@@ -65,12 +65,12 @@ local resolution_option = {
 	["800x600"] = {800, 600};
 	["1060x600"] = {1060, 600};
 	["1024x768"] = {1024, 768};
-	["1280x720"] = {800, 600};
+	["1280x720"] = {1280, 720};
 	["1280x960"] = {1280, 960};
 	["1360x768"] = {1360, 768};
 	["1440x900"] = {1440, 900};
 	["1600x900"] = {1600, 900};
-	["1920x1080"] = {800, 600};
+	["1920x1080"] = {1920, 1080};
 }
 
 -- Widgets
@@ -78,18 +78,15 @@ local resolution_option = {
 
 	local editor_frame = loveframes.Create("frame")
 	editor_frame:SetName("Editor")
-	editor_frame:SetSize(350, love.graphics.getHeight())
-	editor_frame:SetResizable(true)
-	editor_frame:SetMaxWidth(350)
-	editor_frame:SetMaxHeight(love.graphics.getHeight())
-	editor_frame:SetMinWidth(350)
-	editor_frame:SetMinHeight(400)
+	editor_frame:SetSize(320, love.graphics.getHeight())
+	editor_frame:SetResizable(false)
 	editor_frame:ShowCloseButton(false)
 	editor_frame:SetScreenLocked(true)
 	
 	
 		local resolution_picker = loveframes.Create("multichoice", editor_frame)
 		resolution_picker:SetPos(5, 60)
+		resolution_picker:SetWidth(80)
 		for k, v in pairs(resolution_option) do
 			resolution_picker:AddChoice(k)
 		end	
@@ -106,23 +103,44 @@ local resolution_option = {
 	
 		local tabs = loveframes.Create("tabs",editor_frame)
 		tabs:SetPos(5, 120)
+		tabs:SetSize(32*8, 480)
 
-			local tile_panel = loveframes.Create("panel")
-			local entity_panel = loveframes.Create("panel")
-			entity_panel:SetPos(5,30)
-			entity_panel:SetSize(300, 300)
-			
-				local entity_list = loveframes.Create("list", entity_panel)
-				entity_list:SetPadding(5)
-				entity_list:SetSpacing(5)
-				for k,v in pairs(ENTITY_TYPE) do
-					local button = loveframes.Create("text")
-					button:SetText(v)
-					entity_list:AddItem(button)
+			local settings_panel = loveframes.Create("panel")
+			local tools_panel = loveframes.Create("panel")
+			local tile_panel = loveframes.Create("list")
+
+			tile_panel:EnableHorizontalStacking(true)
+			tile_panel.Fill = function(object)
+				for i=0, 255 do 
+					local gfx = mapfile.gfx.tile[i]
+					if gfx then
+						local tile = loveframes.Create("image")
+						tile:SetImage(gfx)
+						tile_panel:AddItem(tile)
+					end	
 				end
+			end
+			tile_panel:Fill()
+			
+
+			local entity_panel = loveframes.Create("columnlist")
+			--local entity_panel = loveframes.Create("list")
+			entity_panel:AddColumn("Entity ID")
+			entity_panel:AddColumn("Entity typename")
+			
+			for k,v in pairs(ENTITY_TYPE) do
+				entity_panel:AddRow(k,v)
+				--local entry = loveframes.Create("text")
+				--entry:SetText(v)
+				--entity_panel:AddItem(entry)
+			end
 			
 		tabs:AddTab("Tileset", tile_panel)
 		tabs:AddTab("Entity", entity_panel)
+		tabs:AddTab("Settings", settings_panel)
+		tabs:AddTab("Tools", tools_panel)
+		
+		
 	
 		local map_path = loveframes.Create("textinput", editor_frame)
 		map_path:SetText("maps/fun_roleplay.map")
@@ -134,6 +152,9 @@ local resolution_option = {
 		savebutton:SetText("Save")
 		savebutton:SetWidth(30)
 		savebutton:SetPos(map_path:GetWidth() + 10, 30)
+		savebutton.OnClick = function(object)
+			--tile_panel.refresh()
+		end
 	
 		local loadbutton = loveframes.Create("button", editor_frame)
 		loadbutton:SetText("Load")
@@ -143,5 +164,8 @@ local resolution_option = {
 			local path = map_path:GetText()
 		
 			mapfile_read(path)
+			
+			tile_panel:Clear()
+			tile_panel:Fill()
 			cam_x, cam_y = 0, 0
 		end

@@ -1,8 +1,9 @@
 function love.load()
 	loveframes = require "loveframes"
+	--loveframes.config["DEBUG"]=true
 	
-	love.filesystem.load("cs2dmap.lua")()
 	love.filesystem.load("shader/cs2dshaders.lua")()
+	love.filesystem.load("cs2dmap.lua")()
 	love.filesystem.load("interface/editor.lua")()
 
 	
@@ -49,6 +50,10 @@ end
 function love.keypressed(key, unicode)
 	global_key_pressed[key] = true 
 	if (key == "escape") then os.exit(0) end
+	if (key=="f1") then
+		local state = loveframes.config["DEBUG"]
+		loveframes.config["DEBUG"] = not state
+	end	
 
 	loveframes.keypressed(key, unicode)
 end
