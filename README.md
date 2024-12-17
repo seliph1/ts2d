@@ -23,4 +23,4 @@ Make sure you have [Love2D](https://love2d.org/) installed.
 ### Steps
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/top-down-shooter.git
+   git clone https://github.com/seliph1/ts2d.git
