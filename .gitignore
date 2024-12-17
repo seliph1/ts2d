@@ -1,0 +1,13 @@
+/gfx/
+/sfx/
+/logos/
+/maps/
+/logs/
+
+*.bak
+*.bat
+*.map
+*.dll
+*.exe
+*.zip
+*.love
