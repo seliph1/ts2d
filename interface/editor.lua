@@ -95,7 +95,12 @@ local resolution_option = {
 		end	
 		resolution_picker:SetChoice("800x600")
 		resolution_picker.OnChoiceSelected = function(object, choice)
-			print(choice)
+			local width, height = unpack(resolution_option[choice])
+			
+			love.window.setMode(width, height)
+			editor_frame:SetMaxHeight(height)
+			editor_frame:SetHeight(height)
+			editor_frame:SetPos(0,0)
 		end
 		
 	

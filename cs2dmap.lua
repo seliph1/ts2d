@@ -103,12 +103,9 @@ local TILE_MODE_HEIGHT = {
 	[53]=0,		-- 53 deadly abyss
 }
 local EMPTY = {}
-
 local placeholder = love.image.newImageData(32,32)
 
-
 function create_spritesheet(file, xsize, ysize)
-	--local spritesheet = love.image.newImageData(file)
 	local spritesheet = fs:loadImageData(file)
 	local spritesheet_table = {}
 	local w, h = spritesheet:getDimensions()
@@ -220,14 +217,13 @@ function mapfile_new(width, height)
 	
 			if not mapdata.gfx.entity[path] then -- Try to load a new image
 				if fs:isFile(path) then
-					--local sprite = love.graphics.newImage(path)
 					local sprite = fs:loadImage(path)
 					
 					mapdata.gfx.entity[path] = sprite
-					print(string.format("Sprite loaded: %s .", path))
+					print(string.format("Sprite loaded: %s", path))
 				else
 					mapdata.gfx.entity[path] = love.graphics.newImage(placeholder)
-					print(string.format("Failed to load: %s.", path))
+					print(string.format("Failed to load: %s", path))
 				end				
 			end
 		end	
@@ -237,7 +233,7 @@ function mapfile_new(width, height)
 	local path = string.format("gfx/backgrounds/%s", mapdata.background_file)
 	if (mapdata.background_file ~= "") and fs:isFile(path) then
 		mapdata.gfx.background = fs:loadImage(path)
-		print(string.format("Sprite loaded: %s .", path))
+		print(string.format("Sprite loaded: %s", path))
 	else
 		mapdata.gfx.background = love.graphics.newImage(placeholder)
 	end
@@ -576,10 +572,10 @@ function mapfile_read(path)
 				if fs:isFile(path) then -- Check if file exists
 					local sprite = fs:loadImage(path)
 					mapdata.gfx.entity[path] = sprite
-					print(string.format("Sprite loaded: %s .", path))
+					print(string.format("Sprite loaded: %s", path))
 				else
 					mapdata.gfx.entity[path] = love.graphics.newImage(placeholder)
-					print(string.format("Failed to load %s.", path))
+					print(string.format("Failed to load %s", path))
 				end				
 			end
 		end	
@@ -588,7 +584,7 @@ function mapfile_read(path)
 	-- Background load.
 	local path = string.format("gfx/backgrounds/%s", mapdata.background_file)
 	if (mapdata.background_file ~= "") and fs:isFile(path) then
-		print(string.format("Sprite loaded: %s .", path))
+		print(string.format("Sprite loaded: %s", path))
 		mapdata.gfx.background = fs:loadImage(path)
 	else
 		mapdata.gfx.background = love.graphics.newImage(placeholder)
