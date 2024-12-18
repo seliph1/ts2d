@@ -78,34 +78,34 @@ local resolution_option = {
 
 	local editor_frame = loveframes.Create("frame")
 	editor_frame:SetName("Editor")
-	editor_frame:SetSize(320, love.graphics.getHeight())
+	editor_frame:SetSize(32*8+10, love.graphics.getHeight())
 	editor_frame:SetResizable(false)
 	editor_frame:ShowCloseButton(false)
 	editor_frame:SetScreenLocked(true)
 	
 	
-		local resolution_picker = loveframes.Create("multichoice", editor_frame)
-		resolution_picker:SetPos(5, 60)
-		resolution_picker:SetWidth(80)
-		for k, v in pairs(resolution_option) do
-			resolution_picker:AddChoice(k)
-		end	
-		resolution_picker:SetChoice("800x600")
-		resolution_picker.OnChoiceSelected = function(object, choice)
-			local width, height = unpack(resolution_option[choice])
-			
-			love.window.setMode(width, height)
-			editor_frame:SetMaxHeight(height)
-			editor_frame:SetHeight(height)
-			editor_frame:SetPos(0,0)
-		end
-		
-	
 		local tabs = loveframes.Create("tabs",editor_frame)
-		tabs:SetPos(5, 120)
+		tabs:SetPos(5, 100)
 		tabs:SetSize(32*8, 480)
 
 			local settings_panel = loveframes.Create("panel")
+			
+				local resolution_picker = loveframes.Create("multichoice", settings_panel)
+				resolution_picker:SetPos(5, 5)
+				resolution_picker:SetWidth(80)
+				for k, v in pairs(resolution_option) do
+					resolution_picker:AddChoice(k)
+				end	
+				resolution_picker:SetChoice("800x600")
+				resolution_picker.OnChoiceSelected = function(object, choice)
+					local width, height = unpack(resolution_option[choice])
+					
+					love.window.setMode(width, height)
+					editor_frame:SetMaxHeight(height)
+					editor_frame:SetHeight(height)
+					editor_frame:SetPos(0,0)
+				end
+			
 			local tools_panel = loveframes.Create("panel")
 			local tile_panel = loveframes.Create("list")
 
@@ -125,8 +125,10 @@ local resolution_option = {
 
 			local entity_panel = loveframes.Create("columnlist")
 			--local entity_panel = loveframes.Create("list")
-			entity_panel:AddColumn("Entity ID")
-			entity_panel:AddColumn("Entity typename")
+			entity_panel:AddColumn("ID")
+			entity_panel:AddColumn("Typename")
+			entity_panel:SetColumnWidth(1, 20)
+			entity_panel:SetColumnWidth(2, 210)
 			
 			for k,v in pairs(ENTITY_TYPE) do
 				entity_panel:AddRow(k,v)
@@ -135,10 +137,10 @@ local resolution_option = {
 				--entity_panel:AddItem(entry)
 			end
 			
-		tabs:AddTab("Tileset", tile_panel)
-		tabs:AddTab("Entity", entity_panel)
-		tabs:AddTab("Settings", settings_panel)
-		tabs:AddTab("Tools", tools_panel)
+		tabs:AddTab("Tileset", tile_panel, "Tileset")
+		tabs:AddTab("Entity", entity_panel, "Entity")
+		tabs:AddTab("Settings", settings_panel, "Settings")
+		tabs:AddTab("Tools", tools_panel, "Tools")
 		
 		
 	
@@ -150,16 +152,18 @@ local resolution_option = {
 
 		local savebutton = loveframes.Create("button", editor_frame)
 		savebutton:SetText("Save")
-		savebutton:SetWidth(30)
+		savebutton:SetWidth(40)
 		savebutton:SetPos(map_path:GetWidth() + 10, 30)
+		savebutton:SetPos(50, 60)
+		savebutton:SetEnabled(false)
 		savebutton.OnClick = function(object)
 			--tile_panel.refresh()
 		end
 	
 		local loadbutton = loveframes.Create("button", editor_frame)
 		loadbutton:SetText("Load")
-		loadbutton:SetWidth(30)
-		loadbutton:SetPos(map_path:GetWidth() + 45, 30)
+		loadbutton:SetWidth(40)
+		loadbutton:SetPos(5, 60)
 		loadbutton.OnClick = function(object)
 			local path = map_path:GetText()
 		
@@ -169,3 +173,9 @@ local resolution_option = {
 			tile_panel:Fill()
 			cam_x, cam_y = 0, 0
 		end
+		
+		local filler = loveframes.Create("button", editor_frame)
+		filler:SetText("Toggle")
+		filler:SetWidth(60)
+		filler:SetPos(95, 60)
+		filler:SetToggleable(true)

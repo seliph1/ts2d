@@ -6,7 +6,7 @@
 return function(loveframes)
 ---------- module start ----------
 
--- tooltip clas
+-- tooltip class
 local newobject = loveframes.NewObject("tooltip", "loveframes_object_tooltip", true)
 
 --[[---------------------------------------------------------

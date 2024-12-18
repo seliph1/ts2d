@@ -23,7 +23,7 @@ function newobject:initialize()
 	self.offsetx = 0
 	self.tab = 1
 	self.tabnumber = 1
-	self.padding = 5
+	self.padding = 1
 	self.tabheight = 25
 	self.previoustabheight = 25
 	self.buttonscrollamount = 200

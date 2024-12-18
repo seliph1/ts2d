@@ -1,6 +1,7 @@
 function love.load()
 	loveframes = require "loveframes"
 	--loveframes.config["DEBUG"]=true
+	loveframes.SetActiveSkin("CS2D")
 	
 	love.filesystem.load("shader/cs2dshaders.lua")()
 	love.filesystem.load("cs2dmap.lua")()
