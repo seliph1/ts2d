@@ -629,6 +629,9 @@ local function entityInCamera(e, camx, camy)
 	end
 end
 
+function mapdata_update(dt)
+end
+
 function mapdata_draw(camx, camy)
 	local camx, camy = floor(camx), floor(camy)
 	local screen_w = love.graphics.getWidth()

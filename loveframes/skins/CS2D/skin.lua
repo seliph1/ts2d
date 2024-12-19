@@ -1677,20 +1677,12 @@ function skin.collapsiblecategory(object)
 	local open = object:GetOpen()
 	local textcolor = skin.controls.collapsiblecategory_text_color
 	local font = skin.controls.smallfont
-	local image = skin.images["button-nohover.png"]
-	local topbarimage = skin.images["frame-topbar.png"]
-	local topbarimage_width = topbarimage:getWidth()
-	local topbarimage_height = topbarimage:getHeight()
-	local topbarimage_scalex = width/topbarimage_width
-	local topbarimage_scaley = 25/topbarimage_height
-	local imageheight = image:getHeight()
-	local scaley = height/imageheight
 	
 	love.graphics.setColor(1, 1, 1, 1)
-	love.graphics.draw(image, x, y, 0, width, scaley)
+	--love.graphics.draw(image, x, y, 0, width, scaley)
 	
 	love.graphics.setColor(1, 1, 1, 1)
-	love.graphics.draw(topbarimage, x, y, 0, topbarimage_scalex, topbarimage_scaley)
+	--love.graphics.draw(topbarimage, x, y, 0, topbarimage_scalex, topbarimage_scaley)
 	
 	love.graphics.setColor(bordercolor)
 	skin.OutlinedRectangle(x, y, width, height)

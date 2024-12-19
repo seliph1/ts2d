@@ -28,6 +28,8 @@ function love.update( dt )
 	mouse_y = math.floor( (love.mouse.getY() - love.graphics.getHeight()/2 + cam_y) / 32  )
 	
 	--love.window.setTitle (love.timer.getFPS( ))
+	mapdata_update(dt)
+	
 	
 	loveframes.update(dt)
 end
@@ -36,6 +38,7 @@ function love.draw()
 	--love.graphics.setBackgroundColor(0, 0, 0, 0)
 	
 	mapdata_draw(cam_x, cam_y)
+	
 	
 	loveframes.draw()
 end

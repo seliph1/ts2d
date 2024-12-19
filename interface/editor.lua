@@ -91,6 +91,7 @@ local cs2d_font = love.graphics.newFont("gfx/fonts/liberationsans.ttf",15)
 		tabs:SetSize(32*8, 480)
 
 			local settings_panel = loveframes.Create("panel")
+				--local collapsible = loveframes.Create("collapsiblecategory", settings_panel)
 			
 				local resolution_picker = loveframes.Create("multichoice", settings_panel)
 				resolution_picker:SetPos(150, 5)
@@ -216,7 +217,6 @@ local cs2d_font = love.graphics.newFont("gfx/fonts/liberationsans.ttf",15)
 		end
 		
 		local filler = loveframes.Create("button", editor_frame)
-		filler:SetText("Toggle")
 		filler:SetWidth(60)
 		filler:SetPos(95, 60)
 		filler:SetToggleable(true)
