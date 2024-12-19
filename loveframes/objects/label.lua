@@ -26,15 +26,10 @@ function newobject:initialize()
 	self.width = 5
 	self.height = 5
 	self.maxw = 0
-	self.shadowxoffset = 1
-	self.shadowyoffset = 1
 	self.lines = 0
 	self.formattedtext = {}
 	self.original = {}
 	self.defaultcolor = {0, 0, 0, 1}
-	self.shadowcolor = {0, 0, 0, 1}
-	self.linkcolor = {0, .4, 1, 1}
-	self.linkhovercolor = {0, 0, 1, 1}
 	self.ignorenewlines = false
 	self.shadow = false
 	self.linkcol = false
@@ -89,36 +84,9 @@ function newobject:update(dt)
 	local base = loveframes.base
 	local update = self.Update
 	
-	self:CheckHover()
-	
-	local hover = self.hover
-	local linksenabled = self.linksenabled
-	local linkcol = false
-	
-	if hover and linksenabled and not loveframes.resizeobject then
-		local formattedtext = self.formattedtext
-		local x = self.x
-		local y = self.y
-		for k, v in ipairs(formattedtext) do
-			local link = v.link
-			if link then
-				local mx, my = love.mouse.getPosition()
-				local font = v.font
-				local linkx = v.x
-				local linky = v.y
-				local text = v.text
-				local twidth = font:getWidth(text)
-				local theight = font:getHeight()
-				local col = loveframes.BoundingBox(x + linkx, mx, y + linky, my, twidth, 1, theight, 1)
-				v.hover = false
-				if col then
-					v.hover = true
-					linkcol = true
-				end
-			end
-		end
-		self.linkcol = linkcol
-	end
+	if parent.type ~= "tooltip" then
+		self:CheckHover()
+	end	
 	
 	-- move to parent if there is a parent
 	if parent ~= base then
@@ -157,32 +125,7 @@ function newobject:mousepressed(x, y, button)
 		if baseparent and baseparent.type == "frame" then
 			baseparent:MakeTop()
 		end
-		local linksenabled = self.linksenabled
-		if linksenabled then
-			local formattedtext = self.formattedtext
-			local objx = self.x
-			local objy = self.y
-			for k, v in ipairs(formattedtext) do
-				local link = v.link
-				if link then
-					local linkx = v.x
-					local linky = v.y
-					local font = v.font
-					local text = v.text
-					local twidth = font:getWidth(text)
-					local theight = font:getHeight()
-					local col = loveframes.BoundingBox(objx + linkx, x, objy + linky, y, twidth, 1, theight, 1)
-					if col then
-						local onclicklink = self.OnClickLink
-						if onclicklink then
-							onclicklink(self, text)
-						end
-					end
-				end
-			end
-		end
 	end
-	
 end
 
 --[[---------------------------------------------------------
@@ -197,10 +140,7 @@ function newobject:SetText(t)
 	local defaultcolor = self.defaultcolor
 	local inserts = {}
 	local prevcolor = defaultcolor
-	local prevlinkcolor = self.linkcolor
-	local prevlinkhovercolor = self.linkhovercolor
 	local prevfont = font
-	local link = false
 	local tdata
 	
 	self.text = ""
@@ -225,27 +165,10 @@ function newobject:SetText(t)
 			if v.color then
 				prevcolor = v.color
 			end
-			if v.linkcolor then
-				prevlinkcolor = v.linkcolor
-			end
-			if v.linkhovercolor then
-				prevlinkhovercolor = v.linkhovercolor
-			end
-			if v.font then
-				prevfont = v.font
-			end
-			if v.link then
-				link = true
-			else
-				link = false
-			end
 		elseif dtype == "number" then
 			table.insert(self.formattedtext, {
 				font = prevfont, 
 				color = prevcolor, 
-				linkcolor = prevlinkcolor, 
-				linkhovercolor = prevlinkhovercolor, 
-				link = link, 
 				text = tostring(v)
 			})
 		elseif dtype == "string" then
@@ -259,9 +182,6 @@ function newobject:SetText(t)
 				table.insert(self.formattedtext, {
 					font = prevfont, 
 					color = prevcolor, 
-					linkcolor = prevlinkcolor, 
-					linkhovercolor = prevlinkhovercolor, 
-					link = link, 
 					text = j
 				})
 			end
@@ -286,9 +206,6 @@ function newobject:SetText(t)
 								key = key, 
 								font = v.font, 
 								color = v.color, 
-								linkcolor = prevlinkcolor, 
-								linkhovercolor = v.linkhovercolor, 
-								link = v.link, 
 								text = new
 							})
 							new = item
@@ -304,9 +221,6 @@ function newobject:SetText(t)
 							key = key, 
 							font = v.font, 
 							color = v.color, 
-							linkcolor = prevlinkcolor, 
-							linkhovercolor = v.linkhovercolor, 
-							link = v.link, 
 							text = new
 						})
 					end
@@ -319,9 +233,6 @@ function newobject:SetText(t)
 		table.insert(self.formattedtext, v.key, {
 			font = v.font, 
 			color = v.color, 
-			linkcolor = prevlinkcolor, 
-			linkhovercolor = v.linkhovercolor, 
-			link = v.link, 
 			text = v.text
 		})
 	end
@@ -344,16 +255,10 @@ function newobject:SetText(t)
 	local largestwidth = 0
 	local largestheight = 0
 	local initialwidth = 0
-	local detectlinks = self.detectlinks
 	
 	for k, v in ipairs(textdata) do
 		local text = v.text
 		local color = v.color
-		if detectlinks then
-			if loveframes.utf8.len(text) > 7 and (loveframes.utf8.sub(text, 1, 7) == "http://" or loveframes.utf8.sub(text, 1, 8) == "https://") then
-				v.link = true
-			end
-		end
 		if type(text) == "string" then
 			self.text = self.text .. text
 			local width = v.font:getWidth(text)
@@ -464,72 +369,25 @@ end
 	- desc: draws the object's text
 --]]---------------------------------------------------------
 function newobject:DrawText()
-
-	local textdata = self.formattedtext
+	local textdata = object.formattedtext
 	local x = self.x
 	local y = self.y
-	local shadow = self.shadow
-	local shadowxoffset = self.shadowxoffset
-	local shadowyoffset = self.shadowyoffset
-	local shadowcolor = self.shadowcolor
-	local inlist, list = self:IsInList()
+	
+	--local inlist, list = object:IsInList()
 	local printfunc = function(text, x, y)
 		love.graphics.print(text, math.floor(x + 0.5), math.floor(y + 0.5))
 	end
-	
 	for k, v in ipairs(textdata) do
 		local textx = v.x
 		local texty = v.y
 		local text = v.text
 		local color = v.color
 		local font = v.font
-		local link = v.link
 		local theight = font:getHeight("a")
-		if inlist then
-			local listy = list.y
-			local listhieght = list.height
-			if (y + texty) <= (listy + listhieght) and y + ((texty + theight)) >= listy then
-				love.graphics.setFont(font)
-				if shadow then
-					love.graphics.setColor(unpack(shadowcolor))
-					printfunc(text, x + textx + shadowxoffset, y + texty + shadowyoffset)
-				end
-				if link then
-					local linkcolor = v.linkcolor
-					local linkhovercolor = v.linkhovercolor
-					local hover = v.hover
-					if hover then
-						love.graphics.setColor(linkhovercolor)
-					else
-						love.graphics.setColor(linkcolor)
-					end
-				else
-					love.graphics.setColor(unpack(color))
-				end
-				printfunc(text, x + textx, y + texty)
-			end
-		else
-			love.graphics.setFont(font)
-			if shadow then
-				love.graphics.setColor(unpack(shadowcolor))
-				printfunc(text, x + textx + shadowxoffset, y + texty + shadowyoffset)
-			end
-			if link then
-				local linkcolor = v.linkcolor
-				local linkhovercolor = v.linkhovercolor
-				local hover = v.hover
-				if hover then
-					love.graphics.setColor(linkhovercolor)
-				else
-					love.graphics.setColor(linkcolor)
-				end
-			else
-				love.graphics.setColor(unpack(color))
-			end
-			printfunc(text, x + textx, y + texty)
-		end
-	end
-	
+		love.graphics.setFont(font)
+		love.graphics.setColor(unpack(color))
+		printfunc(text, x + textx, y + texty)
+	end	
 	return self
 end
 
@@ -661,73 +519,6 @@ function newobject:GetIgnoreNewlines()
 end
 
 --[[---------------------------------------------------------
-	- func: SetShadow(bool)
-	- desc: sets whether or not the object should draw a
-			shadow behind its text
---]]---------------------------------------------------------
-function newobject:SetShadow(bool)
-
-	self.shadow = bool
-	return self
-	
-end
-
---[[---------------------------------------------------------
-	- func: GetShadow()
-	- desc: gets whether or not the object should draw a
-			shadow behind its text
---]]---------------------------------------------------------
-function newobject:GetShadow()
-
-	return self.shadow
-	
-end
-
---[[---------------------------------------------------------
-	- func: SetShadowOffsets(offsetx, offsety)
-	- desc: sets the object's x and y shadow offsets
---]]---------------------------------------------------------
-function newobject:SetShadowOffsets(offsetx, offsety)
-
-	self.shadowxoffset = offsetx
-	self.shadowyoffset = offsety
-	
-	return self
-	
-end
-
---[[---------------------------------------------------------
-	- func: GetShadowOffsets()
-	- desc: gets the object's x and y shadow offsets
---]]---------------------------------------------------------
-function newobject:GetShadowOffsets()
-
-	return self.shadowxoffset, self.shadowyoffset
-	
-end
-
---[[---------------------------------------------------------
-	- func: SetShadowColor(r, g, b, a)
-	- desc: sets the object's shadow color
---]]---------------------------------------------------------
-function newobject:SetShadowColor(r, g, b, a)
-	
-	self.shadowcolor = {r, g, b, a}
-	return self
-	
-end
-
---[[---------------------------------------------------------
-	- func: GetShadowColor()
-	- desc: gets the object's shadow color
---]]---------------------------------------------------------
-function newobject:GetShadowColor()
-	
-	return self.shadowcolor
-	
-end
-
---[[---------------------------------------------------------
 	- func: SetDefaultColor(r, g, b, a)
 	- desc: sets the object's default text color
 --]]---------------------------------------------------------
@@ -748,52 +539,5 @@ function newobject:GetDefaultColor()
 	return self.defaultcolor
 	
 end
-
---[[---------------------------------------------------------
-	- func: SetLinksEnabled(enabled)
-	- desc: sets whether or not the object should process
-			urls into clickable links
---]]---------------------------------------------------------
-function newobject:SetLinksEnabled(enabled)
-
-	self.linksenabled = enabled
-	return self
-	
-end
-
---[[---------------------------------------------------------
-	- func: GetLinksEnabled()
-	- desc: gets whether or not the object should process
-			urls into clickable links
---]]---------------------------------------------------------
-function newobject:GetLinksEnabled()
-
-	return self.linksenabled
-	
-end
-
---[[---------------------------------------------------------
-	- func: SetDetectLinks(detect)
-	- desc: sets whether or not the object should detect
-			links when processing new text
---]]---------------------------------------------------------
-function newobject:SetDetectLinks(detect)
-
-	self.detectlinks = detect
-	return self
-	
-end
-
---[[---------------------------------------------------------
-	- func: GetDetectLinks()
-	- desc: gets whether or not the object should detect
-			links when processing new text
---]]---------------------------------------------------------
-function newobject:GetDetectLinks()
-
-	return self.detectlinks
-	
-end
-
 ---------- module end ----------
 end

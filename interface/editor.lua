@@ -143,9 +143,10 @@ local cs2d_font = love.graphics.newFont("gfx/fonts/liberationsans.ttf",15)
 				multiline:SetPos(5, 180):SetSize(200,200):SetMultiline(true)
 				
 			
+			local map_panel = loveframes.Create("panel")
 			local tools_panel = loveframes.Create("panel")
+			
 			local tile_panel = loveframes.Create("list")
-
 			tile_panel:EnableHorizontalStacking(true)
 			tile_panel.Fill = function(object)
 				for i=0, 255 do 
@@ -165,14 +166,14 @@ local cs2d_font = love.graphics.newFont("gfx/fonts/liberationsans.ttf",15)
 			entity_panel:SetColumnWidth(1, 20)
 			entity_panel:SetColumnWidth(2, 210)
 			entity_panel:SetColumnResizeEnabled(bool)
-			
 			for k,v in pairs(ENTITY_TYPE) do
 				entity_panel:AddRow(k,v)
 			end
 			
 		tabs:AddTab("Tileset", tile_panel, "A very large tooltip to test if this goes offscreen or not\nand maybe a line break")
-		tabs:AddTab("Entity", entity_panel, "Entity")
-		tabs:AddTab("Settings", settings_panel, "Settings")
+		tabs:AddTab("Entity", entity_panel, "Entity Picker")
+		tabs:AddTab("Settings", settings_panel, "Editor Settings")
+		tabs:AddTab("Map", map_panel, "Map Settings")
 		tabs:AddTab("Tools", tools_panel, "Tools")
 		
 		
@@ -182,11 +183,12 @@ local cs2d_font = love.graphics.newFont("gfx/fonts/liberationsans.ttf",15)
 		map_path:SetPos(5, 30)
 		--map_path:SetMultiline(true)
 		--map_path:SetHeight(90)
-		
+		--[[
 		local map_path_input_menu = loveframes.Create("menu", editor_frame)
 		map_path_input_menu:AddOption("Copy")
 		map_path_input_menu:AddOption("Paste")
 		map_path_input_menu:SetVisible(false)
+		--]]
 		
 		
 		local savebutton = loveframes.Create("button", editor_frame)

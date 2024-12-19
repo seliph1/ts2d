@@ -14,7 +14,9 @@ skin.name = "CS2D"
 skin.author = "mozilla"
 skin.version = "1.0"
 
-local bordercolor = {0.56, 0.56, 0.56, 1}
+--local bordercolor = {0.56, 0.56, 0.56, 1}
+--local bordercolor = {0.8, 0.8, 0.8, 1}
+local bordercolor = {1, 1, 1, 1}
 
 -- add skin directives to this table
 skin.directives = {}
@@ -244,13 +246,6 @@ function skin.PrintText(text, x, y)
 	love.graphics.print(text, math.floor(x + 0.5), math.floor(y + 0.5))
 end
 
---[[
-local function DrawColumnHeaderText(text, hx, hwidth, tx, twidth)
-
-	local new = ""
-	if tx + width > hx + hwidth then
---]]
-
 --[[---------------------------------------------------------
 	- func: OutlinedRectangle(x, y, width, height, ovt, ovb, ovl, ovr)
 	- desc: creates and outlined rectangle
@@ -302,16 +297,6 @@ function skin.frame(object)
 	local topcolor = skin.controls.frame_top_color
 	local namecolor = skin.controls.frame_name_color
 	local font = skin.controls.frame_name_font
-	local topbarimage = skin.images["frame-topbar.png"]
-	local topbarimage_width = topbarimage:getWidth()
-	local topbarimage_height = topbarimage:getHeight()
-	local topbarimage_scalex = width/topbarimage_width
-	local topbarimage_scaley = 25/topbarimage_height
-	local bodyimage = skin.images["frame-body.png"]
-	local bodyimage_width = bodyimage:getWidth()
-	local bodyimage_height = bodyimage:getHeight()
-	local bodyimage_scalex = width/bodyimage_width
-	local bodyimage_scaley = height/bodyimage_height
 		
 	-- frame body
 	love.graphics.setColor(unpack(skin.controls.frame_body_color))
@@ -375,7 +360,25 @@ function skin.button(object)
 	local togglecolor = skin.controls.button_toggle_color
 	local nonclickablecolor = skin.controls.button_nonclickable_color	
 	
+	local image_hover = skin.images["button-hover.png"]
+	local image_hover_sh = height/image_hover:getHeight()
+	
 	local roundcorner = skin.controls.button_round_corner
+	local function round_border()
+		--drawing the stencil for a round rectangle
+		love.graphics.rectangle("fill", x, y, width, height, roundcorner, roundcorner)
+	end
+	
+	local function image_hover_draw()
+		love.graphics.stencil(round_border)
+		love.graphics.setStencilTest("greater",0)
+		
+		love.graphics.setColor(1, 1, 1, 0.5)
+		love.graphics.draw(image_hover, x, y, 0, width, image_hover_sh)
+		
+		love.graphics.setStencilTest()
+	end
+	
 	if not enabled or not clickable then
 		-- button border (dont draw)
 		--love.graphics.setColor(bordercolor)
@@ -401,8 +404,8 @@ function skin.button(object)
 				love.graphics.rectangle("fill", x, y, width, height, roundcorner, roundcorner)
 				
 				-- button border
-				love.graphics.setColor(bodycolor)
-				love.graphics.rectangle("line", x, y, width, height, roundcorner, roundcorner)
+				--love.graphics.setColor(bodycolor)
+				--love.graphics.rectangle("line", x, y, width, height, roundcorner, roundcorner)
 				
 				-- button text
 				love.graphics.setFont(font)
@@ -413,9 +416,12 @@ function skin.button(object)
 				love.graphics.setColor(bodycolor)
 				love.graphics.rectangle("fill", x, y, width, height, roundcorner, roundcorner)
 				
+				-- Button hover shade
+				image_hover_draw()
+				
 				-- button border
-				love.graphics.setColor(bordercolor)
-				love.graphics.rectangle("line", x, y, width, height, roundcorner, roundcorner)
+				--love.graphics.setColor(bordercolor)
+				--love.graphics.rectangle("line", x, y, width, height, roundcorner, roundcorner)
 				
 				-- button text
 				love.graphics.setFont(font)
@@ -430,8 +436,8 @@ function skin.button(object)
 				love.graphics.rectangle("fill", x, y, width, height, roundcorner, roundcorner)
 				
 				-- button border
-				love.graphics.setColor(bodycolor)
-				love.graphics.rectangle("line", x, y, width, height, roundcorner, roundcorner)
+				--love.graphics.setColor(bodycolor)
+				--love.graphics.rectangle("line", x, y, width, height, roundcorner, roundcorner)
 				
 				-- button text
 				love.graphics.setFont(font)
@@ -444,8 +450,8 @@ function skin.button(object)
 				love.graphics.rectangle("fill", x, y, width, height, roundcorner, roundcorner)
 				
 				-- button border
-				love.graphics.setColor(bordercolor)
-				love.graphics.rectangle("line", x, y, width, height, roundcorner, roundcorner)
+				--love.graphics.setColor(bordercolor)
+				--love.graphics.rectangle("line", x, y, width, height, roundcorner, roundcorner)
 				-- button text
 				
 				love.graphics.setFont(font)
@@ -462,8 +468,8 @@ function skin.button(object)
 			love.graphics.rectangle("fill", x, y, width, height, roundcorner, roundcorner)
 			
 			-- button border
-			love.graphics.setColor(bordercolor)
-			love.graphics.rectangle("line", x, y, width, height, roundcorner, roundcorner)
+			--love.graphics.setColor(bordercolor)
+			--love.graphics.rectangle("line", x, y, width, height, roundcorner, roundcorner)
 			
 			-- button text
 			love.graphics.setFont(font)
@@ -488,6 +494,10 @@ function skin.button(object)
 			-- button body
 			love.graphics.setColor(bodycolor)
 			love.graphics.rectangle("fill", x, y, width, height, roundcorner, roundcorner)
+			
+			-- button hover shade
+			image_hover_draw()
+			
 			-- button text
 			love.graphics.setFont(font)
 			if object.image then
@@ -506,12 +516,13 @@ function skin.button(object)
 				skin.PrintText(text, x + width/2 - twidth/2, y + height/2 - theight/2)
 			end
 			-- button border
-			love.graphics.setColor(bordercolor)
-			love.graphics.rectangle("line", x, y, width, height, roundcorner, roundcorner)
+			--love.graphics.setColor(bordercolor)
+			--love.graphics.rectangle("line", x, y, width, height, roundcorner, roundcorner)
 		else
 			-- button body
 			love.graphics.setColor(bodycolor)
 			love.graphics.rectangle("fill", x, y, width, height, roundcorner, roundcorner)
+			
 			-- button text
 			love.graphics.setFont(font)
 			if object.image then
@@ -530,10 +541,12 @@ function skin.button(object)
 				skin.PrintText(text, x + width/2 - twidth/2, y + height/2 - theight/2)
 			end
 			-- button border
-			love.graphics.setColor(bordercolor)
-			love.graphics.rectangle("line", x, y, width, height, roundcorner, roundcorner)
+			--love.graphics.setColor(bordercolor)
+			--love.graphics.rectangle("line", x, y, width, height, roundcorner, roundcorner)
 		end
 	end
+	
+	love.graphics.setLineWidth(1)
 end
 
 --[[---------------------------------------------------------
@@ -817,14 +830,10 @@ function skin.scrollbutton(object)
 	local bodyhovercolor = skin.controls.scrollbar_body_hover_color
 	local bodynohovercolor = skin.controls.scrollbar_body_nohover_color
 	
-	
 	if down then
 		-- button body
-		local image = skin.images["button-down.png"]
-		local imageheight = image:getHeight()
-		local scaley = height/imageheight
 		love.graphics.setColor(bodydowncolor)
-		love.graphics.draw(image, x, y, 0, width, scaley)
+		love.graphics.rectangle("fill", x, y, width, height)
 		
 		-- button border
 		love.graphics.setColor(bordercolor)
@@ -832,22 +841,15 @@ function skin.scrollbutton(object)
 		
 	elseif hover then
 		-- button body
-		local image = skin.images["button-hover.png"]
-		local imageheight = image:getHeight()
-		local scaley = height/imageheight
 		love.graphics.setColor(bodyhovercolor)
-		love.graphics.draw(image, x, y, 0, width, scaley)
+		love.graphics.rectangle("fill", x, y, width, height)
 		-- button border
 		love.graphics.setColor(bordercolor)
 		skin.OutlinedRectangle(x, y, width, height)
 	else
 		-- button body
-		local image = skin.images["button-nohover.png"]
-		local imageheight = image:getHeight()
-		local scaley = height/imageheight
-		
 		love.graphics.setColor(bodynohovercolor)
-		love.graphics.draw(image, x, y, 0, width, scaley)
+		love.graphics.rectangle("fill", x, y, width, height)
 		-- button border
 		love.graphics.setColor(bordercolor)
 		skin.OutlinedRectangle(x, y, width, height)
@@ -898,7 +900,7 @@ function skin.scrollbutton(object)
 		end
 		love.graphics.draw(image, x + width/2 - imagewidth/2, y + height/2 - imageheight/2)
 	end
-	
+
 end
 
 
@@ -1321,63 +1323,7 @@ function skin.label(object)
 		love.graphics.setColor(unpack(color))
 		printfunc(text, x + textx, y + texty)
 	end	
-	--[[
-	for k, v in ipairs(textdata) do
-		local textx = v.x
-		local texty = v.y
-		local text = v.text
-		local color = v.color
-		local font = v.font
-		local link = v.link
-		local theight = font:getHeight("a")
-		if inlist then
-			local listy = list.y
-			local listhieght = list.height
-			if (y + texty) <= (listy + listhieght) and y + ((texty + theight)) >= listy then
-				love.graphics.setFont(font)
-				if shadow then
-					love.graphics.setColor(unpack(shadowcolor))
-					printfunc(text, x + textx + shadowxoffset, y + texty + shadowyoffset)
-				end
-				if link then
-					local linkcolor = v.linkcolor
-					local linkhovercolor = v.linkhovercolor
-					local hover = v.hover
-					if hover then
-						love.graphics.setColor(linkhovercolor)
-					else
-						love.graphics.setColor(linkcolor)
-					end
-				else
-					love.graphics.setColor(unpack(color))
-				end
-				printfunc(text, x + textx, y + texty)
-			end
-		else
-			love.graphics.setFont(font)
-			if shadow then
-				love.graphics.setColor(unpack(shadowcolor))
-				printfunc(text, x + textx + shadowxoffset, y + texty + shadowyoffset)
-			end
-			if link then
-				local linkcolor = v.linkcolor
-				local linkhovercolor = v.linkhovercolor
-				local hover = v.hover
-				if hover then
-					love.graphics.setColor(linkhovercolor)
-				else
-					love.graphics.setColor(linkcolor)
-				end
-			else
-				love.graphics.setColor(unpack(color))
-			end
-			printfunc(text, x + textx, y + texty)
-		end
-	end
-	--]]
 end
-
-
 
 --[[---------------------------------------------------------
 	- func: DrawTextInput(object)
