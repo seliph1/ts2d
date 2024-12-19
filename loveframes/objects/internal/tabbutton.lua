@@ -30,12 +30,11 @@ function newobject:initialize(parent, text, tabnumber, tip, image, onopened, onc
 	self.image = nil
 	self.OnOpened = nil
 	self.OnClosed = nil
+	self.internals = {}
 	
 	if tip then
 		self.tooltip = loveframes.objects["tooltip"]:new(self, tip)
-		self.tooltip:SetFollowCursor(false)
-		self.tooltip:SetFollowObject(true)
-		self.tooltip:SetOffsets(0, -(self.tooltip.internals[1]:GetHeight() + 12))
+		table.insert(self.internals, self.tooltip)
 	end
 	
 	if image then

@@ -18,7 +18,7 @@ function newobject:initialize()
 	self.type = "slider"
 	self.text = "Slider"
 	self.slidetype = "horizontal"
-	self.width = 5
+	self.width = 100
 	self.height = 5
 	self.max = 10
 	self.min = 0
@@ -399,15 +399,17 @@ end
 	- desc: sets the objects's slide type
 --]]---------------------------------------------------------
 function newobject:SetSlideType(slidetype)
-
 	self.slidetype = slidetype
+
+	local w,h = self:GetSize()
+	self:SetSize(h, w)
 	
-	if slidetype == "vertical" then
-		self:SetValue(self.min)
-	end
-	
+	self:SetValue(self.min)
+	local sliderbutton 	= self.internals[1]
+	sliderbutton:MoveToX(0)
+	sliderbutton:MoveToY(0)
+
 	return self
-	
 end
 
 --[[---------------------------------------------------------

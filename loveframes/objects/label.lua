@@ -11,8 +11,8 @@
 return function(loveframes)
 ---------- module start ----------
 
--- text object
-local newobject = loveframes.NewObject("text", "loveframes_object_text", true)
+-- label object
+local newobject = loveframes.NewObject("label", "loveframes_object_label", true)
 
 --[[---------------------------------------------------------
 	- func: initialize()
@@ -20,7 +20,7 @@ local newobject = loveframes.NewObject("text", "loveframes_object_text", true)
 --]]---------------------------------------------------------
 function newobject:initialize()
 
-	self.type = "text"
+	self.type = "label"
 	self.text = ""
 	self.font = loveframes.basicfont
 	self.width = 5
@@ -50,14 +50,11 @@ function newobject:initialize()
 	
 	local directives = skin.directives
 	if directives then
-		local text_default_color = directives.text_default_color
-		local text_default_shadowcolor = directives.text_default_shadowcolor
-		local text_default_font = directives.text_default_font
+		local text_default_color = directives.tooltip_default_color
+		local text_default_font = directives.tooltip_default_font
+		
 		if text_default_color then
 			self.defaultcolor = text_default_color
-		end
-		if text_default_shadowcolor then
-			self.shadowcolor = text_default_shadowcolor
 		end
 		if text_default_font then
 			self.font = text_default_font

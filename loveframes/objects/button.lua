@@ -179,11 +179,9 @@ end
 	- func: SetText(text)
 	- desc: sets the object's text
 --]]---------------------------------------------------------
-function newobject:SetText(text)
-
+function newobject:SetText(text, fixed)
 	self.text = text
 	return self
-	
 end
 
 --[[---------------------------------------------------------

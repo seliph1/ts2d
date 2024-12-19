@@ -16,7 +16,7 @@ local newobject = loveframes.NewObject("sliderbutton", "loveframes_object_slider
 function newobject:initialize(parent)
 
 	self.type = "sliderbutton"
-	self.width = 10
+	self.width = 20
 	self.height = 20
 	self.staticx = 0
 	self.staticy = 0

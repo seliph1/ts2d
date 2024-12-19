@@ -782,7 +782,7 @@ function mapdata_draw(camx, camy)
 	love.graphics.print(string.format ("entities on screen: %d/%d", entity_screen, entity_total), love.graphics.getWidth()-200, 20)
 	
 	
-	if not loveframes.GetHover() then
+	if loveframes.GetCollisionCount()==0 then
 		local tile_id = mapfile_tile(mouse_x, mouse_y)
 		local label = string.format ("Camera: %dpx|%dpx   Tile Position: %d|%d    Tile #%d", cam_x, cam_y, mouse_x, mouse_y, tile_id)
 		

@@ -333,6 +333,7 @@ function newobject:SetGroup(group)
 	self.group = group
 	self.group[self] = self
 	
+	return self
 end
 
 --[[---------------------------------------------------------
@@ -342,7 +343,6 @@ end
 function newobject:GetGroup(group)
 
 	return self.group
-	
 end
 
 --[[---------------------------------------------------------

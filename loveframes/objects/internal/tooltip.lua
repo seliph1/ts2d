@@ -16,11 +16,11 @@ local newobject = loveframes.NewObject("tooltip", "loveframes_object_tooltip", t
 function newobject:initialize(object, text)
 	
 	self.type = "tooltip"
-	self.parent = loveframes.base
+	self.parent = object or nil
 	self.object = object or nil
 	self.width = 0
 	self.height = 0
-	self.padding = 5
+	self.padding = 2
 	self.xoffset = 10
 	self.yoffset = -10
 	self.internal = true
@@ -30,7 +30,7 @@ function newobject:initialize(object, text)
 	self.internals = {}
 	
 	-- create the object's text
-	local textobject = loveframes.Create("text")
+	local textobject = loveframes.Create("label")
 	textobject:Remove()
 	textobject.parent = self
 	textobject:SetText(text or "")

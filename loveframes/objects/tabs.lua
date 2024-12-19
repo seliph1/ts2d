@@ -34,7 +34,6 @@ function newobject:initialize()
 	self.autobuttonareawidth = true
 	self.dtscrolling = true
 	self.internal = false
-	self.tooltipfont = loveframes.basicfontsmall
 	self.internals = {}
 	self.children = {}
 	
@@ -533,24 +532,6 @@ function newobject:SetTabHeight(height)
 	for k, v in ipairs(internals) do
 		if v.type == "tabbutton" then
 			v:SetHeight(self.tabheight)
-		end
-	end
-	
-	return self
-	
-end
-
---[[---------------------------------------------------------
-	- func: SetToolTipFont(font)
-	- desc: sets the height of the tab buttons
---]]---------------------------------------------------------
-function newobject:SetToolTipFont(font)
-
-	local internals = self.internals
-	
-	for k, v in ipairs(internals) do
-		if v.type == "tabbutton" and v.tooltip then
-			v.tooltip:SetFont(font)
 		end
 	end
 	
