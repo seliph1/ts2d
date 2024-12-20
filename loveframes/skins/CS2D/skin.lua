@@ -14,9 +14,7 @@ skin.name = "CS2D"
 skin.author = "mozilla"
 skin.version = "1.0"
 
---local bordercolor = {0.56, 0.56, 0.56, 1}
---local bordercolor = {0.8, 0.8, 0.8, 1}
-local bordercolor = {1, 1, 1, 1}
+local bordercolor = {0.5, 0.5, 0.5, 1}
 
 -- add skin directives to this table
 skin.directives = {}
@@ -101,7 +99,7 @@ skin.controls.scrollbar_body_hover_color			= {0.3, 0.3, 0.3, 1}
 skin.controls.scrollbar_body_nohover_color			= {0.2, 0.2, 0.2, 1}
 
 -- slider & button
-skin.controls.slider_bar_outline_color              = {0, 0, 0, 1}
+skin.controls.slider_bar_outline_color              = {0.1, 0.1, 0.1, 1}
 skin.controls.slider_button_nohover_color           = {0.2, 0.2, 0.2, 1}
 skin.controls.slider_button_hover_color  	        = {0.3, 0.3, 0.3, 1}
 skin.controls.slider_button_down_color  	        = {0.35, 0.35, 0.35, 1}
@@ -117,7 +115,7 @@ skin.controls.list_body_color                       = {0.15, 0.15, 0.15, 1}
 skin.controls.tabpanel_body_color                   = {0.15, 0.15, 0.15, 1}
 
 -- tabbutton
-skin.controls.tab_text_nohover_color                = {0, 0, 0, 1}
+skin.controls.tab_text_nohover_color                = {0.5, 0.5, 0.5, 1}
 skin.controls.tab_text_hover_color                  = {1, 1, 1, 1}
 skin.controls.tab_text_font                         = skin.controls.smallfont
 
@@ -278,6 +276,25 @@ function skin.OutlinedRectangle(x, y, width, height, ovt, ovb, ovl, ovr)
 	end
 	
 end
+
+function skin.EmbossedRectangle(x, y, width, height)
+	local r,g,b,a = love.graphics.getColor()
+
+	local br = 0.8
+	-- top
+	love.graphics.setColor(r,g,b, 1)
+	love.graphics.rectangle("fill", x, y, width, 1)
+	-- left
+	love.graphics.setColor(r,g,b, 1)
+	love.graphics.rectangle("fill", x, y, 1, height)
+	-- bottom
+	love.graphics.setColor(r-br,g-br,b-br, 1)
+	love.graphics.rectangle("fill", x, y + height - 1, width, 1)
+	-- right
+	love.graphics.setColor(r-br,g-br,b-br, 1)
+	love.graphics.rectangle("fill", x + width - 1, y, 1, height)
+end
+
 
 --[[---------------------------------------------------------
 	- func: DrawFrame(object)
@@ -787,7 +804,8 @@ function skin.scrollbar(object)
 	end
 	
 	love.graphics.setColor(bordercolor)
-	skin.OutlinedRectangle(x+ox, y+oy, width-ox*2, height-oy*2)
+	--skin.OutlinedRectangle(x+ox, y+oy, width-ox*2, height-oy*2)
+	skin.EmbossedRectangle(x+ox, y+oy, width-ox*2, height-oy*2)
 	
 end
 
@@ -1016,8 +1034,8 @@ function skin.tabbutton(object)
 	local nohovercolor = skin.controls.button_nohover_color
 	local bodycolor = skin.controls.button_body_color
 	
-	local texthovercolor = skin.controls.button_text_hover_color
-	local textnohovercolor = skin.controls.button_text_nohover_color
+	local texthovercolor = skin.controls.tab_text_hover_color
+	local textnohovercolor = skin.controls.tab_text_nohover_color
 	
 	if image then
 		image:setFilter("nearest", "nearest")
@@ -1037,19 +1055,21 @@ function skin.tabbutton(object)
 	
 	local width  = object:GetWidth()
 	local height = object:GetHeight()
+		
+	local image_hover = skin.images["button-hover.png"]
+	local image_hover_sh = height/image_hover:getHeight()
 	
 	if tabnumber == ptabnumber then
 		-- button body
-		--local gradient = skin.images["button-hover.png"]
-		--local gradientheight = gradient:getHeight()
-		--local scaley = height/gradientheight
 		love.graphics.setColor(bodycolor)
 		love.graphics.rectangle("fill", x, y, width, height)
-		--love.graphics.draw(gradient, x, y, 0, width, scaley)
+		
+		love.graphics.setColor(1, 1, 1, 0.5)
+		love.graphics.draw(image_hover, x, y, 0, width, image_hover_sh)
+		
 		-- button border
 		love.graphics.setColor(bordercolor)
 		skin.OutlinedRectangle(x, y, width, height, nil, true, nil, nil)	
-		--function skin.OutlinedRectangle(x, y, width, height, ovt, ovb, ovl, ovr)
 		
 		if image then
 			-- button image
@@ -1563,7 +1583,7 @@ function skin.sliderbutton(object)
 		love.graphics.rectangle("fill", x+ox, y+oy, width-ox*2, height-oy*2)
 		-- button border
 		love.graphics.setColor(bordercolor)
-		skin.OutlinedRectangle(x+ox, y+oy, width-ox*2, height-oy*2)
+		skin.EmbossedRectangle(x+ox, y+oy, width-ox*2, height-oy*2)
 		return
 	end
 	
@@ -1573,21 +1593,21 @@ function skin.sliderbutton(object)
 		love.graphics.rectangle("fill", x+ox, y+oy, width-ox*2, height-oy*2)
 		-- button border
 		love.graphics.setColor(bordercolor)
-		skin.OutlinedRectangle(x+ox, y+oy, width-ox*2, height-oy*2)
+		skin.EmbossedRectangle(x+ox, y+oy, width-ox*2, height-oy*2)
 	elseif hover then
 		-- button body
 		love.graphics.setColor(bodyhovercolor)
 		love.graphics.rectangle("fill", x+ox, y+oy, width-ox*2, height-oy*2)
 		-- button border
 		love.graphics.setColor(bordercolor)
-		skin.OutlinedRectangle(x+ox, y+oy, width-ox*2, height-oy*2)
+		skin.EmbossedRectangle(x+ox, y+oy, width-ox*2, height-oy*2)
 	else
 		-- button body
 		love.graphics.setColor(bodynohovercolor)
 		love.graphics.rectangle("fill", x+ox, y+oy, width-ox*2, height-oy*2)
 		-- button border
 		love.graphics.setColor(bordercolor)
-		skin.OutlinedRectangle(x+ox, y+oy, width-ox*2, height-oy*2)
+		skin.EmbossedRectangle(x+ox, y+oy, width-ox*2, height-oy*2)
 	end
 	
 end

@@ -202,7 +202,7 @@ function newobject:SetText(text)
 	
 	if text ~= "" then
 		self.internals = {}
-		local textobject = loveframes.Create("text")
+		local textobject = loveframes.Create("label")
 		local skin = loveframes.GetActiveSkin()
 		if not skin then
 			skin = loveframes.config["DEFAULTSKIN"]

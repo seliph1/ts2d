@@ -59,6 +59,11 @@ function newobject:initialize()
 	self.vbar = false
 	self.hbar = false
 	self.alltextselected = false
+	
+	self.selected_start = 0
+	self.selected_end = 0
+	self.selected_active = 0
+	
 	self.linenumbers = true
 	self.linenumberspanel = false
 	self.editable = true

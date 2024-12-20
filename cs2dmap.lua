@@ -1,5 +1,6 @@
 local ffi = require "ffi"
 local List = require "lib/list"
+local shader = require "shader/cs2dshaders"
 require "lib/lovefs/lovefs"
 
 local fs = lovefs()
@@ -8,7 +9,7 @@ if love.filesystem.isFused() then
 else
 	fs:cd(love.filesystem.getSource() )
 end
-
+	
 local floor = math.floor
 local ceil = math.ceil
 local min = math.min
@@ -103,9 +104,29 @@ local TILE_MODE_HEIGHT = {
 	[53]=0,		-- 53 deadly abyss
 }
 local EMPTY = {}
-local placeholder = love.image.newImageData(32,32)
 
-function create_spritesheet(file, xsize, ysize)
+
+
+local editor = {
+	pencil = {
+		mode = "paint",
+		x = 0,
+		y = 0,
+	};
+	
+	mousemap_x = 0,
+	mousemap_y = 0,
+	mouse_x = 0,
+	mouse_y = 0,
+	camera_x = 0,
+	camera_y = 0,
+}
+
+--[[---------------------------------------------------------
+	Lib
+--]]---------------------------------------------------------
+
+local function create_spritesheet(file, xsize, ysize)
 	local spritesheet = fs:loadImageData(file)
 	local spritesheet_table = {}
 	local w, h = spritesheet:getDimensions()
@@ -121,8 +142,43 @@ function create_spritesheet(file, xsize, ysize)
 	return spritesheet_table
 end
 
-editor_icons = create_spritesheet("gfx/gui_icons.bmp", 16, 16)
-flare = fs:loadImage("gfx/sprites/flare2.bmp")
+local function entityInCamera(e, camx, camy)
+	local path 		= e.string_settings[1]
+	local sprite 	= mapfile.gfx.entity[path]
+	local width		= sprite:getWidth() 
+	local height 	= sprite:getHeight()
+	local size_x 	= e.number_settings[1]
+	local size_y 	= e.number_settings[2]
+	local shift_x 	= e.number_settings[3] 	 
+	local shift_y 	= e.number_settings[4]
+	
+	local sw = love.graphics.getWidth()
+	local sh = love.graphics.getHeight()
+	
+	local x1, y1 = e.x*32 - camx + sw/2 + shift_x, e.y*32 - camy + sh/2 + shift_y 
+	local x1size, y1size = size_x, size_y
+	
+	local x2, y2 = 0, 0
+	local x2size, y2size = sw, sh
+	
+	if x1 <= x2 + x2size and x1 + x1size >= x2 
+	and y1 <= y2 + y2size and y1 + y1size >= y2 
+	then
+		return true
+	else
+		return false
+	end
+end
+
+
+local editor_icons = create_spritesheet("gfx/gui_icons.bmp", 16, 16)
+local editor_placeholder = love.image.newImageData(32, 32)
+local flare = fs:loadImage("gfx/sprites/flare2.bmp")
+
+
+--[[---------------------------------------------------------
+	Functions
+--]]---------------------------------------------------------
 
 function mapfile_new(width, height)
 	local mapdata = {
@@ -177,7 +233,7 @@ function mapfile_new(width, height)
 	
 	for x = 0, mapdata.width do
 	for y = 0, mapdata.height do
-		local id = math.random(0,255)
+		local id = math.random(0,10)
 		mapdata.map[x] = mapdata.map[x] or {}
 		mapdata.map[x][y] = id
 		
@@ -222,7 +278,7 @@ function mapfile_new(width, height)
 					mapdata.gfx.entity[path] = sprite
 					print(string.format("Sprite loaded: %s", path))
 				else
-					mapdata.gfx.entity[path] = love.graphics.newImage(placeholder)
+					mapdata.gfx.entity[path] = love.graphics.newImage(editor_placeholder)
 					print(string.format("Failed to load: %s", path))
 				end				
 			end
@@ -235,7 +291,7 @@ function mapfile_new(width, height)
 		mapdata.gfx.background = fs:loadImage(path)
 		print(string.format("Sprite loaded: %s", path))
 	else
-		mapdata.gfx.background = love.graphics.newImage(placeholder)
+		mapdata.gfx.background = love.graphics.newImage(editor_placeholder)
 	end
 
 	return mapdata
@@ -574,7 +630,7 @@ function mapfile_read(path)
 					mapdata.gfx.entity[path] = sprite
 					print(string.format("Sprite loaded: %s", path))
 				else
-					mapdata.gfx.entity[path] = love.graphics.newImage(placeholder)
+					mapdata.gfx.entity[path] = love.graphics.newImage(editor_placeholder)
 					print(string.format("Failed to load %s", path))
 				end				
 			end
@@ -587,10 +643,13 @@ function mapfile_read(path)
 		print(string.format("Sprite loaded: %s", path))
 		mapdata.gfx.background = fs:loadImage(path)
 	else
-		mapdata.gfx.background = love.graphics.newImage(placeholder)
+		mapdata.gfx.background = love.graphics.newImage(editor_placeholder)
 	end
 
 	mapfile = mapdata
+	
+	editor.camera_x = 0
+	editor.camera_y = 0
 end
 
 function mapfile_tile(x, y) -- coords in tiles
@@ -601,44 +660,32 @@ function mapfile_tile(x, y) -- coords in tiles
 	end	
 end
 
-local function entityInCamera(e, camx, camy)
-	local path 		= e.string_settings[1]
-	local sprite 	= mapfile.gfx.entity[path]
-	local width		= sprite:getWidth() 
-	local height 	= sprite:getHeight()
-	local size_x 	= e.number_settings[1]
-	local size_y 	= e.number_settings[2]
-	local shift_x 	= e.number_settings[3] 	 
-	local shift_y 	= e.number_settings[4]
-	
-	local sw = love.graphics.getWidth()
-	local sh = love.graphics.getHeight()
-	
-	local x1, y1 = e.x*32 - camx + sw/2 + shift_x, e.y*32 - camy + sh/2 + shift_y 
-	local x1size, y1size = size_x, size_y
-	
-	local x2, y2 = 0, 0
-	local x2size, y2size = sw, sh
-	
-	if x1 <= x2 + x2size and x1 + x1size >= x2 
-	and y1 <= y2 + y2size and y1 + y1size >= y2 
-	then
-		return true
-	else
-		return false
-	end
-end
-
 function mapdata_update(dt)
+	if loveframes.collisioncount == 0 then
+		local s = 500*dt
+		if (global_key_pressed.up) then editor.camera_y = editor.camera_y - s end
+		if (global_key_pressed.down) then editor.camera_y = editor.camera_y + s end
+		if (global_key_pressed.left) then editor.camera_x = editor.camera_x - s end
+		if (global_key_pressed.right) then editor.camera_x = editor.camera_x + s end
+	end
+	
+	editor.mouse_x = love.mouse.getX() - love.mouse.getX() % 32
+	editor.mouse_y = love.mouse.getY() - love.mouse.getY() % 32
+	
+	editor.mousemap_x = math.floor( (love.mouse.getX() - love.graphics.getWidth()/2 + editor.camera_x) / 32  )
+	editor.mousemap_y = math.floor( (love.mouse.getY() - love.graphics.getHeight()/2 + editor.camera_y) / 32  )
 end
 
-function mapdata_draw(camx, camy)
-	local camx, camy = floor(camx), floor(camy)
+
+function mapdata_draw()
+	local camera_x, camera_y = floor(editor.camera_x), floor(editor.camera_y)
 	local screen_w = love.graphics.getWidth()
 	local screen_h = love.graphics.getHeight()
+	local center_x = screen_w/2 - camera_x
+	local center_y = screen_h/2 - camera_y
+	
 	local ts = mapfile.tile_size
-	local camera_x = screen_w/2 - camx
-	local camera_y = screen_h/2 - camy
+
 	local entity_screen = 0
 	local entity_total = mapfile.entity_list:count()
 	
@@ -654,12 +701,12 @@ function mapdata_draw(camx, camy)
 	end	
 	
 	
-	local minx, maxx = floor( (camx - screen_w/2 ) / ts ), ceil( ( camx + screen_w/2 ) / ts )
-	local miny, maxy = floor( (camy - screen_h/2 ) / ts ), ceil( ( camy + screen_h/2 ) / ts )
+	local minx, maxx = floor( (camera_x - screen_w/2 ) / ts ), ceil( ( camera_x + screen_w/2 ) / ts )
+	local miny, maxy = floor( (camera_y - screen_h/2 ) / ts ), ceil( ( camera_y + screen_h/2 ) / ts )
 	
 	
 	love.graphics.setBlendMode("alpha")
-	love.graphics.setShader(magenta_s)
+	love.graphics.setShader(shader.magenta)
 	-- FLOORS
 	for x = minx, maxx do
 	for y = miny, maxy do
@@ -669,8 +716,8 @@ function mapdata_draw(camx, camy)
 		
 		if gfx and property ~= 1 then 
 			local off_x, off_y = floor(ts/2), floor(ts/2)
-			local sx = x*ts - camx + screen_w/2 + off_x
-			local sy = y*ts - camy + screen_h/2 + off_y
+			local sx = x*ts - camera_x + screen_w/2 + off_x
+			local sy = y*ts - camera_y + screen_h/2 + off_y
 			local brightness = (mod.brightness/100)
 			
 			love.graphics.setColor(
@@ -689,10 +736,10 @@ function mapdata_draw(camx, camy)
 	
 	
 	-- Entities
-	love.graphics.setShader(entity_filter)
+	love.graphics.setShader(shader.entity)
 	for index, e in mapfile.entity_list:walk() do
 	--for index, e in ipairs(EMPTY) do
-		if e.type == 22 and entityInCamera(e, camx, camy) then
+		if e.type == 22 and entityInCamera(e, camera_x, camera_y) then
 			local path 		= e.string_settings[1]
 			local sprite 	= mapfile.gfx.entity[path]
 			local width		= sprite:getWidth() 
@@ -713,10 +760,8 @@ function mapdata_draw(camx, camy)
 			local angle = math.rad(rotation + rotationspeed * os.clock() * 90)
 			local scale_x = size_x/width
 			local scale_y = size_y/height
-			local center_x = width/2
-			local center_y = height/2
-			local sx = (e.x * 32) + camera_x + shift_x + size_x/2
-			local sy = (e.y * 32) + camera_y + shift_y + size_y/2
+			local sx = (e.x * 32) + center_x + shift_x + size_x/2
+			local sy = (e.y * 32) + center_y + shift_y + size_y/2
 			
 			if blend == 0 then -- No filter/solid
 				love.graphics.setBlendMode("alpha")
@@ -727,17 +772,17 @@ function mapdata_draw(camx, camy)
 			else
 				love.graphics.setBlendMode("alpha")
 			end
-			entity_filter:send("mask", mask)
-			entity_filter:send("blend", blend)
+			shader.entity:send("mask", mask)
+			shader.entity:send("blend", blend)
 				
 			love.graphics.setColor(love.math.colorFromBytes(red, green, blue, alpha))
-			love.graphics.draw(sprite, sx, sy, angle, scale_x, scale_y, center_x, center_y)
+			love.graphics.draw(sprite, sx, sy, angle, scale_x, scale_y, width/2, height/2)
 			entity_screen = entity_screen + 1
 		end
 	end
 	
 	love.graphics.setBlendMode("alpha")
-	love.graphics.setShader(magenta_s)
+	love.graphics.setShader(shader.magenta)
 	-- WALLS
 	for x = minx, maxx do
 	for y = miny, maxy do
@@ -746,8 +791,8 @@ function mapdata_draw(camx, camy)
 		local property = mapfile.tile[tile_id].property
 		if gfx and property == 1 then
 			local off_x, off_y = floor(ts/2), floor(ts/2)
-			local sx = x*ts - camx + screen_w/2 + off_x
-			local sy = y*ts - camy + screen_h/2 + off_y
+			local sx = x*ts - camera_x + screen_w/2 + off_x
+			local sy = y*ts - camera_y + screen_h/2 + off_y
 			local brightness = (mod.brightness/100)
 			love.graphics.setColor(
 				love.math.colorFromBytes(
@@ -758,6 +803,7 @@ function mapdata_draw(camx, camy)
 			)
 			love.graphics.draw(gfx, sx, sy, rad(mod.rotation*90), 1, 1, off_x, off_y)
 		end
+		
 	end
 	end
 	
@@ -780,19 +826,41 @@ function mapdata_draw(camx, camy)
 	
 	love.graphics.setBlendMode("alpha")
 	love.graphics.setShader()
-	love.graphics.setColor(1,1,1,1)
+	love.graphics.setColor(1, 1, 1, 1)
 	
 	love.graphics.print(string.format ("entities on screen: %d/%d", entity_screen, entity_total), love.graphics.getWidth()-200, 20)
 	
 	
-	if loveframes.GetCollisionCount()==0 then
-		local tile_id = mapfile_tile(mouse_x, mouse_y)
-		local label = string.format ("Camera: %dpx|%dpx   Tile Position: %d|%d    Tile #%d", cam_x, cam_y, mouse_x, mouse_y, tile_id)
-		--local width = 
+	if loveframes.collisioncount == 0 then
+		local tile_id = mapfile_tile(editor.mousemap_x, editor.mousemap_y)
+		local label = string.format(
+			"Camera: %dpx|%dpx   Tile Position: %d|%d    Tile #%d", 
+			editor.camera_x, 
+			editor.camera_y, 
+			editor.mousemap_x, 
+			editor.mousemap_y, 
+			tile_id
+		)
 		
 		love.graphics.print(label , love.graphics.getWidth()/2, love.graphics.getHeight()-20)
 	end	
+
+	-- Draw pencil
+	--love.graphics.rectangle("fill", (editor.mouse_x)*32, (editor.mouse_y)*32, 32, 32)
+	--love.graphics.rectangle("fill",editor.mouse_x*32, editor.mouse_y*32, 32, 32)
+	--local cursor_x = (screen_w/2 - camera_x) % 32 + editor.mouse_x*32
+	--local cursor_y = (screen_h/2 - camera_y) % 32 + editor.mouse_y*32
+	
+	
+	--love.graphics.rectangle("fill",cursor_x, cursor_y, 32, 32)
+	love.graphics.rectangle("fill", editor.mouse_x, editor.mouse_y, 32, 32)
 end
+
+
+--[[---------------------------------------------------------
+	Editor module
+--]]---------------------------------------------------------
+--love.filesystem.load("interface/editor.lua")()
 
 
 print("Maploader module loaded.")

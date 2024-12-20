@@ -21,7 +21,6 @@ function loveframes.Create(data, parent)
 	
 		local objects = loveframes.objects
 		local object = objects[data]
-		local objectcount = loveframes.objectcount
 		
 		if not object then
 			loveframes.Error("Error creating object: Invalid object '" ..data.. "'.")
@@ -52,8 +51,6 @@ function loveframes.Create(data, parent)
 		if parent then
 			newobject:SetParent(parent)
 		end
-		
-		loveframes.objectcount = objectcount + 1
 		
 		-- return the object for further manipulation
 		return newobject

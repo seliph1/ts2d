@@ -1,4 +1,6 @@
-magenta_s = love.graphics.newShader [[
+local shader = {}
+
+shader.magenta = love.graphics.newShader [[
 //extern Image palette;
 uniform float epsilon = 0.1;
 
@@ -21,7 +23,7 @@ vec4 effect(vec4 color, Image tex, vec2 texture_coords, vec2 screen_coords)
 }
 ]]
 
-entity_filter = love.graphics.newShader [[
+shader.entity = love.graphics.newShader [[
 uniform int mask = 0;
 uniform int blend = 0;
 uniform float epsilon = 0.1;
@@ -59,7 +61,7 @@ vec4 effect( vec4 color, Image tex, vec2 texture_coords, vec2 screen_coords )
 ]]
 
 
-shadow_filter = love.graphics.newShader [[
+shader.shadow = love.graphics.newShader [[
 
 // Inputs
 uniform vec2 light_direction = vec2(0.0, 1.0);				// Direction of the light (normalized)
@@ -84,4 +86,6 @@ vec4 effect( vec4 color, Image tex, vec2 texture_coords, vec2 screen_coords )
 	return frag_color;
 }
 ]]
+
+return shader
 

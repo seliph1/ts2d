@@ -120,6 +120,37 @@ function loveframes.GetCollisions(object, t)
 end
 
 --[[---------------------------------------------------------
+	- func: GetObjectCount(object, table)
+	- desc: gets all active objects
+--]]---------------------------------------------------------
+function loveframes.GetObjectCount(object, c)
+	local object = object or loveframes.base
+	local internals = object.internals
+	local children = object.children
+	local c = c or 0
+	
+	if internals then
+		c = c + #internals
+		for k, v in ipairs(internals) do
+			--c = c + 1
+			c = loveframes.GetObjectCount(v, c)
+		end
+	end
+	
+	if children then
+		c = c + #children
+		for k, v in ipairs(children) do
+			--c = c + 1
+			--loveframes.GetObjectCount(v, c)
+			c = loveframes.GetObjectCount(v, c)
+		end
+	end
+	
+	return c
+end
+
+
+--[[---------------------------------------------------------
 	- func: GetAllObjects(object, table)
 	- desc: gets all active objects
 --]]---------------------------------------------------------
@@ -375,12 +406,18 @@ end
 	- func: draw()
 	- desc: draws debug information
 --]]---------------------------------------------------------
+loveframes.debugwindow = {type = "None", children = nil, parent = nil, x = 0, y = 0, width = 0, height = 0}
+
 function loveframes.DebugDraw()
+
 	local infox = 5
 	local infoy = 40
-	local topcol = {type = "None", children = {}, x = 0, y = 0, width = 0, height = 0}
+	local topcol = loveframes.debugwindow
 	local hoverobject = loveframes.hoverobject
-	--local objects = loveframes.GetAllObjects()
+	
+	local objects = loveframes.GetObjectCount() --loveframes.objectcount
+	local collisions = loveframes.collisioncount
+	
 	local version = loveframes.version
 	local stage = loveframes.stage
 	local basedir = loveframes.config["DIRECTORY"]
@@ -397,53 +434,61 @@ function loveframes.DebugDraw()
 	if topcol.type == "frame" then
 		for k, v in pairs(topcol.dockzones) do
 			love.graphics.setLineWidth(1)
-			love.graphics.setColor(255/255, 0, 0, 100/255)
+			love.graphics.setColor(1, 0, 0, 0.2)
 			love.graphics.rectangle("fill", v.x, v.y, v.width, v.height)
-			love.graphics.setColor(255/255, 0, 0, 255/255)
+			love.graphics.setColor(1, 0, 0, 1)
 			love.graphics.rectangle("line", v.x, v.y, v.width, v.height)
 		end
 	end
 	
 	-- outline the object that the mouse is hovering over
-	love.graphics.setColor(255/255, 204/255, 51/255, 255/255)
+	love.graphics.setColor(1, 0.8, 0.2, 1)
 	love.graphics.setLineWidth(2)
 	love.graphics.rectangle("line", topcol.x - 1, topcol.y - 1, topcol.width + 2, topcol.height + 2)
 	
 	-- draw main debug box
 	love.graphics.setFont(font)
-	love.graphics.setColor(0, 0, 0, 200/255)
-	love.graphics.rectangle("fill", infox, infoy, 200, 70)
-	love.graphics.setColor(255/255, 0, 0, 255/255)
+	love.graphics.setColor(0,0,0,0.8)
+	love.graphics.rectangle("fill", infox, infoy, 200, 80)
+	love.graphics.setColor(1,0,0,1)
 	love.graphics.print("Love Frames - Debug (" ..version.. " - " ..stage.. ")", infox + 5, infoy + 5)
-	love.graphics.setColor(255/255, 255/255, 255/255, 255/255)
+	love.graphics.setColor(1,1,1,1)
 	love.graphics.print("LOVE Version: " ..loveversion, infox + 10, infoy + 20)
 	love.graphics.print("FPS: " ..fps, infox + 10, infoy + 30)
 	love.graphics.print("Delta Time: " ..deltatime, infox + 10, infoy + 40)
-	love.graphics.print("Total Objects: " ..loveframes.objectcount, infox + 10, infoy + 50)
+	love.graphics.print("Total Objects: " ..objects, infox + 10, infoy + 50)
+	love.graphics.print("Total Collisions: " ..collisions, infox + 10, infoy + 60)
 	
 	-- draw object information if needed
 	if topcol.type ~= "base" then
-		love.graphics.setColor(0, 0, 0, 200/255)
-		love.graphics.rectangle("fill", infox, infoy + 75, 200, 100)
-		love.graphics.setColor(255/255, 0, 0, 255/255)
+		love.graphics.setColor(0,0,0,0.8)
+		love.graphics.rectangle("fill", infox, infoy + 85, 200, 100)
+		love.graphics.setColor(1,0,0,1)
 		love.graphics.print("Object Information", infox + 5, infoy + 80)
-		love.graphics.setColor(255/255, 255/255, 255/255, 255/255)
+		love.graphics.setColor(1,1,1,1)
 		love.graphics.print("Type: " ..topcol.type, infox + 10, infoy + 95)
-		if topcol.children then
-			love.graphics.print("# of children: " .. #topcol.children, infox + 10, infoy + 105)
+		if topcol.parent then
+			love.graphics.print("Parent: " ..topcol.parent.type, infox + 10, infoy + 105)
 		else
-			love.graphics.print("# of children: 0", infox + 10, infoy + 105)
+			love.graphics.print("Parent: None", infox + 10, infoy + 105)
+		end
+		
+		if topcol.children then
+			love.graphics.print("# of children: " .. #topcol.children, infox + 10, infoy + 115)
+		else
+			love.graphics.print("# of children: 0", infox + 10, infoy + 115)
 		end
 		if topcol.internals then
-			love.graphics.print("# of internals: " .. #topcol.internals, infox + 10, infoy + 115)
+			love.graphics.print("# of internals: " .. #topcol.internals, infox + 10, infoy + 125)
 		else
-			love.graphics.print("# of internals: 0", infox + 10, infoy + 115)
+			love.graphics.print("# of internals: 0", infox + 10, infoy + 125)
 		end
-		love.graphics.print("X: " ..topcol.x, infox + 10, infoy + 125)
-		love.graphics.print("Y: " ..topcol.y, infox + 10, infoy + 135)
-		love.graphics.print("Width: " ..topcol.width, infox + 10, infoy + 145)
-		love.graphics.print("Height: " ..topcol.height, infox + 10, infoy + 155)
+		love.graphics.print("X: " ..topcol.x, infox + 10, infoy + 135)
+		love.graphics.print("Y: " ..topcol.y, infox + 10, infoy + 145)
+		love.graphics.print("Width: " ..topcol.width, infox + 10, infoy + 155)
+		love.graphics.print("Height: " ..topcol.height, infox + 10, infoy + 165)
 	end
+
 end
 
 --return util

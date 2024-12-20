@@ -75,8 +75,11 @@ function loveframes.update(dt)
 	local base = loveframes.base
 	local input_cursor_set = loveframes.input_cursor_set
 	
+	-- DEBUG:
 	loveframes.collisioncount = 0
-	loveframes.objectcount = 0
+	--loveframes.objectcount = 0
+	
+	
 	loveframes.hover = false
 	loveframes.hoverobject = false
 	
