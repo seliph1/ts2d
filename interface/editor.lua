@@ -80,7 +80,6 @@
 	editor_frame:ShowCloseButton(false)
 	editor_frame:SetScreenLocked(true)
 	
-	
 		local tabs = loveframes.Create("tabs",editor_frame)
 		tabs:SetPos(5, 100)
 		tabs:SetSize(32*6, 480)
@@ -95,14 +94,28 @@
 					print(string.format("Tile ID selected: %s ", tile_id))
 				end
 			end
+			tile_panel.Hovering = function(object)
+				if object.hover then
+					love.graphics.setColor(1,1,1,0.2)
+					love.graphics.rectangle("fill", object.x, object.y, 32, 32)
+				end	
+			end
+			
 			tile_panel.Fill = function(object)
-				for i=0, 255 do 
+				for i = 0, 255 do 
 					local gfx = mapfile_gfx("tile", i)
 					if gfx then
 						local tile = loveframes.Create("imagelink")
+						--local tile = loveframes.Create("button")
 						tile:SetProperty("tile_id", i)
+						--tile:SetText(i):SetSize(32,32)
 						tile:SetImage(gfx)
+						--tile.groupIndex = 1
+						
 						tile.OnClick = tile_panel.Select
+						tile.DrawOver = tile_panel.Hovering
+						
+						
 						tile_panel:AddItem(tile)
 					end	
 				end
@@ -163,6 +176,7 @@
 		settingsbutton:SetWidth(60)
 		settingsbutton:SetText("Settings")
 		settingsbutton:SetPos(95, 60)
+		settingsbutton:SetToggleable(true)
 
 
 		--local settings_panel = loveframes.Create("panel")

@@ -36,7 +36,7 @@ loveframes.config["DEFAULTSKIN"] = "Default"
 loveframes.config["ACTIVESKIN"] = "Default"
 loveframes.config["INDEXSKINIMAGES"] = true
 loveframes.config["DEBUG"] = false
-loveframes.config["ENABLE_SYSTEM_CURSORS"] = true
+loveframes.config["ENABLE_SYSTEM_CURSORS"] = false
 
 -- misc library vars
 loveframes.state = "none"

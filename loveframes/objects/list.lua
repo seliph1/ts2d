@@ -39,6 +39,8 @@ function newobject:initialize()
 	self.children = {}
 	self.OnScroll = nil
 	
+	self.stencilfunc = nil
+	
 	self:SetDrawFunc()
 end
 

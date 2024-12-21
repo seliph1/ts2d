@@ -91,7 +91,7 @@ local function create_spritesheet(file, xsize, ysize)
 	return spritesheet_table
 end
 
-local function entityInCamera(e, camx, camy)
+local function entityInCamera(e, camx, camy, sprite)
 	local path 		= e.string_settings[1]
 	local size_x 	= e.number_settings[1]
 	local size_y 	= e.number_settings[2]
@@ -116,8 +116,34 @@ local function entityInCamera(e, camx, camy)
 	end
 end
 
-local function render_grid()
+local function entityPosInScreen(e, camx, camy)
+	local sw = love.graphics.getWidth()
+	local sh = love.graphics.getHeight()
+	local x1, y1 = e.x*32 - camx + sw/2, e.y*32 - camy + sh/2
+	local x1size, y1size = 32, 32
 	
+	local x2, y2 = 0, 0
+	local x2size, y2size = sw, sh
+
+	if x1 <= x2 + x2size and x1 + x1size >= x2 
+	and y1 <= y2 + y2size and y1 + y1size >= y2 
+	then
+		return true
+	else
+		return false
+	end
+end
+
+local function render_grid()
+	--[[
+	local center_x = love.graphics.getWidth()/2 - floor(editor.camera_x)
+	local center_y = love.graphics.getHeight()/2 - floor(editor.camera_y)
+	
+	local size_x = mapfile_get("width")
+	local size_y = mapfile_get("height")
+	
+	love.graphics.rectangle("fill", center_x, center_y, (size_x+1)*32, (size_y+1)*32)
+	--]]
 end
 
 
@@ -239,6 +265,7 @@ function mapfile_new(width, height)
 	local path = string.format("gfx/backgrounds/%s", mapdata.background_file)
 	if (mapdata.background_file ~= "") and fs:isFile(path) then
 		mapdata.gfx.background = fs:loadImage(path)
+		mapdata.gfx.background:setWrap("repeat", "repeat")
 		print(string.format("Sprite loaded: %s", path))
 	else
 		mapdata.gfx.background = love.graphics.newImage(editor_placeholder)
@@ -251,8 +278,6 @@ end
 	Load a new empty map
 --]]---------------------------------------------------------
 local mapfile = mapfile_new(50, 50)
-
-
 
 --[[---------------------------------------------------------
 	Callbacks
@@ -651,6 +676,7 @@ function mapfile_read(path)
 	if (mapdata.background_file ~= "") and fs:isFile(path) then
 		print(string.format("Sprite loaded: %s", path))
 		mapdata.gfx.background = fs:loadImage(path)
+		mapdata.gfx.background:setWrap("repeat", "repeat")
 	else
 		mapdata.gfx.background = love.graphics.newImage(editor_placeholder)
 	end
@@ -679,6 +705,12 @@ function mapfile_gfx(group, id)
 	return nil
 end
 
+function mapfile_get(property)
+	if mapfile[property] then
+		return mapfile[property]
+	end	
+end
+
 function mapdata_update(dt)
 	if loveframes.collisioncount == 0 then
 		local s = 500*dt
@@ -698,13 +730,18 @@ function mapdata_update(dt)
 		
 		if love.mouse.isDown(1) then
 			mapdata_settile(editor.mousemap_x, editor.mousemap_y, editor.pencil.tile_id)
+
 		elseif love.mouse.isDown(2) then
 			mapdata_setpencil( mapdata_gettile(editor.mousemap_x, editor.mousemap_y) )
+			
+			if true  then
+				
+			end
 		end
 	end
 	
-	editor.mousemap_x = math.floor( (love.mouse.getX() - love.graphics.getWidth()/2 + editor.camera_x) / 32  )
-	editor.mousemap_y = math.floor( (love.mouse.getY() - love.graphics.getHeight()/2 + editor.camera_y) / 32  )
+	editor.mousemap_x = floor( (love.mouse.getX() - love.graphics.getWidth()*0.5 + editor.camera_x) / 32  )
+	editor.mousemap_y = floor( (love.mouse.getY() - love.graphics.getHeight()*0.5 + editor.camera_y) / 32  )
 end
 
 
@@ -723,21 +760,26 @@ function mapdata_draw()
 	
 	if mapfile.background_file ~= "" then
 		local background_w, background_h = mapfile.gfx.background:getDimensions()
+
+		
 		for i = 0, screen_w / background_w do
 		for j = 0, screen_w / background_h do
 		
 			love.graphics.draw(mapfile.gfx.background, i * background_w, j * background_h)
 		end
 		end
+
 	end	
 	
 	
 	local minx, maxx = floor( (camera_x - screen_w/2 ) / ts ), ceil( ( camera_x + screen_w/2 ) / ts )
 	local miny, maxy = floor( (camera_y - screen_h/2 ) / ts ), ceil( ( camera_y + screen_h/2 ) / ts )
 	
-	
 	love.graphics.reset()
 	love.graphics.setShader(shader.magenta)
+	
+
+	
 	-- FLOORS
 	for x = minx, maxx do
 	for y = miny, maxy do
@@ -769,8 +811,8 @@ function mapdata_draw()
 	-- Entities
 	love.graphics.setShader(shader.entity)
 	for index, e in mapfile.entity_list:walk() do
-	--for index, e in ipairs(EMPTY) do
-		if e.type == 22 and entityInCamera(e, camera_x, camera_y) then
+	for index, e in ipairs(EMPTY) do
+		--if e.type == 22 and entityInCamera(e, camera_x, camera_y) then
 			local path 		= e.string_settings[1]
 			local sprite 	= mapfile.gfx.entity[path]
 			local width		= sprite:getWidth() 
@@ -838,22 +880,22 @@ function mapdata_draw()
 	end
 	end
 	
-	--[[
+	
 	-- ENTITY ICONS
 	love.graphics.setBlendMode("screen", "premultiplied")
 	love.graphics.setShader()
 	local breath = math.cos(os.clock()*8)/2 + 0.5
 	for index, e in mapfile.entity_list:walk() do
-		if e.type == 22 and aabb(e.x, e.y, minx, miny, maxx, maxy) then
+		if entityPosInScreen(e, camera_x, camera_y) then
 			
 			love.graphics.setColor(0,0.3*breath , 0,1)
-			love.graphics.draw(flare, e.x*32+16 + camera_x, e.y*32+16 + camera_y, 0, 0.4, 0.4, 48, 48)
+			love.graphics.draw(flare, e.x*32+16 + center_x, e.y*32+16 + center_y, 0, 0.4, 0.4, 48, 48)
 		
 			love.graphics.setColor(0,1,0,1)
-			love.graphics.draw(editor_icons[9], e.x*32+16 + camera_x, e.y*32+16 + camera_y, 0, 1, 1, 8, 8)
+			love.graphics.draw(editor_icons[9], e.x*32+16 + center_x, e.y*32+16 + center_y, 0, 1, 1, 8, 8)
 		end	
 	end
-	--]]
+	
 	
 	love.graphics.reset()
 	love.graphics.print(string.format ("entities on screen: %d/%d", entity_screen, entity_total), love.graphics.getWidth()-200, 20)
@@ -873,38 +915,41 @@ function mapdata_draw()
 		love.graphics.print(label , love.graphics.getWidth()/2, love.graphics.getHeight()-20)
 		
 		
+		-- Draw cursor
 		local offset_x = screen_w % 32 - screen_w/2 
 		local offset_y = screen_h % 32 - screen_h/2 
-		
 		local cursor_x = love.mouse.getX() - ( camera_x + love.mouse.getX() - offset_x  )%32
 		local cursor_y = love.mouse.getY() - ( camera_y + love.mouse.getY() - offset_y  )%32
 		local time = love.timer.getTime()
 		local oscillation = (math.sin( time * math.pi * 2) + 1)/2
-		
-		love.graphics.setColor(1, 1, 0, 0.5 + oscillation/2  )
-		--love.graphics.setColor(1, 1, 0, 1)
+		love.graphics.setColor(1, 1, 0, 0.5 + oscillation/2 )
 		love.graphics.rectangle("line",cursor_x, cursor_y, 32, 32)
+		love.graphics.reset()
 		
-		
+		-- Draw cursor gfx
+		love.graphics.setShader(shader.magenta)
+		love.graphics.setColor(1, 1, 1, 0.5 + oscillation/2 )
+		love.graphics.draw(mapfile.gfx.tile[editor.pencil.tile_id], cursor_x, cursor_y)
+		love.graphics.reset()
 		
 		-- Draw visible area
-		love.graphics.reset()
 		love.graphics.rectangle("line", screen_w/2 - 10*32,  screen_h/2 - 8*32, 20*32, 16*32)
 		local label = "CS2D visible area"
 		local labelsize = love.graphics.getFont():getWidth(label)
 		love.graphics.print(label, screen_w/2 - labelsize/2, screen_h/2 - 8*32)
 		
+		-- Draw dot
+		love.graphics.line(screen_w/2-2, screen_h/2, screen_w/2+2, screen_h/2)
+		love.graphics.line(screen_w/2, screen_h/2-2, screen_w/2, screen_h/2+2)
 		
 		-- Draw map limits
 		love.graphics.setColor(0,1,0,1)
 		local label = "CS2D map limit"
 		love.graphics.print(label, center_x + 4, center_y - 18)
 		love.graphics.rectangle("line", center_x, center_y, (mapfile.width+1)*32, (mapfile.height+1)*32)
-		
-		-- Draw grid
-		love.graphics.setColor(0,1,0,1)
 	end	
-
+	
+	love.graphics.reset()
 end
 --[[---------------------------------------------------------
 	Load editor module UI

@@ -19,7 +19,6 @@ function newobject:initialize()
 	self.internal = true
 	self.children = {}
 	self.internals = {}
-	
 end
 
 --[[---------------------------------------------------------

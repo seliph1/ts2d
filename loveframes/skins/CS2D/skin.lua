@@ -61,7 +61,7 @@ skin.controls.button_body_color						= {0.2, 0.2, 0.2, 1}
 skin.controls.button_down_color						= {0.3, 0.3, 0.3, 1}
 skin.controls.button_nohover_color					= {0.78, 0.78, 0.78, 1}
 skin.controls.button_hover_color					= {1, 1, 1, 1}
-skin.controls.button_toggle_color					= {0.2, 0.2, 0.2, 1}
+skin.controls.button_toggle_color					= {0.18, 0.18, 0.18, 1}
 skin.controls.button_nonclickable_color				= {0.1, 0.1, 0.1, 1}
 
 skin.controls.button_text_down_color                = {1, 1, 1, 1}
@@ -380,27 +380,14 @@ function skin.button(object)
 	local image_hover = skin.images["button-hover.png"]
 	local image_hover_sh = height/image_hover:getHeight()
 	
-	local roundcorner = skin.controls.button_round_corner
-	local function round_border()
-		--drawing the stencil for a round rectangle
-		love.graphics.rectangle("fill", x, y, width, height, roundcorner, roundcorner)
-	end
+	local roundcorner = nil --skin.controls.button_round_corner
 	
 	local function image_hover_draw()
-		love.graphics.stencil(round_border)
-		love.graphics.setStencilTest("greater",0)
-		
 		love.graphics.setColor(1, 1, 1, 0.5)
 		love.graphics.draw(image_hover, x, y, 0, width, image_hover_sh)
-		
-		love.graphics.setStencilTest()
 	end
 	
 	if not enabled or not clickable then
-		-- button border (dont draw)
-		--love.graphics.setColor(bordercolor)
-		--love.graphics.rectangle("line", x, y, width, height, roundcorner, roundcorner)
-	
 		-- button body
 		love.graphics.setColor(nonclickablecolor)
 		love.graphics.rectangle("fill", x, y, width, height, roundcorner, roundcorner)
@@ -420,10 +407,6 @@ function skin.button(object)
 				love.graphics.setColor(togglecolor)
 				love.graphics.rectangle("fill", x, y, width, height, roundcorner, roundcorner)
 				
-				-- button border
-				--love.graphics.setColor(bodycolor)
-				--love.graphics.rectangle("line", x, y, width, height, roundcorner, roundcorner)
-				
 				-- button text
 				love.graphics.setFont(font)
 				love.graphics.setColor(texttogglecolor)
@@ -435,10 +418,6 @@ function skin.button(object)
 				
 				-- Button hover shade
 				image_hover_draw()
-				
-				-- button border
-				--love.graphics.setColor(bordercolor)
-				--love.graphics.rectangle("line", x, y, width, height, roundcorner, roundcorner)
 				
 				-- button text
 				love.graphics.setFont(font)
@@ -452,10 +431,6 @@ function skin.button(object)
 				love.graphics.setColor(togglecolor)
 				love.graphics.rectangle("fill", x, y, width, height, roundcorner, roundcorner)
 				
-				-- button border
-				--love.graphics.setColor(bodycolor)
-				--love.graphics.rectangle("line", x, y, width, height, roundcorner, roundcorner)
-				
 				-- button text
 				love.graphics.setFont(font)
 				love.graphics.setColor(texttogglecolor)
@@ -466,11 +441,7 @@ function skin.button(object)
 				love.graphics.setColor(bodycolor)
 				love.graphics.rectangle("fill", x, y, width, height, roundcorner, roundcorner)
 				
-				-- button border
-				--love.graphics.setColor(bordercolor)
-				--love.graphics.rectangle("line", x, y, width, height, roundcorner, roundcorner)
 				-- button text
-				
 				love.graphics.setFont(font)
 				love.graphics.setColor(textnohovercolor)
 				skin.PrintText(text, x + width/2 - twidth/2, y + height/2 - theight/2)
@@ -481,19 +452,15 @@ function skin.button(object)
 	
 		if down or checked then
 			-- button body
-			love.graphics.setColor(bodycolor)
+			love.graphics.setColor(togglecolor)
 			love.graphics.rectangle("fill", x, y, width, height, roundcorner, roundcorner)
-			
-			-- button border
-			--love.graphics.setColor(bordercolor)
-			--love.graphics.rectangle("line", x, y, width, height, roundcorner, roundcorner)
 			
 			-- button text
 			love.graphics.setFont(font)
 			if object.image then
 				love.graphics.setColor(1, 1, 1)
 				love.graphics.draw(object.image, x + 2,  y + height/2 - object.image:getHeight()/2)
-				love.graphics.setColor(textdowncolor)
+				love.graphics.setColor(texttogglecolor)
 				local text = object.text
 				local font = skin.controls.button_text_font
 				while font:getWidth(text) > width - object.image:getWidth() - 10 do
@@ -502,7 +469,7 @@ function skin.button(object)
 				end
 				skin.PrintText(text, x + object.image:getWidth() + 4, y + height/2 - theight/2)
 			else
-				love.graphics.setColor(textdowncolor)
+				love.graphics.setColor(texttogglecolor)
 				skin.PrintText(text, x + width/2 - twidth/2 + 1, y + height/2 - theight/2 + 1)
 			end
 			
@@ -532,9 +499,6 @@ function skin.button(object)
 				love.graphics.setColor(texthovercolor)
 				skin.PrintText(text, x + width/2 - twidth/2, y + height/2 - theight/2)
 			end
-			-- button border
-			--love.graphics.setColor(bordercolor)
-			--love.graphics.rectangle("line", x, y, width, height, roundcorner, roundcorner)
 		else
 			-- button body
 			love.graphics.setColor(bodycolor)
@@ -557,11 +521,11 @@ function skin.button(object)
 				love.graphics.setColor(textnohovercolor)
 				skin.PrintText(text, x + width/2 - twidth/2, y + height/2 - theight/2)
 			end
-			-- button border
-			--love.graphics.setColor(bordercolor)
-			--love.graphics.rectangle("line", x, y, width, height, roundcorner, roundcorner)
 		end
 	end
+	
+	love.graphics.setColor(bordercolor)
+	skin.OutlinedRectangle(x, y, width, height)
 	
 	love.graphics.setLineWidth(1)
 end
@@ -651,6 +615,8 @@ function skin.imagelink(object)
 	local image = object.image
 	local color = object.imagecolor
 	local stretch = object.stretch
+	local hover = object:GetHover()
+	
 	
 	if stretch then
 		scalex, scaley = object:GetWidth() / image:getWidth(), object:GetHeight() / image:getHeight()
@@ -702,6 +668,7 @@ function skin.imagebutton(object)
 		love.graphics.setColor(textdowncolor)
 		skin.PrintText(text, x + width/2 - twidth/2 + 1, y + height - theight - 6 + 1)
 	elseif hover then
+		
 		if image then
 			love.graphics.setColor(imagecolor)
 			love.graphics.draw(image, x, y)
@@ -728,7 +695,6 @@ function skin.imagebutton(object)
 		love.graphics.setLineStyle("smooth")
 		love.graphics.rectangle("line", x+1, y+1, width-2, height-2)
 	end
-
 end
 
 --[[---------------------------------------------------------

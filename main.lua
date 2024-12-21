@@ -1,8 +1,9 @@
 function love.load()
 	loveframes = require "loveframes"
 	--loveframes.config["DEBUG"]=true
-	
 	loveframes.SetActiveSkin("CS2D")
+	
+	--love.filesystem.load("interface/init.lua")()
 	love.filesystem.load("cs2dmap.lua")()
 end
 
@@ -10,6 +11,8 @@ function love.update( dt )
 
 	mapdata_update(dt)
 	loveframes.update(dt)
+	
+	love.window.setTitle(love.timer.getFPS())
 end
 
 function love.draw()
