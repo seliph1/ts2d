@@ -1,6 +1,12 @@
 local ffi = require "ffi"
 local List = require "lib/list"
 local shader = require "shader/cs2dshaders"
+local floor = math.floor
+local ceil = math.ceil
+local min = math.min
+local max = math.max
+local rad = math.rad
+
 require "lib/lovefs/lovefs"
 
 local fs = lovefs()
@@ -9,68 +15,6 @@ if love.filesystem.isFused() then
 else
 	fs:cd(love.filesystem.getSource() )
 end
-	
-local floor = math.floor
-local ceil = math.ceil
-local min = math.min
-local max = math.max
-local rad = math.rad
-
-
-local ENTITY_TYPE={};
-ENTITY_TYPE[0]="Info_T";
-ENTITY_TYPE[1]="Info_CT";
-ENTITY_TYPE[2]="Info_VIP";
-ENTITY_TYPE[3]="Info_Hostage";
-ENTITY_TYPE[4]="Info_RescuePoint";
-ENTITY_TYPE[5]="Info_BombSpot";
-ENTITY_TYPE[6]="Info_EscapePoint";
-ENTITY_TYPE[7]="Info_Target";
-ENTITY_TYPE[8]="Info_Animation";
-ENTITY_TYPE[9]="Info_Storm";
-ENTITY_TYPE[10]="Info_TileFX";
-ENTITY_TYPE[11]="Info_NoBuying";
-ENTITY_TYPE[12]="Info_NoWeapons";
-ENTITY_TYPE[13]="Info_NoFOW";
-ENTITY_TYPE[14]="Info_Quake";
-ENTITY_TYPE[15]="Info_CTF_Flag";
-ENTITY_TYPE[16]="Info_OldRender";
-ENTITY_TYPE[17]="Info_Dom_Point";
-ENTITY_TYPE[18]="Info_NoBuildings";
-ENTITY_TYPE[19]="Info_BotNode";
-ENTITY_TYPE[20]="Info_TeamGate";
-ENTITY_TYPE[21]="Env_Item";
-ENTITY_TYPE[22]="Env_Sprite";
-ENTITY_TYPE[23]="Env_Sound";
-ENTITY_TYPE[24]="Env_Decal";
-ENTITY_TYPE[25]="Env_Breakable";
-ENTITY_TYPE[26]="Env_Explode";
-ENTITY_TYPE[27]="Env_Hurt";
-ENTITY_TYPE[28]="Env_Image";
-ENTITY_TYPE[29]="Env_Object";
-ENTITY_TYPE[30]="Env_Building";
-ENTITY_TYPE[31]="Env_NPC";
-ENTITY_TYPE[32]="Env_Room";
-ENTITY_TYPE[33]="Env_Light";
-ENTITY_TYPE[34]="Env_LightStripe";
-ENTITY_TYPE[35]="Env_Cube3D";
-ENTITY_TYPE[50]="Gen_Particles";
-ENTITY_TYPE[51]="Gen_Sprites";
-ENTITY_TYPE[52]="Gen_Weather";
-ENTITY_TYPE[53]="Gen_FX";
-ENTITY_TYPE[70]="Func_Teleport";
-ENTITY_TYPE[71]="Func_DynWall";
-ENTITY_TYPE[72]="Func_Message";
-ENTITY_TYPE[73]="Func_GameAction";
-ENTITY_TYPE[80]="Info_NoWeather";
-ENTITY_TYPE[81]="Info_RadarIcon";
-ENTITY_TYPE[90]="Trigger_Start";
-ENTITY_TYPE[91]="Trigger_Move";
-ENTITY_TYPE[92]="Trigger_Hit";
-ENTITY_TYPE[93]="Trigger_Use";
-ENTITY_TYPE[94]="Trigger_Delay";
-ENTITY_TYPE[95]="Trigger_Once";
-ENTITY_TYPE[96]="Trigger_If"
 
 local DEFAULT_MOD = {
 	brightness = 100,
@@ -105,13 +49,12 @@ local TILE_MODE_HEIGHT = {
 }
 local EMPTY = {}
 
-
-
 local editor = {
 	pencil = {
 		mode = "paint",
 		x = 0,
 		y = 0,
+		tile_id = 0,
 	};
 	
 	mousemap_x = 0,
@@ -120,7 +63,13 @@ local editor = {
 	mouse_y = 0,
 	camera_x = 0,
 	camera_y = 0,
+	
+	
+	key_pressed = {};
+	key_released = {};
 }
+
+local mapfile = {}
 
 --[[---------------------------------------------------------
 	Lib
@@ -144,9 +93,6 @@ end
 
 local function entityInCamera(e, camx, camy)
 	local path 		= e.string_settings[1]
-	local sprite 	= mapfile.gfx.entity[path]
-	local width		= sprite:getWidth() 
-	local height 	= sprite:getHeight()
 	local size_x 	= e.number_settings[1]
 	local size_y 	= e.number_settings[2]
 	local shift_x 	= e.number_settings[3] 	 
@@ -170,6 +116,10 @@ local function entityInCamera(e, camx, camy)
 	end
 end
 
+local function render_grid()
+	
+end
+
 
 local editor_icons = create_spritesheet("gfx/gui_icons.bmp", 16, 16)
 local editor_placeholder = love.image.newImageData(32, 32)
@@ -177,7 +127,7 @@ local flare = fs:loadImage("gfx/sprites/flare2.bmp")
 
 
 --[[---------------------------------------------------------
-	Functions
+	Initializer
 --]]---------------------------------------------------------
 
 function mapfile_new(width, height)
@@ -190,8 +140,8 @@ function mapfile_new(width, height)
 		author = "mapfile.lua";
 		tileset = "cs2dnorm.bmp";
 		tile_count = 255;
-		width = width or 25;
-		height = height or 25;
+		width = width-1 or 24;
+		height = height-1 or 24;
 		write_time = "000000";
 		background_file = "";
 		background_scroll_speed_x = 0;
@@ -233,7 +183,7 @@ function mapfile_new(width, height)
 	
 	for x = 0, mapdata.width do
 	for y = 0, mapdata.height do
-		local id = math.random(0,10)
+		local id = 0
 		mapdata.map[x] = mapdata.map[x] or {}
 		mapdata.map[x][y] = id
 		
@@ -296,7 +246,65 @@ function mapfile_new(width, height)
 
 	return mapdata
 end
-mapfile = mapfile_new(25, 25)
+
+--[[---------------------------------------------------------
+	Load a new empty map
+--]]---------------------------------------------------------
+local mapfile = mapfile_new(50, 50)
+
+
+
+--[[---------------------------------------------------------
+	Callbacks
+--]]---------------------------------------------------------
+function mapdata_keypressed(key, unicode)
+	editor.key_pressed[key] = true 
+	
+	if (key=="f2") then
+		mapdata_random()
+	end
+end
+
+function mapdata_keyreleased(key, unicode)
+	editor.key_pressed[key] = false
+end
+
+--[[---------------------------------------------------------
+	Functions
+--]]---------------------------------------------------------
+
+function mapdata_setpencil(tile_id)
+	if tile_id and type(tile_id) == "number" and tile_id > 0 and tile_id < 255 then
+		editor.pencil.tile_id = tile_id
+	else
+		editor.pencil.tile_id = 0
+	end	
+end
+
+function mapdata_random()
+	for x = 0, mapfile.width do
+	for y = 0, mapfile.height do
+		--local id = 0
+		mapfile.map[x] = mapfile.map[x] or {}
+		mapfile.map[x][y] = math.random(0,255)
+	end
+	end	
+end
+
+
+function mapdata_settile(x, y, tile_id)
+	if mapfile.map[x] and mapfile.map[x][y] then
+		mapfile.map[x][y] = tile_id
+	end	
+end
+
+function mapdata_gettile(x, y) -- coords in tiles
+	if mapfile.map[x] and mapfile.map[x][y] then 
+		return mapfile.map[x][y]
+	else
+		return 0
+	end	
+end
 
 
 function mapfile_read(path)
@@ -364,12 +372,19 @@ function mapfile_read(path)
 		cursor = cursor + bytes
 	end
 	
+	local mapdata = {
+		gfx = {
+			tile = {};
+			entity = {};
+			background = {};
+		}
+	}
 	-----------------------------------------------------------------------------------------------------------
 	-- HEADER (1)
 	-----------------------------------------------------------------------------------------------------------
 	-- header first check
 	-----------------------------------------------------------------------------------------------------------
-	local mapdata = {}
+
 	local header_check_a = read_string() -- Header check 
 	print("Header check 1: \""..header_check_a.."\"")
 	if not (
@@ -420,12 +435,6 @@ function mapfile_read(path)
 	mapdata.background_color_green = read_byte()
 	mapdata.background_color_blue = read_byte()
 	
-	mapdata.gfx = {
-		tile = {};
-		entity = {};
-		background = {};
-	}
-
 	-- header second check
 	-----------------------------------------------------------------------------------------------------------
 	local header_check_b = read_string()
@@ -660,17 +669,39 @@ function mapfile_tile(x, y) -- coords in tiles
 	end	
 end
 
+function mapfile_gfx(group, id)
+	if mapfile.gfx[group] then
+		if mapfile.gfx[group][id] then
+			return mapfile.gfx[group][id]
+		end	
+	end
+	
+	return nil
+end
+
 function mapdata_update(dt)
 	if loveframes.collisioncount == 0 then
 		local s = 500*dt
-		if (global_key_pressed.up) then editor.camera_y = editor.camera_y - s end
-		if (global_key_pressed.down) then editor.camera_y = editor.camera_y + s end
-		if (global_key_pressed.left) then editor.camera_x = editor.camera_x - s end
-		if (global_key_pressed.right) then editor.camera_x = editor.camera_x + s end
+		if (editor.key_pressed.up or editor.key_pressed.w) then 
+			editor.camera_y = editor.camera_y - s
+		end
+		if (editor.key_pressed.left or editor.key_pressed.a) then 
+			editor.camera_x = editor.camera_x - s 
+		end
+		if (editor.key_pressed.down or editor.key_pressed.s) then 
+			editor.camera_y = editor.camera_y + s
+		end
+
+		if (editor.key_pressed.right or editor.key_pressed.d) then 
+			editor.camera_x = editor.camera_x + s 
+		end
+		
+		if love.mouse.isDown(1) then
+			mapdata_settile(editor.mousemap_x, editor.mousemap_y, editor.pencil.tile_id)
+		elseif love.mouse.isDown(2) then
+			mapdata_setpencil( mapdata_gettile(editor.mousemap_x, editor.mousemap_y) )
+		end
 	end
-	
-	editor.mouse_x = love.mouse.getX() - love.mouse.getX() % 32
-	editor.mouse_y = love.mouse.getY() - love.mouse.getY() % 32
 	
 	editor.mousemap_x = math.floor( (love.mouse.getX() - love.graphics.getWidth()/2 + editor.camera_x) / 32  )
 	editor.mousemap_y = math.floor( (love.mouse.getY() - love.graphics.getHeight()/2 + editor.camera_y) / 32  )
@@ -705,7 +736,7 @@ function mapdata_draw()
 	local miny, maxy = floor( (camera_y - screen_h/2 ) / ts ), ceil( ( camera_y + screen_h/2 ) / ts )
 	
 	
-	love.graphics.setBlendMode("alpha")
+	love.graphics.reset()
 	love.graphics.setShader(shader.magenta)
 	-- FLOORS
 	for x = minx, maxx do
@@ -781,7 +812,7 @@ function mapdata_draw()
 		end
 	end
 	
-	love.graphics.setBlendMode("alpha")
+	love.graphics.reset()
 	love.graphics.setShader(shader.magenta)
 	-- WALLS
 	for x = minx, maxx do
@@ -824,10 +855,7 @@ function mapdata_draw()
 	end
 	--]]
 	
-	love.graphics.setBlendMode("alpha")
-	love.graphics.setShader()
-	love.graphics.setColor(1, 1, 1, 1)
-	
+	love.graphics.reset()
 	love.graphics.print(string.format ("entities on screen: %d/%d", entity_screen, entity_total), love.graphics.getWidth()-200, 20)
 	
 	
@@ -843,25 +871,49 @@ function mapdata_draw()
 		)
 		
 		love.graphics.print(label , love.graphics.getWidth()/2, love.graphics.getHeight()-20)
+		
+		
+		local offset_x = screen_w % 32 - screen_w/2 
+		local offset_y = screen_h % 32 - screen_h/2 
+		
+		local cursor_x = love.mouse.getX() - ( camera_x + love.mouse.getX() - offset_x  )%32
+		local cursor_y = love.mouse.getY() - ( camera_y + love.mouse.getY() - offset_y  )%32
+		local time = love.timer.getTime()
+		local oscillation = (math.sin( time * math.pi * 2) + 1)/2
+		
+		love.graphics.setColor(1, 1, 0, 0.5 + oscillation/2  )
+		--love.graphics.setColor(1, 1, 0, 1)
+		love.graphics.rectangle("line",cursor_x, cursor_y, 32, 32)
+		
+		
+		
+		-- Draw visible area
+		love.graphics.reset()
+		love.graphics.rectangle("line", screen_w/2 - 10*32,  screen_h/2 - 8*32, 20*32, 16*32)
+		local label = "CS2D visible area"
+		local labelsize = love.graphics.getFont():getWidth(label)
+		love.graphics.print(label, screen_w/2 - labelsize/2, screen_h/2 - 8*32)
+		
+		
+		-- Draw map limits
+		love.graphics.setColor(0,1,0,1)
+		local label = "CS2D map limit"
+		love.graphics.print(label, center_x + 4, center_y - 18)
+		love.graphics.rectangle("line", center_x, center_y, (mapfile.width+1)*32, (mapfile.height+1)*32)
+		
+		-- Draw grid
+		love.graphics.setColor(0,1,0,1)
 	end	
 
-	-- Draw pencil
-	--love.graphics.rectangle("fill", (editor.mouse_x)*32, (editor.mouse_y)*32, 32, 32)
-	--love.graphics.rectangle("fill",editor.mouse_x*32, editor.mouse_y*32, 32, 32)
-	--local cursor_x = (screen_w/2 - camera_x) % 32 + editor.mouse_x*32
-	--local cursor_y = (screen_h/2 - camera_y) % 32 + editor.mouse_y*32
-	
-	
-	--love.graphics.rectangle("fill",cursor_x, cursor_y, 32, 32)
-	love.graphics.rectangle("fill", editor.mouse_x, editor.mouse_y, 32, 32)
 end
-
+--[[---------------------------------------------------------
+	Load editor module UI
+--]]---------------------------------------------------------
+love.filesystem.load("interface/editor.lua")()
 
 --[[---------------------------------------------------------
-	Editor module
+	
 --]]---------------------------------------------------------
---love.filesystem.load("interface/editor.lua")()
-
 
 print("Maploader module loaded.")
 

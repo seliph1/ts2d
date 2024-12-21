@@ -636,6 +636,37 @@ function skin.image(object)
 	
 end
 
+function skin.imagelink(object)
+	
+	local skin = object:GetSkin()
+	local x = object:GetX()
+	local y = object:GetY()
+	local orientation = object:GetOrientation()
+	local scalex = object:GetScaleX()
+	local scaley = object:GetScaleY()
+	local offsetx = object:GetOffsetX()
+	local offsety = object:GetOffsetY()
+	local shearx = object:GetShearX()
+	local sheary = object:GetShearY()
+	local image = object.image
+	local color = object.imagecolor
+	local stretch = object.stretch
+	
+	if stretch then
+		scalex, scaley = object:GetWidth() / image:getWidth(), object:GetHeight() / image:getHeight()
+	end
+
+	if color then
+		love.graphics.setColor(color)
+		love.graphics.draw(image, x, y, orientation, scalex, scaley, offsetx, offsety, shearx, sheary)
+	else
+		love.graphics.setColor(1, 1, 1, 1)
+		love.graphics.draw(image, x, y, orientation, scalex, scaley, offsetx, offsety, shearx, sheary)
+	end
+	
+end
+
+
 --[[---------------------------------------------------------
 	- func: DrawImageButton(object)
 	- desc: draws the image button object

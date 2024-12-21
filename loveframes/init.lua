@@ -202,11 +202,11 @@ function loveframes.draw()
 	end
 	
 	love.graphics.setColor(r, g, b, a)
+	love.graphics.reset()
 	
 	if font then
 		love.graphics.setFont(font)
 	end
-	
 end
 
 --[[---------------------------------------------------------

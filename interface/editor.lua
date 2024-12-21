@@ -75,7 +75,7 @@
 
 	local editor_frame = loveframes.Create("frame")
 	editor_frame:SetName("Editor")
-	editor_frame:SetSize(32*8+10, love.graphics.getHeight())
+	editor_frame:SetSize(32*6+10, love.graphics.getHeight())
 	editor_frame:SetResizable(false)
 	editor_frame:ShowCloseButton(false)
 	editor_frame:SetScreenLocked(true)
@@ -83,74 +83,26 @@
 	
 		local tabs = loveframes.Create("tabs",editor_frame)
 		tabs:SetPos(5, 100)
-		tabs:SetSize(32*8, 480)
-
-			local settings_panel = loveframes.Create("panel")
-				--local collapsible = loveframes.Create("collapsiblecategory", settings_panel)
-			
-				local resolution_picker = loveframes.Create("multichoice", settings_panel)
-				resolution_picker:SetPos(150, 5)
-				resolution_picker:SetWidth(80)
-				for k, v in pairs(resolution_option) do
-					resolution_picker:AddChoice(k)
-				end	
-				resolution_picker:SetChoice("800x600")
-				resolution_picker.OnChoiceSelected = function(object, choice)
-					local width, height = unpack(resolution_option[choice])
-					
-					love.window.setMode(width, height)
-					editor_frame:SetMaxHeight(height)
-					editor_frame:SetHeight(height)
-					editor_frame:SetPos(0,0)
-				end
-				
-				local resolution_label = loveframes.Create("label",settings_panel)
-				resolution_label:SetText("Resolution: ")
-				resolution_label:SetPos(5, 5)
-				
-				local slider = loveframes.Create("slider", settings_panel)
-				slider:SetPos(5,60)
-				--slider:SetEnabled(false)
-				--slider:SetSize(32*7, 32*7)
-				--slider:SetSlideType("vertical")
-				
-				local vert = loveframes.Create("button", settings_panel)
-				vert:SetText("Change Slider Type"):SetPos(5, 30):SetWidth(200)
-				vert.OnClick = function(object)
-					local orientation = slider:GetSlideType()
-					if orientation == "horizontal" then
-						slider:SetSlideType("vertical")
-					elseif orientation == "vertical" then
-						slider:SetSlideType("horizontal")
-					end
-				end
-				
-				local checkbox = loveframes.Create("checkbox", settings_panel)
-				checkbox:SetPos(5,120)
-				
-				local group = {}
-				local radiobutton1 = loveframes.Create("radiobutton", settings_panel)
-				radiobutton1:SetPos(5,140):SetGroup(group):SetText("option1")
-				
-				local radiobutton2 = loveframes.Create("radiobutton", settings_panel)
-				radiobutton2:SetPos(5,160):SetGroup(group):SetText("option2")
-				
-				
-				local multiline = loveframes.Create("textinput", settings_panel)
-				multiline:SetPos(5, 180):SetSize(200,200):SetMultiline(true)
-				
-			
-			local map_panel = loveframes.Create("panel")
-			local tools_panel = loveframes.Create("panel")
-			
+		tabs:SetSize(32*6, 480)
+		
+		
 			local tile_panel = loveframes.Create("list")
 			tile_panel:EnableHorizontalStacking(true)
+			tile_panel.Select = function(object)
+				local tile_id = object:GetProperty("tile_id")
+				if tile_id then
+					mapdata_setpencil(tile_id)
+					print(string.format("Tile ID selected: %s ", tile_id))
+				end
+			end
 			tile_panel.Fill = function(object)
 				for i=0, 255 do 
-					local gfx = mapfile.gfx.tile[i]
+					local gfx = mapfile_gfx("tile", i)
 					if gfx then
-						local tile = loveframes.Create("image")
+						local tile = loveframes.Create("imagelink")
+						tile:SetProperty("tile_id", i)
 						tile:SetImage(gfx)
+						tile.OnClick = tile_panel.Select
 						tile_panel:AddItem(tile)
 					end	
 				end
@@ -169,15 +121,11 @@
 			
 		tabs:AddTab("Tileset", tile_panel, "A very large tooltip to test if this goes offscreen or not\nand maybe a line break")
 		tabs:AddTab("Entity", entity_panel, "Entity Picker")
-		tabs:AddTab("Settings", settings_panel, "Editor Settings")
-		tabs:AddTab("Map", map_panel, "Map Settings")
-		tabs:AddTab("Tools", tools_panel, "Tools")
-		
 		
 	
 		local map_path = loveframes.Create("textinput", editor_frame)
 		map_path:SetText("maps/fun_roleplay.map")
-		map_path:SetPos(5, 30)
+		map_path:SetPos(5, 30):SetWidth(192)
 		--map_path:SetMultiline(true)
 		--map_path:SetHeight(90)
 		--[[
@@ -211,17 +159,28 @@
 			tile_panel:Fill()
 		end
 		
-		local filler = loveframes.Create("button", editor_frame)
-		filler:SetWidth(60)
-		filler:SetPos(95, 60)
-		filler:SetToggleable(true)
-		
-		
-		
-multiline:SetText([[
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla eget dui lacinia, eleifend nunc sed, pretium nisi. Aliquam venenatis est sapien, ac pulvinar tellus varius in. Etiam dolor lorem, feugiat sit amet nunc vitae, lobortis commodo diam. Praesent auctor massa vitae dapibus mollis. Ut ac tempus nunc, sit amet vestibulum tortor. Aliquam quis nisl semper, convallis diam in, fringilla ex. Aliquam pretium eros sit amet mollis ultrices. Praesent at gravida nisl, id cursus lorem. Duis bibendum ut elit nec tempus.
-Aenean eu nunc eget tellus lobortis tincidunt. Sed orci sem, faucibus quis orci non, interdum varius ante. Quisque sollicitudin est vitae aliquam mollis. Sed scelerisque placerat vehicula. Curabitur volutpat venenatis elit, in tempor justo tempor sed. Vivamus tempus elit sit amet tortor bibendum, id egestas augue sagittis. Pellentesque neque leo, molestie eget sem ac, congue pharetra risus. Nulla fermentum leo nec feugiat interdum. Integer ullamcorper fermentum iaculis. Ut vulputate porta sem id varius. Morbi sit amet enim lorem. Praesent sagittis ipsum non lacus fringilla, eget scelerisque dui consectetur. Suspendisse sit amet ante eu justo ullamcorper mollis eget id quam.
-Sed mauris arcu, cursus ut mi et, finibus laoreet magna. Mauris nec tortor lacinia, ultrices ipsum sit amet, tincidunt ipsum. Aenean at nibh vitae nunc blandit tristique. Nam commodo scelerisque hendrerit. Nunc finibus rhoncus neque vel molestie. Vivamus fermentum mollis quam id aliquet. Nunc tincidunt nibh commodo tempor ullamcorper. Aenean pharetra nisl vel justo varius, suscipit lobortis enim interdum. Vestibulum molestie luctus euismod.
-Nullam non elit ultrices, posuere purus ut, fringilla ipsum. Mauris vehicula libero id diam tempor molestie. In a tempus justo. Nullam id tempor enim, a dignissim nisl. Nullam pellentesque, mauris eu feugiat molestie, risus ante elementum dolor, ac varius erat neque ut risus. Curabitur sed tincidunt diam. Vivamus interdum sodales dolor, eu posuere ligula semper at. Sed magna risus, auctor eget egestas id, lobortis eu nisl. Vivamus pellentesque blandit ex nec molestie. Aliquam imperdiet neque efficitur urna tincidunt gravida. Ut nec quam tortor. Pellentesque commodo, nisi ut congue interdum, neque odio consequat massa, ut vulputate lectus felis ac tortor. Aliquam vel sem et nulla iaculis luctus eu id elit. Integer at consectetur massa. Ut tempor venenatis metus quis luctus. Proin pellentesque orci eu elit varius, vel fringilla mi viverra.
-Vivamus ornare non nulla sed lacinia. Cras nec magna vitae ligula dapibus tempus. Curabitur nec venenatis tortor. Donec et sollicitudin nisl. Phasellus blandit tincidunt blandit. Vivamus vel ipsum venenatis, ullamcorper metus nec, iaculis ante. Donec eu massa varius justo pellentesque tempus. Morbi laoreet mauris tempor ante commodo, sit amet pharetra lectus hendrerit. Maecenas rutrum sit amet enim sit amet laoreet. Aliquam at mi eget felis scelerisque luctus in non leo. 
-]])
+		local settingsbutton = loveframes.Create("button", editor_frame)
+		settingsbutton:SetWidth(60)
+		settingsbutton:SetText("Settings")
+		settingsbutton:SetPos(95, 60)
+
+
+		--local settings_panel = loveframes.Create("panel")
+		-- local resolution_picker = loveframes.Create("multichoice", settings_panel)
+		-- resolution_picker:SetPos(150, 5)
+		-- resolution_picker:SetWidth(80)
+		-- for k, v in pairs(resolution_option) do
+			-- resolution_picker:AddChoice(k)
+		-- end	
+		-- resolution_picker:SetChoice("800x600")
+		-- resolution_picker.OnChoiceSelected = function(object, choice)
+			-- local width, height = unpack(resolution_option[choice])
+				
+			-- love.window.setMode(width, height)
+			-- editor_frame:SetMaxHeight(height)
+			-- editor_frame:SetHeight(height)
+			-- editor_frame:SetPos(0,0)
+		-- end
+		-- local resolution_label = loveframes.Create("label",settings_panel)
+		-- resolution_label:SetText("Resolution: ")
+		-- resolution_label:SetPos(5, 5)

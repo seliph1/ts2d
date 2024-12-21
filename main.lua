@@ -4,8 +4,6 @@ function love.load()
 	
 	loveframes.SetActiveSkin("CS2D")
 	love.filesystem.load("cs2dmap.lua")()
-	
-	global_key_pressed = {}
 end
 
 function love.update( dt )
@@ -18,8 +16,6 @@ function love.draw()
 	--love.graphics.setBackgroundColor(0, 0, 0, 0)
 	
 	mapdata_draw()
-	
-	
 	loveframes.draw()
 end
 
@@ -32,23 +28,20 @@ function love.mousereleased(x, y, button)
 end
 
 function love.keypressed(key, unicode)
-	global_key_pressed[key] = true 
+	
 	if (key == "escape") then os.exit(0) end
 	if (key=="f1") then
 		local state = loveframes.config["DEBUG"]
 		loveframes.config["DEBUG"] = not state
 	end
 	
-	if (key=="f2") then
-		mapfile_read("maps/fun_roleplay.map")
-	end
-
+	mapdata_keypressed(key, unicode)
 	loveframes.keypressed(key, unicode)
 end
 
 function love.keyreleased(key, unicode)
-	global_key_pressed[key] = nil
-	
+
+	mapdata_keyreleased(key, unicode)
 	loveframes.keyreleased(key)
 end
 
