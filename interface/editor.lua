@@ -172,29 +172,41 @@
 			tile_panel:Fill()
 		end
 		
+		local settings_panel = loveframes.Create("frame")
+		settings_panel:SetVisible(false)
+		settings_panel.OnClose = function(object)
+			object:SetVisible(false)
+			return false
+		end
+		
+		
 		local settingsbutton = loveframes.Create("button", editor_frame)
 		settingsbutton:SetWidth(60)
 		settingsbutton:SetText("Settings")
 		settingsbutton:SetPos(95, 60)
-		settingsbutton:SetToggleable(true)
+		settingsbutton:SetProperty("target", settings_panel)
+		settingsbutton.OnClick = function(object)
+			local target = object:GetProperty("target")
+			target:SetVisible(true)
+		end
 
 
-		--local settings_panel = loveframes.Create("panel")
-		-- local resolution_picker = loveframes.Create("multichoice", settings_panel)
-		-- resolution_picker:SetPos(150, 5)
-		-- resolution_picker:SetWidth(80)
-		-- for k, v in pairs(resolution_option) do
-			-- resolution_picker:AddChoice(k)
-		-- end	
-		-- resolution_picker:SetChoice("800x600")
-		-- resolution_picker.OnChoiceSelected = function(object, choice)
-			-- local width, height = unpack(resolution_option[choice])
+
+		local resolution_picker = loveframes.Create("multichoice", settings_panel)
+		resolution_picker:SetPos(150, 5)
+		resolution_picker:SetWidth(80)
+		for k, v in pairs(resolution_option) do
+			resolution_picker:AddChoice(k)
+		end	
+		resolution_picker:SetChoice("800x600")
+		resolution_picker.OnChoiceSelected = function(object, choice)
+			local width, height = unpack(resolution_option[choice])
 				
-			-- love.window.setMode(width, height)
-			-- editor_frame:SetMaxHeight(height)
-			-- editor_frame:SetHeight(height)
-			-- editor_frame:SetPos(0,0)
-		-- end
-		-- local resolution_label = loveframes.Create("label",settings_panel)
-		-- resolution_label:SetText("Resolution: ")
-		-- resolution_label:SetPos(5, 5)
+			love.window.setMode(width, height)
+			editor_frame:SetMaxHeight(height)
+			editor_frame:SetHeight(height)
+			editor_frame:SetPos(0,0)
+		end
+		local resolution_label = loveframes.Create("label",settings_panel)
+		resolution_label:SetText("Resolution: ")
+		resolution_label:SetPos(5, 5)

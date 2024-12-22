@@ -47,7 +47,31 @@ local TILE_MODE_HEIGHT = {
 	[52]=0,		-- 52 deadly explosion
 	[53]=0,		-- 53 deadly abyss
 }
-local EMPTY = {}
+
+local ENTITY_TYPE = {
+	["null"] = {
+		name = "Null";
+		color = {1,1,1};
+	};
+	[0] = {
+		name = "Info_T";
+		color = {1,0,0};
+		label = "T";
+	};
+		
+	[1] = { 
+		name = "Info_CT";
+		color = {0,0,1};
+		label = "CT";
+	};
+
+
+	[22] = {
+		name ="Env_Sprite";
+		color = {0,1,0};
+		label = "Spr";
+	};
+}
 
 local editor = {
 	pencil = {
@@ -67,9 +91,14 @@ local editor = {
 	
 	key_pressed = {};
 	key_released = {};
+	
+	entity_update_request = false;
+	smallfont = love.graphics.newFont(8)
 }
 
 local mapfile = {}
+local oscillation = 0
+local breath = 0
 
 --[[---------------------------------------------------------
 	Lib
@@ -190,6 +219,7 @@ function mapfile_new(width, height)
 		entity_count = 0;
 		entity_table = {};
 		entity_list = List:new();
+		entity_cache = {};
 		
 		gfx = {
 			tile = {};
@@ -612,6 +642,7 @@ function mapfile_read(path)
 	mapdata.entity_count = read_integer()
 	mapdata.entity_list = List.new()
 	mapdata.entity_table = {}
+	mapdata.entity_cache = {}
 	
 	--print("Entity count: " .. mapdata.entity_count)
 	for i = 1, mapdata.entity_count do
@@ -630,6 +661,9 @@ function mapfile_read(path)
 		end
 		mapdata.entity_list:push( e )
 		table.insert(mapdata.entity_table, e)
+		
+		mapdata.entity_cache[e.x] = mapdata.entity_cache[e.x] or {}
+		mapdata.entity_cache[e.x][e.y] = e
 	end
 
 	-----------------------------------------------------------------------------------------------------------
@@ -734,14 +768,18 @@ function mapdata_update(dt)
 		elseif love.mouse.isDown(2) then
 			mapdata_setpencil( mapdata_gettile(editor.mousemap_x, editor.mousemap_y) )
 			
-			if true  then
+			--if true  then
 				
-			end
+			--end
 		end
+		
+		editor.mousemap_x = floor( (love.mouse.getX() - love.graphics.getWidth()*0.5 + editor.camera_x) / 32  )
+		editor.mousemap_y = floor( (love.mouse.getY() - love.graphics.getHeight()*0.5 + editor.camera_y) / 32  )
+		
+		
+		local time = love.timer.getTime()
+		oscillation = (math.sin( time * math.pi * 2) + 1)/2
 	end
-	
-	editor.mousemap_x = floor( (love.mouse.getX() - love.graphics.getWidth()*0.5 + editor.camera_x) / 32  )
-	editor.mousemap_y = floor( (love.mouse.getY() - love.graphics.getHeight()*0.5 + editor.camera_y) / 32  )
 end
 
 
@@ -771,14 +809,12 @@ function mapdata_draw()
 
 	end	
 	
-	
 	local minx, maxx = floor( (camera_x - screen_w/2 ) / ts ), ceil( ( camera_x + screen_w/2 ) / ts )
 	local miny, maxy = floor( (camera_y - screen_h/2 ) / ts ), ceil( ( camera_y + screen_h/2 ) / ts )
 	
 	love.graphics.reset()
 	love.graphics.setShader(shader.magenta)
 	
-
 	
 	-- FLOORS
 	for x = minx, maxx do
@@ -807,12 +843,12 @@ function mapdata_draw()
 	end
 	end
 	
-	
+	--[[
 	-- Entities
 	love.graphics.setShader(shader.entity)
 	for index, e in mapfile.entity_list:walk() do
-	for index, e in ipairs(EMPTY) do
-		--if e.type == 22 and entityInCamera(e, camera_x, camera_y) then
+	--for index, e in ipairs(EMPTY) do
+		if e.type == 22 and entityInCamera(e, camera_x, camera_y) then
 			local path 		= e.string_settings[1]
 			local sprite 	= mapfile.gfx.entity[path]
 			local width		= sprite:getWidth() 
@@ -853,12 +889,16 @@ function mapdata_draw()
 			entity_screen = entity_screen + 1
 		end
 	end
+	--]]
 	
 	love.graphics.reset()
-	love.graphics.setShader(shader.magenta)
+	
 	-- WALLS
 	for x = minx, maxx do
 	for y = miny, maxy do
+		-- Magenta filter
+		love.graphics.setShader(shader.magenta)
+	
 		local tile_id, mod = mapfile_tile(x,y)
 		local gfx = mapfile.gfx.tile[tile_id]
 		local property = mapfile.tile[tile_id].property
@@ -877,9 +917,33 @@ function mapdata_draw()
 			love.graphics.draw(gfx, sx, sy, rad(mod.rotation*90), 1, 1, off_x, off_y)
 		end
 		
+		
+		if mapfile.entity_cache[x] and mapfile.entity_cache[x][y] then
+			local e = mapfile.entity_cache[x][y]
+			local t = ENTITY_TYPE[e.type] or ENTITY_TYPE["null"]
+			local c = t.color
+			local breath = oscillation * 0.5 + 0.5
+			
+	
+			-- Draw entity icons!
+			love.graphics.setFont(editor.smallfont)
+			love.graphics.setBlendMode("add")
+			love.graphics.setShader()
+
+			--love.graphics.setColor(c[1]*breath*0.2, c[2]*breath*0.2, c[3]*breath*0.2)
+			love.graphics.setColor(c[1], c[2], c[3], breath*0.2)
+			love.graphics.draw(flare, e.x*32+16 + center_x, e.y*32+16 + center_y, 0, 0.4, 0.4, 48, 48)
+		
+			love.graphics.setColor(c[1], c[2], c[3], breath)
+			love.graphics.draw(editor_icons[9], e.x*32+16 + center_x, e.y*32+16 + center_y, 0, 1, 1, 8, 8)
+			
+			love.graphics.printf(t.label or "", e.x*32+8 + center_x, e.y*32+22 + center_y, 32 ,"center")
+		end	
+
 	end
 	end
 	
+	--[[
 	
 	-- ENTITY ICONS
 	love.graphics.setBlendMode("screen", "premultiplied")
@@ -896,23 +960,25 @@ function mapdata_draw()
 		end	
 	end
 	
-	
+	--]]
 	love.graphics.reset()
-	love.graphics.print(string.format ("entities on screen: %d/%d", entity_screen, entity_total), love.graphics.getWidth()-200, 20)
+	
 	
 	
 	if loveframes.collisioncount == 0 then
 		local tile_id = mapfile_tile(editor.mousemap_x, editor.mousemap_y)
 		local label = string.format(
-			"Camera: %dpx|%dpx   Tile Position: %d|%d    Tile #%d", 
+			"Camera: %dpx|%dpx   Tile Position: %d|%d    Tile #%d     Entities on screen: %d/%d", 
 			editor.camera_x, 
 			editor.camera_y, 
 			editor.mousemap_x, 
 			editor.mousemap_y, 
-			tile_id
+			tile_id,
+			entity_screen,
+			entity_total
 		)
 		
-		love.graphics.print(label , love.graphics.getWidth()/2, love.graphics.getHeight()-20)
+		love.graphics.printf(label, 0, screen_h-20, screen_w, "center")
 		
 		
 		-- Draw cursor
@@ -920,8 +986,7 @@ function mapdata_draw()
 		local offset_y = screen_h % 32 - screen_h/2 
 		local cursor_x = love.mouse.getX() - ( camera_x + love.mouse.getX() - offset_x  )%32
 		local cursor_y = love.mouse.getY() - ( camera_y + love.mouse.getY() - offset_y  )%32
-		local time = love.timer.getTime()
-		local oscillation = (math.sin( time * math.pi * 2) + 1)/2
+		
 		love.graphics.setColor(1, 1, 0, 0.5 + oscillation/2 )
 		love.graphics.rectangle("line",cursor_x, cursor_y, 32, 32)
 		love.graphics.reset()
