@@ -1,10 +1,11 @@
+
 function love.load()
-	loveframes = require "loveframes"
-	--loveframes.config["DEBUG"]=true
+	loveframes = require "lib/loveframes"
+
 	loveframes.SetActiveSkin("CS2D")
-	
-	--love.filesystem.load("interface/init.lua")()
 	love.filesystem.load("cs2dmap.lua")()
+	
+	love.graphics.setBackgroundColor(1,1,1,1)
 end
 
 function love.update( dt )
@@ -12,15 +13,15 @@ function love.update( dt )
 	mapdata_update(dt)
 	loveframes.update(dt)
 	
-	love.window.setTitle(love.timer.getFPS())
+	--love.window.setTitle(love.timer.getFPS())
 end
 
 function love.draw()
-	--love.graphics.setBackgroundColor(0, 0, 0, 0)
-	
 	mapdata_draw()
+
+	
 	loveframes.draw()
-end
+end 
 
 function love.mousepressed(x, y, button)
 	loveframes.mousepressed(x, y, button)
@@ -51,3 +52,8 @@ end
 function love.textinput(text)
 	loveframes.textinput(text)
 end
+--[[
+function love.resize(w, h)
+	
+end--]]
+

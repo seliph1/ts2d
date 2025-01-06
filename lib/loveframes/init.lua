@@ -52,6 +52,7 @@ loveframes.dragobject = false
 loveframes.hover = false
 loveframes.input_cursor_set = false
 loveframes.prevcursor = nil
+loveframes.opacity = 1
 loveframes.basicfont = love.graphics.newFont(12)
 loveframes.basicfontsmall = love.graphics.newFont(10)
 loveframes.collisions = {}

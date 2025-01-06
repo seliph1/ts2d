@@ -21,15 +21,15 @@ skin.directives = {}
 -- Text
 skin.directives.text_default_color		 				= {1, 1, 1, 1};
 skin.directives.text_default_shadowcolor 				= {1, 1, 1, 1};
-skin.directives.text_default_font_src	 				= "loveframes/skins/CS2D/images/liberationsans.ttf"
+skin.directives.text_default_font_src	 				= "lib/loveframes/skins/CS2D/images/liberationsans.ttf"
 skin.directives.text_default_font		 				= love.graphics.newFont(skin.directives.text_default_font_src, 15)
 
 skin.directives.radiobutton_text_default_color 		 	= {1, 1, 1, 1};
 skin.directives.radiobutton_text_default_shadowcolor 	= {1, 1, 1, 1};
-skin.directives.radiobutton_text_default_font_src	 	= "loveframes/skins/CS2D/images/liberationsans.ttf"
+skin.directives.radiobutton_text_default_font_src	 	= "lib/loveframes/skins/CS2D/images/liberationsans.ttf"
 skin.directives.radiobutton_text_default_font		 	= love.graphics.newFont(skin.directives.radiobutton_text_default_font_src, 15)
 
-skin.directives.tooltip_default_font_src	 			= "loveframes/skins/CS2D/images/liberationsans.ttf"
+skin.directives.tooltip_default_font_src	 			= "lib/loveframes/skins/CS2D/images/liberationsans.ttf"
 skin.directives.tooltip_default_font					= love.graphics.newFont(skin.directives.tooltip_default_font_src, 12)
 skin.directives.tooltip_default_color 		 			= {1, 1, 1, 1};
 

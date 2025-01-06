@@ -69,20 +69,33 @@
 		["1600x900"] = {1600, 900};
 		["1920x1080"] = {1920, 1080};
 	}
+	
+	local editor_default_size = 600
+	local editor_default_width = 32*6
+	
+	local tool_option = {
+		["Rectangle"] = "rectangle";
+		["Pencil"] = "pencil";
+		["Color Fill"] = "colorfill";
+		["Select"] = "select";
+		["Measure"] = "measure";
+		["Pathfinder"] = "path";
+		["Blend"] = "blend";
+	}
 
 -- Widgets
 -------------------------------------------------------------------
 
 	local editor_frame = loveframes.Create("frame")
 	editor_frame:SetName("Editor")
-	editor_frame:SetSize(32*6+10, love.graphics.getHeight())
+	editor_frame:SetSize(editor_default_width+10, editor_default_size)
 	editor_frame:SetResizable(false)
 	editor_frame:ShowCloseButton(false)
 	editor_frame:SetScreenLocked(true)
 	
 		local tabs = loveframes.Create("tabs",editor_frame)
-		tabs:SetPos(5, 100)
-		tabs:SetSize(32*6, 480)
+		tabs:SetPos(5, 150)
+		tabs:SetSize(editor_default_width, editor_default_size-150)
 		
 		
 			local tile_panel = loveframes.Create("list")
@@ -96,7 +109,7 @@
 			end
 			tile_panel.Hovering = function(object)
 				if object.hover then
-					love.graphics.setColor(1,1,1,0.2)
+					love.graphics.setColor(1, 1, 1, 0.2)
 					love.graphics.rectangle("fill", object.x, object.y, 32, 32)
 				end	
 			end
@@ -126,14 +139,18 @@
 			entity_panel:AddColumn("ID")
 			entity_panel:AddColumn("Typename")
 			entity_panel:SetColumnWidth(1, 20)
-			entity_panel:SetColumnWidth(2, 210)
+			entity_panel:SetColumnWidth(2, editor_default_width-40)
 			entity_panel:SetColumnResizeEnabled(bool)
 			for k,v in pairs(ENTITY_TYPE) do
 				entity_panel:AddRow(k,v)
 			end
 			
-		tabs:AddTab("Tileset", tile_panel, "A very large tooltip to test if this goes offscreen or not\nand maybe a line break")
-		tabs:AddTab("Entity", entity_panel, "Entity Picker")
+			
+			local tools = loveframes.Create("panel")
+		
+		tabs:AddTab("Tileset", tile_panel, "Tileset containing all individual tiles\nto paint into the map")
+		tabs:AddTab("Entity", entity_panel, "Entity list containing all objects, buildings and NPCs\nthat can be added in the map")
+		tabs:AddTab("Tools", tools, "Map editor tools for measuring and changing terrain")
 		
 	
 		local map_path = loveframes.Create("textinput", editor_frame)
@@ -147,6 +164,42 @@
 		map_path_input_menu:AddOption("Paste")
 		map_path_input_menu:SetVisible(false)
 		--]]
+		
+		
+		local pencil_mode = loveframes.Create("multichoice", editor_frame)
+		pencil_mode:SetPos(75, 90):SetWidth(80)
+		for k, v in pairs(tool_option) do
+			pencil_mode:AddChoice(k)
+		end	
+		pencil_mode:SetChoice("Pencil")
+		pencil_mode.OnChoiceSelected = function(object, choice)
+			local mode = tool_option[choice] or "pencil"
+			mapdata_toolmode(mode)
+		end
+		
+		local pencil_label = loveframes.Create("label", editor_frame)
+		pencil_label:SetPos(5, 95):SetText("Tool Mode: ")
+		--[[
+		local pencil_button = loveframes.Create("button", editor_frame)
+		pencil_button:SetPos(5,95):SetText("Pencil"):SetWidth(40)
+		pencil_button.OnClick = function(object)
+			mapdata_toolmode("pencil")
+		end
+		
+		local rectangle_button = loveframes.Create("button", editor_frame)
+		rectangle_button:SetPos(55,95):SetText("Rectangle"):SetWidth(40)
+		rectangle_button.OnClick = function(object)
+			mapdata_toolmode("rectangle")
+		end
+		
+		
+		local colorfill_button = loveframes.Create("button", editor_frame)
+		colorfill_button:SetPos(105,95):SetText("Color Fill"):SetWidth(40)
+		colorfill_button.OnClick = function(object)
+			mapdata_toolmode("fill")
+		end--]]
+
+		
 		
 		
 		local savebutton = loveframes.Create("button", editor_frame)
@@ -188,12 +241,13 @@
 		settingsbutton.OnClick = function(object)
 			local target = object:GetProperty("target")
 			target:SetVisible(true)
+			target:Center()
 		end
 
 
 
 		local resolution_picker = loveframes.Create("multichoice", settings_panel)
-		resolution_picker:SetPos(150, 5)
+		resolution_picker:SetPos(80, 30)
 		resolution_picker:SetWidth(80)
 		for k, v in pairs(resolution_option) do
 			resolution_picker:AddChoice(k)
@@ -207,6 +261,10 @@
 			editor_frame:SetHeight(height)
 			editor_frame:SetPos(0,0)
 		end
+		
 		local resolution_label = loveframes.Create("label",settings_panel)
 		resolution_label:SetText("Resolution: ")
-		resolution_label:SetPos(5, 5)
+		resolution_label:SetPos(10, 35)
+		
+		
+		local entity_icon_render = checkbox
