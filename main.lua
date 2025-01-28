@@ -25,10 +25,12 @@ end
 
 function love.mousepressed(x, y, button)
 	loveframes.mousepressed(x, y, button)
+	mapdata_mousepressed(x, y, button)
 end
 
 function love.mousereleased(x, y, button)
 	loveframes.mousereleased(x, y, button)
+	mapdata_mousereleased(x, y, button)
 end
 
 function love.keypressed(key, unicode)
@@ -39,14 +41,14 @@ function love.keypressed(key, unicode)
 		loveframes.config["DEBUG"] = not state
 	end
 	
-	mapdata_keypressed(key, unicode)
+	
 	loveframes.keypressed(key, unicode)
+	mapdata_keypressed(key, unicode)
 end
 
 function love.keyreleased(key, unicode)
-
-	mapdata_keyreleased(key, unicode)
 	loveframes.keyreleased(key)
+	mapdata_keyreleased(key, unicode)
 end
 
 function love.textinput(text)
@@ -54,6 +56,5 @@ function love.textinput(text)
 end
 --[[
 function love.resize(w, h)
-	
 end--]]
 

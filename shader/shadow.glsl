@@ -236,8 +236,8 @@ float sceneDist(vec2 p)
 	//float m = 0.0;
 	int c = 0;
 	
-	for (int x = 0; x < tilemapWidth/2; x++) {
-	for (int y = 0; y < tilemapHeight/2; y++) {
+	for (int x = 0; x < tilemapWidth/8; x++) {
+	for (int y = 0; y < tilemapHeight/8; y++) {
 		//if (mod(c, 2) == 0) {
 			float occluder = boxDist(translate(p, vec2(x*64+16, y*64+16)), vec2(16,16), 0.0);
 			m = merge(m, occluder);

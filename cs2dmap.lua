@@ -866,12 +866,15 @@ function mapdata_update(dt)
 	oscillation = (math.sin( time * math.pi * 2) + 1)/2
 
 	if loveframes.collisioncount > 0 then return end
+
+	-- CAMERA MOVEMENT
+	--------------------------------------------------------------------------------------------------
 	local past_camera_x, past_camera_y = editor.camera_x, editor.camera_y
 	local s = 500*dt
 	if editor.key_pressed.space then
 		s = 500*dt*5
 	end
-
+	
 	if (editor.key_pressed.up) then --or editor.key_pressed.w) then 
 		editor.camera_y = editor.camera_y - s
 	end
@@ -887,12 +890,14 @@ function mapdata_update(dt)
 	
 	if editor.tool.mode == "pencil" then
 		if love.mouse.isDown(1) then
-		mapdata_settile(editor.mousemap_tx, editor.mousemap_ty, editor.tool.tile_id)
-
+			mapdata_settile(editor.mousemap_tx, editor.mousemap_ty, editor.tool.tile_id)
 		elseif love.mouse.isDown(2) then
 			mapdata_setpencil( mapdata_gettile(editor.mousemap_tx, editor.mousemap_ty) )
 		end
 	end
+	
+	-- CURSOR DATA UPDATE
+	--------------------------------------------------------------------------------------------------
 	
 	local sw, sh = love.graphics.getWidth()/2, love.graphics.getHeight()/2
 	editor.mousemap_x = love.mouse.getX() - sw + editor.camera_x
@@ -1066,18 +1071,13 @@ function mapdata_draw()
 	
 	
 	-- SDF
+	
 	--[[
 	local border = 40
-	
 	love.graphics.setBlendMode("multiply", "premultiplied")
-	love.graphics.setBlendMode("subtract")
-	love.graphics.setBlendMode("screen")
-	love.graphics.setBlendMode("add")
-	love.graphics.setBlendMode("alpha")
-	
-	love.graphics.setShader(shader.shadow4)
-	shader.shadow4:send("iTime", love.timer.getTime())
-	shader.shadow4:send("iMouse", {love.mouse.getPosition()} )
+	love.graphics.setShader(shader.shadow)
+	shader.shadow:send("iTime", love.timer.getTime())
+	shader.shadow:send("iMouse", {love.mouse.getX(), love.mouse.getY(), 0, 0} )
 	love.graphics.draw(editor.rect)
 	--]]
 	
@@ -1126,7 +1126,7 @@ function mapdata_draw()
 	--]]
 	
 	
-	
+	--[[
 	shader.raycasts:send("iMouse", {love.mouse.getX(), love.mouse.getY(), .0, .0})
 	shader.raycasts:send("iChannel0", heightmap)
 	love.graphics.setShader(shader.raycasts)
@@ -1137,7 +1137,7 @@ function mapdata_draw()
 	
 	love.graphics.setShader()
 	love.graphics.setBlendMode("alpha")
-	
+	--]]
 	
 	-- Reset render
 	love.graphics.setShader()
@@ -1183,6 +1183,25 @@ function mapdata_draw()
 	elseif editor.tool.mode == "rectangle" then
 		
 		if editor.tool.selecting then
+		
+			-- Draw big cursor in pivot
+			local offset_x = screen_w % 32 - screen_w/2 
+			local offset_y = screen_h % 32 - screen_h/2 
+			local cursor_x = love.mouse.getX() - ( camera_x + love.mouse.getX() - offset_x  )%32
+			local cursor_y = love.mouse.getY() - ( camera_y + love.mouse.getY() - offset_y  )%32
+			
+			local size_x = editor.tool.pivot.x - editor.mousemap_tx
+			local size_y = editor.tool.pivot.y - editor.mousemap_ty
+			
+			--if size_x == 0 then size_x = 1 end
+			--if size_y == 0 then size_y = 1 end
+			
+			
+			love.graphics.setColor(0.5, 0.5, 1, 0.5 + oscillation/2 )
+			love.graphics.rectangle("line", cursor_x, cursor_y, math.abs(size_x*32), math.abs(size_y*32))
+
+
+			love.graphics.print( string.format("%d x %d", size_x, size_y), love.graphics.getWidth()/2, 20)
 		else
 			-- Draw cursor
 			local offset_x = screen_w % 32 - screen_w/2 
@@ -1224,13 +1243,42 @@ end
 --]]---------------------------------------------------------
 function mapdata_keypressed(key, unicode)
 	editor.key_pressed[key] = true 
-	if (key=="f2") then
-		mapdata_random()
-	end
+	
+
 end
 
 function mapdata_keyreleased(key, unicode)
 	editor.key_pressed[key] = false
+	
+
+end
+
+
+function mapdata_mousepressed(x, y, button)
+	
+end
+
+function mapdata_mousereleased(x, y, button)
+	if loveframes.collisioncount > 0 then return end
+	
+	
+	if button == 1 then
+	
+	
+		if editor.tool.mode == "rectangle" then
+			if editor.tool.selecting then
+				editor.tool.selecting = false
+				editor.tool.pivot.x = 0
+				editor.tool.pivot.y = 0
+			else
+				editor.tool.selecting = true
+				editor.tool.pivot.x = editor.mousemap_tx
+				editor.tool.pivot.y = editor.mousemap_ty
+			end	
+		end
+		
+		
+	end	
 end
 
 --[[---------------------------------------------------------
