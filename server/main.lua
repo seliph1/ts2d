@@ -1,9 +1,8 @@
-loveframes = require "lib/loveframes"
-console = require "console"
-server = require "server"
+local loveframes = require "lib/loveframes"
+local console = require "console"
+local server = require "server"
 
 function love.load()
-	
 	server.load()
 	server.start("127.0.0.1","36963")
 end

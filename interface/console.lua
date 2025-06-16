@@ -1,4 +1,6 @@
-_print = print
+local client = require "client"
+
+_Print = print
 
 function print(...)
 	local args = {...}
@@ -8,12 +10,11 @@ function print(...)
 	end
 	if console_window then
 		--console_window:InsertText( table.concat(str," ") )
-	end	
-	_print(unpack(args))
+	end
+	_Print(unpack(args))
 end
 
-
-console_frame = loveframes.Create("frame")
+local console_frame = loveframes.Create("frame")
 console_frame:SetSize(640, 480)
 console_frame:SetName("Console")
 console_frame:SetResizable(false)
@@ -23,16 +24,14 @@ console_frame:SetScreenLocked(true)
 	--console_frame:SetName(string.format("Console [FPS: %i]", love.timer.getFPS()))
 --end
 
-
-console_window = loveframes.Create("textinput", console_frame)
+local console_window = loveframes.Create("textinput", console_frame)
 console_window:SetPos(5, 30):SetSize(630, 400)
 console_window:SetMultiline(true)
 console_window:SetEditable(false)
 console_window:SetAutoScroll(true)
 console_window:ShowLineNumbers(false)
 
-
-console_input = loveframes.Create("textinput", console_frame)
+local console_input = loveframes.Create("textinput", console_frame)
 console_input:SetPos(5, 435):SetWidth(630)
 console_input.OnEnter = function(self, text)
 	self:SetText("")
@@ -48,13 +47,10 @@ console_input.parse = function(str)
 	local command_id = args[1]
 	local commands = console_input.commands
 	if commands[ command_id ] then
-	
 		local command_object = commands[ command_id ]
 		if command_object.action then
 			local status = command_object.action( unpack(args,2) )
-			
 		end
-		
 	else
 		print(string.format("Unknown command: %s", str))
 	end
@@ -64,17 +60,15 @@ console_input.commands = {
 	["map"] = {
 		action = function(...)
 			local args = {...}
-			
 			if client.map then
 				local status = client.map:read( "maps/"..table.concat(args," ")..".map" )
 				if status then
 					print(status)
 				end
-			end	
+			end
 		end,
 		syntax = "/map <mapfile>",
 	};
-
 	["scroll"] = {
 		action = function(x,y)
 			if client.map then
@@ -89,7 +83,6 @@ console_input.commands = {
 		action = function()
 		end
 	};
-	
 	["connect"] = {
 		action = function(ip, port)
 			client.start("127.0.0.1:36963")
@@ -97,27 +90,22 @@ console_input.commands = {
 		end,
 		syntax = "connect <ip:port>",
 	};
-	
 	["send"] = {
 		action = function(message)
 		end,
 	};
-	
 	["version"] = {
 		action = function()
 		end,
 	};
-	
 	["players"] = {
 		action = function()
 		end;
 	};
-	
 	["name"] = {
 		action = function(name)
 		end;
 	};
-	
 	["say"] = {
 		action = function(message)
 		end;
