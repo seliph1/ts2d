@@ -48,7 +48,8 @@ end
 
 function client.load()
     -- Use `home` to store control info so the server can see it
-    home.targetX, home.targetY = 0, 0
+    home.targetX = 0
+    home.targetY = 0
     home.wantShoot = false
     home.move = { up = false, down = false, left = false, right = false }
 end
