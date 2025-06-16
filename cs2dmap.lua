@@ -37,23 +37,23 @@ local DEFAULT_MOD = {
 }
 
 local TILE_MODE_HEIGHT = {
-	[0]=0,		-- 0  normal floor without sound
-	[1]=0.5,	-- 1  wall
-	[2]=0.3,	-- 2  obstacle
-	[3]=0.5,	-- 3  wall without shadow
-	[4]=0.3,	-- 4  obstacle without shadow
-	[5]=0,		-- 5  wall that is rendered at floor level
-	[10]=0,		-- 10 floor dirt
-	[11]=0,		-- 11 floor snow (with footprints and fx)
-	[12]=0,		-- 12 floor step
-	[13]=0,		-- 13 floor tile
-	[14]=0,		-- 14 floor wade (water with wave fx)
-	[15]=0,		-- 15 floor metal
-	[16]=0,		-- 16 floor wood
-	[50]=0,		-- 50 deadly normal
-	[51]=0,		-- 51 deadly toxic
-	[52]=0,		-- 52 deadly explosion
-	[53]=0,		-- 53 deadly abyss
+	[0]=0.0,		-- 0  normal floor without sound
+	[1]=1.0,	-- 1  wall
+	[2]=0.5,	-- 2  obstacle
+	[3]=1.0,	-- 3  wall without shadow
+	[4]=0.5,	-- 4  obstacle without shadow
+	[5]=0.0,		-- 5  wall that is rendered at floor level
+	[10]=0.0,		-- 10 floor dirt
+	[11]=0.0,		-- 11 floor snow (with footprints and fx)
+	[12]=0.0,		-- 12 floor step
+	[13]=0.0,		-- 13 floor tile
+	[14]=0.0,		-- 14 floor wade (water with wave fx)
+	[15]=0.0,		-- 15 floor metal
+	[16]=0.0,		-- 16 floor wood
+	[50]=0.0,		-- 50 deadly normal
+	[51]=0.0,		-- 51 deadly toxic
+	[52]=0.0,		-- 52 deadly explosion
+	[53]=0.0,		-- 53 deadly abyss
 }
 
 local TILE_BLEND_DIR = {
@@ -95,7 +95,8 @@ local ENTITY_TYPE = {
 
 local editor = {
 	tool = {
-		mode = "pencil",
+		--mode = "pencil",
+		mode = "off",
 		x = 0,
 		y = 0,
 		tile_id = 0,
@@ -212,6 +213,7 @@ end
 editor.icons = create_spritesheet("gfx/gui_icons.bmp", 16, 16)
 editor.blendmap = create_spritesheet("gfx/blendmap.bmp", 32, 32)
 editor.placeholder = love.image.newImageData(32, 32)
+editor.placeholder_img = love.graphics.newImage(editor.placeholder)
 editor.rect_data = love.image.newImageData(love.graphics.getDimensions())
 editor.rect = love.graphics.newImage(editor.rect_data)
 
@@ -254,6 +256,8 @@ function mapfile_new(width, height)
 		map = {};
 		map_mod = {};
 		
+		shadow_mask = love.image.newImageData(width+1, height+1);
+		
 		entity_count = 0;
 		entity_table = {};
 		entity_list = List:new();
@@ -284,6 +288,8 @@ function mapfile_new(width, height)
 		mapdata.map[x] = mapdata.map[x] or {}
 		mapdata.map[x][y] = id
 		
+		mapdata.shadow_mask:setPixel(x, y, 0.0, 0.0, 0.0)
+		
 		mapdata.map_mod[x] = mapdata.map_mod[x] or {}
 		mapdata.map_mod[x][y] = {
 			brightness = 100,
@@ -298,6 +304,8 @@ function mapfile_new(width, height)
 		}
 	end
 	end	
+	mapdata.shadow_render = love.graphics.newImage(mapdata.shadow_mask)
+	mapdata.shadow_render:setFilter("nearest", "nearest")
 	
 	local tileset_atlas = fs:loadImageData("gfx/tiles/"..mapdata.tileset)
 	local w, h = tileset_atlas:getDimensions()
@@ -352,6 +360,7 @@ function mapfile_new(width, height)
 	end
 
 	--mapdata.world:add(player, player.x, player.y, player.w, player.h)
+
 	return mapdata
 end
 
@@ -561,6 +570,7 @@ function mapfile_read(path)
 	-- MAP (4)
 	-----------------------------------------------------------------------------------------------------------
 	mapdata.map = {}
+	mapdata.shadow_mask = love.image.newImageData(mapdata.width+1, mapdata.height+1)
 	for x = 0, mapdata.width do
 	for y = 0, mapdata.height do
 		local id = read_byte()
@@ -568,12 +578,13 @@ function mapfile_read(path)
 		mapdata.map[x][y] = id
 		
 		local property = mapdata.tile[id].property
-		if property == 1 then
-			--local block = {x=x,y=y,w=mapdata.tile_size,h=mapdata.tile_size}
-			--mapdata.world:add(block, x*32, y*32, mapdata.tile_size, mapdata.tile_size)
-		end	
+		local height = TILE_MODE_HEIGHT[property]
+		mapdata.shadow_mask:setPixel(x, y, height, height, height)
 	end
 	end	
+	mapdata.shadow_render = love.graphics.newImage(mapdata.shadow_mask)
+	mapdata.shadow_render:setFilter("nearest", "nearest")
+	
 	--mapdata.world:add(player, player.x, player.y, player.w, player.h)
 	
 	----------------------------------------------------------------------------------------------
@@ -742,6 +753,48 @@ function mapfile_read(path)
 end
 
 
+-------------------------------------------------------------------------------------------------
+
+function mapdata_colorfill(x, y, replace)
+	local color = mapdata_gettile(x,y)
+	if color == replace then return end
+	local q = {}
+	local t = mapfile.map
+	
+	
+	table.insert(q, {x=x,y=y})
+	for index, n in ipairs(q) do
+		
+		local w, e  = {},{}
+		
+		w.x, w.y = n.x, n.y
+		e.x, e.y = n.x, n.y
+		
+		while t[w.x][w.y] == color and w.x > 0 do
+			w.x = w.x - 1
+		end
+		
+		while t[e.x][e.y] == color and e.x < mapfile.height do
+			e.x = e.x + 1
+		end
+
+		for i = w.x+1, e.x-1 do
+			mapdata_settile(i, n.y, replace)
+			
+			local north = math.min(n.y + 1, mapfile.height)
+			local south = math.max(n.y - 1, 0)
+			
+			if t[i][south]==color then
+				table.insert(q,{x = i, y = south})
+			end
+			
+			if t[i][north]==color then
+				table.insert(q,{x = i, y = north})
+			end
+		end		
+	end
+end
+
 function mapdata_setpencil(tile_id)
 	if tile_id and type(tile_id) == "number" and tile_id > 0 and tile_id < 255 then
 		editor.tool.tile_id = tile_id
@@ -766,8 +819,14 @@ function mapdata_random()
 		--local id = 0
 		mapfile.map[x] = mapfile.map[x] or {}
 		mapfile.map[x][y] = math.random(0,255)
+		
+		local property = mapfile.tile[tile_id].property
+		local height = TILE_MODE_HEIGHT[property]
+		mapfile.shadow_mask:setPixel(x, y, height, height, height)
 	end
 	end	
+	
+	mapdata_shadow_refresh()
 end
 
 
@@ -775,7 +834,34 @@ function mapdata_settile(x, y, tile_id)
 	if mapfile.map[x] and mapfile.map[x][y] then
 		mapfile.map[x][y] = tile_id
 	end	
+	
+	local property = mapfile.tile[tile_id].property
+	local height = TILE_MODE_HEIGHT[property]
+	mapfile.shadow_mask:setPixel(x, y, height, height, height)
+
+	mapdata_shadow_refresh()
 end
+
+function mapdata_setrectangle(x1, y1, x2, y2, tile_id)
+	local xs = (x1 - x2)
+	local ys = (y1 - y2)
+	if xs > 0 then xs = -1 else xs = 1 end
+	if ys > 0 then ys = -1 else ys = 1 end
+				
+	for x = x1, x2, xs do
+	for y = y1, y2, ys do
+		if mapfile.map[x] and mapfile.map[x][y] then
+			mapfile.map[x][y] = tile_id
+			
+			local property = mapfile.tile[tile_id].property
+			local height = TILE_MODE_HEIGHT[property]
+			mapfile.shadow_mask:setPixel(x, y, height, height, height)
+		end	
+	end
+	end
+	
+	mapdata_shadow_refresh()
+end	
 
 function mapdata_gettile(x, y) -- coords in tiles
 	if mapfile.map[x] and mapfile.map[x][y] then 
@@ -783,6 +869,11 @@ function mapdata_gettile(x, y) -- coords in tiles
 	else
 		return 0
 	end	
+end
+
+function mapdata_shadow_refresh()
+	mapfile.shadow_render = love.graphics.newImage(mapfile.shadow_mask)
+	mapfile.shadow_render:setFilter("nearest", "nearest")
 end
 
 function mapfile_tile(x, y) -- coords in tiles
@@ -870,31 +961,8 @@ function mapdata_update(dt)
 	-- CAMERA MOVEMENT
 	--------------------------------------------------------------------------------------------------
 	local past_camera_x, past_camera_y = editor.camera_x, editor.camera_y
-	local s = 500*dt
-	if editor.key_pressed.space then
-		s = 500*dt*5
-	end
 	
-	if (editor.key_pressed.up) then --or editor.key_pressed.w) then 
-		editor.camera_y = editor.camera_y - s
-	end
-	if (editor.key_pressed.left) then --or editor.key_pressed.a) then 
-		editor.camera_x = editor.camera_x - s
-	end
-	if (editor.key_pressed.down) then --or editor.key_pressed.s) then 
-		editor.camera_y = editor.camera_y + s
-	end
-	if (editor.key_pressed.right) then --or editor.key_pressed.d) then 
-		editor.camera_x = editor.camera_x + s
-	end
-	
-	if editor.tool.mode == "pencil" then
-		if love.mouse.isDown(1) then
-			mapdata_settile(editor.mousemap_tx, editor.mousemap_ty, editor.tool.tile_id)
-		elseif love.mouse.isDown(2) then
-			mapdata_setpencil( mapdata_gettile(editor.mousemap_tx, editor.mousemap_ty) )
-		end
-	end
+	mapdata_keydown(dt)
 	
 	-- CURSOR DATA UPDATE
 	--------------------------------------------------------------------------------------------------
@@ -977,6 +1045,115 @@ function background_draw()
 		end
 		end
 	end	
+end
+
+function tool_draw()
+	local camera_x = editor.camera_x
+	local camera_y = editor.camera_y
+	local screen_w = love.graphics.getWidth()
+	local screen_h = love.graphics.getHeight()
+	local cursor_x = editor.mousemap_tx*32 - camera_x + screen_w/2
+	local cursor_y = editor.mousemap_ty*32 - camera_y + screen_h/2
+	
+	if editor.tool.mode == "pencil" then
+		-- Draw cursor
+		love.graphics.setColor(1, 1, 0, 0.5 + oscillation/2 )
+		love.graphics.rectangle("line",cursor_x, cursor_y, 32, 32)
+		
+		-- Draw cursor gfx
+		love.graphics.setShader(shader.magenta)
+		love.graphics.setColor(1, 1, 1, 0.5 + oscillation/2 )
+		love.graphics.draw(mapfile.gfx.tile[editor.tool.tile_id], cursor_x, cursor_y)
+		love.graphics.setShader()
+	elseif editor.tool.mode == "rectangle" then
+		if editor.tool.selecting then
+			local anchor_x = editor.tool.pivot.x*32 - camera_x + screen_w/2
+			local anchor_y = editor.tool.pivot.y*32 - camera_y + screen_h/2
+			
+			local diff_x = math.abs(editor.mousemap_tx*32 - editor.tool.pivot.x*32) + 32
+			local diff_y = math.abs(editor.mousemap_ty*32 - editor.tool.pivot.y*32) + 32
+			local dif_x = editor.mousemap_x - editor.tool.pivot.x*32
+			local dif_y = editor.mousemap_y - editor.tool.pivot.y*32		
+			
+			if dif_x < 0 then
+				anchor_x = editor.mousemap_tx*32 - camera_x + screen_w/2
+			end
+					
+			if dif_y < 0 then
+				anchor_y = editor.mousemap_ty*32 - camera_y + screen_h/2
+			end
+			
+			love.graphics.setColor(0.5, 0.5, 1, 0.5 + oscillation/2 )
+			love.graphics.rectangle("fill",  anchor_x, anchor_y, diff_x, diff_y)
+			
+			local size_x = floor(diff_x/32)
+			local size_y = floor(diff_y/32)
+			love.graphics.print( string.format("%d x %d", size_x, size_y), love.graphics.getWidth()/2, 20)
+		else
+			love.graphics.setColor(0.5, 0.5, 1, 0.5 + oscillation/2 )
+			love.graphics.rectangle("line",cursor_x, cursor_y, 32, 32)
+		end	
+		
+		-- Draw cursor gfx
+		love.graphics.setShader(shader.magenta)
+		love.graphics.setColor(1, 1, 1, 0.5 + oscillation/2 )
+		love.graphics.draw(mapfile.gfx.tile[editor.tool.tile_id], cursor_x, cursor_y)
+		love.graphics.setShader()
+	elseif editor.tool.mode == "colorfill" then
+		love.graphics.setColor(0.5, 0, 0, 0.5 + oscillation/2 )
+		love.graphics.rectangle("line",cursor_x, cursor_y, 32, 32)
+	
+	
+		-- Draw cursor gfx
+		love.graphics.setShader(shader.magenta)
+		love.graphics.setColor(1, 1, 1, 0.5 + oscillation/2 )
+		love.graphics.draw(mapfile.gfx.tile[editor.tool.tile_id], cursor_x, cursor_y)
+		love.graphics.setShader()
+	elseif editor.tool.mode == "select" then
+		
+			if editor.tool.selecting then
+			local anchor_x = editor.tool.pivot.x*32 - camera_x + screen_w/2
+			local anchor_y = editor.tool.pivot.y*32 - camera_y + screen_h/2
+			
+			local diff_x = math.abs(editor.mousemap_tx*32 - editor.tool.pivot.x*32) + 32
+			local diff_y = math.abs(editor.mousemap_ty*32 - editor.tool.pivot.y*32) + 32
+			local dif_x = editor.mousemap_x - editor.tool.pivot.x*32
+			local dif_y = editor.mousemap_y - editor.tool.pivot.y*32		
+			
+			if dif_x < 0 then
+				anchor_x = editor.mousemap_tx*32 - camera_x + screen_w/2
+			end
+					
+			if dif_y < 0 then
+				anchor_y = editor.mousemap_ty*32 - camera_y + screen_h/2
+			end
+			
+			love.graphics.setColor(0.5, 0.5, 1, 0.5 + oscillation/2 )
+			love.graphics.rectangle("fill",  anchor_x, anchor_y, diff_x, diff_y)
+			
+			local size_x = floor(diff_x/32)
+			local size_y = floor(diff_y/32)
+			love.graphics.print( string.format("%d x %d", size_x, size_y), love.graphics.getWidth()/2, 20)
+		else
+			love.graphics.setColor(0.5, 0.5, 1, 0.5 + oscillation/2 )
+			love.graphics.rectangle("line",cursor_x, cursor_y, 32, 32)
+		end	
+	end	
+end
+
+function shadow_draw()
+	
+	--shader.raycasts:send("iMouse", {love.mouse.getX(), love.mouse.getY(), .0, .0})
+	shader.raycasts:send("iChannel0", mapfile.shadow_render)
+	shader.raycasts:send("iTime", love.timer.getTime())
+	
+	love.graphics.setShader(shader.raycasts)
+	love.graphics.setBlendMode("alpha")
+	
+	love.graphics.setColor(1,1,1,1)
+	love.graphics.draw(editor.placeholder_img, 0, 0, 0, mapfile.width+1, mapfile.height+1)
+	
+	love.graphics.setShader()
 end
 
 function mapdata_draw()
@@ -1064,80 +1241,11 @@ function mapdata_draw()
 	love.graphics.setColor(1,1,1,1)
 	love.graphics.draw(mapfile.gfx.wall)
 
+	-- Draw the shadow layer.
+	shadow_draw()
+
 	-- Reset the transformation stack
 	love.graphics.pop()
-	
-	-- Draw the shadow layer.
-	
-	
-	-- SDF
-	
-	--[[
-	local border = 40
-	love.graphics.setBlendMode("multiply", "premultiplied")
-	love.graphics.setShader(shader.shadow)
-	shader.shadow:send("iTime", love.timer.getTime())
-	shader.shadow:send("iMouse", {love.mouse.getX(), love.mouse.getY(), 0, 0} )
-	love.graphics.draw(editor.rect)
-	--]]
-	
-	-- Raycast
-	--[[
-	shader.raycast:send("iMouse", {love.mouse.getX(), love.mouse.getY(), .0, .0})
-	love.graphics.setShader(shader.raycast)
-	--love.graphics.setBlendMode("multiply","premultiplied")
-	love.graphics.rectangle("fill", 0, 0, love.graphics.getWidth(), love.graphics.getHeight())
-	
-	love.graphics.setShader()
-	love.graphics.setBlendMode("alpha")
-	--]]
-	
-	--[[
-	shader.experiment:send("iTime", love.timer.getTime() )
-	love.graphics.setShader(shader.experiment)
-	love.graphics.draw(editor.rect)
-	
-	love.graphics.setShader()
-	love.graphics.setBlendMode("alpha")
-	--]]
-
-	-- Bleed
-	--[[
-	shader.bleed:send("iTime", love.timer.getTime() )
-	shader.bleed:send("iMouse", {love.mouse.getX(), love.mouse.getY(), .0, .0})
-	love.graphics.setShader(shader.bleed)
-	love.graphics.draw(editor.rect)
-	
-	love.graphics.setShader()
-	love.graphics.setBlendMode("alpha")
-	--]]
-	
-	-- Wind
-	--[[
-	--shader.wind:send("iTime", love.timer.getTime() )
-	shader.wind:send("iMouse", {love.mouse.getX(), love.mouse.getY(), .0, .0})
-	shader.wind:send("iChannel0", heightmap)
-	--shader.wind:send("iChannel0", flare)
-	love.graphics.setShader(shader.wind)
-	love.graphics.draw(editor.rect)
-	
-	love.graphics.setShader()
-	love.graphics.setBlendMode("alpha")
-	--]]
-	
-	
-	--[[
-	shader.raycasts:send("iMouse", {love.mouse.getX(), love.mouse.getY(), .0, .0})
-	shader.raycasts:send("iChannel0", heightmap)
-	love.graphics.setShader(shader.raycasts)
-	--love.graphics.setBlendMode("multiply", "premultiplied")
-	--love.graphics.setBlendMode("add")
-	love.graphics.setBlendMode("alpha")
-	love.graphics.rectangle("fill", 0, 0, love.graphics.getWidth(), love.graphics.getHeight())
-	
-	love.graphics.setShader()
-	love.graphics.setBlendMode("alpha")
-	--]]
 	
 	-- Reset render
 	love.graphics.setShader()
@@ -1146,6 +1254,10 @@ function mapdata_draw()
 
 	-- If not on a frame, draw the rest of UI and guidelines
 	if loveframes.collisioncount > 0 then return end
+	
+	-- Draw minimap
+	--love.graphics.draw(mapfile.shadow_render, love.graphics.getWidth(), 0, 0, 1, 1, mapfile.shadow_render:getWidth(), 0)
+	
 	
 	-- Draw status bar
 	local tile_id = mapfile_tile(editor.mousemap_tx, editor.mousemap_ty)
@@ -1160,61 +1272,12 @@ function mapdata_draw()
 		entity_sprite,
 		entity_total
 	)
-	
 	love.graphics.printf(label, 0, screen_h-20, screen_w, "center")
 
-	
-	if editor.tool.mode == "pencil" then
-		-- Draw cursor
-		local offset_x = screen_w % 32 - screen_w/2 
-		local offset_y = screen_h % 32 - screen_h/2 
-		local cursor_x = love.mouse.getX() - ( camera_x + love.mouse.getX() - offset_x  )%32
-		local cursor_y = love.mouse.getY() - ( camera_y + love.mouse.getY() - offset_y  )%32
-		
-		love.graphics.setColor(1, 1, 0, 0.5 + oscillation/2 )
-		love.graphics.rectangle("line",cursor_x, cursor_y, 32, 32)
-		
-		
-		-- Draw cursor gfx
-		love.graphics.setShader(shader.magenta)
-		love.graphics.setColor(1, 1, 1, 0.5 + oscillation/2 )
-		love.graphics.draw(mapfile.gfx.tile[editor.tool.tile_id], cursor_x, cursor_y)
-		love.graphics.setShader()
-	elseif editor.tool.mode == "rectangle" then
-		
-		if editor.tool.selecting then
-		
-			-- Draw big cursor in pivot
-			local offset_x = screen_w % 32 - screen_w/2 
-			local offset_y = screen_h % 32 - screen_h/2 
-			local cursor_x = love.mouse.getX() - ( camera_x + love.mouse.getX() - offset_x  )%32
-			local cursor_y = love.mouse.getY() - ( camera_y + love.mouse.getY() - offset_y  )%32
-			
-			local size_x = editor.tool.pivot.x - editor.mousemap_tx
-			local size_y = editor.tool.pivot.y - editor.mousemap_ty
-			
-			--if size_x == 0 then size_x = 1 end
-			--if size_y == 0 then size_y = 1 end
-			
-			
-			love.graphics.setColor(0.5, 0.5, 1, 0.5 + oscillation/2 )
-			love.graphics.rectangle("line", cursor_x, cursor_y, math.abs(size_x*32), math.abs(size_y*32))
+	-- Draw tool gfx
+	tool_draw()
 
-
-			love.graphics.print( string.format("%d x %d", size_x, size_y), love.graphics.getWidth()/2, 20)
-		else
-			-- Draw cursor
-			local offset_x = screen_w % 32 - screen_w/2 
-			local offset_y = screen_h % 32 - screen_h/2 
-			local cursor_x = love.mouse.getX() - ( camera_x + love.mouse.getX() - offset_x  )%32
-			local cursor_y = love.mouse.getY() - ( camera_y + love.mouse.getY() - offset_y  )%32
-			
-			love.graphics.setColor(0.5, 0.5, 1, 0.5 + oscillation/2 )
-			love.graphics.rectangle("line",cursor_x, cursor_y, 32, 32)
-		end
-	end
-
-	-- Draw visible area
+	-- Draw visible area box
 	love.graphics.setColor(1,1,1,1)
 	love.graphics.rectangle("line", screen_w/2 - 10*32,  screen_h/2 - 8*32, 22*32, 16*32)
 	local label = "CS2D visible area"
@@ -1230,7 +1293,6 @@ function mapdata_draw()
 	local label = "CS2D map limit"
 	love.graphics.print(label, center_x + 4, center_y - 18)
 	love.graphics.rectangle("line", center_x, center_y, (mapfile.width+1)*32, (mapfile.height+1)*32)
-	
 	
 	-- Reset render
 	love.graphics.setShader()
@@ -1249,24 +1311,72 @@ end
 
 function mapdata_keyreleased(key, unicode)
 	editor.key_pressed[key] = false
-	
+end
 
+function mapdata_keydown(dt)
+	local s = 500*dt
+	if editor.key_pressed.space then
+		s = 500*dt*5
+	end
+
+	if (editor.key_pressed.up) then 
+		editor.camera_y = editor.camera_y - s
+	end
+	if (editor.key_pressed.left) then 
+		editor.camera_x = editor.camera_x - s
+	end
+	if (editor.key_pressed.down) then 
+		editor.camera_y = editor.camera_y + s
+	end
+	if (editor.key_pressed.right) then 
+		editor.camera_x = editor.camera_x + s
+	end
+	--[[
+	if (editor.key_pressed.up or editor.key_pressed.w) then 
+		editor.camera_y = editor.camera_y - s
+	end
+	if (editor.key_pressed.left or editor.key_pressed.a) then 
+		editor.camera_x = editor.camera_x - s
+	end
+	if (editor.key_pressed.down or editor.key_pressed.s) then 
+		editor.camera_y = editor.camera_y + s
+	end
+	if (editor.key_pressed.right or editor.key_pressed.d) then 
+		editor.camera_x = editor.camera_x + s
+	end--]]
+
+
+	if editor.tool.mode == "pencil" then
+		if love.mouse.isDown(1) then
+			mapdata_settile(editor.mousemap_tx, editor.mousemap_ty, editor.tool.tile_id)
+		end
+	end	
 end
 
 
 function mapdata_mousepressed(x, y, button)
-	
-end
-
-function mapdata_mousereleased(x, y, button)
 	if loveframes.collisioncount > 0 then return end
-	
-	
-	if button == 1 then
-	
-	
-		if editor.tool.mode == "rectangle" then
+
+	if editor.tool.mode == "rectangle" then
+		if button == 2 then
+			-- reseting the tool flags
+			editor.tool.selecting = false
+			editor.tool.pivot.x = 0
+			editor.tool.pivot.y = 0
+			
+			mapdata_setpencil( mapdata_gettile(editor.mousemap_tx, editor.mousemap_ty) )
+		elseif button == 1 then
 			if editor.tool.selecting then
+				-- Action cleared! applying changes...
+				mapdata_setrectangle(
+					editor.tool.pivot.x, 
+					editor.tool.pivot.y,
+					editor.mousemap_tx,
+					editor.mousemap_ty,
+					editor.tool.tile_id
+				)
+			
+				-- reseting the tool flags
 				editor.tool.selecting = false
 				editor.tool.pivot.x = 0
 				editor.tool.pivot.y = 0
@@ -1276,15 +1386,29 @@ function mapdata_mousereleased(x, y, button)
 				editor.tool.pivot.y = editor.mousemap_ty
 			end	
 		end
-		
-		
-	end	
+	elseif editor.tool.mode == "pencil" then
+		if button == 2 then
+			mapdata_setpencil( mapdata_gettile(editor.mousemap_tx, editor.mousemap_ty) )
+		end
+	elseif editor.tool.mode == "colorfill" then
+		if button == 1 then
+			mapdata_colorfill(editor.mousemap_tx, editor.mousemap_ty, editor.tool.tile_id)
+		elseif button == 2 then
+			mapdata_setpencil( mapdata_gettile(editor.mousemap_tx, editor.mousemap_ty) )
+		end
+	end
+end
+
+function mapdata_mousereleased(x, y, button)
+	if loveframes.collisioncount > 0 then return end
+
 end
 
 --[[---------------------------------------------------------
 	Load editor module UI
 --]]---------------------------------------------------------
-love.filesystem.load("interface/editor.lua")()
+--love.filesystem.load("interface/editor.lua")()
+love.filesystem.load("interface/console.lua")()
 
 --[[---------------------------------------------------------
 	

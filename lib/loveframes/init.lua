@@ -32,8 +32,8 @@ loveframes.stage = "Alpha"
 -- library configurations
 loveframes.config = {}
 loveframes.config["DIRECTORY"] = nil
-loveframes.config["DEFAULTSKIN"] = "Default"
-loveframes.config["ACTIVESKIN"] = "Default"
+loveframes.config["DEFAULTSKIN"] = "CS2D"
+loveframes.config["ACTIVESKIN"] = "CS2D"
 loveframes.config["INDEXSKINIMAGES"] = true
 loveframes.config["DEBUG"] = false
 loveframes.config["ENABLE_SYSTEM_CURSORS"] = false

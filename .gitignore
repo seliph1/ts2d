@@ -3,6 +3,8 @@
 /logos/
 /maps/
 /logs/
+/other/
+/assets/
 
 *.bak
 *.bat

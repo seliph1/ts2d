@@ -155,6 +155,7 @@
 	
 		local map_path = loveframes.Create("textinput", editor_frame)
 		map_path:SetText("maps/fun_roleplay.map")
+		--map_path:SetText("maps/de_dust.map")
 		map_path:SetPos(5, 30):SetWidth(192)
 		--map_path:SetMultiline(true)
 		--map_path:SetHeight(90)
@@ -179,27 +180,6 @@
 		
 		local pencil_label = loveframes.Create("label", editor_frame)
 		pencil_label:SetPos(5, 95):SetText("Tool Mode: ")
-		--[[
-		local pencil_button = loveframes.Create("button", editor_frame)
-		pencil_button:SetPos(5,95):SetText("Pencil"):SetWidth(40)
-		pencil_button.OnClick = function(object)
-			mapdata_toolmode("pencil")
-		end
-		
-		local rectangle_button = loveframes.Create("button", editor_frame)
-		rectangle_button:SetPos(55,95):SetText("Rectangle"):SetWidth(40)
-		rectangle_button.OnClick = function(object)
-			mapdata_toolmode("rectangle")
-		end
-		
-		
-		local colorfill_button = loveframes.Create("button", editor_frame)
-		colorfill_button:SetPos(105,95):SetText("Color Fill"):SetWidth(40)
-		colorfill_button.OnClick = function(object)
-			mapdata_toolmode("fill")
-		end--]]
-
-		
 		
 		
 		local savebutton = loveframes.Create("button", editor_frame)
@@ -266,5 +246,12 @@
 		resolution_label:SetText("Resolution: ")
 		resolution_label:SetPos(10, 35)
 		
+		--[[
+		local shadow_update = loveframes.Create("button", settings_panel)
+		shadow_update:SetPos(10, 65)
+		shadow_update.OnClick = function(object)
+			mapdata_shadow_refresh()
+		end--]]
 		
+
 		local entity_icon_render = checkbox
