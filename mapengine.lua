@@ -10,7 +10,6 @@ end
 -- Loading some libs
 local ffi = require "ffi"
 local List = require "lib/list"
-local shadows = require "lib/shadows"
 local shader = require "shader/cs2dshaders"
 
 -- Localise some important functions to constantly call during execution
@@ -116,7 +115,12 @@ local ENTITY_TYPE = {
 --[[---------------------------------------------------------
 	Lib
 --]]---------------------------------------------------------
-
+--- Creates a spritesheet out of a file, in equal rectangles
+--- containing all subsections  of the file as a ImageData object
+--- @param file string
+--- @param xsize number
+--- @param ysize number
+--- @return table spritesheet_table table containing all ImageData
 local function create_spritesheet(file, xsize, ysize)
 	local spritesheet = fs:loadImageData(file)
 	local spritesheet_table = {}
@@ -180,9 +184,12 @@ end
 --[[---------------------------------------------------------
 	MapObject 
 --]]---------------------------------------------------------
-
+--- The object that creates, manages and draw
+--- all map related operations in our game
+---@class MapObject
 
 local MapObject = {
+	---@method draw test
 	new = function()
 	end
 }
@@ -193,9 +200,13 @@ MapObject.__tostring = function(self)
 	return string.format("map: %s (author: %s [#%s])", mapdata.name, mapdata.author, mapdata.usgn)
 end
 
+--- Creates a new MapObject handler
+---@param width number map width
+---@param height number map height
+---@return table MapObject
 function MapObject.new(width, height)
-	local width = width or 50
-	local height = height or 50
+	width = width or 50
+	height = height or 50
 	local object = {
 		_updateRequest = true;
 		_breath = 0;
@@ -217,12 +228,10 @@ function MapObject.new(width, height)
 			height = 16,
 		};
 	}
-	
 	object._placeholder = love.image.newImageData(32, 32)
 	object._placeholder_img = love.graphics.newImage(object._placeholder)
 	object._flare = fs:loadImage("gfx/sprites/flare2.bmp");
 	object._blendmap = create_spritesheet("gfx/blendmap.bmp", 32, 32)
-	
 	local mapdata = {
 		name = "untitled";
 		header = "Unreal Software's Counter-Strike 2D Map File (max)";
@@ -242,34 +251,26 @@ function MapObject.new(width, height)
 		background_color_red = 0;
 		background_color_green = 0;
 		background_color_blue = 0;
-		background_scroll_speed_x = 0;
-		background_scroll_speed_y = 0;
 		save_tile_heights = 0;
-		pixel_tiles_hd = 0; 
+		pixel_tiles_hd = 0;
 		tile_size = 32;
 		daylight = 0;
 		version = "CS2D v1.0.1.4";
-
 		tile = {};
 		map = {};
 		map_mod = {};
-		
 		--shadow_mask = love.image.newImageData(width+1, height+1);
 		entity_count = 0;
 		entity_table = {};
 		entity_cache = {};
 		entity_list = List:new();
-		
 		gfx = {
 			tile = {};
 			entity = {};
 			background = {};
 			quad = {};
-			ground;
-			wall;
 		};
 	}
-	
 	for i = -1, mapdata.tile_count do
 		mapdata.tile[i] = {
 			height = 0,
@@ -277,15 +278,12 @@ function MapObject.new(width, height)
 			property = 0,
 		}
 	end	
-	
 	for x = 0, mapdata.width do
 	for y = 0, mapdata.height do
 		local id = 0
 		mapdata.map[x] = mapdata.map[x] or {}
 		mapdata.map[x][y] = id
-		
 		--mapdata.shadow_mask:setPixel(x, y, 0.0, 0.0, 0.0)
-		
 		mapdata.map_mod[x] = mapdata.map_mod[x] or {}
 		mapdata.map_mod[x][y] = {
 			brightness = 100,
@@ -299,74 +297,62 @@ function MapObject.new(width, height)
 			blending = 0,
 		}
 	end
-	end	
+	end
 	--mapdata.shadow_render = love.graphics.newImage(mapdata.shadow_mask)
 	--mapdata.shadow_render:setFilter("nearest", "nearest")
-	
 	local tileset_atlas = fs:loadImageData("gfx/tiles/"..mapdata.tileset)
 	local w, h = tileset_atlas:getDimensions()
 	local s = mapdata.tile_size
 	local tile_id = 0
-	
 	-- New spritebatch technique
 	local tileset_spritesheet = fs:loadImage("gfx/tiles/"..mapdata.tileset)
 	tileset_spritesheet:setFilter("nearest", "linear")
 	mapdata.gfx.ground = love.graphics.newSpriteBatch(tileset_spritesheet, mapdata.width * mapdata.height)
 	mapdata.gfx.wall = love.graphics.newSpriteBatch(tileset_spritesheet, mapdata.width * mapdata.height)
-	
 	for y = 0, floor(h/s)-1 do
 	for x = 0, floor(w/s)-1 do
 		local sprite = love.image.newImageData(s, s)
 		sprite:paste(tileset_atlas, 0, 0, x*s, y*s, s, s)
-		
 		mapdata.gfx.tile[tile_id] = love.graphics.newImage(sprite)
 		mapdata.gfx.quad[tile_id] = love.graphics.newQuad(x*s, y*s, s, s, w, h)
-		
 		tile_id = tile_id + 1
 	end
 	end
-	
 	-- Entity load (This is actually a new map so no need to walk through a list )
-	
 	-- Background load.(This is actually a new map so no need to walk through a list )
 	mapdata.gfx.background = love.graphics.newImage(object._placeholder)
 	object._mapdata = mapdata
-	
 	return setmetatable(object, MapObject)
 end
 
+--- @method Clears the map
 function MapObject:clear()
-	
 	collectgarbage("collect")
 end
 
+--- @method Reads from a CS2D Map file
+--- @param path string file relative to maps/ path in CS2D
 function MapObject:read(path)
 	--local filedata = love.filesystem.newFileData(path)
 	if not fs:isFile(path) then
 		return string.format("File %q does not exist. Check your files/folders and try again!", path)
 	end
-	
 	local filedata = fs:loadFile(path)
-	
 	-- Get a C pointer to read files as binary mode.
 	local size = filedata:getSize()
 	local pointer = filedata:getFFIPointer()
-	
 	-- Set byte and integer tables to read.
 	local bytearray = ffi.cast('uint8_t*',pointer)
 	local integerarray = ffi.cast('int32_t*',pointer)
 	local shortarray = ffi.cast('uint16_t*',pointer)
-	
 	-- Set the cursor at the start of file
 	local cursor = 0
-	
 	-- Read single byte
 	local function read_byte()
 		local value = bytearray[cursor]
 		cursor = cursor+1
 		return value
 	end
-	
 	-- Reading functions
 	local function read_integer()
 		local b1, b2, b3, b4 = bytearray[cursor],bytearray[cursor+1],bytearray[cursor+2],bytearray[cursor+3]
@@ -375,7 +361,6 @@ function MapObject:read(path)
 		cursor = cursor + 4
 		return value > 0x7fffffff and value - 0x100000000 or value
 	end
-	
 	-- Read string until \n
 	local function read_string()
 		local str = ""
@@ -392,14 +377,12 @@ function MapObject:read(path)
 			end	
 		end
 	end
-	
 	-- Read short integer as unsigned endian.
 	local function read_short()
 		local value = shortarray[math.floor(cursor/2)]
 		cursor = cursor+2
 		return value
 	end
-	
 	-- Jumps the cursor
 	local function seek_forward(bytes)
 		cursor = cursor + bytes
@@ -418,7 +401,6 @@ function MapObject:read(path)
 	) then
 		error("\n\nMap header first check failed. \nCheck if your file is corrupted.\nResult string: \""..header_check_a.."\"")
 	end
-	
 	-- skeleton
 	-----------------------------------------------------------------------------------------------------------
 	local mapdata = {
@@ -427,8 +409,8 @@ function MapObject:read(path)
 			entity = {};
 			background = {};
 			quad = {};
-			ground;
-			wall;
+			--ground = love.graphics.newSpriteBatch(self._placeholder);
+			--wall = love.graphics.newSpriteBatch(self._placeholder);
 		};
 	}
 	-- byte header data
@@ -439,24 +421,23 @@ function MapObject:read(path)
 	mapdata.save_tile_heights = read_byte()		-- Tile height property
 	mapdata.pixel_tiles_hd = read_byte()		-- Tile pixel size
 	mapdata.tile_size = mapdata.pixel_tiles_hd == 1 and 64 or 32
-	seek_forward(6)		
+	seek_forward(6)
 	-- integer header data
 	-----------------------------------------------------------------------------------------------------------	-- Six empty slots
 	mapdata.uptime = read_integer()				-- Time map were made
 	mapdata.usgn = read_integer()-51			-- Author USGN
 	mapdata.daylight = read_integer()			-- Daylight value
-	seek_forward(7*4)		
+	seek_forward(7*4)
 	-- string header data
 	-----------------------------------------------------------------------------------------------------------	-- 7*4 empty spaces
 	mapdata.author = read_string()				-- Author name
 	mapdata.version = read_string()				-- Map version
-	seek_forward(8*2)	
+	seek_forward(8*2)
 	-- more map settings
 	-----------------------------------------------------------------------------------------------------------
 	mapdata.write_time = read_string()			-- Map date
 	mapdata.tileset = read_string()				-- Tileset name string
 	mapdata.tile_count = read_byte()			-- How many tiles is in the map
-	
 	mapdata.tile={}
 	for i = -1, mapdata.tile_count do
 		mapdata.tile[i] = {
@@ -473,15 +454,13 @@ function MapObject:read(path)
 	mapdata.background_color_red = read_byte()
 	mapdata.background_color_green = read_byte()
 	mapdata.background_color_blue = read_byte()
-	
 	-- header second check
 	-----------------------------------------------------------------------------------------------------------
 	local header_check_b = read_string()
-	if header_check_b ~= "ed.erawtfoslaernu" then 
-		file:close()
+	if header_check_b ~= "ed.erawtfoslaernu" then
+		--file:close()
 		error("Map header second check failed. Check if your file is corrupted.")
 	end
-	
 	-----------------------------------------------------------------------------------------------------------
 	-- TILE MODES (2)
 	-----------------------------------------------------------------------------------------------------------
@@ -506,7 +485,7 @@ function MapObject:read(path)
 		53 deadly abyss
 	--]]
 	for i = 0, mapdata.tile_count do 
-		mapdata.tile[i].property = read_byte(file)
+		mapdata.tile[i].property = read_byte()
 	end
 
 	-----------------------------------------------------------------------------------------------------------
@@ -515,7 +494,7 @@ function MapObject:read(path)
 	if mapdata.save_tile_heights > 0 then
 		for i = 0, mapdata.tile_count do
 			if mapdata.save_tile_heights == 1 then -- CS2D 1.0.0.3 prerelease
-				mapdata.tile[i].height = read_int()
+				mapdata.tile[i].height = read_integer()
 			elseif mapdata.save_tile_heights == 2 then-- CS2D 1.0.0.3 and above
 				mapdata.tile[i].height = read_short()
 				mapdata.tile[i].modifier = read_byte()
@@ -539,30 +518,26 @@ function MapObject:read(path)
 	-- MAP (4)
 	-----------------------------------------------------------------------------------------------------------
 	mapdata.map = {}
-	mapdata.shadow_mask = love.image.newImageData(mapdata.width+1, mapdata.height+1)
+	--mapdata.shadow_mask = love.image.newImageData(mapdata.width+1, mapdata.height+1)
 	for x = 0, mapdata.width do
 	for y = 0, mapdata.height do
 		local id = read_byte()
 		mapdata.map[x] = mapdata.map[x] or {}
 		mapdata.map[x][y] = id
-		
 		local property = mapdata.tile[id].property
 		local height = TILE_MODE_HEIGHT[property]
-		mapdata.shadow_mask:setPixel(x, y, height, height, height)
+		--mapdata.shadow_mask:setPixel(x, y, height, height, height)
 	end
 	end	
-	mapdata.shadow_render = love.graphics.newImage(mapdata.shadow_mask)
-	mapdata.shadow_render:setFilter("nearest", "nearest")
-	
+	--mapdata.shadow_render = love.graphics.newImage(mapdata.shadow_mask)
+	--mapdata.shadow_render:setFilter("nearest", "nearest")
 	--mapdata.world:add(player, player.x, player.y, player.w, player.h)
-	
 	----------------------------------------------------------------------------------------------
 	-- Tile id mod table.
 	mapdata.map_mod = {}
 	if mapdata.modifiers == 1 then
 		for x = 0, mapdata.width  do
 		for y = 0, mapdata.height  do
-
 			local modifier = read_byte()
 			local rotation = modifier % 4
 			local brightness = 100
@@ -573,19 +548,15 @@ function MapObject:read(path)
 				blue = 255,
 				overlay = 0,
 			}
-			
 			if modifier > 0 then -- At least something is modified.
-			
 				-- menor que 64 -- bits 00
 				-- maior que 64 e menor que 128 -- bits 01
 				-- maior que 128 e menor que 192 -- bits 10
 				-- maior que 192 -- 11
-				
 				if modifier >= 192 then -- Some stuff that DC planned.
 					read_string() 
 				elseif modifier >= 64 and modifier < 128 then -- Blending
 					brightness = math.floor( ( modifier - 64 - rotation) * 2.5 )
-					
 					blending = read_byte() + 2
 				elseif modifier >= 128 then -- Color + Blending
 					brightness = math.floor( ( modifier - 128 - rotation) * 2.5 )
@@ -598,7 +569,6 @@ function MapObject:read(path)
 				end
 			end
 			if brightness == 0 then brightness = 100 end
-			
 			mapdata.map_mod[x] = mapdata.map_mod[x] or {}
 			mapdata.map_mod[x][y] = {
 				blending = blending,
@@ -607,8 +577,7 @@ function MapObject:read(path)
 				modifier = modifier,
 				brightness = brightness,
 			}
-
-		end	
+		end
 		end
 	else
 		for x = 0, mapdata.width  do
@@ -625,10 +594,9 @@ function MapObject:read(path)
 				modifier = 0,
 				blending = 0,
 			}
-		end	
-		end	
+		end
+		end
 	end
-	
 	-----------------------------------------------------------------------------------------------------------
 	-- ENTITIES (5)
 	-----------------------------------------------------------------------------------------------------------
@@ -636,7 +604,6 @@ function MapObject:read(path)
 	mapdata.entity_list = List.new()
 	mapdata.entity_table = {}
 	mapdata.entity_cache = {}
-	
 	--print("Entity count: " .. mapdata.entity_count)
 	for i = 1, mapdata.entity_count do
 		local e = {}
@@ -647,14 +614,12 @@ function MapObject:read(path)
 		e.trigger = read_string()
 		e.string_settings = {}
 		e.number_settings = {}
-		
-		for i = 1, 10 do
-			e.number_settings[i] = read_integer()
-			e.string_settings[i] = read_string()
+		for j = 1, 10 do
+			e.number_settings[j] = read_integer()
+			e.string_settings[j] = read_string()
 		end
 		mapdata.entity_list:push( e )
 		table.insert(mapdata.entity_table, e)
-		
 		mapdata.entity_cache[e.x] = mapdata.entity_cache[e.x] or {}
 		mapdata.entity_cache[e.x][e.y] = e
 	end
@@ -663,58 +628,50 @@ function MapObject:read(path)
 	-- GFX/SFX INDEXING (6)
 	-----------------------------------------------------------------------------------------------------------
 	-- Tileset load.
-	local path = string.format("gfx/tiles/%s", mapdata.tileset)
+	local tileset_path = string.format("gfx/tiles/%s", mapdata.tileset)
 	--local tileset_raw = fs:loadImage(path)
-	local tileset_atlas = fs:loadImageData(path)
+	local tileset_atlas = fs:loadImageData(tileset_path)
 	local w, h = tileset_atlas:getDimensions()
 	local s = mapdata.tile_size
 	local tile_id = 0
-	
 	local tileset_spritesheet = fs:loadImage("gfx/tiles/"..mapdata.tileset)
 	tileset_spritesheet:setFilter("nearest", "linear")
 	mapdata.gfx.ground = love.graphics.newSpriteBatch(tileset_spritesheet, mapdata.width * mapdata.height)
 	mapdata.gfx.wall = love.graphics.newSpriteBatch(tileset_spritesheet, mapdata.width * mapdata.height)
-	
 	for y = 0, floor(h/s)-1 do
 	for x = 0, floor(w/s)-1 do
 		local sprite = love.image.newImageData(s, s)
 		sprite:paste(tileset_atlas,0,0,x*s, y*s, s, s)
-		
 		mapdata.gfx.tile[tile_id] = love.graphics.newImage(sprite)
 		mapdata.gfx.quad[tile_id] = love.graphics.newQuad(x*s, y*s, s, s, w, h)
-		
 		tile_id = tile_id + 1
 	end
 	end
-	
 	-- Entity load
-	for index, e in mapdata.entity_list:walk() do
+	for _, e in mapdata.entity_list:walk() do
 		if e.type == 22 then
-			local path = (e.string_settings[1] or "gfx/cs2d.bmp")
-	
-			if not mapdata.gfx.entity[path] then -- Try to load a new image
-				if fs:isFile(path) then -- Check if file exists
-					local sprite = fs:loadImage(path)
-					mapdata.gfx.entity[path] = sprite
-					print(string.format("Sprite loaded: %s", path))
+			local sprite_path = (e.string_settings[1] or "gfx/cs2d.bmp")
+			if not mapdata.gfx.entity[sprite_path] then -- Try to load a new image
+				if fs:isFile(sprite_path) then -- Check if file exists
+					local sprite = fs:loadImage(sprite_path)
+					mapdata.gfx.entity[sprite_path] = sprite
+					print(string.format("Sprite loaded: %s", sprite_path))
 				else
-					mapdata.gfx.entity[path] = love.graphics.newImage(self._placeholder)
-					print(string.format("Failed to load %s", path))
-				end				
+					mapdata.gfx.entity[sprite_path] = love.graphics.newImage(self._placeholder)
+					print(string.format("Failed to load %s", sprite_path))
+				end
 			end
-		end	
+		end
 	end
-	
 	-- Background load.
-	local path = string.format("gfx/backgrounds/%s", mapdata.background_file)
-	if (mapdata.background_file ~= "") and fs:isFile(path) then
-		print(string.format("Sprite loaded: %s", path))
-		mapdata.gfx.background = fs:loadImage(path)
+	local background_path = string.format("gfx/backgrounds/%s", mapdata.background_file)
+	if (mapdata.background_file ~= "") and fs:isFile(background_path) then
+		print(string.format("Sprite loaded: %s", background_path))
+		mapdata.gfx.background = fs:loadImage(background_path)
 		mapdata.gfx.background:setWrap("repeat", "repeat")
 	else
 		mapdata.gfx.background = love.graphics.newImage(self._placeholder)
 	end
-	
 	self._mapdata = mapdata
 	self._updateRequest = true
 end
@@ -764,28 +721,24 @@ end
 function MapObject:random()
 	for x = 0, self._mapdata.width do
 	for y = 0, self._mapdata.height do
-		--local id = 0
+		local r = math.random(0,255)
 		self._mapdata.map[x] = self._mapdata.map[x] or {}
-		self._mapdata.map[x][y] = math.random(0,255)
-		
-		local property = self._mapdata.tile[tile_id].property
+		self._mapdata.map[x][y] = r
+		local property = self._mapdata.tile[r].property
 		local height = TILE_MODE_HEIGHT[property]
 		--mapfile.shadow_mask:setPixel(x, y, height, height, height)
 	end
-	end	
-	
+	end
 	--mapdata_shadow_refresh()
 end
 
 function MapObject:settile(x, y, tile_id)
 	if self._mapdata.map[x] and self._mapdata.map[x][y] then
 		self._mapdata.map[x][y] = tile_id
-	end	
-	
+	end
 	local property = self._mapdata.tile[tile_id].property
 	local height = TILE_MODE_HEIGHT[property]
 	--self._mapdata.shadow_mask:setPixel(x, y, height, height, height)
-
 	--mapdata_shadow_refresh()
 end
 
@@ -802,7 +755,6 @@ function MapObject:tile(x, y) -- coords in tiles
 		local id = self._mapdata.map[x][y]
 		local mod = self._mapdata.map_mod[x][y]
 		local property =  self._mapdata.tile[id].property
-		
 		return id, mod, property
 	else
 		return -1, DEFAULT_MOD
@@ -813,16 +765,15 @@ function MapObject:gfx(group, id)
 	if self._mapdata.gfx[group] then
 		if self._mapdata.gfx[group][id] then
 			return self._mapdata.gfx[group][id]
-		end	
+		end
 	end
-	
 	return nil
 end
 
 function MapObject:get(property)
 	if self._mapdata[property] then
 		return self._mapdata[property]
-	end	
+	end
 end
 
 function MapObject:isColliding(object, tx, ty)
@@ -832,13 +783,11 @@ function MapObject:scroll(x, y)
 	x, y = floor(x), floor(y)
 	local cx = floor(x / (32 * 8))
 	local cy = floor(y / (32 * 8))
-	
 	if self._camera.chunk_x ~= cx or self._camera.chunk_y ~= cy then
 		self._updateRequest = true
 	end
 	self._camera.chunk_x = cx
 	self._camera.chunk_y = cy
-
 	self._camera.x = x
 	self._camera.y = y
 end
@@ -858,12 +807,10 @@ function MapObject:update(dt)
 	local render_y = floor( (camera.y - sh ) / tile_size ) 
 	local render_width = ceil( ( camera.x + sw ) / tile_size )
 	local render_height = ceil( ( camera.y + sh ) / tile_size )
-	
 	self._render.x = render_x
 	self._render.y = render_y
 	self._render.width = render_width
 	self._render.height = render_height
-	
 
 	gfx.ground:clear()
 	gfx.wall:clear()
@@ -871,30 +818,28 @@ function MapObject:update(dt)
 	for y = render_y, render_height do
 		local tile_id, mod, property = self:tile(x, y)
 		local quad = gfx.quad[tile_id]
-		
 		local level = property == 1 and "wall" or "ground"
 		if tile_id >= 0 then
 			local brightness = (mod.brightness/100)
 
 			mapdata.gfx[level]:setColor(
 				love.math.colorFromBytes(
-					mod.color.red * brightness , 
-					mod.color.green * brightness, 
+					mod.color.red * brightness,
+					mod.color.green * brightness,
 					mod.color.blue * brightness
 				)
 			)
-			
 			mapdata.gfx[level]:add(
-				quad, 
-				x * tile_size + off_x, 
-				y * tile_size + off_y, 
-				rad(mod.rotation*90), 
-				1, 
-				1, 
-				off_x, 
+				quad,
+				x * tile_size + off_x,
+				y * tile_size + off_y,
+				rad(mod.rotation*90),
+				1,
+				1,
+				off_x,
 				off_y
 			)
-		end	
+		end
 	end
 	end
 end

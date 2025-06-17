@@ -1,11 +1,8 @@
 local state = require 'lib/state'
-
-
 local enet = require 'enet' -- Network
 -- local marshal = require 'marshal' -- Serialization
-local serpent = require 'lib/serpent'
+-- local serpent = require 'lib/serpent'
 local bitser = require 'lib/bitser'
-
 
 local encode = bitser.dumps
 local decode = bitser.loads
@@ -32,8 +29,7 @@ do
     local host
     local peer
 
-    --local useCompression = true
-    local useCompression = false
+    local useCompression = true
     function client.disableCompression()
         useCompression = false
     end
@@ -119,14 +115,14 @@ do
                     local request = decode(event.data)
 
                     -- Message?
-                    if request.message then
+                    if request and request.message then
                         if client.receive then
                             client.receive(unpack(request.message, 1, request.message.nArgs))
                         end
                     end
 
                     -- Diff / exact? (do this first so we have it in `.connect` below)
-                    if request.diff then
+                    if request and request.diff then
                         if client.changing then
                             client.changing(request.diff)
                         end
@@ -135,7 +131,7 @@ do
                             client.changed(request.diff)
                         end
                     end
-                    if request.exact then -- `state.apply` may return a new value
+                    if request and request.exact then -- `state.apply` may return a new value
                         if client.changing then
                             client.changing(request.exact)
                         end
@@ -154,14 +150,13 @@ do
                     end
 
                     -- Id?
-                    if request.id then
+                    if request and request.id then
                         peer = event.peer
                         client.connected = true
                         client.id = request.id
                         if client.connect then
                             client.connect()
                         end
-						
 						print("received id")
 
                         -- Send sessionToken now that we have an id
@@ -172,7 +167,7 @@ do
                     end
 
                     -- Full?
-                    if request.full then
+                    if request and request.full then
                         if client.full then
                             client.full()
                         end
@@ -207,7 +202,6 @@ do
 end
 
 return {
-    server = server,
     client = client,
     DIFF_NIL = state.DIFF_NIL,
 }

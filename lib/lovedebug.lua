@@ -1,3 +1,4 @@
+---@diagnostic disable: undefined-field, param-type-mismatch, cast-local-type
 --local _Debug table for holding all variables
 local _Debug = {
 	errors = {},
@@ -49,6 +50,7 @@ _DebugSettings = {
 	LiveReset = false,
     HaltExecution = true,
     AutoScroll = false,
+	PressKey = "f5"
 }
 
 
@@ -117,7 +119,8 @@ _Debug.onTop = function()
 	love.graphics.origin()
 	love.graphics.setFont(_Debug.Font)
 
-	local p,e,err,index,msg = {},{}
+	local p,e = {},{}
+	local err, index, msg
 	for i,v in ipairs(_Debug.onTopFeed) do
 		err, index = _Debug.lineInfo(v[1]) --Obtain message and type
 		msg = err and _Debug.errors[index] or _Debug.prints[index]
@@ -338,7 +341,7 @@ _Debug.keyConvert = function(key)
 			_Debug.tick = 0
 			_Debug.drawTick = false
 		end
-	elseif key == 'f5' then
+	elseif key == 'f8' then
 		_Debug.liveDo=true
 	elseif key == "return" then
 		if _Debug.input == 'clear' then --Clears the console
@@ -395,7 +398,7 @@ _Debug.keyConvert = function(key)
 			if type(_DebugSettings.LiveFile) == 'table' then
 				_Debug.liveLastModified={}
 				for i = 1, #_DebugSettings.LiveFile do --Setting up lastModified for live files
-					if not love.filesystem.exists(_DebugSettings.LiveFile[i]) then --if the file's not found then the live variables are reset
+					if not love.filesystem.getInfo(_DebugSettings.LiveFile[i]) then --if the file's not found then the live variables are reset
 						_Debug.handleError('_DebugSettings.LiveFile: Index '..i..' file "'.._DebugSettings.LiveFile[i]..'" was not found.')
 						_DebugSettings.LiveFile = prevfile
 						_Debug.liveLastModified = prevmod
@@ -404,7 +407,7 @@ _Debug.keyConvert = function(key)
 					_Debug.liveLastModified[i] = love.filesystem.getInfo(_DebugSettings.LiveFile[i]).modtime
 				end
 			else
-				if love.filesystem.exists(_DebugSettings.LiveFile) then
+				if love.filesystem.getInfo(_DebugSettings.LiveFile) then
 					_Debug.liveLastModified = love.filesystem.getInfo(_DebugSettings.LiveFile).modtime
 				else
 					_Debug.handleError('_DebugSettings.LiveFile: File "'.._DebugSettings.LiveFile..'" was not found.')
@@ -507,7 +510,7 @@ end
 
 --Handle Keypresses
 _Debug.handleKey = function(a)
-	local activekey = love.system.getOS()~='Android' and (_lovedebugpresskey or "f8") or 'menu'
+	local activekey = love.system.getOS()~='Android' and (_DebugSettings.PressKey or "f8") or 'menu'
 	if a == activekey then
 		if love.keyboard.isDown("lshift", "rshift", "lctrl", "rctrl") then --Support for both Shift and CTRL
 			_Debug.drawOverlay = not _Debug.drawOverlay --Toggle
@@ -673,9 +676,9 @@ _G["love"].run = function()
 						--if love.quit then
 						--	xpcall(function() quit = love.quit() end, _Debug.handleError)
 						--end
-						if not love.quit or not love.quit() then
+						--if not love.quit or not love.quit() then
 							return a or 0
-						end
+						--end
 					end
 					local skipEvent = false
 					if name == "textinput" then --Keypress

@@ -5,6 +5,7 @@
 /logs/
 /other/
 /assets/
+/.vscode/
 
 *.bak
 *.bat

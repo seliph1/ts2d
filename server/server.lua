@@ -4,6 +4,7 @@ local server = cs.server
 local W, H = 800, 600 -- Game world size
 
 server.enabled = true
+--server.map = "de_dust"
 
 local share = server.share
 local homes = server.homes
@@ -29,6 +30,8 @@ function server.connect(clientId)
         shootTimer = 0, -- Can shoot if <= 0
         health = 100,
     }
+
+    server.send(clientId, string.format("mapchange %s", "de_dust"))
 end
 
 function server.receive(id, ...)
@@ -161,7 +164,6 @@ function server.update(dt)
             share.bullets[bulId] = nil
         end
     end
-	
 	server.postupdate(dt)
 end
 

@@ -1,5 +1,7 @@
 local client = require "client"
+local loveframes = require "lib/loveframes"
 
+--[[
 _Print = print
 
 function print(...)
@@ -8,11 +10,11 @@ function print(...)
 	for k,v in pairs(args) do
 		table.insert(str, tostring(v))
 	end
-	if console_window then
+	--if console_window then
 		--console_window:InsertText( table.concat(str," ") )
-	end
+	--end
 	_Print(unpack(args))
-end
+end]]
 
 local console_frame = loveframes.Create("frame")
 console_frame:SetSize(640, 480)
@@ -85,7 +87,9 @@ console_input.commands = {
 	};
 	["connect"] = {
 		action = function(ip, port)
-			client.start("127.0.0.1:36963")
+			ip = ip or "127.0.0.1"
+			port = port or "36963"
+			client.start(string.format("%s:%s", ip, port))
 
 		end,
 		syntax = "connect <ip:port>",
@@ -110,4 +114,10 @@ console_input.commands = {
 		action = function(message)
 		end;
 	};
+}
+
+return {
+	frame = console_frame,
+	window = console_window,
+	input = console_input,
 }

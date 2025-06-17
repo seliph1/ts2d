@@ -1,6 +1,7 @@
+local loveframes = require "lib/loveframes"
 loveframes.SetActiveSkin("CS2D")
 
-_print = print
+_Print = print
 
 function print(...)
 	local args = {...}
@@ -9,9 +10,8 @@ function print(...)
 		table.insert(str, tostring(v))
 	end	
 	console_window:InsertText( table.concat(str," ") )
-	_print(unpack(args))
+	_Print(unpack(args))
 end
-
 
 console_frame = loveframes.Create("frame")
 console_frame:SetSize(640, 480)

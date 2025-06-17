@@ -1,3 +1,4 @@
+---@diagnostic disable: duplicate-set-field
 local loveframes = require "lib/loveframes"
 local client = require "client"
 local console = require "interface/console"
@@ -33,18 +34,20 @@ function love.keypressed(key, unicode)
 	if (key=="f1") then
 		local state = loveframes.config["DEBUG"]
 		loveframes.config["DEBUG"] = not state
+	elseif key == "'" then
+		console.frame:ToggleVisibility()
 	end
-	client.keypressed(key, unicode)
+	client.keypressed(key)
 	loveframes.keypressed(key, unicode)
 end
 
 function love.keyreleased(key, unicode)
-	client.keyreleased(key, unicode)
+	client.keyreleased(key)
 	loveframes.keyreleased(key)
 end
 
 function love.mousemoved( x, y, dx, dy, istouch )
-	client.mousemoved(x, y, dx, dy, istouch)
+	client.mousemoved(x, y)
 end
 
 function love.textinput(text)

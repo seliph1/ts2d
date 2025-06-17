@@ -1,3 +1,4 @@
+---@diagnostic disable: duplicate-set-field
 local loveframes = require "lib/loveframes"
 local console = require "console"
 local server = require "server"
@@ -25,14 +26,11 @@ function love.mousereleased(x, y, button)
 end
 
 function love.keypressed(key, unicode)
-	
 	if (key == "escape") then os.exit(0) end
 	if (key=="f1") then
 		local state = loveframes.config["DEBUG"]
 		loveframes.config["DEBUG"] = not state
 	end
-	
-	
 	loveframes.keypressed(key, unicode)
 end
 

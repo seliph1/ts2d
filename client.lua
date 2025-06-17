@@ -5,8 +5,19 @@ local bulletSound = love.audio.newSource('assets/laser.wav', 'static')
 local smallExplosionSound = love.audio.newSource('assets/hurt.wav', 'static')
 local bigExplosionSound = love.audio.newSource('assets/explosion.wav', 'static')
 
+--- Client base framework
 local client = cs.client
+
+--- Table that gets info froms server
 local share = client.share
+
+--- Use `home` to store control info so the server can see it
+--- @class userdata home
+--- @field targetX integer position of our client
+--- @field targetY integer position of our client
+--- @field wantShoot boolean variable that stores our mouse keypresses
+--- @field move table direction vector
+
 local home = client.home
 
 client.enabled = true
@@ -16,12 +27,6 @@ client.camera = {
 	y = 0,
 }
 client.key = {}
-
-
---[[
-local function normalize(x,y,w,h)
-	return (x/w)*2 - 1, (w/h)*2 - 1
-end--]]
 
 local W, H = 800, 600 -- Game world size
 local DISPLAY_SCALE = 1 -- Scale to draw graphics at w.r.t game world units
@@ -47,7 +52,6 @@ function client.camera_move(dt)
 end
 
 function client.load()
-    -- Use `home` to store control info so the server can see it
     home.targetX = 0
     home.targetY = 0
     home.wantShoot = false
@@ -60,7 +64,6 @@ function client.mousemoved(x, y)
     --local ox, oy = 0.5 * (love.graphics.getWidth() - w), 0.5 * (love.graphics.getHeight() - h)
     --home.targetX, home.targetY = (x - ox) / DISPLAY_SCALE, (y - oy) / DISPLAY_SCALE
 	--print(home.targetX, home.targetY)
-	
 	local w, h = love.graphics.getWidth(), love.graphics.getHeight()
 	home.targetX = math.floor((x/w)*W)
 	home.targetY = math.floor((y/h)*H)
@@ -69,7 +72,6 @@ end
 function client.mousepressed(x, y, button)
     if button == 1 then
         home.wantShoot = true
-		
 		client.send(string.format("click %s-%s",home.targetX, home.targetY))
     end
 end
@@ -82,23 +84,14 @@ end
 
 function client.keypressed(k)
 	client.key[k] = true
-
     if k == 'w' then home.move.up = true end
     if k == 's' then home.move.down = true end
     if k == 'a' then home.move.left = true end
     if k == 'd' then home.move.right = true end
-	
-	
-	if k == "'" then
-		if console_frame then
-			console_frame:ToggleVisibility()
-		end
-	end
 end
 
 function client.keyreleased(k)
 	client.key[k] = false
-	
     if k == 'w' then home.move.up = false end
     if k == 's' then home.move.down = false end
     if k == 'a' then home.move.left = false end
@@ -119,7 +112,6 @@ function client.receive(message)
         bigExplosionSound:stop()
         bigExplosionSound:play()
     end
-	
 	--print("received message: "..message)
 end
 
@@ -145,34 +137,26 @@ end
 
 function client.draw()
     love.graphics.push('all')
-
     -- Center and scale display
     local w, h = DISPLAY_SCALE * W, DISPLAY_SCALE * H
     local ox, oy = 0.5 * (love.graphics.getWidth() - w), 0.5 * (love.graphics.getHeight() - h)
     love.graphics.setScissor(ox, oy, w, h)
 	--love.graphics.scale(DISPLAY_SCALE)
-
 	if client.map then
 		client.map:draw_floor()
-		
 		--client.map:draw_entities()
 	end
-
     if client.connected then
         -- Player render
 		client.map:draw_players(share, home, client)
-		
 		-- Bullet render
 		client.map:draw_bullets(share, home, client)
     end
-	
 	if client.map then
 		client.map:draw_ceiling()
 	end
-	
 	-- Resets scissoring
 	love.graphics.pop()
-	
 	local label = string.format("Camera: %dpx|%dpx  Ping: %s  FPS: %s", 
 		client.camera.x,
 		client.camera.y,
@@ -213,8 +197,6 @@ function client.update(dt)
 	client.postupdate(dt)
 end
 
-
-
 -- Quick hack to try local overrides for player input -- will test this more
 --function client.changing(diff)
 --    if diff.triangles then
@@ -229,11 +211,4 @@ end
 --        end
 --    end
 --end
-
-
--- Render map engine 2.0
-
-
-
-
 return client
