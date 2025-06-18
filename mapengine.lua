@@ -141,7 +141,7 @@ local function entityInCamera(e, camx, camy, sprite)
 	local path 		= e.string_settings[1]
 	local size_x 	= e.number_settings[1]
 	local size_y 	= e.number_settings[2]
-	local shift_x 	= e.number_settings[3] 	 
+	local shift_x 	= e.number_settings[3]
 	local shift_y 	= e.number_settings[4]
 	
 	local sw = love.graphics.getWidth()
@@ -332,7 +332,7 @@ end
 
 --- @method Reads from a CS2D Map file
 --- @param path string file relative to maps/ path in CS2D
-function MapObject:read(path)
+function MapObject:read(path, noindexing)
 	--local filedata = love.filesystem.newFileData(path)
 	if not fs:isFile(path) then
 		return string.format("File %q does not exist. Check your files/folders and try again!", path)
@@ -624,6 +624,11 @@ function MapObject:read(path)
 		mapdata.entity_cache[e.x][e.y] = e
 	end
 
+	if noindexing then
+		self._mapdata = mapdata
+		self._updateRequest = true
+		return
+	end
 	-----------------------------------------------------------------------------------------------------------
 	-- GFX/SFX INDEXING (6)
 	-----------------------------------------------------------------------------------------------------------

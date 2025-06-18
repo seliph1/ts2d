@@ -1,7 +1,8 @@
 ---@diagnostic disable: duplicate-set-field
 local loveframes = require "lib/loveframes"
 local client = require "client"
-local console = require "interface/console"
+
+Console = require "interface/console"
 --require "lib/lovedebug"
 
 function love.load()
@@ -35,7 +36,7 @@ function love.keypressed(key, unicode)
 		local state = loveframes.config["DEBUG"]
 		loveframes.config["DEBUG"] = not state
 	elseif key == "'" then
-		console.frame:ToggleVisibility()
+		Console.frame:ToggleVisibility()
 	end
 	client.keypressed(key)
 	loveframes.keypressed(key, unicode)

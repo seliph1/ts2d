@@ -1,9 +1,12 @@
 local cs = require "lib/cs"
 local MapObject = require "mapengine"
-
-local bulletSound = love.audio.newSource('assets/laser.wav', 'static')
-local smallExplosionSound = love.audio.newSource('assets/hurt.wav', 'static')
-local bigExplosionSound = love.audio.newSource('assets/explosion.wav', 'static')
+require "lib/lovefs"
+local fs = lovefs()
+if love.filesystem.isFused() then
+	fs:cd(love.filesystem.getSourceBaseDirectory() )
+else
+	fs:cd(love.filesystem.getSource() )
+end
 
 --- Client base framework
 local client = cs.client
@@ -17,7 +20,6 @@ local share = client.share
 --- @field targetY integer position of our client
 --- @field wantShoot boolean variable that stores our mouse keypresses
 --- @field move table direction vector
-
 local home = client.home
 
 client.enabled = true
@@ -59,11 +61,7 @@ function client.load()
 end
 
 function client.mousemoved(x, y)
-    -- Transform mouse coordinates according to display centering and scaling (see `.draw` below)
-    --local w, h = DISPLAY_SCALE * W, DISPLAY_SCALE * H
-    --local ox, oy = 0.5 * (love.graphics.getWidth() - w), 0.5 * (love.graphics.getHeight() - h)
-    --home.targetX, home.targetY = (x - ox) / DISPLAY_SCALE, (y - oy) / DISPLAY_SCALE
-	--print(home.targetX, home.targetY)
+    -- Transform mouse coordinates according to display centering and scaling
 	local w, h = love.graphics.getWidth(), love.graphics.getHeight()
 	home.targetX = math.floor((x/w)*W)
 	home.targetY = math.floor((y/h)*H)
@@ -72,7 +70,7 @@ end
 function client.mousepressed(x, y, button)
     if button == 1 then
         home.wantShoot = true
-		client.send(string.format("click %s-%s",home.targetX, home.targetY))
+		--client.send(string.format("click %s-%s",home.targetX, home.targetY))
     end
 end
 
@@ -98,21 +96,61 @@ function client.keyreleased(k)
     if k == 'd' then home.move.right = false end
 end
 
+function client.parse(str)
+    local args = {}
+	for word in string.gmatch(str, "%S+") do
+		table.insert(args, word)
+	end
+
+	local action_id = args[1]
+	local actions = client.actions
+	if actions[ action_id ] then
+		local action_object = actions[ action_id ]
+		if action_object.action then
+			local status = action_object.action( unpack(args,2) )
+		end
+	else
+		print(string.format("Unknown command: %s", str))
+	end
+end
+
+client.actions = {
+    -- Server only actions
+	["mapchange"] = {
+		action = function(...)
+			local args = {...}
+			local status = client.map:read( "maps/"..table.concat(args," ")..".map" )
+			if status then
+				print(status)
+			end
+		end,
+	};
+    ["filecheck"] = {
+        action = function(...)
+            local args = {...}
+            local path = table.concat(args," ")
+            if fs:isFile(path) then
+                print(string.format("file %s exists.", path))
+            else
+                print(string.format("file %s does not exist. Requesting", path))
+            end
+        end
+    };
+	["scroll"] = {
+		action = function(x,y)
+    		x = x or 0
+			y = y or 0
+			client.map:scroll(x, y)
+		end
+	};
+	["name"] = {
+		action = function(name)
+		end;
+	};
+}
+
 function client.receive(message)
-    if message == 'bulletSound' then
-        bulletSound:setPitch(1.4 + 0.3 * math.random())
-        bulletSound:stop()
-        bulletSound:play()
-    elseif message == 'smallExplosionSound' then
-        smallExplosionSound:setPitch(1.4 + 0.3 * math.random())
-        smallExplosionSound:stop()
-        smallExplosionSound:play()
-    elseif message == 'bigExplosionSound' then
-        bigExplosionSound:setPitch(0.7 + 0.3 * math.random())
-        bigExplosionSound:stop()
-        bigExplosionSound:play()
-    end
-	--print("received message: "..message)
+    client.parse(message)
 end
 
 function client.move_player(player, dt, home) -- `home` is used to apply controls if given
@@ -168,14 +206,11 @@ end
 
 function client.update(dt)
 	client.preupdate(dt)
-	
 	client.camera_move(dt)
-	
 	if client.map then
 		client.map:scroll(client.camera.x, client.camera.y)
 		client.map:update(dt)
 	end
-
     -- Do some client-side prediction
     if client.connected then
         -- Predictively move triangles
@@ -185,7 +220,7 @@ function client.update(dt)
         end
 
         -- Predictively move bullets
-        for bulId, bul in pairs(share.bullets) do
+        for _, bul in pairs(share.bullets) do
             client.move_bullet(bul, dt)
         end
     end
@@ -193,7 +228,6 @@ function client.update(dt)
     -- Scale down display if window is too small
     --local w, h = love.graphics.getDimensions()
     --DISPLAY_SCALE = math.min(1, w / W, h / H)
-	
 	client.postupdate(dt)
 end
 
