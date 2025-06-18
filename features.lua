@@ -4,13 +4,13 @@
     Increases hudtxt unique id
     cache hudtxt message
     force update
+    health info style: (health bar, percentage)
 
 
     client routine:
     check files
     request files from server
     load map 
-
     receive server data
     receive physics data
     receive player data
@@ -25,5 +25,5 @@
     receive map cycle
     receive enabled server mod
     switch to ingame mode
-    
+
 ]]

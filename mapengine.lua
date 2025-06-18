@@ -18,6 +18,7 @@ local ceil = math.ceil
 local min = math.min
 local max = math.max
 local rad = math.rad
+local random = math.random
 
 -- Default config tables for tiles/tilesets/maps
 local DEFAULT_PROPERTY = 0
@@ -904,21 +905,17 @@ function MapObject:draw_ceiling()
 	local camera = self._camera
 	local mapdata = self._mapdata
 	local render = self._render
-	
 	local sw, sh = love.graphics.getWidth(), love.graphics.getHeight()
 	local tile_size = mapdata.tile_size
 
 	-- Change camera perspective
 	love.graphics.push()
 	love.graphics.translate(-camera.x + sw/2, -camera.y + sh/2)
-
 	-- Draw the wall layer
 	love.graphics.setColor(1,1,1,1)
 	love.graphics.draw(mapdata.gfx.wall)
-	
 	-- Reset the transformation stack
 	love.graphics.pop()
-	
 	-- Reset render
 	love.graphics.setShader()
 	love.graphics.setBlendMode("alpha")
@@ -931,14 +928,11 @@ end
 function MapObject:draw_bullets(share, home, client)
 	local camera = self._camera
 	local render = self._render
-	
 	local bullets = share.bullets
 	local sw, sh = love.graphics.getWidth(), love.graphics.getHeight()
-	
 	-- Change camera perspective
 	love.graphics.push()
 	love.graphics.translate(-camera.x + sw/2, -camera.y + sh/2)
-
 	-- Bullets
 	for _, bul in pairs(bullets) do
 		love.graphics.push()
@@ -954,10 +948,8 @@ function MapObject:draw_bullets(share, home, client)
 
 		love.graphics.pop()
 	end
-	
 	-- Reset the transformation stack
 	love.graphics.pop()
-	
 	-- Reset render
 	love.graphics.setShader()
 	love.graphics.setBlendMode("alpha")
@@ -967,14 +959,11 @@ end
 function MapObject:draw_players(share, home, client) -- get info from server!
 	local camera = self._camera
 	local render = self._render
-	
 	local players = share.players -- get info from server
 	local sw, sh = love.graphics.getWidth(), love.graphics.getHeight()
-	
 	-- Change camera perspective
 	love.graphics.push()
 	love.graphics.translate(-camera.x + sw/2, -camera.y + sh/2)
-
 
 	for clientId, player in pairs(players) do
 		love.graphics.push()
@@ -986,7 +975,6 @@ function MapObject:draw_players(share, home, client) -- get info from server!
 		else
 			targetX, targetY = player.targetX, player.targetY
 		end
-		
 		--local x,y = normalize(targetX, targetY)
 		--love.graphics.rotate(math.atan2(targetY - player.y, targetX -  player.x))
 		love.graphics.rotate(math.atan2(targetY - sh/2, targetX -  sw/2))
@@ -997,30 +985,21 @@ function MapObject:draw_players(share, home, client) -- get info from server!
 		love.graphics.setColor(1, 1, 1, 0.8) -- Outline (thicker if it's us)
 		love.graphics.setLineWidth(clientId == client.id and 3 or 1)
 		love.graphics.polygon('line', -20, 20, 30, 0, -20, -20)
-		
-		
 		love.graphics.pop() -- Pop rotation (don't rotate health bar)
-		
-		
 		--[[
-		
-
 		love.graphics.setColor(0, 0, 0, 0.5) -- Health bar
 		love.graphics.rectangle('fill', -20, -35, 40, 4)
 		love.graphics.setColor(0.933, 0.961, 0.859, 0.5)
 		love.graphics.rectangle('fill', -20, -35, player.health / 100 * 40, 4)
-
 		love.graphics.pop()
 		--]]
 	end
-	
 	-- Reset the transformation stack
 	love.graphics.pop()
-	
 	-- Reset render
 	love.graphics.setShader()
 	love.graphics.setBlendMode("alpha")
-	love.graphics.setColor(1, 1, 1, 1)	
+	love.graphics.setColor(1, 1, 1, 1)
 end
 
 function MapObject:draw_entity(e)
@@ -1047,8 +1026,6 @@ function MapObject:draw_entity(e)
 	local scale_y = size_y/height
 	local sx = (e.x * 32) + shift_x + size_x/2
 	local sy = (e.y * 32) + shift_y + size_y/2
-	
-	
 	love.graphics.setShader(shader.entity)
 	if blend == 0 then -- No filter/solid
 		love.graphics.setBlendMode("alpha")
@@ -1076,24 +1053,20 @@ function MapObject:draw_background()
 
 		for i = 0, love.graphics.getWidth() / background_w do
 		for j = 0, love.graphics.getHeight() / background_h do
-		
 			love.graphics.draw(mapdata.gfx.background, i * background_w, j * background_h)
 		end
 		end
-	end	
+	end
 end
 
 function MapObject:draw_entities()
 	local camera = self._camera
 	local mapdata = self._mapdata
 	local render = self._render
-	
 	local sw, sh = love.graphics.getWidth(), love.graphics.getHeight()
-	
 	-- Change camera perspective
 	love.graphics.push()
 	love.graphics.translate(-camera.x + sw/2, -camera.y + sh/2)
-	
 	-- Draw entity sprites
 	for index, e in mapdata.entity_list:walk() do
 		--do break end
@@ -1101,11 +1074,27 @@ function MapObject:draw_entities()
 			self:draw_entity(e)
 		end
 	end
-	
 	-- Reset the transformation stack
 	love.graphics.pop()
 end
 
+function MapObject:draw_items(share)
+	local camera = self._camera
+	local mapdata = self._mapdata
+	local items = share.items
+	local sw, sh = love.graphics.getWidth(), love.graphics.getHeight()
+	love.graphics.push()
+	love.graphics.translate(-camera.x + sw/2, -camera.y + sh/2)
+	
+	for _, item in pairs(items) do
+		love.graphics.push()
+		love.graphics.translate(mapdata.tile_size/2, mapdata.tile_size/2) --  Offset by half a tile
+		love.graphics.setColor(0, 0, 0, 0.8)
+		love.graphics.circle("fill",item.x*32, item.y*32, 5)
+		love.graphics.pop()
+	end
+	love.graphics.pop()
+end
 
 
 return MapObject

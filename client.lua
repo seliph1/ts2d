@@ -1,6 +1,7 @@
 local cs = require "lib/cs"
 local MapObject = require "mapengine"
-require "lib/lovefs"
+require "lib/lovefs/lovefs"
+
 local fs = lovefs()
 if love.filesystem.isFused() then
 	fs:cd(love.filesystem.getSourceBaseDirectory() )
@@ -138,9 +139,13 @@ client.actions = {
     };
 	["scroll"] = {
 		action = function(x,y)
-    		x = x or 0
-			y = y or 0
+    		x = tonumber(x) or 0
+			y = tonumber(y) or 0
+
+			client.camera.x = x
+			client.camera.y = y
 			client.map:scroll(x, y)
+			print(string.format("scrolled to %s-%s", x, y))
 		end
 	};
 	["name"] = {
@@ -189,6 +194,8 @@ function client.draw()
 		client.map:draw_players(share, home, client)
 		-- Bullet render
 		client.map:draw_bullets(share, home, client)
+		-- Draw items on the ground
+		client.map:draw_items(share)
     end
 	if client.map then
 		client.map:draw_ceiling()
