@@ -144,16 +144,12 @@ local function entityInCamera(e, camx, camy, sprite)
 	local size_y 	= e.number_settings[2]
 	local shift_x 	= e.number_settings[3]
 	local shift_y 	= e.number_settings[4]
-	
 	local sw = love.graphics.getWidth()
 	local sh = love.graphics.getHeight()
-	
 	local x1, y1 = e.x*32 - camx + sw/2 + shift_x, e.y*32 - camy + sh/2 + shift_y 
 	local x1size, y1size = size_x, size_y
-	
 	local x2, y2 = 0, 0
 	local x2size, y2size = sw, sh
-	
 	if x1 <= x2 + x2size and x1 + x1size >= x2 
 	and y1 <= y2 + y2size and y1 + y1size >= y2 
 	then
@@ -168,7 +164,6 @@ local function entityPosInScreen(e, camx, camy)
 	local sh = love.graphics.getHeight()
 	local x1, y1 = e.x*32 - camx + sw/2, e.y*32 - camy + sh/2
 	local x1size, y1size = 32, 32
-	
 	local x2, y2 = 0, 0
 	local x2size, y2size = sw, sh
 
@@ -1078,19 +1073,33 @@ function MapObject:draw_entities()
 	love.graphics.pop()
 end
 
-function MapObject:draw_items(share)
+function MapObject:draw_items(share, client)
 	local camera = self._camera
 	local mapdata = self._mapdata
-	local items = share.items
+	local itemlist = share.itemlist
+	local gfx = client.gfx
+	local itemdata = client.content.itemdata
 	local sw, sh = love.graphics.getWidth(), love.graphics.getHeight()
 	love.graphics.push()
 	love.graphics.translate(-camera.x + sw/2, -camera.y + sh/2)
-	
-	for _, item in pairs(items) do
+
+	for _, item in pairs(itemlist) do
 		love.graphics.push()
 		love.graphics.translate(mapdata.tile_size/2, mapdata.tile_size/2) --  Offset by half a tile
+		
+		love.graphics.setColor(1, 1, 1, 1)
+		local path = itemdata[item.id].common_path .. itemdata[item.id].dropped_image
+		if not client.gfx.itemlist[path] then
+			client.gfx.itemlist[path] = fs:loadImage(path)
+		end
+
 		love.graphics.setColor(0, 0, 0, 0.8)
-		love.graphics.circle("fill",item.x*32, item.y*32, 5)
+		love.graphics.circle("fill",item.x*32, item.y*32, 7)
+		love.graphics.setColor(0, 0, 0, 0.8)
+		love.graphics.circle("fill",item.x*32, item.y*32, 8)
+		love.graphics.draw(client.gfx.itemlist[path])
+
+		
 		love.graphics.pop()
 	end
 	love.graphics.pop()

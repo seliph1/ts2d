@@ -151,6 +151,15 @@ console_input.commands = {
 		action = function(name)
 		end;
 	};
+	["files"] = {
+		action = function()
+			if client then
+				for k,v in pairs(client.gfx.items) do
+					print(k,v)
+				end
+			end
+		end;
+	};
 	["say"] = {
 		action = function(message)
 		end;

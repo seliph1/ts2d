@@ -1,5 +1,7 @@
-local cs = require "lib/cs"
+local cs 		= require "lib/cs"
 local MapObject = require "mapengine"
+local enum      = require "enum"
+
 require "lib/lovefs/lovefs"
 
 local fs = lovefs()
@@ -12,7 +14,7 @@ end
 --- Client base framework
 local client = cs.client
 
---- Table that gets info froms server
+--- Table that gets info from server
 local share = client.share
 
 --- Use `home` to store control info so the server can see it
@@ -28,8 +30,43 @@ client.map = MapObject.new(50, 50)
 client.camera = {
 	x = 0,
 	y = 0,
+	tx = 0,
+	ty = 0,
+	snap_pointer = 0,
+	snap_enabled = false,
 }
 client.key = {}
+client.gfx = {
+	itemlist = {};
+	hud = {};
+	objects = {};
+}
+client.content = enum
+
+do
+	for _, item in pairs(client.content.itemdata) do
+		local path = item.common_path
+		local full_path_d = path .. item.dropped_image
+		local full_path_h = path .. item.held_image
+		local full_path_k = path .. item.kill_image
+		local full_path = path .. item.display_image
+
+		if item.dropped_image ~= "" and fs:isFile(full_path) then
+			client.gfx.itemlist[full_path] = fs:loadImage(full_path)
+		end
+		if item.held_image ~= "" and fs:isFile(full_path_d) then
+			client.gfx.itemlist[full_path_d] = fs:loadImage(full_path_d)
+		end
+		if item.display_image ~= "" and fs:isFile(full_path_h) then
+			client.gfx.itemlist[full_path_h] = fs:loadImage(full_path_h)
+		end
+		if item.kill_image ~= "" and fs:isFile(full_path_k) then
+			client.gfx.itemlist[full_path_k] = fs:loadImage(full_path_k)
+		end
+	end
+end
+
+
 
 local W, H = 800, 600 -- Game world size
 local DISPLAY_SCALE = 1 -- Scale to draw graphics at w.r.t game world units
@@ -195,7 +232,7 @@ function client.draw()
 		-- Bullet render
 		client.map:draw_bullets(share, home, client)
 		-- Draw items on the ground
-		client.map:draw_items(share)
+		client.map:draw_items(share, client)
     end
 	if client.map then
 		client.map:draw_ceiling()

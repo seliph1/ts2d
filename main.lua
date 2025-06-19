@@ -1,8 +1,9 @@
 ---@diagnostic disable: duplicate-set-field
+Console = require "interface/console"
+
 local loveframes = require "lib/loveframes"
 local client = require "client"
 
-Console = require "interface/console"
 --require "lib/lovedebug"
 
 function love.load()
