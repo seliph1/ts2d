@@ -27,7 +27,7 @@ function newobject:initialize()
 	self.down = true
 	self.enabled = true
 	self.internals = {}
-	self.OnChanged = function () end
+	self.OnChanged = function(object, checked) end
 	self.group = {}
 
 	self:SetDrawFunc()

@@ -158,7 +158,7 @@ skin.controls.menuoption_body_hover_color           = {0.2, 0.8, 1, 1}
 skin.controls.menuoption_text_hover_color           = {1, 1, 1, 1}
 skin.controls.menuoption_text_color                 = {0.71, 0.71, 0.71, 1}
 
-local function ParseHeaderText(str, hx, hwidth, tx)
+local function ParseHeaderText(str, hx, hwidth, tx, twidth)
 	
 	local font = love.graphics.getFont()
 	local twidth = love.graphics.getFont():getWidth(str)
@@ -1655,10 +1655,10 @@ function skin.columnlistheader(object)
 	local textdowncolor = skin.controls.columnlistheader_text_hover_color
 	local nohovercolor = skin.controls.columnlistheader_body_nohover_color
 	local textnohovercolor = skin.controls.columnlistheader_text_nohover_color
-	
-	local name = ParseHeaderText(object:GetName(), x, width, x + width/2, twidth)
+
 	local twidth = font:getWidth(name)
-		
+	local name = ParseHeaderText(object:GetName(), x, width, x + width/2, twidth)
+
 	if down then
 		local image = skin.images["button-down.png"]
 		local imageheight = image:getHeight()

@@ -22,7 +22,7 @@ function newobject:initialize()
 	self.hover = false
 	self.down = false
 	self.autoposition = true
-	self.OnClick = function() end
+	self.OnClick = function(x, y, object) end
 	
 	-- apply template properties to the object
 	loveframes.ApplyTemplatesToObject(self)

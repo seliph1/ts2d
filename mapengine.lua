@@ -10,7 +10,7 @@ end
 -- Loading some libs
 local ffi = require "ffi"
 local List = require "lib/list"
-local shader = require "shader/cs2dshaders"
+local shader = require "sys/core/shaders/cs2dshaders"
 
 -- Localise some important functions to constantly call during execution
 local floor = math.floor
@@ -182,12 +182,11 @@ end
 --]]---------------------------------------------------------
 --- The object that creates, manages and draw
 --- all map related operations in our game
----@class MapObject
-
 local MapObject = {
 	---@method draw test
 	new = function()
-	end
+	end,
+	spritesheet = create_spritesheet,
 }
 
 MapObject.__index = MapObject
@@ -207,6 +206,10 @@ function MapObject.new(width, height)
 		_updateRequest = true;
 		_breath = 0;
 		_oscillation = 0;
+		_item_spatial_hash = {
+
+		};
+
 		_camera = {
 			x = 0,
 			y = 0,
@@ -273,7 +276,7 @@ function MapObject.new(width, height)
 			modifier = 0,
 			property = 0,
 		}
-	end	
+	end
 	for x = 0, mapdata.width do
 	for y = 0, mapdata.height do
 		local id = 0
@@ -748,7 +751,7 @@ function MapObject:gettile(x, y) -- coords in tiles
 		return self._mapdata.map[x][y]
 	else
 		return 0
-	end	
+	end
 end
 
 function MapObject:tile(x, y) -- coords in tiles
@@ -845,6 +848,20 @@ function MapObject:update(dt)
 	end
 end
 
+function MapObject:isOnScreen(x, y)
+	local camera = self._camera
+	local render = self._render
+
+	if x > render.x
+	and y > render.y
+	and x < render.width
+	and y < render.height
+	then
+		return true
+	end
+	return false
+end
+
 function MapObject:draw_floor()
 	local camera = self._camera
 	local mapdata = self._mapdata
@@ -914,10 +931,7 @@ function MapObject:draw_ceiling()
 	-- Reset render
 	love.graphics.setShader()
 	love.graphics.setBlendMode("alpha")
-	love.graphics.setColor(1, 1, 1, 1)	
-end
-
-function MapObject:draw_external(z)
+	love.graphics.setColor(1, 1, 1, 1)
 end
 
 function MapObject:draw_bullets(share, home, client)
@@ -934,10 +948,11 @@ function MapObject:draw_bullets(share, home, client)
 		love.graphics.translate(bul.x, bul.y)
 		love.graphics.rotate(math.atan2(bul.dirY, bul.dirX))
 
-		love.graphics.setColor(bul.r, bul.g, bul.b) -- Fill
+		--love.graphics.setColor(bul.r, bul.g, bul.b) -- Fill
+		love.graphics.setColor(1, 1, 1, 1)
 		love.graphics.ellipse('fill', 0, 0, 24, 1)
-		love.graphics.setColor(1, 1, 1, 0.38)
 
+		love.graphics.setColor(1, 1, 1, 0.38)
 		love.graphics.setLineWidth(0.3) -- Outline
 		love.graphics.ellipse('line', 0, 0, 24, 1)
 
@@ -948,7 +963,7 @@ function MapObject:draw_bullets(share, home, client)
 	-- Reset render
 	love.graphics.setShader()
 	love.graphics.setBlendMode("alpha")
-	love.graphics.setColor(1, 1, 1, 1)	
+	love.graphics.setColor(1, 1, 1, 1)
 end
 
 function MapObject:draw_players(share, home, client) -- get info from server!
@@ -970,6 +985,18 @@ function MapObject:draw_players(share, home, client) -- get info from server!
 		else
 			targetX, targetY = player.targetX, player.targetY
 		end
+		--love.graphics.circle("fill", 0, 0, 30)
+		local holding = player.h
+		local itemdata = client.content.itemlist[holding]
+		local stance = itemdata.player_stance
+
+		local texture = client.gfx.player[player.p].texture
+		local quad = client.gfx.player[player.p][stance]
+		local width, height = quad:getTextureDimensions()
+
+		love.graphics.draw(texture, quad, 0, 0, love.timer.getTime() % 360, 1, 1, 16, 16)
+
+		--[[
 		--local x,y = normalize(targetX, targetY)
 		--love.graphics.rotate(math.atan2(targetY - player.y, targetX -  player.x))
 		love.graphics.rotate(math.atan2(targetY - sh/2, targetX -  sw/2))
@@ -981,6 +1008,7 @@ function MapObject:draw_players(share, home, client) -- get info from server!
 		love.graphics.setLineWidth(clientId == client.id and 3 or 1)
 		love.graphics.polygon('line', -20, 20, 30, 0, -20, -20)
 		love.graphics.pop() -- Pop rotation (don't rotate health bar)
+		]]
 		--[[
 		love.graphics.setColor(0, 0, 0, 0.5) -- Health bar
 		love.graphics.rectangle('fill', -20, -35, 40, 4)
@@ -988,6 +1016,8 @@ function MapObject:draw_players(share, home, client) -- get info from server!
 		love.graphics.rectangle('fill', -20, -35, player.health / 100 * 40, 4)
 		love.graphics.pop()
 		--]]
+
+		love.graphics.pop()
 	end
 	-- Reset the transformation stack
 	love.graphics.pop()
@@ -1001,16 +1031,16 @@ function MapObject:draw_entity(e)
 	local mapdata 	= self._mapdata
 	local path 		= e.string_settings[1]
 	local sprite 	= mapdata.gfx.entity[path]
-	local width		= sprite:getWidth() 
+	local width		= sprite:getWidth()
 	local height 	= sprite:getHeight()
 	local size_x 	= e.number_settings[1]
 	local size_y 	= e.number_settings[2]
-	local shift_x 	= e.number_settings[3] 	 
-	local shift_y 	= e.number_settings[4] 	 
+	local shift_x 	= e.number_settings[3]
+	local shift_y 	= e.number_settings[4]
 	local rotation 	= -e.number_settings[5]
-	local red 		= e.number_settings[6] 
-	local green 	= e.number_settings[7] 
-	local blue 		= e.number_settings[8] 
+	local red 		= e.number_settings[6]
+	local green 	= e.number_settings[7]
+	local blue 		= e.number_settings[8]
 	local fx		= e.number_settings[9]
 	local blend 	= e.number_settings[10]
 	local alpha 	= ( tonumber( e.string_settings[2] ) or 1 ) * 255
@@ -1073,35 +1103,41 @@ function MapObject:draw_entities()
 	love.graphics.pop()
 end
 
+function MapObject:update_items()
+
+end
+
 function MapObject:draw_items(share, client)
 	local camera = self._camera
 	local mapdata = self._mapdata
-	local itemlist = share.itemlist
+	local items = share.items
 	local gfx = client.gfx
-	local itemdata = client.content.itemdata
+	local itemlist = client.content.itemlist
 	local sw, sh = love.graphics.getWidth(), love.graphics.getHeight()
 	love.graphics.push()
+	love.graphics.setShader(shader.magenta)
 	love.graphics.translate(-camera.x + sw/2, -camera.y + sh/2)
 
-	for _, item in pairs(itemlist) do
-		love.graphics.push()
-		love.graphics.translate(mapdata.tile_size/2, mapdata.tile_size/2) --  Offset by half a tile
-		
-		love.graphics.setColor(1, 1, 1, 1)
-		local path = itemdata[item.id].common_path .. itemdata[item.id].dropped_image
-		if not client.gfx.itemlist[path] then
-			client.gfx.itemlist[path] = fs:loadImage(path)
+	for _, item in pairs(items) do
+		if self:isOnScreen(item.x, item.y) then
+			local itemdata = itemlist[item.it]
+			local path = itemdata.common_path .. itemdata.dropped_image
+			local imagedata = gfx.itemlist[path]
+
+			if itemdata and imagedata then
+				love.graphics.push()
+				love.graphics.translate(mapdata.tile_size/2, mapdata.tile_size/2) --  Offset by half a tile
+
+				-- Transpose and rotate the image relative to the center
+				love.graphics.setColor(1, 1, 1, 1)
+				love.graphics.draw(imagedata, item.x*32, item.y*32, item.r + love.timer.getTime()%360, 1, 1, imagedata:getWidth()/2, imagedata:getHeight()/2)
+
+				-- Go back to the beginning
+				love.graphics.pop()
+			end
 		end
-
-		love.graphics.setColor(0, 0, 0, 0.8)
-		love.graphics.circle("fill",item.x*32, item.y*32, 7)
-		love.graphics.setColor(0, 0, 0, 0.8)
-		love.graphics.circle("fill",item.x*32, item.y*32, 8)
-		love.graphics.draw(client.gfx.itemlist[path])
-
-		
-		love.graphics.pop()
 	end
+	love.graphics.setShader()
 	love.graphics.pop()
 end
 

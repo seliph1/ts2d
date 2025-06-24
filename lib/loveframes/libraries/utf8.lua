@@ -78,6 +78,8 @@ local rep     = string.rep
 local reverse = string.reverse
 local sub     = string.sub
 local upper   = string.upper
+local utf8_lc_uc = nil
+local utf8_uc_lc = nil
 
 -- returns the number of bytes used by the UTF-8 character at byte i in s
 -- also doubles as a UTF-8 character validator

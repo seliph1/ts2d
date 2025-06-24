@@ -155,7 +155,7 @@ enum.itemname = {
 ---@field held_image string
 ---@field player_stance string
 ---@field acessory table
-enum.itemdata = {
+enum.itemlist = {
 	[1] = {
 		name = "USP", -- Display name
 		alt_name = "Heckler & Koch USP", -- Name gotten from external source (wikipedia, etc)
@@ -850,9 +850,9 @@ enum.itemdata = {
 		weight = 400,
 		accuracy = 0, 
 		common_path = "gfx/weapons/",
-		dropped_image = "flashbang_d.bmp",
+		dropped_image = "flashbang_bmp",
 		held_image = "flashbang.bmp",
-		kill_image = "flashbang_k.bmp",
+		kill_image = "flashbang.bmp",
 		display_image = "flashbang_m.bmp", 
 		player_stance = "object",
 		acessory = {};
@@ -871,10 +871,10 @@ enum.itemdata = {
 		weight = 400,
 		accuracy = 0, 
 		common_path = "gfx/weapons/",
-		dropped_image = "smokegrenade_d.bmp",
+		dropped_image = "smokegrenade.bmp",
 		held_image = "smokegrenade.bmp",
-		kill_image = "smokegrenade_k.bmp",
-		display_image = "smokegrenade_m.bmp", 
+		kill_image = "smokegrenade.bmp",
+		display_image = "smokegrenade.bmp", 
 		player_stance = "object",
 		acessory = {};
 	};
@@ -892,10 +892,10 @@ enum.itemdata = {
 		weight = 400,
 		accuracy = 0, 
 		common_path = "gfx/weapons/",
-		dropped_image = "smokegrenade_d.bmp",
-		held_image = "smokegrenade.bmp",
-		kill_image = "smokegrenade_k.bmp",
-		display_image = "smokegrenade_m.bmp", 
+		dropped_image = "flare.bmp",
+		held_image = "flare.bmp",
+		kill_image = "flare.bmp",
+		display_image = "flare.bmp", 
 		player_stance = "object",
 		acessory = {};
 	};
@@ -915,8 +915,8 @@ enum.itemdata = {
 		common_path = "gfx/weapons/",
 		dropped_image = "bomb_d.bmp",
 		held_image = "bomb.bmp",
-		kill_image = "bomb_k.bmp",
-		display_image = "bomb_m.bmp", 
+		kill_image = "bomb.bmp",
+		display_image = "bomb.bmp",
 		player_stance = "melee",
 		acessory = {};
 	};
@@ -934,10 +934,10 @@ enum.itemdata = {
 		weight = 0,
 		accuracy = 0, 
 		common_path = "gfx/weapons/",
-		dropped_image = "bomb_d.bmp",
-		held_image = "defusekit.bmp",
-		kill_image = "defusekit_k.bmp",
-		display_image = "defusekit_m.bmp", 
+		dropped_image = "defusekit_d.bmp",
+		held_image = "",
+		kill_image = "",
+		display_image = "",
 		player_stance = "nothing",
 		acessory = {};
 	};
@@ -956,8 +956,8 @@ enum.itemdata = {
 		accuracy = 0, 
 		common_path = "gfx/weapons/",
 		dropped_image = "kevlar_d.bmp",
-		held_image = "kevlar.bmp",
-		kill_image = "kevlar_k.bmp",
+		held_image = "",
+		kill_image = "",
 		display_image = "kevlar_m.bmp", 
 		player_stance = "nothing",
 		acessory = {};
@@ -977,8 +977,8 @@ enum.itemdata = {
 		accuracy = 0, 
 		common_path = "gfx/weapons/",
 		dropped_image = "kevlar+helm_d.bmp",
-		held_image = "kevlar+helm.bmp",
-		kill_image = "kevlar+helm_k.bmp",
+		held_image = "",
+		kill_image = "",
 		display_image = "kevlar+helm_m.bmp", 
 		player_stance = "nothing",
 		acessory = {};
@@ -999,29 +999,8 @@ enum.itemdata = {
 		common_path = "gfx/weapons/",
 		dropped_image = "nightvision_d.bmp",
 		held_image = "nightvision.bmp",
-		kill_image = "nightvision_k.bmp",
-		display_image = "nightvision_m.bmp", 
-		player_stance = "nothing",
-		acessory = {};
-	};
-	[60] = {
-		name = "NIGHT VISION",
-		alt_name = "Night Vision",
-		internal_name = "nightvision",
-		category = "other",
-		price = 1250,
-		damage = 0,
-		ammo_cap = 0,
-		ammo_mag = 0,
-		rate_of_fire = 0,
-		range = 0,
-		weight = 0,
-		accuracy = 0, 
-		common_path = "gfx/weapons/",
-		dropped_image = "nightvision_d.bmp",
-		held_image = "nightvision.bmp",
-		kill_image = "nightvision_k.bmp",
-		display_image = "nightvision_m.bmp", 
+		kill_image = "",
+		display_image = "",
 		player_stance = "nothing",
 		acessory = {};
 	};
@@ -1039,10 +1018,10 @@ enum.itemdata = {
 		weight = 0,
 		accuracy = 0, 
 		common_path = "gfx/weapons/",
-		dropped_image = "gasmask_d.bmp",
+		dropped_image = "gasmask.bmp",
 		held_image = "gasmask.bmp",
-		kill_image = "gasmask_k.bmp",
-		display_image = "gasmask_m.bmp", 
+		kill_image = "",
+		display_image = "",
 		player_stance = "nothing",
 		acessory = {};
 	};
@@ -1249,10 +1228,10 @@ enum.itemdata = {
 		weight = 0,
 		accuracy = 0, 
 		common_path = "gfx/weapons/",
-		dropped_image = "redflag_d.bmp",
+		dropped_image = "redflag.bmp",
 		held_image = "redflag.bmp",
-		kill_image = "redflag_k.bmp",
-		display_image = "redflag_m.bmp", 
+		kill_image = "redflag.bmp",
+		display_image = "redflag.bmp", 
 		player_stance = "nothing",
 		acessory = {};
 	};
@@ -1270,10 +1249,10 @@ enum.itemdata = {
 		weight = 0,
 		accuracy = 0, 
 		common_path = "gfx/weapons/",
-		dropped_image = "blueflag_d.bmp",
+		dropped_image = "blueflag.bmp",
 		held_image = "blueflag.bmp",
-		kill_image = "blueflag_k.bmp",
-		display_image = "blueflag_m.bmp", 
+		kill_image = "blueflag.bmp",
+		display_image = "blueflag.bmp", 
 		player_stance = "nothing",
 		acessory = {};
 	};
@@ -1396,10 +1375,10 @@ enum.itemdata = {
 		weight = 400,
 		accuracy = 0, 
 		common_path = "gfx/weapons/",
-		dropped_image = "mine_d.bmp",
+		dropped_image = "mine.bmp",
 		held_image = "mine.bmp",
 		kill_image = "mine_k.bmp",
-		display_image = "mine_m.bmp", 
+		display_image = "mine.bmp", 
 		player_stance = "melee",
 		acessory = {};
 	};
@@ -1722,12 +1701,12 @@ enum.itemdata_default = {
 	acessory = {};
 }
 
-enum.itemdata_meta = {
+enum.itemlist_meta = {
 	__index = function(t, k)
-		return enum.item_default
+		return enum.itemdata_default
 	end
 }
-setmetatable(enum.itemdata, enum.itemdata_meta)
+setmetatable(enum.itemlist, enum.itemdata_meta)
 
 enum.npc = {
 	[1] = {"Zombie", 150}, -- Zombie
@@ -1735,6 +1714,109 @@ enum.npc = {
 	[3] = {"Snark", 20},  -- Snark
 	[4] = {"Vortigaunt", 200}, -- Vortigaunt
 	[5] = {"Soldier", 100}, -- Soldier
+}
+
+enum.player = {
+	ct1 = {
+		path = "gfx/player/ct1.bmp",
+		stance = {
+			handgun = {32, 32, 32, 32};
+			rifle = {32, 64, 32, 32};
+			melee = {32, 0, 32, 32};
+			object = {32, 0, 32, 32};
+			zombie = {0, 32, 32, 32};
+		};
+	};
+	ct2 = {
+		path = "gfx/player/ct2.bmp",
+		stance = {
+			handgun = {32, 32, 32, 32};
+			rifle = {32, 64, 32, 32};
+			melee = {32, 0, 32, 32};
+			object = {32, 0, 32, 32};
+			zombie = {0, 32, 32, 32};
+		};
+	};
+	ct3 = {
+		path = "gfx/player/ct3.bmp",
+		stance = {
+			handgun = {32, 32, 32, 32};
+			rifle = {32, 64, 32, 32};
+			melee = {32, 0, 32, 32};
+			object = {32, 0, 32, 32};
+			zombie = {0, 32, 32, 32};
+		};
+	};
+	ct4 = {
+		path = "gfx/player/ct4.bmp",
+		stance = {
+			handgun = {32, 32, 32, 32};
+			rifle = {32, 64, 32, 32};
+			melee = {32, 0, 32, 32};
+			object = {32, 0, 32, 32};
+			zombie = {0, 32, 32, 32};
+		};
+	};
+	t1 = {
+		path = "gfx/player/t1.bmp",
+		stance = {
+			handgun = {32, 32, 32, 32};
+			rifle = {32, 64, 32, 32};
+			melee = {32, 0, 32, 32};
+			object = {32, 0, 32, 32};
+			zombie = {0, 32, 32, 32};
+		};
+	};
+	t2 = {
+		path = "gfx/player/t2.bmp",
+		stance = {
+			handgun = {32, 32, 32, 32};
+			rifle = {32, 64, 32, 32};
+			melee = {32, 0, 32, 32};
+			object = {32, 0, 32, 32};
+			zombie = {0, 32, 32, 32};
+		};
+	};
+	t3 = {
+		path = "gfx/player/t3.bmp",
+		stance = {
+			handgun = {32, 32, 32, 32};
+			rifle = {32, 64, 32, 32};
+			melee = {32, 0, 32, 32};
+			object = {32, 0, 32, 32};
+			zombie = {0, 32, 32, 32};
+		};
+	};
+	t4 = {
+		path = "gfx/player/t4.bmp",
+		stance = {
+			handgun = {32, 32, 32, 32};
+			rifle = {32, 64, 32, 32};
+			melee = {32, 0, 32, 32};
+			object = {32, 0, 32, 32};
+			zombie = {0, 32, 32, 32};
+		};
+	};
+	vip = {
+		path = "gfx/player/vip.bmp",
+		stance = {
+			handgun = {32, 32, 32, 32};
+			rifle = {32, 64, 32, 32};
+			melee = {32, 0, 32, 32};
+			object = {32, 0, 32, 32};
+			zombie = {0, 32, 32, 32};
+		};
+	};
+	zombie = {
+		path = "gfx/npc/zombie.bmp",
+		stance = {
+			handgun = {32, 32, 32, 32};
+			rifle = {32, 64, 32, 32};
+			melee = {32, 0, 32, 32};
+			object = {32, 0, 32, 32};
+			zombie = {0, 32, 32, 32};
+		};
+	};
 }
 
 

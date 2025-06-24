@@ -369,7 +369,7 @@ end
 	- desc: draws the object's text
 --]]---------------------------------------------------------
 function newobject:DrawText()
-	local textdata = object.formattedtext
+	local textdata = self.formattedtext
 	local x = self.x
 	local y = self.y
 	

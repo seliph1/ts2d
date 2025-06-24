@@ -31,7 +31,7 @@ skin.controls.checkbox_check_color                  = {1, 0.6, 0, 1}
 skin.controls.radiobutton_body_color                = {1, 1, 1, 1}
 skin.controls.radiobutton_check_color               = {1, 0.6, 0, 1}
 skin.controls.radiobutton_inner_border_color        = {0.8, 0.48, 0, 1}
-skin.controls.radiobutton_text_font                 = smallfont
+skin.controls.radiobutton_text_font                 = love.graphics.newFont(11)
 
 
 -- columnlistrow

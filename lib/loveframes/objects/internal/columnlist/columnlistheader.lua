@@ -40,7 +40,7 @@ function newobject:initialize(name, parent)
 		end
 	end
 	
-	self.OnClick = function(object)
+	self.OnClick = function(object, x, y)
 		local descending = object.descending
 		local parent = object.parent
 		local pinternals = parent.internals

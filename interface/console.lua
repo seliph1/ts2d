@@ -164,6 +164,12 @@ console_input.commands = {
 		action = function(message)
 		end;
 	};
+
+	["info"] = {
+		action = function()
+			print(client.map)
+		end;
+	};
 }
 
 return {

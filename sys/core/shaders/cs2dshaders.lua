@@ -1,4 +1,5 @@
 local shader = {}
+local path = "sys/core/shaders/"
 
 shader.mask = love.graphics.newShader [[
 extern Image tile;
@@ -210,23 +211,23 @@ vec4 effect( vec4 color, Image tex, vec2 texture_coords, vec2 screen_coords )
 ]]
 local file
 
-file = love.filesystem.read("shader/shadow.glsl")
+file = love.filesystem.read(path .. "shadow.glsl")
 shader.shadow = love.graphics.newShader ( file )
 
 
-file = love.filesystem.read("shader/raycast.glsl")
+file = love.filesystem.read(path .. "raycast.glsl")
 shader.raycast = love.graphics.newShader( file )
 
-file = love.filesystem.read("shader/experiment.glsl")
+file = love.filesystem.read(path .. "experiment.glsl")
 shader.experiment = love.graphics.newShader( file )
 
 --file = love.filesystem.read("shader/bleed.glsl")
 --shader.bleed = love.graphics.newShader( file )
 
-file = love.filesystem.read("shader/windcover.glsl")
+file = love.filesystem.read(path .. "windcover.glsl")
 shader.wind = love.graphics.newShader( file )
 
-file = love.filesystem.read("shader/raycastshadow.glsl")
+file = love.filesystem.read(path .. "raycastshadow.glsl")
 shader.raycasts = love.graphics.newShader( file )
 
 return shader

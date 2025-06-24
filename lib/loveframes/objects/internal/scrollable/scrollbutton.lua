@@ -21,7 +21,7 @@ function newobject:initialize(scrolltype)
 	self.height = 16
 	self.down = false
 	self.internal = true
-	self.OnClick = function() end
+	self.OnClick = function(x, y, object) end
 	
 	-- apply template properties to the object
 	loveframes.ApplyTemplatesToObject(self)

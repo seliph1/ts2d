@@ -38,10 +38,10 @@ skin.directives = {}
 skin.directives.text_default_color = skin.controls.color_fore0
 
 
-local function ParseHeaderText(str, hx, hwidth, tx)
+local function ParseHeaderText(str, hx, hwidth, tx, twidth)
 	
 	local font = love.graphics.getFont()
-	local twidth = love.graphics.getFont():getWidth(str)
+	local twidth = love.graphics.getFont():getWidth(str) or twidth
 	
 	if (tx + twidth) - hwidth/2 > hx + hwidth then
 		if #str > 1 then
@@ -349,7 +349,8 @@ function skin.imagebutton(object)
 	local theight = font:getHeight(object.text)
 	local checked = object.checked
 	
-	local fore1, fore2 = skin.controls.color_back0
+	local fore1 = skin.controls.color_back0
+	local fore2 = skin.controls.color_back0
 
 	if down then
 		if image then

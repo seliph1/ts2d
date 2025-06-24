@@ -344,6 +344,8 @@ function lovefs(dir)
 	temp.home = love.filesystem.getUserDirectory()
 	temp.current = temp.home
 	temp.sep = package.config:sub(1,1)
+
+	local sep = temp.sep
 	dir = dir or temp.home
 	if not temp:cd(dir) then
 		if not temp:cd(temp.home) then

@@ -27,6 +27,11 @@ local home = client.home
 
 client.enabled = true
 client.map = MapObject.new(50, 50)
+--client.map:read("maps/as_snow.map")
+client.content = enum
+client.width = 800
+client.height = 600
+client.scale = 1
 client.camera = {
 	x = 0,
 	y = 0,
@@ -40,11 +45,11 @@ client.gfx = {
 	itemlist = {};
 	hud = {};
 	objects = {};
+	player = {};
 }
-client.content = enum
 
 do
-	for _, item in pairs(client.content.itemdata) do
+	for _, item in pairs(client.content.itemlist) do
 		local path = item.common_path
 		local full_path_d = path .. item.dropped_image
 		local full_path_h = path .. item.held_image
@@ -64,12 +69,16 @@ do
 			client.gfx.itemlist[full_path_k] = fs:loadImage(full_path_k)
 		end
 	end
+
+	for name, player in pairs(client.content.player) do
+		client.gfx.player[name] = client.gfx.player[name] or {}
+		local texture = fs:loadImage(player.path)
+		client.gfx.player[name].texture = texture
+		for entry, value in pairs(player.stance) do
+			client.gfx.player[name][entry] = love.graphics.newQuad(value[1], value[2], value[3], value[4], texture) --fs:loadImage(player.path)
+		end
+	end
 end
-
-
-
-local W, H = 800, 600 -- Game world size
-local DISPLAY_SCALE = 1 -- Scale to draw graphics at w.r.t game world units
 
 function client.camera_move(dt)
 	local s = 500*dt
@@ -77,17 +86,32 @@ function client.camera_move(dt)
 		s = 500*dt*5
 	end
 
-	if (client.key.up) then 
+	if (client.key.up) then
 		client.camera.y = client.camera.y - s
 	end
-	if (client.key.left) then 
+	if (client.key.left) then
 		client.camera.x = client.camera.x - s
 	end
-	if (client.key.down) then 
+	if (client.key.down) then
 		client.camera.y = client.camera.y + s
 	end
-	if (client.key.right) then 
+	if (client.key.right) then
 		client.camera.x = client.camera.x + s
+	end
+end
+
+function client.changed(payload)
+	for category, data in pairs(payload) do
+		if category == "items" then
+			--client.map:update_items(22)
+			--client.map._updateRequest = true
+			-- This is the entire itemdata payload received by the server
+			--[[
+			for key, item in pairs(data) do
+				print(key, item.it, item.x, item.y)
+			end
+			]]
+		end
 	end
 end
 
@@ -101,8 +125,8 @@ end
 function client.mousemoved(x, y)
     -- Transform mouse coordinates according to display centering and scaling
 	local w, h = love.graphics.getWidth(), love.graphics.getHeight()
-	home.targetX = math.floor((x/w)*W)
-	home.targetY = math.floor((y/h)*H)
+	home.targetX = math.floor((x/w)*client.width)
+	home.targetY = math.floor((y/h)*client.height)
 end
 
 function client.mousepressed(x, y, button)
@@ -133,6 +157,7 @@ function client.keyreleased(k)
     if k == 'a' then home.move.left = false end
     if k == 'd' then home.move.right = false end
 end
+
 
 function client.parse(str)
     local args = {}
@@ -213,20 +238,77 @@ end
 function client.move_bullet(bul, dt)
     bul.x, bul.y = bul.x + 800 * bul.dirX * dt, bul.y + 800 * bul.dirY * dt
 end
+--//-------------------------------------------------------------
+-- Fake share table 
+--//-------------------------------------------------------------
+--[[
+---@param tbl table
+---@return number
+function Rift(tbl) -- (R)andom (I)ndex (F)rom (T)able)
+	local tk = {}
+	for k, v in pairs(tbl) do
+		tk[#tk+1] = k
+	end
+	return tk[ math.random(1, #tk) ]
+end
 
+local fake_share = {
+	players = {
+		[1] = {
+			x = 32*4,
+			y = 32*4,
+			vx = 0,
+			vy = 0,
+			targetX = 0,
+			targetY = 0,
+			shootTimer = 0, -- Can shoot if <= 0
+			health = 100,
+			p = "ct1",
+			h = 30 -- holding
+		};
+	};
+	items = {
+		[1] = {
+			id = 30,
+			ac = 0,
+			am = 0,
+			x = 5,
+			y = 5,
+			r = math.random(0, 360),
+		};
+	};
+	bullets = {};
+}
+
+test = {}
+test["10|10"] = {}
+
+for i=1,100000 do
+	table.insert(fake_share.items, {
+		id = Rift(client.content.itemlist),
+		--id = 30,
+		ac = 0,
+		am = 0,
+		x = 5,--math.random(1, 500),
+		y = 5,--math.random(1, 500),
+		r = math.random(0, 360),
+	})
+end
+]]
 
 function client.draw()
     love.graphics.push('all')
     -- Center and scale display
-    local w, h = DISPLAY_SCALE * W, DISPLAY_SCALE * H
+    local w, h = client.scale * client.width, client.scale * client.height
     local ox, oy = 0.5 * (love.graphics.getWidth() - w), 0.5 * (love.graphics.getHeight() - h)
     love.graphics.setScissor(ox, oy, w, h)
-	--love.graphics.scale(DISPLAY_SCALE)
+	--love.graphics.scale(client.scale)
 	if client.map then
 		client.map:draw_floor()
 		--client.map:draw_entities()
 	end
     if client.connected then
+	--if true then
         -- Player render
 		client.map:draw_players(share, home, client)
 		-- Bullet render
@@ -269,9 +351,6 @@ function client.update(dt)
         end
     end
 
-    -- Scale down display if window is too small
-    --local w, h = love.graphics.getDimensions()
-    --DISPLAY_SCALE = math.min(1, w / W, h / H)
 	client.postupdate(dt)
 end
 

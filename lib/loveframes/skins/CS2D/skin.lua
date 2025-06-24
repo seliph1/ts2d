@@ -207,10 +207,10 @@ skin.controls.menuoption_body_hover_color           = {0.2, 0.8, 1, 1}
 skin.controls.menuoption_text_hover_color           = {1, 1, 1, 1}
 skin.controls.menuoption_text_color                 = {0.71, 0.71, 0.71, 1}
 
-local function ParseHeaderText(str, hx, hwidth, tx)
+local function ParseHeaderText(str, hx, hwidth, tx, twidth)
 	
 	local font = love.graphics.getFont()
-	local twidth = love.graphics.getFont():getWidth(str)
+	local twidth = love.graphics.getFont():getWidth(str) or twidth
 	
 	if (tx + twidth) - hwidth/2 > hx + hwidth then
 		if #str > 1 then
@@ -380,7 +380,7 @@ function skin.button(object)
 	local image_hover = skin.images["button-hover.png"]
 	local image_hover_sh = height/image_hover:getHeight()
 	
-	local roundcorner = nil --skin.controls.button_round_corner
+	local roundcorner = 1 --skin.controls.button_round_corner
 	
 	local function image_hover_draw()
 		love.graphics.setColor(1, 1, 1, 0.5)
@@ -1765,9 +1765,9 @@ function skin.columnlistheader(object)
 	local nohovercolor = skin.controls.columnlistheader_body_nohover_color
 	local textnohovercolor = skin.controls.columnlistheader_text_nohover_color
 	
-	local name = ParseHeaderText(object:GetName(), x, width, x + width/2, twidth)
 	local twidth = font:getWidth(name)
-		
+	local name = ParseHeaderText(object:GetName(), x, width, x + width/2, twidth)
+
 	if down then
 		-- header body
 		love.graphics.setColor(bodydowncolor)
