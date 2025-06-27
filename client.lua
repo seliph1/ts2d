@@ -28,6 +28,7 @@ local home = client.home
 client.enabled = true
 client.map = MapObject.new(50, 50)
 --client.map:read("maps/as_snow.map")
+
 client.content = enum
 client.width = 800
 client.height = 600
@@ -39,6 +40,7 @@ client.camera = {
 	ty = 0,
 	snap_pointer = 0,
 	snap_enabled = false,
+	speed = 500,
 }
 client.key = {}
 client.gfx = {
@@ -81,29 +83,32 @@ do
 end
 
 function client.camera_move(dt)
-	local s = 500*dt
+	local s = client.camera.speed * dt
 	if client.key.space then
-		s = 500*dt*5
+		s = s * 5
 	end
 
 	if (client.key.up) then
-		client.camera.y = client.camera.y - s
+		client.camera.ty = client.camera.ty - s
 	end
 	if (client.key.left) then
-		client.camera.x = client.camera.x - s
+		client.camera.tx = client.camera.tx - s
 	end
 	if (client.key.down) then
-		client.camera.y = client.camera.y + s
+		client.camera.ty = client.camera.ty + s
 	end
 	if (client.key.right) then
-		client.camera.x = client.camera.x + s
+		client.camera.tx = client.camera.tx + s
 	end
+end
+
+function client.changing(payload)
 end
 
 function client.changed(payload)
 	for category, data in pairs(payload) do
 		if category == "items" then
-			--client.map:update_items(22)
+			client.map:update_items(share, client)
 			--client.map._updateRequest = true
 			-- This is the entire itemdata payload received by the server
 			--[[
@@ -116,6 +121,7 @@ function client.changed(payload)
 end
 
 function client.load()
+	-- Set up initial values for client
     home.targetX = 0
     home.targetY = 0
     home.wantShoot = false
@@ -125,14 +131,20 @@ end
 function client.mousemoved(x, y)
     -- Transform mouse coordinates according to display centering and scaling
 	local w, h = love.graphics.getWidth(), love.graphics.getHeight()
-	home.targetX = math.floor((x/w)*client.width)
-	home.targetY = math.floor((y/h)*client.height)
+	local rel_x = x - (w - client.width)/2
+	local rel_y = y - (h - client.height)/2
+	-- Dont go less than 0 or more than 600/800 even if mouse is out of bounds
+	local abs_x = math.min(math.max(rel_x, 0), client.width)
+	local abs_y = math.min(math.max(rel_y, 0), client.height)
+	-- Update mouse position
+	home.targetX = abs_x
+	home.targetY = abs_y
 end
 
 function client.mousepressed(x, y, button)
     if button == 1 then
         home.wantShoot = true
-		--client.send(string.format("click %s-%s",home.targetX, home.targetY))
+		--client.send(string.format("click %s-%s", home.targetX, home.targetY))
     end
 end
 
@@ -221,80 +233,73 @@ function client.receive(message)
 end
 
 function client.move_player(player, dt, home) -- `home` is used to apply controls if given
+	--[[
     player.vx, player.vy = 0, 0
+	-- Get vector from player
     if home then
         local move = home.move
-        if move.up then player.vy = player.vy - 220 end
-        if move.down then player.vy = player.vy + 220 end
-        if move.left then player.vx = player.vx - 220 end
-        if move.right then player.vx = player.vx + 220 end
+        if move.up then player.vy = player.vy - player.s end
+        if move.down then player.vy = player.vy + player.s end
+        if move.left then player.vx = player.vx - player.s end
+        if move.right then player.vx = player.vx + player.s end
     end
-    local v = math.sqrt(player.vx * player.vx + player.vy * player.vy)
-    if v > 0 then player.vx, player.vy = 220 * player.vx / v, 220 * player.vy / v end -- Limit speed
-    player.x, player.y = player.x + player.vx * dt, player.y + player.vy * dt
-    player.x, player.y = math.max(0, math.min(player.x, 20000)), math.max(0, math.min(player.y, 20000))
+	-- Apply speed 
+	player.x = player.x + player.vx * dt
+	player.y = player.y + player.vy * dt
+	
+	-- Clamp player position to map size
+	player.x = math.max(0, math.min(player.x, client.map:getPixelWidth() ))
+	player.y = math.max(0, math.min(player.y, client.map:getPixelHeight() ))	
+	]]
+
 end
 
 function client.move_bullet(bul, dt)
     bul.x, bul.y = bul.x + 800 * bul.dirX * dt, bul.y + 800 * bul.dirY * dt
 end
---//-------------------------------------------------------------
--- Fake share table 
---//-------------------------------------------------------------
---[[
----@param tbl table
----@return number
-function Rift(tbl) -- (R)andom (I)ndex (F)rom (T)able)
-	local tk = {}
-	for k, v in pairs(tbl) do
-		tk[#tk+1] = k
+
+local function lerp(a, b, t)
+	return a + (b - a) * t
+end
+
+function client.camera_tween(dt)
+	if client.connected then
+		local diff_x = client.width/2 - home.targetX
+		local diff_y = client.height/2 - home.targetY
+
+		client.camera.tx = share.players[client.id].x - diff_x
+		client.camera.ty = share.players[client.id].y - diff_y
 	end
-	return tk[ math.random(1, #tk) ]
+
+	client.camera.x = lerp(client.camera.x, client.camera.tx, 10 * dt)
+	client.camera.y = lerp(client.camera.y, client.camera.ty, 10 * dt)
 end
 
-local fake_share = {
-	players = {
-		[1] = {
-			x = 32*4,
-			y = 32*4,
-			vx = 0,
-			vy = 0,
-			targetX = 0,
-			targetY = 0,
-			shootTimer = 0, -- Can shoot if <= 0
-			health = 100,
-			p = "ct1",
-			h = 30 -- holding
-		};
-	};
-	items = {
-		[1] = {
-			id = 30,
-			ac = 0,
-			am = 0,
-			x = 5,
-			y = 5,
-			r = math.random(0, 360),
-		};
-	};
-	bullets = {};
-}
+function client.update(dt)
+	client.preupdate(dt)
+	client.camera_move(dt)
+	if client.map then
+		client.map:scroll(client.camera.x, client.camera.y)
+		client.map:update(dt)
+	end
 
-test = {}
-test["10|10"] = {}
+    -- Do some client-side prediction
+    if client.connected then
+        -- Predictively move triangles
+        for id, player in pairs(share.players) do
+            -- We can use our `home` to apply controls predictively if it's our triangle
+            client.move_player(player, dt, id == client.id and home or nil)
+        end
 
-for i=1,100000 do
-	table.insert(fake_share.items, {
-		id = Rift(client.content.itemlist),
-		--id = 30,
-		ac = 0,
-		am = 0,
-		x = 5,--math.random(1, 500),
-		y = 5,--math.random(1, 500),
-		r = math.random(0, 360),
-	})
+        -- Predictively move bullets
+        for _, bul in pairs(share.bullets) do
+            client.move_bullet(bul, dt)
+        end
+    end
+
+	client.camera_tween(dt)
+	client.postupdate(dt)
 end
-]]
 
 function client.draw()
     love.graphics.push('all')
@@ -305,7 +310,7 @@ function client.draw()
 	--love.graphics.scale(client.scale)
 	if client.map then
 		client.map:draw_floor()
-		--client.map:draw_entities()
+		client.map:draw_entities()
 	end
     if client.connected then
 	--if true then
@@ -321,51 +326,22 @@ function client.draw()
 	end
 	-- Resets scissoring
 	love.graphics.pop()
-	local label = string.format("Camera: %dpx|%dpx  Ping: %s  FPS: %s", 
+
+	-- Draw the rest of hud
+	local label = string.format("Camera: %dpx|%dpx  Ping: %s  FPS: %s  Target: %d|%d",
 		client.camera.x,
 		client.camera.y,
 		client.getPing(),
-		love.timer.getFPS()
+		love.timer.getFPS(),
+		home.targetX,
+		home.targetY
 	)
 	love.graphics.printf(label, 0, love.graphics.getHeight()-20, love.graphics.getWidth(), "center")
+
+
+	-- Draw middle screen
+	love.graphics.line(love.graphics.getWidth()/2-5, love.graphics.getHeight()/2, love.graphics.getWidth()/2+5, love.graphics.getHeight()/2)
+	love.graphics.line(love.graphics.getWidth()/2, love.graphics.getHeight()/2-5, love.graphics.getWidth()/2, love.graphics.getHeight()/2+5)
 end
 
-function client.update(dt)
-	client.preupdate(dt)
-	client.camera_move(dt)
-	if client.map then
-		client.map:scroll(client.camera.x, client.camera.y)
-		client.map:update(dt)
-	end
-    -- Do some client-side prediction
-    if client.connected then
-        -- Predictively move triangles
-        for id, player in pairs(share.players) do
-            -- We can use our `home` to apply controls predictively if it's our triangle
-            client.move_player(player, dt, id == client.id and home or nil)
-        end
-
-        -- Predictively move bullets
-        for _, bul in pairs(share.bullets) do
-            client.move_bullet(bul, dt)
-        end
-    end
-
-	client.postupdate(dt)
-end
-
--- Quick hack to try local overrides for player input -- will test this more
---function client.changing(diff)
---    if diff.triangles then
---        local myTri = diff.triangles[client.id]
---        if myTri then
---            if myTri.x and share.triangles[client.id].x then
---                myTri.x = 0.98 * share.triangles[client.id].x + 0.02 * myTri.x
---            end
---            if myTri.y and share.triangles[client.id].y then
---                myTri.y = 0.98 * share.triangles[client.id].y + 0.02 * myTri.y
---            end
---        end
---    end
---end
 return client

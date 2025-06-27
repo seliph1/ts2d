@@ -138,8 +138,8 @@ local function create_spritesheet(file, xsize, ysize)
 	return spritesheet_table
 end
 
-local function entityInCamera(e, camx, camy, sprite)
-	local path 		= e.string_settings[1]
+local function entityInCamera(e, camx, camy)
+	--local path 		= e.string_settings[1]
 	local size_x 	= e.number_settings[1]
 	local size_y 	= e.number_settings[2]
 	local shift_x 	= e.number_settings[3]
@@ -206,9 +206,9 @@ function MapObject.new(width, height)
 		_updateRequest = true;
 		_breath = 0;
 		_oscillation = 0;
-		_item_spatial_hash = {
-
-		};
+		_item_field = {};
+		_mapentity_field = {};
+		_player_cache = {};
 
 		_camera = {
 			x = 0,
@@ -226,6 +226,7 @@ function MapObject.new(width, height)
 			width = 16,
 			height = 16,
 		};
+
 	}
 	object._placeholder = love.image.newImageData(32, 32)
 	object._placeholder_img = love.graphics.newImage(object._placeholder)
@@ -802,13 +803,18 @@ function MapObject:update(dt)
 	local mapdata = self._mapdata
 	local gfx = mapdata.gfx
 	local camera = self._camera
-	local screen_w = love.graphics.getWidth()
-	local screen_h = love.graphics.getHeight()
+	--local screen_w = love.graphics.getWidth()
+	--local screen_h = love.graphics.getHeight()
+
+	local screen_w = 800
+	local screen_h = 600
+
+
 	local sw, sh = screen_w, screen_h
 	local tile_size = mapdata.tile_size
 	local off_x, off_y = floor(tile_size/2), floor(tile_size/2)
-	local render_x = floor( (camera.x - sw ) / tile_size ) 
-	local render_y = floor( (camera.y - sh ) / tile_size ) 
+	local render_x = floor( (camera.x - sw ) / tile_size )
+	local render_y = floor( (camera.y - sh ) / tile_size )
 	local render_width = ceil( ( camera.x + sw ) / tile_size )
 	local render_height = ceil( ( camera.y + sh ) / tile_size )
 	self._render.x = render_x
@@ -985,7 +991,8 @@ function MapObject:draw_players(share, home, client) -- get info from server!
 		else
 			targetX, targetY = player.targetX, player.targetY
 		end
-		--love.graphics.circle("fill", 0, 0, 30)
+		-- Calculate drawing angle
+		local angle = math.atan2(targetY - client.height/2, targetX - client.width/2) + math.pi/2
 		local holding = player.h
 		local itemdata = client.content.itemlist[holding]
 		local stance = itemdata.player_stance
@@ -994,29 +1001,7 @@ function MapObject:draw_players(share, home, client) -- get info from server!
 		local quad = client.gfx.player[player.p][stance]
 		local width, height = quad:getTextureDimensions()
 
-		love.graphics.draw(texture, quad, 0, 0, love.timer.getTime() % 360, 1, 1, 16, 16)
-
-		--[[
-		--local x,y = normalize(targetX, targetY)
-		--love.graphics.rotate(math.atan2(targetY - player.y, targetX -  player.x))
-		love.graphics.rotate(math.atan2(targetY - sh/2, targetX -  sw/2))
-
-		love.graphics.setColor(player.r, player.g, player.b) -- Fill
-		love.graphics.polygon('fill', -20, 20, 30, 0, -20, -20)
-
-		love.graphics.setColor(1, 1, 1, 0.8) -- Outline (thicker if it's us)
-		love.graphics.setLineWidth(clientId == client.id and 3 or 1)
-		love.graphics.polygon('line', -20, 20, 30, 0, -20, -20)
-		love.graphics.pop() -- Pop rotation (don't rotate health bar)
-		]]
-		--[[
-		love.graphics.setColor(0, 0, 0, 0.5) -- Health bar
-		love.graphics.rectangle('fill', -20, -35, 40, 4)
-		love.graphics.setColor(0.933, 0.961, 0.859, 0.5)
-		love.graphics.rectangle('fill', -20, -35, player.health / 100 * 40, 4)
-		love.graphics.pop()
-		--]]
-
+		love.graphics.draw(texture, quad, 0, 0, angle, 1, 1, 16, 16)
 		love.graphics.pop()
 	end
 	-- Reset the transformation stack
@@ -1103,42 +1088,108 @@ function MapObject:draw_entities()
 	love.graphics.pop()
 end
 
-function MapObject:update_items()
-
-end
-
-function MapObject:draw_items(share, client)
+function MapObject:update_items(share, client)
 	local camera = self._camera
 	local mapdata = self._mapdata
 	local items = share.items
 	local gfx = client.gfx
 	local itemlist = client.content.itemlist
+
+	self._item_field = {}
+	for _, item in pairs(items) do
+		local cx = floor( item.x / 32)
+		local cy = floor( item.y / 32)
+
+		self._item_field[cx] = self._item_field[cx] or {}
+		self._item_field[cx][cy] = self._item_field[cx][cy] or {}
+
+		table.insert(self._item_field[cx][cy], item)
+	end
+	print("item field updated")
+end
+
+function MapObject:getItemsFromCamera()
+	local render = self._render
+
+	local x1 = floor(render.x/32)
+	local x2 = floor(render.width/32)
+	local y1 = floor(render.y/32)
+	local y2 = floor(render.height/32)
+
+	local len = 0
+	local dict = {}
+	for x = x1, x2 do
+	for y = y1, y2 do
+		if self._item_field[x] and self._item_field[x][y] then
+			dict[ self._item_field[x][y] ] = true
+			len = len + 1
+		end
+	end
+	end
+
+	return dict, len
+end
+
+function MapObject:draw_items(share, client)
+	local camera = self._camera
+	local mapdata = self._mapdata
+	local render = self._render
+	local items = share.items
+	local gfx = client.gfx
+	local itemlist = client.content.itemlist
 	local sw, sh = love.graphics.getWidth(), love.graphics.getHeight()
+	local tile_size = mapdata.tile_size
+
 	love.graphics.push()
 	love.graphics.setShader(shader.magenta)
 	love.graphics.translate(-camera.x + sw/2, -camera.y + sh/2)
 
-	for _, item in pairs(items) do
-		if self:isOnScreen(item.x, item.y) then
+	for chunk in pairs(self:getItemsFromCamera()) do
+		for index, item in pairs(chunk) do
 			local itemdata = itemlist[item.it]
 			local path = itemdata.common_path .. itemdata.dropped_image
 			local imagedata = gfx.itemlist[path]
 
 			if itemdata and imagedata then
-				love.graphics.push()
-				love.graphics.translate(mapdata.tile_size/2, mapdata.tile_size/2) --  Offset by half a tile
-
 				-- Transpose and rotate the image relative to the center
 				love.graphics.setColor(1, 1, 1, 1)
-				love.graphics.draw(imagedata, item.x*32, item.y*32, item.r + love.timer.getTime()%360, 1, 1, imagedata:getWidth()/2, imagedata:getHeight()/2)
-
-				-- Go back to the beginning
-				love.graphics.pop()
+				love.graphics.draw(imagedata, item.x*tile_size + tile_size/2, item.y*tile_size + tile_size/2, item.r + love.timer.getTime()%360, 1, 1, imagedata:getWidth()/2, imagedata:getHeight()/2)
 			end
 		end
 	end
+
 	love.graphics.setShader()
 	love.graphics.pop()
+end
+
+function MapObject:getDimensions()
+	local mapdata  = self._mapdata
+	return mapdata.width, mapdata.height
+end
+
+function MapObject:getWidth()
+	local mapdata  = self._mapdata
+	return mapdata.width
+end
+
+function MapObject:getHeight()
+	local mapdata  = self._mapdata
+	return mapdata.height
+end
+
+function MapObject:getPixelDimensions()
+	local mapdata  = self._mapdata
+	return mapdata.width*32, mapdata.height*32
+end
+
+function MapObject:getPixelWidth()
+	local mapdata  = self._mapdata
+	return mapdata.width*32
+end
+
+function MapObject:getPixelHeight()
+	local mapdata  = self._mapdata
+	return mapdata.height*32
 end
 
 

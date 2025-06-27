@@ -5,6 +5,7 @@
     cache hudtxt message
     force update
     health info style: (health bar, percentage)
+    sv_forcecamera
 
 
     client routine:
