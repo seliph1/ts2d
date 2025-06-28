@@ -1,34 +1,27 @@
 local cs 		= require "lib/cs"
-local MapObject = require "mapengine"
+local b			= require "lib.battery"
 local enum      = require "enum"
+local MapObject = require "mapengine"
 
 require "lib/lovefs/lovefs"
-
 local fs = lovefs()
 if love.filesystem.isFused() then
 	fs:cd(love.filesystem.getSourceBaseDirectory() )
 else
 	fs:cd(love.filesystem.getSource() )
 end
-
 --- Client base framework
+--- @class client
+--- @field home table
+--- @field share table
+--- @field connected function
+--- @field preupdate function
+--- @field postupdate function
+--- @field getPing fun():number
+--- @field id number
 local client = cs.client
-
---- Table that gets info from server
-local share = client.share
-
---- Use `home` to store control info so the server can see it
---- @class userdata home
---- @field targetX integer position of our client
---- @field targetY integer position of our client
---- @field wantShoot boolean variable that stores our mouse keypresses
---- @field move table direction vector
-local home = client.home
-
 client.enabled = true
 client.map = MapObject.new(50, 50)
---client.map:read("maps/as_snow.map")
-
 client.content = enum
 client.width = 800
 client.height = 600
@@ -40,7 +33,12 @@ client.camera = {
 	ty = 0,
 	snap_pointer = 0,
 	snap_enabled = false,
-	speed = 500,
+	speed = 500, -- pixel/frame
+	tween_speed = 15, -- pixel/frame
+}
+client.cache = {
+	smoothness = 20,
+	players = {},
 }
 client.key = {}
 client.gfx = {
@@ -49,6 +47,22 @@ client.gfx = {
 	objects = {};
 	player = {};
 }
+
+--- Table that gets info from server
+--- @class share
+--- @field bullets table
+--- @field players table
+--- @field items table
+--- @field scores table
+local share = client.share
+
+--- Use `home` to store control info so the server can see it
+--- @class home
+--- @field targetX integer position of our client
+--- @field targetY integer position of our client
+--- @field wantShoot boolean variable that stores our mouse keypresses
+--- @field move table direction vector
+local home = client.home
 
 do
 	for _, item in pairs(client.content.itemlist) do
@@ -82,29 +96,13 @@ do
 	end
 end
 
-function client.camera_move(dt)
-	local s = client.camera.speed * dt
-	if client.key.space then
-		s = s * 5
-	end
-
-	if (client.key.up) then
-		client.camera.ty = client.camera.ty - s
-	end
-	if (client.key.left) then
-		client.camera.tx = client.camera.tx - s
-	end
-	if (client.key.down) then
-		client.camera.ty = client.camera.ty + s
-	end
-	if (client.key.right) then
-		client.camera.tx = client.camera.tx + s
-	end
-end
-
+--- Callback for information in sync with server
+---@param payload table
 function client.changing(payload)
 end
 
+--- Callback for information synced with server
+---@param payload table
 function client.changed(payload)
 	for category, data in pairs(payload) do
 		if category == "items" then
@@ -120,6 +118,14 @@ function client.changed(payload)
 	end
 end
 
+---Callback for messages/packets received by server
+---@param message string
+function client.receive(message)
+	-- Send the message to the command parser
+    client.parse(message)
+end
+
+--- Client loading routine at the start of program
 function client.load()
 	-- Set up initial values for client
     home.targetX = 0
@@ -128,6 +134,9 @@ function client.load()
     home.move = { up = false, down = false, left = false, right = false }
 end
 
+--- Callback for mouse movement on screen
+---@param x number
+---@param y number
 function client.mousemoved(x, y)
     -- Transform mouse coordinates according to display centering and scaling
 	local w, h = love.graphics.getWidth(), love.graphics.getHeight()
@@ -141,6 +150,10 @@ function client.mousemoved(x, y)
 	home.targetY = abs_y
 end
 
+--- Callback for mouse clicking on screen
+---@param x number
+---@param y number
+---@param button number
 function client.mousepressed(x, y, button)
     if button == 1 then
         home.wantShoot = true
@@ -148,12 +161,18 @@ function client.mousepressed(x, y, button)
     end
 end
 
+--- Callback for mouse button releasing on screen
+---@param x number
+---@param y number
+---@param button number
 function client.mousereleased(x, y, button)
     if button == 1 then
         home.wantShoot = false
     end
 end
 
+--- Callback for key press event
+---@param k string Key pressed
 function client.keypressed(k)
 	client.key[k] = true
     if k == 'w' then home.move.up = true end
@@ -162,6 +181,8 @@ function client.keypressed(k)
     if k == 'd' then home.move.right = true end
 end
 
+--- Callback for key release event
+---@param k string Key released
 function client.keyreleased(k)
 	client.key[k] = false
     if k == 'w' then home.move.up = false end
@@ -170,7 +191,8 @@ function client.keyreleased(k)
     if k == 'd' then home.move.right = false end
 end
 
-
+--- Client command parser
+--- @param str string
 function client.parse(str)
     local args = {}
 	for word in string.gmatch(str, "%S+") do
@@ -191,7 +213,9 @@ end
 
 client.actions = {
     -- Server only actions
-	["mapchange"] = {
+	mapchange = {
+		---Changes map currently being drawn on screen
+		---@param ... string
 		action = function(...)
 			local args = {...}
 			local status = client.map:read( "maps/"..table.concat(args," ")..".map" )
@@ -200,7 +224,9 @@ client.actions = {
 			end
 		end,
 	};
-    ["filecheck"] = {
+    filecheck = {
+		---Checks if a file exists on client side, and send a confirmation to server
+		---@param ... string
         action = function(...)
             local args = {...}
             local path = table.concat(args," ")
@@ -211,7 +237,10 @@ client.actions = {
             end
         end
     };
-	["scroll"] = {
+	scroll = {
+		--- Scroll camera to a set position
+		---@param x number
+		---@param y number
 		action = function(x,y)
     		x = tonumber(x) or 0
 			y = tonumber(y) or 0
@@ -222,62 +251,85 @@ client.actions = {
 			print(string.format("scrolled to %s-%s", x, y))
 		end
 	};
-	["name"] = {
-		action = function(name)
+	name = {
+		---Changes name of this client
+		---@param ... string
+		action = function(...)
 		end;
 	};
 }
 
-function client.receive(message)
-    client.parse(message)
+--- Move player in smooth intervals
+---@param id number
+---@param player table player object table
+---@param dt number delta time
+function client.move_player(id, player, dt) -- `home` is used to apply controls if given
+	-- Receive the actual position from server
+	local x = player.x
+	local y = player.y
+
+	-- Get the last position received from cache
+	client.cache.players[id] = client.cache.players[id] or {x=player.x, y=player.y}
+	local cache = client.cache.players[id]
+	local cx = cache.x
+	local cy = cache.y
+
+	-- Interpolate the movement
+	cache.x = b.lerp(cx, x, client.cache.smoothness * dt)
+	cache.y = b.lerp(cy, y, client.cache.smoothness * dt)
 end
 
-function client.move_player(player, dt, home) -- `home` is used to apply controls if given
-	--[[
-    player.vx, player.vy = 0, 0
-	-- Get vector from player
-    if home then
-        local move = home.move
-        if move.up then player.vy = player.vy - player.s end
-        if move.down then player.vy = player.vy + player.s end
-        if move.left then player.vx = player.vx - player.s end
-        if move.right then player.vx = player.vx + player.s end
-    end
-	-- Apply speed 
-	player.x = player.x + player.vx * dt
-	player.y = player.y + player.vy * dt
-	
-	-- Clamp player position to map size
-	player.x = math.max(0, math.min(player.x, client.map:getPixelWidth() ))
-	player.y = math.max(0, math.min(player.y, client.map:getPixelHeight() ))	
-	]]
-
-end
-
+--- Bullet movement updater
+---@param bul table Bullet object
+---@param dt number Delta time
 function client.move_bullet(bul, dt)
     bul.x, bul.y = bul.x + 800 * bul.dirX * dt, bul.y + 800 * bul.dirY * dt
 end
 
-local function lerp(a, b, t)
-	return a + (b - a) * t
-end
+--- Camera movement vector function
+---@param dt number Delta time
+function client.camera_move(dt)
+	-- Speed
+	local s = client.camera.speed * dt
+	if client.key.space then
+		s = s * 5
+	end
+	-- Vector
+	local vx, vy = 0, 0
+	if (client.key.up) then vy = -s end
+	if (client.key.left) then vx = -s end
+	if (client.key.down) then vy = s end
+	if (client.key.right) then vx = s end
+	-- Vector apply
+	client.camera.tx = client.camera.tx + vx
+	client.camera.ty = client.camera.ty + vy
 
-function client.camera_tween(dt)
 	if client.connected then
-		local diff_x = client.width/2 - home.targetX
-		local diff_y = client.height/2 - home.targetY
+		local diff_x = (client.width/2 - home.targetX)/2
+		local diff_y = (client.height/2 - home.targetY)/2
+
+		diff_x = 0
+		diff_y = 0
 
 		client.camera.tx = share.players[client.id].x - diff_x
 		client.camera.ty = share.players[client.id].y - diff_y
 	end
-
-	client.camera.x = lerp(client.camera.x, client.camera.tx, 10 * dt)
-	client.camera.y = lerp(client.camera.y, client.camera.ty, 10 * dt)
 end
 
+---Camera interpolated movement function
+---@param dt number Delta time
+function client.camera_tween(dt)
+	client.camera.x = b.lerp(client.camera.x, client.camera.tx, client.camera.tween_speed * dt)
+	client.camera.y = b.lerp(client.camera.y, client.camera.ty, client.camera.tween_speed * dt)
+end
+
+---Main game loop
+---@param dt number
 function client.update(dt)
 	client.preupdate(dt)
 	client.camera_move(dt)
+	client.camera_tween(dt)
+
 	if client.map then
 		client.map:scroll(client.camera.x, client.camera.y)
 		client.map:update(dt)
@@ -288,7 +340,8 @@ function client.update(dt)
         -- Predictively move triangles
         for id, player in pairs(share.players) do
             -- We can use our `home` to apply controls predictively if it's our triangle
-            client.move_player(player, dt, id == client.id and home or nil)
+            ---client.move_player(player, dt, id == client.id and home or nil)
+			client.move_player(id, player, dt)
         end
 
         -- Predictively move bullets
@@ -296,11 +349,10 @@ function client.update(dt)
             client.move_bullet(bul, dt)
         end
     end
-
-	client.camera_tween(dt)
 	client.postupdate(dt)
 end
 
+---Main game render loop
 function client.draw()
     love.graphics.push('all')
     -- Center and scale display
@@ -315,7 +367,8 @@ function client.draw()
     if client.connected then
 	--if true then
         -- Player render
-		client.map:draw_players(share, home, client)
+		--client.map:draw_players(share, home, client)
+		client.map:draw_playersc(client)
 		-- Bullet render
 		client.map:draw_bullets(share, home, client)
 		-- Draw items on the ground
@@ -344,4 +397,5 @@ function client.draw()
 	love.graphics.line(love.graphics.getWidth()/2, love.graphics.getHeight()/2-5, love.graphics.getWidth()/2, love.graphics.getHeight()/2+5)
 end
 
+--- Returns the client object to the main code block
 return client

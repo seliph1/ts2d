@@ -157,7 +157,7 @@ do
                         if client.connect then
                             client.connect()
                         end
-						print("received id")
+						print(string.format("received id %s", client.id))
 
                         -- Send sessionToken now that we have an id
                         peer:send(encode({

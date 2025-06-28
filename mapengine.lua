@@ -972,6 +972,45 @@ function MapObject:draw_bullets(share, home, client)
 	love.graphics.setColor(1, 1, 1, 1)
 end
 
+---Draw player from cache data
+---@param client client
+function MapObject:draw_playersc(client)
+	local camera = self._camera
+	local render = self._render
+
+	local players = client.share.players
+	local cache = client.cache
+	local sw, sh = love.graphics.getWidth(), love.graphics.getHeight()
+	
+	love.graphics.push()
+	love.graphics.translate(-camera.x + sw/2, -camera.y + sh/2)
+
+	for client_id, player in pairs(players) do
+		local player_cache = cache.players[client_id]
+		love.graphics.push()
+		--love.graphics.translate(player.x, player.y)
+		love.graphics.translate(player_cache.x, player_cache.y)
+
+		local targetX, targetY = player.targetX, player.targetY
+
+		local angle = math.atan2(targetY - client.height/2, targetX - client.width/2) + math.pi/2
+		local holding = player.h
+		local itemdata = client.content.itemlist[holding]
+		local stance = itemdata.player_stance
+
+		local texture = client.gfx.player[player.p].texture
+		local quad = client.gfx.player[player.p][stance]
+		--local width, height = quad:getTextureDimensions()
+		love.graphics.draw(texture, quad, 0, 0, angle, 1, 1, 16, 16)
+		--love.graphics.points(0, 0)
+		love.graphics.setColor(1,0,0,0.5)
+		love.graphics.rectangle("fill", -13, -13, 26, 26)
+		love.graphics.pop()
+	end
+
+	love.graphics.pop()
+end
+
 function MapObject:draw_players(share, home, client) -- get info from server!
 	local camera = self._camera
 	local render = self._render

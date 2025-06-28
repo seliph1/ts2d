@@ -31,7 +31,7 @@
 -----------------------------------------------------------------------------
 -- Imports and dependencies
 -----------------------------------------------------------------------------
-local math = require('math')
+local math = require('lib.battery')
 local string = require("string")
 local table = require("table")
 local tostring = tostring
