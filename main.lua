@@ -1,10 +1,9 @@
 ---@diagnostic disable: duplicate-set-field
-Console = require "interface/console"
 
+Console = require "interface/console"
+--require "lib/lovedebug"
 local loveframes = require "lib/loveframes"
 local client = require "client"
-
---require "lib/lovedebug"
 
 function love.load()
 	love.graphics.setBackgroundColor(1,1,1,1)

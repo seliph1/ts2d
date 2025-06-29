@@ -528,7 +528,7 @@ function MapObject:read(path, noindexing)
 		local height = TILE_MODE_HEIGHT[property]
 		--mapdata.shadow_mask:setPixel(x, y, height, height, height)
 	end
-	end	
+	end
 	--mapdata.shadow_render = love.graphics.newImage(mapdata.shadow_mask)
 	--mapdata.shadow_render:setFilter("nearest", "nearest")
 	--mapdata.world:add(player, player.x, player.y, player.w, player.h)
@@ -781,7 +781,20 @@ function MapObject:get(property)
 	end
 end
 
-function MapObject:isColliding(object, tx, ty)
+---Check if a collision is happening between `object` that has x|y property and a map tile
+---
+---If `x` and `y` is not specified, it will calculate collision at its own camera position
+---@param x number
+---@param y number
+---@return boolean
+function MapObject:isColliding(x, y)
+	local tx, ty = floor(x/32), floor(y/32)
+	local id, mod, property = self:tile(tx, ty)
+
+	if TILE_MODE_HEIGHT[property] and TILE_MODE_HEIGHT[property] >= 0.5 then
+		return true
+	end
+	return false
 end
 
 function MapObject:scroll(x, y)

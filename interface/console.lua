@@ -170,6 +170,20 @@ console_input.commands = {
 			print(client.map)
 		end;
 	};
+
+	["tp"] = {
+		action = function()
+			local home = client.home
+			local share = client.share
+			local diff_x = (client.width/2 - home.targetX)
+			local diff_y = (client.height/2 - home.targetY)
+
+			local pos_x = client.camera.x - diff_x
+			local pos_y = client.camera.y - diff_y
+
+			client.send(string.format("setpos %s %s %s", client.id, pos_x, pos_y))
+		end
+	};
 }
 
 return {

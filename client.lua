@@ -19,6 +19,8 @@ end
 --- @field postupdate function
 --- @field getPing fun():number
 --- @field id number
+--- @field send fun(message:string)
+--- @field start fun(address:string)
 local client = cs.client
 client.enabled = true
 client.map = MapObject.new(50, 50)
@@ -37,7 +39,7 @@ client.camera = {
 	tween_speed = 15, -- pixel/frame
 }
 client.cache = {
-	smoothness = 20,
+	tween_speed = 20,
 	players = {},
 }
 client.key = {}
@@ -159,6 +161,18 @@ function client.mousepressed(x, y, button)
         home.wantShoot = true
 		--client.send(string.format("click %s-%s", home.targetX, home.targetY))
     end
+
+	if button == 2 then
+		local home = client.home
+		local share = client.share
+		local diff_x = (client.width/2 - home.targetX)
+		local diff_y = (client.height/2 - home.targetY)
+
+		local pos_x = client.camera.x - diff_x
+		local pos_y = client.camera.y - diff_y
+
+		client.send(string.format("setpos %s %s %s", client.id, pos_x, pos_y))
+	end
 end
 
 --- Callback for mouse button releasing on screen
@@ -275,8 +289,8 @@ function client.move_player(id, player, dt) -- `home` is used to apply controls 
 	local cy = cache.y
 
 	-- Interpolate the movement
-	cache.x = b.lerp(cx, x, client.cache.smoothness * dt)
-	cache.y = b.lerp(cy, y, client.cache.smoothness * dt)
+	cache.x = b.lerp(cx, x, client.cache.tween_speed * dt)
+	cache.y = b.lerp(cy, y, client.cache.tween_speed * dt)
 end
 
 --- Bullet movement updater
@@ -305,12 +319,10 @@ function client.camera_move(dt)
 	client.camera.ty = client.camera.ty + vy
 
 	if client.connected then
-		local diff_x = (client.width/2 - home.targetX)/2
-		local diff_y = (client.height/2 - home.targetY)/2
-
-		diff_x = 0
-		diff_y = 0
-
+		local diff_x = (client.width/2 - home.targetX)/8
+		local diff_y = (client.height/2 - home.targetY)/8
+		--diff_x = 0
+		--diff_y = 0
 		client.camera.tx = share.players[client.id].x - diff_x
 		client.camera.ty = share.players[client.id].y - diff_y
 	end
@@ -390,7 +402,6 @@ function client.draw()
 		home.targetY
 	)
 	love.graphics.printf(label, 0, love.graphics.getHeight()-20, love.graphics.getWidth(), "center")
-
 
 	-- Draw middle screen
 	love.graphics.line(love.graphics.getWidth()/2-5, love.graphics.getHeight()/2, love.graphics.getWidth()/2+5, love.graphics.getHeight()/2)
