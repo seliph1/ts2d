@@ -1,11 +1,11 @@
---[[
-    Features:
+# Features:
 
     Increases hudtxt unique id
     cache hudtxt message
     force update
     health info style: (health bar, percentage)
     sv_forcecamera
+    entity move callback
 
 
     client routine:
