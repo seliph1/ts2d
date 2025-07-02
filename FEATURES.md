@@ -26,5 +26,3 @@
     receive map cycle
     receive enabled server mod
     switch to ingame mode
-
-]]

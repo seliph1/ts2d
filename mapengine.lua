@@ -10,15 +10,21 @@ end
 -- Loading some libs
 local ffi = require "ffi"
 local List = require "lib/list"
+local bump = require "lib/bump"
 local shader = require "sys/core/shaders/cs2dshaders"
 
 -- Localise some important functions to constantly call during execution
+local max = math.max
+local min = math.min
+local sqrt = math.sqrt
+local atan2 = math.atan2
+local random = math.random
 local floor = math.floor
 local ceil = math.ceil
-local min = math.min
-local max = math.max
+local cos = math.cos
+local sin = math.sin
+local abs = math.abs
 local rad = math.rad
-local random = math.random
 
 -- Default config tables for tiles/tilesets/maps
 local DEFAULT_PROPERTY = 0
@@ -97,18 +103,85 @@ local ENTITY_TYPE = {
 		color = {1,0,0};
 		label = "T";
 	};
-		
 	[1] = { 
 		name = "Info_CT";
 		color = {0,0,1};
 		label = "CT";
 	};
-
-
+	[21] = {
+		name ="Env_Item";
+		color = {0,1,0};
+		label = "Item";
+	};
 	[22] = {
 		name ="Env_Sprite";
 		color = {0,1,0};
 		label = "Spr";
+	};
+	[23]={
+		name ="Env_Sound";
+		color = {0,1,0};
+		label = "Sound";
+	};
+	[24]={
+		name ="Env_Decal";
+		color = {0,1,0};
+		label = "Decal";
+	};
+	[25]={
+		name ="Env_Breakable";
+		color = {0,1,0};
+		label = "Spr";
+	};
+	[26]={
+		name ="Env_Explode";
+		color = {0,1,0};
+		label = "Explode";
+	};
+	[27]={
+		name ="Env_Hurt";
+		color = {0,1,0};
+		label = "Hurt";
+	};
+	[28]={
+		name ="Env_Image";
+		color = {0,1,0};
+		label = "Image";
+	};
+	[29]={
+		name ="Env_Object";
+		color = {0,1,0};
+		label = "Object";
+	};
+	[30]={
+		name ="Env_Building";
+		color = {0,1,0};
+		label = "Build";
+	};
+	[31]={
+		name ="Env_NPC";
+		color = {0,1,0};
+		label = "NPC";
+	};
+	[32]={
+		name ="Env_Room";
+		color = {0,1,0};
+		label = "Room";
+	};
+	[33]={
+		name ="Env_Light";
+		color = {0,1,0};
+		label = "Light";
+	};
+	[34]={
+		name ="Env_LightStripe";
+		color = {0,1,0};
+		label = "LStripe";
+	};
+	[35]={
+		name ="Env_Cube3D";
+		color = {0,1,0};
+		label = "C3D";
 	};
 }
 
@@ -146,7 +219,7 @@ local function entityInCamera(e, camx, camy)
 	local shift_y 	= e.number_settings[4]
 	local sw = love.graphics.getWidth()
 	local sh = love.graphics.getHeight()
-	local x1, y1 = e.x*32 - camx + sw/2 + shift_x, e.y*32 - camy + sh/2 + shift_y 
+	local x1, y1 = e.x*32 - camx + sw/2 + shift_x, e.y*32 - camy + sh/2 + shift_y
 	local x1size, y1size = size_x, size_y
 	local x2, y2 = 0, 0
 	local x2size, y2size = sw, sh
@@ -176,7 +249,9 @@ local function entityPosInScreen(e, camx, camy)
 	end
 end
 
-
+local function sort_by_depth(a,b)
+	return a.depth < b.depth
+end
 --[[---------------------------------------------------------
 	MapObject 
 --]]---------------------------------------------------------
@@ -207,8 +282,7 @@ function MapObject.new(width, height)
 		_breath = 0;
 		_oscillation = 0;
 		_item_field = {};
-		_mapentity_field = {};
-		_player_cache = {};
+		_world = bump.newWorld();
 
 		_camera = {
 			x = 0,
@@ -228,10 +302,15 @@ function MapObject.new(width, height)
 		};
 
 	}
+
 	object._placeholder = love.image.newImageData(32, 32)
 	object._placeholder_img = love.graphics.newImage(object._placeholder)
-	object._flare = fs:loadImage("gfx/sprites/flare2.bmp");
+	object._flare = fs:loadImage("gfx/sprites/flare2.bmp")
 	object._blendmap = create_spritesheet("gfx/blendmap.bmp", 32, 32)
+	object._hudicon = create_spritesheet("gfx/gui_icons.bmp", 16, 16)
+	object._smallfont = love.graphics.newFont("gfx/fonts/liberationsans.ttf", 10)
+	object._normalfont = love.graphics.newFont("gfx/fonts/liberationsans.ttf", 16)
+
 	local mapdata = {
 		name = "untitled";
 		header = "Unreal Software's Counter-Strike 2D Map File (max)";
@@ -262,8 +341,6 @@ function MapObject.new(width, height)
 		--shadow_mask = love.image.newImageData(width+1, height+1);
 		entity_count = 0;
 		entity_table = {};
-		entity_cache = {};
-		entity_list = List:new();
 		gfx = {
 			tile = {};
 			entity = {};
@@ -286,6 +363,7 @@ function MapObject.new(width, height)
 		--mapdata.shadow_mask:setPixel(x, y, 0.0, 0.0, 0.0)
 		mapdata.map_mod[x] = mapdata.map_mod[x] or {}
 		mapdata.map_mod[x][y] = {
+			object_type = "tile",
 			brightness = 100,
 			rotation = 0,
 			color = {
@@ -295,7 +373,13 @@ function MapObject.new(width, height)
 			},
 			modifier = 0,
 			blending = 0,
+			id = 0,
+			height = 0,
+			property = 0,
+			depth = 0,
 		}
+
+		--object._world:add( mapdata.map_mod[x][y], x*32, y*32, 32, 32 )
 	end
 	end
 	--mapdata.shadow_render = love.graphics.newImage(mapdata.shadow_mask)
@@ -371,7 +455,6 @@ function MapObject:read(path, noindexing)
 				cursor = cursor + index+1
 				return str
 			end
-			
 			if bytearray[cursor+index]~=13 then
 				str = str .. chr
 			end	
@@ -392,7 +475,6 @@ function MapObject:read(path, noindexing)
 	-----------------------------------------------------------------------------------------------------------
 	-- header first check
 	-----------------------------------------------------------------------------------------------------------
-
 	local header_check_a = read_string() -- Header check 
 	print("Header check 1: \""..header_check_a.."\"")
 	if not (
@@ -413,6 +495,8 @@ function MapObject:read(path, noindexing)
 			--wall = love.graphics.newSpriteBatch(self._placeholder);
 		};
 	}
+
+	self._world = bump.newWorld()
 	-- byte header data
 	-----------------------------------------------------------------------------------------------------------
 	mapdata.name = string.match(path, "(.+).map")
@@ -464,30 +548,9 @@ function MapObject:read(path, noindexing)
 	-----------------------------------------------------------------------------------------------------------
 	-- TILE MODES (2)
 	-----------------------------------------------------------------------------------------------------------
-	--[[
-			Tile modes are:
-		0  normal floor without sound
-		1  wall
-		2  obstacle
-		3  wall without shadow
-		4  obstacle without shadow
-		5  wall that is rendered at floor level
-		10 floor dirt
-		11 floor snow (with footprints and fx)
-		12 floor step
-		13 floor tile
-		14 floor wade (water with wave fx)
-		15 floor metal
-		16 floor wood
-		50 deadly normal
-		51 deadly toxic
-		52 deadly explosion
-		53 deadly abyss
-	--]]
-	for i = 0, mapdata.tile_count do 
+	for i = 0, mapdata.tile_count do
 		mapdata.tile[i].property = read_byte()
 	end
-
 	-----------------------------------------------------------------------------------------------------------
 	-- TILE HEIGHTS (3)
 	-----------------------------------------------------------------------------------------------------------
@@ -531,7 +594,6 @@ function MapObject:read(path, noindexing)
 	end
 	--mapdata.shadow_render = love.graphics.newImage(mapdata.shadow_mask)
 	--mapdata.shadow_render:setFilter("nearest", "nearest")
-	--mapdata.world:add(player, player.x, player.y, player.w, player.h)
 	----------------------------------------------------------------------------------------------
 	-- Tile id mod table.
 	mapdata.map_mod = {}
@@ -554,7 +616,7 @@ function MapObject:read(path, noindexing)
 				-- maior que 128 e menor que 192 -- bits 10
 				-- maior que 192 -- 11
 				if modifier >= 192 then -- Some stuff that DC planned.
-					read_string() 
+					read_string()
 				elseif modifier >= 64 and modifier < 128 then -- Blending
 					brightness = math.floor( ( modifier - 64 - rotation) * 2.5 )
 					blending = read_byte() + 2
@@ -571,12 +633,16 @@ function MapObject:read(path, noindexing)
 			if brightness == 0 then brightness = 100 end
 			mapdata.map_mod[x] = mapdata.map_mod[x] or {}
 			mapdata.map_mod[x][y] = {
+				object_type = "tile",
 				blending = blending,
 				color = color,
 				rotation = rotation,
 				modifier = modifier,
 				brightness = brightness,
+				depth = 0,
 			}
+
+			--self._world:add( mapdata.map_mod[x][y], x*32, y*32, 32, 32 )
 		end
 		end
 	else
@@ -584,6 +650,7 @@ function MapObject:read(path, noindexing)
 		for y = 0, mapdata.height  do
 			mapdata.map_mod[x] = mapdata.map_mod[x] or {}
 			mapdata.map_mod[x][y] = {
+				object_type="tile",
 				brightness = 100,
 				rotation = 0,
 				color = {
@@ -593,7 +660,9 @@ function MapObject:read(path, noindexing)
 				},
 				modifier = 0,
 				blending = 0,
+				depth = 0,
 			}
+			--self._world:add( mapdata.map_mod[x][y], x*32, y*32, 32, 32 )
 		end
 		end
 	end
@@ -601,12 +670,11 @@ function MapObject:read(path, noindexing)
 	-- ENTITIES (5)
 	-----------------------------------------------------------------------------------------------------------
 	mapdata.entity_count = read_integer()
-	mapdata.entity_list = List.new()
 	mapdata.entity_table = {}
-	mapdata.entity_cache = {}
-	--print("Entity count: " .. mapdata.entity_count)
+	print("Entity count: " .. mapdata.entity_count)
 	for i = 1, mapdata.entity_count do
 		local e = {}
+		e.object_type = "entity"
 		e.name = read_string()
 		e.type = read_byte()
 		e.x = read_integer()
@@ -614,19 +682,21 @@ function MapObject:read(path, noindexing)
 		e.trigger = read_string()
 		e.string_settings = {}
 		e.number_settings = {}
+		e.index = i
+		e.depth = e.index
 		for j = 1, 10 do
 			e.number_settings[j] = read_integer()
 			e.string_settings[j] = read_string()
 		end
-		mapdata.entity_list:push( e )
 		table.insert(mapdata.entity_table, e)
-		mapdata.entity_cache[e.x] = mapdata.entity_cache[e.x] or {}
-		mapdata.entity_cache[e.x][e.y] = e
+
+		-- Add it to bump world
+		self._world:add(e, e.x*32, e.y*32, 32, 32)
 	end
 
 	if noindexing then
 		self._mapdata = mapdata
-		self._updateRequest = true
+		self:shiftRender()
 		return
 	end
 	-----------------------------------------------------------------------------------------------------------
@@ -653,7 +723,7 @@ function MapObject:read(path, noindexing)
 	end
 	end
 	-- Entity load
-	for _, e in mapdata.entity_list:walk() do
+	for index, e in pairs(mapdata.entity_table) do
 		if e.type == 22 then
 			local sprite_path = (e.string_settings[1] or "gfx/cs2d.bmp")
 			if not mapdata.gfx.entity[sprite_path] then -- Try to load a new image
@@ -678,7 +748,7 @@ function MapObject:read(path, noindexing)
 		mapdata.gfx.background = love.graphics.newImage(self._placeholder)
 	end
 	self._mapdata = mapdata
-	self._updateRequest = true
+	self:shiftRender()
 end
 
 -- Methods
@@ -763,7 +833,7 @@ function MapObject:tile(x, y) -- coords in tiles
 		return id, mod, property
 	else
 		return -1, DEFAULT_MOD
-	end	
+	end
 end
 
 function MapObject:gfx(group, id)
@@ -802,7 +872,7 @@ function MapObject:scroll(x, y)
 	local cx = floor(x / (32 * 8))
 	local cy = floor(y / (32 * 8))
 	if self._camera.chunk_x ~= cx or self._camera.chunk_y ~= cy then
-		self._updateRequest = true
+		self:shiftRender()
 	end
 	self._camera.chunk_x = cx
 	self._camera.chunk_y = cy
@@ -810,19 +880,12 @@ function MapObject:scroll(x, y)
 	self._camera.y = y
 end
 
-function MapObject:update(dt)
-	if not self._updateRequest then return end
-	self._updateRequest = false
+function MapObject:shiftRender()
 	local mapdata = self._mapdata
 	local gfx = mapdata.gfx
 	local camera = self._camera
-	--local screen_w = love.graphics.getWidth()
-	--local screen_h = love.graphics.getHeight()
-
 	local screen_w = 800
 	local screen_h = 600
-
-
 	local sw, sh = screen_w, screen_h
 	local tile_size = mapdata.tile_size
 	local off_x, off_y = floor(tile_size/2), floor(tile_size/2)
@@ -867,6 +930,11 @@ function MapObject:update(dt)
 	end
 end
 
+function MapObject:update(dt)
+	local time = love.timer.getTime()
+	self._oscillation = (sin( time * math.pi * 2) + 1)/2
+end
+
 function MapObject:isOnScreen(x, y)
 	local camera = self._camera
 	local render = self._render
@@ -881,51 +949,39 @@ function MapObject:isOnScreen(x, y)
 	return false
 end
 
+function MapObject:draw_background()
+	local mapdata = self._mapdata
+	if mapdata.background_file ~= "" then
+		local background_w, background_h = mapdata.gfx.background:getDimensions()
+		for i = 0, love.graphics.getWidth() / background_w do
+		for j = 0, love.graphics.getHeight() / background_h do
+			love.graphics.draw(mapdata.gfx.background, i * background_w, j * background_h)
+		end
+		end
+	else
+		love.graphics.clear(
+			mapdata.background_color_red/255,
+			mapdata.background_color_green/255,
+			mapdata.background_color_blue/255
+		)
+	end
+end
+
+
 function MapObject:draw_floor()
 	local camera = self._camera
 	local mapdata = self._mapdata
-	local render = self._render
-	
 	local sw, sh = love.graphics.getWidth(), love.graphics.getHeight()
-	local tile_size = mapdata.tile_size
-	
 	-- Draw background
 	self:draw_background()
-
 	-- Change camera perspective
 	love.graphics.push()
 	love.graphics.translate(-camera.x + sw/2, -camera.y + sh/2)
-
 	-- Draw floor level
 	love.graphics.setShader(shader.magenta)
 	love.graphics.draw(mapdata.gfx.ground)
-	love.graphics.setShader()
-  
-	-- Draw tile blends
-  	local off_x, off_y = floor(tile_size/2), floor(tile_size/2)
-	for x = render.x, render.width do
-	for y = render.y, render.height do
-		local tile_id, mod, property = self:tile(x, y)
-		local quad = mapdata.gfx.quad[tile_id]
-		
-		if mod.blending > 1 then
-			love.graphics.setColor(1,1,1,1)
-			local sx = x * tile_size + off_x
-			local sy = y * tile_size + off_y
-			local dir = TILE_BLEND_DIR[ (mod.blending-2)%8 ]
-			local tile_id_blend = self:tile(x + dir[1], y + dir[2])
-			
-			shader.mask:send("tile", mapdata.gfx.tile[tile_id_blend])
-			love.graphics.setShader(shader.mask)
-			love.graphics.draw(self._blendmap[mod.blending-2], sx, sy, rad(mod.rotation*90), 1, 1, off_x, off_y)	
-			love.graphics.setShader()
-		end
-	end
-	end
-	
 	-- Reset the transformation stack
 	love.graphics.pop()
-	
 	-- Reset render
 	love.graphics.setShader()
 	love.graphics.setBlendMode("alpha")
@@ -938,7 +994,6 @@ function MapObject:draw_ceiling()
 	local render = self._render
 	local sw, sh = love.graphics.getWidth(), love.graphics.getHeight()
 	local tile_size = mapdata.tile_size
-
 	-- Change camera perspective
 	love.graphics.push()
 	love.graphics.translate(-camera.x + sw/2, -camera.y + sh/2)
@@ -966,15 +1021,12 @@ function MapObject:draw_bullets(share, home, client)
 		love.graphics.push()
 		love.graphics.translate(bul.x, bul.y)
 		love.graphics.rotate(math.atan2(bul.dirY, bul.dirX))
-
 		--love.graphics.setColor(bul.r, bul.g, bul.b) -- Fill
 		love.graphics.setColor(1, 1, 1, 1)
 		love.graphics.ellipse('fill', 0, 0, 24, 1)
-
 		love.graphics.setColor(1, 1, 1, 0.38)
 		love.graphics.setLineWidth(0.3) -- Outline
 		love.graphics.ellipse('line', 0, 0, 24, 1)
-
 		love.graphics.pop()
 	end
 	-- Reset the transformation stack
@@ -994,23 +1046,17 @@ function MapObject:draw_playersc(client)
 	local players = client.share.players
 	local cache = client.cache
 	local sw, sh = love.graphics.getWidth(), love.graphics.getHeight()
-	
 	love.graphics.push()
 	love.graphics.translate(-camera.x + sw/2, -camera.y + sh/2)
-
 	for client_id, player in pairs(players) do
 		local player_cache = cache.players[client_id]
 		love.graphics.push()
-		--love.graphics.translate(player.x, player.y)
 		love.graphics.translate(player_cache.x, player_cache.y)
-
 		local targetX, targetY = player.targetX, player.targetY
-
 		local angle = math.atan2(targetY - client.height/2, targetX - client.width/2) + math.pi/2
-		local holding = player.h
+		local holding = player.ih
 		local itemdata = client.content.itemlist[holding]
 		local stance = itemdata.player_stance
-
 		local texture = client.gfx.player[player.p].texture
 		local quad = client.gfx.player[player.p][stance]
 		--local width, height = quad:getTextureDimensions()
@@ -1020,7 +1066,6 @@ function MapObject:draw_playersc(client)
 		love.graphics.rectangle("fill", -13, -13, 26, 26)
 		love.graphics.pop()
 	end
-
 	love.graphics.pop()
 end
 
@@ -1036,7 +1081,6 @@ function MapObject:draw_players(share, home, client) -- get info from server!
 	for clientId, player in pairs(players) do
 		love.graphics.push()
 		love.graphics.translate(player.x, player.y)
-
 		local targetX, targetY
 		if clientId == client.id then -- If it's us, use `home` data directly
 			targetX, targetY = home.targetX, home.targetY
@@ -1045,14 +1089,12 @@ function MapObject:draw_players(share, home, client) -- get info from server!
 		end
 		-- Calculate drawing angle
 		local angle = math.atan2(targetY - client.height/2, targetX - client.width/2) + math.pi/2
-		local holding = player.h
+		local holding = player.ih
 		local itemdata = client.content.itemlist[holding]
 		local stance = itemdata.player_stance
-
 		local texture = client.gfx.player[player.p].texture
 		local quad = client.gfx.player[player.p][stance]
 		local width, height = quad:getTextureDimensions()
-
 		love.graphics.draw(texture, quad, 0, 0, angle, 1, 1, 16, 16)
 		love.graphics.pop()
 	end
@@ -1100,7 +1142,7 @@ function MapObject:draw_entity(e)
 	end
 	shader.entity:send("mask", mask)
 	shader.entity:send("blend", blend)
-		
+
 	love.graphics.setColor(love.math.colorFromBytes(red, green, blue, alpha))
 	love.graphics.draw(sprite, sx, sy, angle, scale_x, scale_y, width/2, height/2)
 	love.graphics.setShader()
@@ -1108,34 +1150,39 @@ function MapObject:draw_entity(e)
 	love.graphics.setColor(1, 1, 1, 1)
 end
 
-function MapObject:draw_background()
-	local mapdata = self._mapdata
-	if mapdata.background_file ~= "" then
-		local background_w, background_h = mapdata.gfx.background:getDimensions()
-
-		for i = 0, love.graphics.getWidth() / background_w do
-		for j = 0, love.graphics.getHeight() / background_h do
-			love.graphics.draw(mapdata.gfx.background, i * background_w, j * background_h)
-		end
-		end
-	end
-end
-
 function MapObject:draw_entities()
 	local camera = self._camera
 	local mapdata = self._mapdata
 	local render = self._render
 	local sw, sh = love.graphics.getWidth(), love.graphics.getHeight()
-	-- Change camera perspective
+	-- Create new transformation stack
 	love.graphics.push()
+	-- Change camera perspective
 	love.graphics.translate(-camera.x + sw/2, -camera.y + sh/2)
-	-- Draw entity sprites
-	for index, e in mapdata.entity_list:walk() do
-		--do break end
-		if e.type == 22 and entityInCamera(e, camera.x, camera.y) then
+
+	local x, y, w, h = camera.x - 800, camera.y - 600, 800*2, 600*2
+  	local entity, len = self._world:queryRect(x, y, w, h)
+	table.sort(entity, sort_by_depth)
+	for i = 1, len do
+		local e = entity[i]
+		if e.object_type =="entity" and e.type == 22 then
 			self:draw_entity(e)
 		end
 	end
+--[[ 	-- Change font of small entity sprites
+	love.graphics.setFont(self._smallfont)
+	-- Set blend mode
+	love.graphics.setBlendMode("add")
+	for i = 1, len do
+		local e = entity[i]
+		local t = ENTITY_TYPE[e.type] or ENTITY_TYPE["null"]
+		local c = t.color
+		love.graphics.setColor(c[1], c[2], c[3], 0.5 + self._oscillation/2)
+		love.graphics.draw(self._hudicon[9], e.x*32+16, e.y*32+16, 0, 1, 1, 8, 8)
+		love.graphics.printf(t.label or "", e.x*32+20, e.y*32+20, 48 ,"left")
+	end
+	love.graphics.setBlendMode("alpha")
+	love.graphics.setFont(self._normalfont) ]]
 	-- Reset the transformation stack
 	love.graphics.pop()
 end
