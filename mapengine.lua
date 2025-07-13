@@ -11,7 +11,9 @@ end
 local ffi = require "ffi"
 local List = require "lib/list"
 local bump = require "lib/bump"
-local shader = require "sys/core/shaders/cs2dshaders"
+local shader = require "core/shaders/cs2dshaders"
+local effect = require "effect"
+local enum = require "enum"
 
 -- Localise some important functions to constantly call during execution
 local max = math.max
@@ -28,164 +30,15 @@ local rad = math.rad
 
 -- Default config tables for tiles/tilesets/maps
 local DEFAULT_PROPERTY = 0
-
-local DEFAULT_MOD = {
-	brightness = 100,
-	rotation = 0,
-	color = {
-		red = 255,
-		blue = 255,
-		green = 255,
-	},
-	modifier = 0,
-	blending = 0,
-}
-
-local TILE_PROPERTY = {
-	[0]="normal floor without sound";
-	[1]="wall";
-	[2]="obstacle";
-	[3]="wall without shadow";
-	[4]="obstacle without shadow";
-	[5]="wall that is rendered at floor level";
-	[10]="floor dirt";
-	[11]="floor snow (with footprints and fx)";
-	[12]="floor step";
-	[13]="floor tile";
-	[14]="floor wade (water with wave fx)";
-	[15]="floor metal";
-	[16]="floor wood";
-	[50]="deadly normal";
-	[51]="deadly toxic";
-	[52]="deadly explosion";
-	[53]="deadly abyss";
-}
-
-local TILE_MODE_HEIGHT = {
-	[0]=0.0,		-- 0  normal floor without sound
-	[1]=1.0,	-- 1  wall
-	[2]=0.5,	-- 2  obstacle
-	[3]=1.0,	-- 3  wall without shadow
-	[4]=0.5,	-- 4  obstacle without shadow
-	[5]=0.0,		-- 5  wall that is rendered at floor level
-	[10]=0.0,		-- 10 floor dirt
-	[11]=0.0,		-- 11 floor snow (with footprints and fx)
-	[12]=0.0,		-- 12 floor step
-	[13]=0.0,		-- 13 floor tile
-	[14]=0.0,		-- 14 floor wade (water with wave fx)
-	[15]=0.0,		-- 15 floor metal
-	[16]=0.0,		-- 16 floor wood
-	[50]=0.0,		-- 50 deadly normal
-	[51]=0.0,		-- 51 deadly toxic
-	[52]=0.0,		-- 52 deadly explosion
-	[53]=0.0,		-- 53 deadly abyss
-}
-
-local TILE_BLEND_DIR = {
-	[-1] = {0, 0};
-	[0] = { 0,-1};
-	[1] = { 1,-1};
-	[2] = { 1, 0};
-	[3] = { 1, 1};
-	[4] = { 0, 1};
-	[5] = {-1, 1};
-	[6] = {-1, 0};
-	[7] = {-1,-1};
-}
-
-local ENTITY_TYPE = {
-	["null"] = {
-		name = "Null";
-		color = {1,1,1};
-	};
-	[0] = {
-		name = "Info_T";
-		color = {1,0,0};
-		label = "T";
-	};
-	[1] = { 
-		name = "Info_CT";
-		color = {0,0,1};
-		label = "CT";
-	};
-	[21] = {
-		name ="Env_Item";
-		color = {0,1,0};
-		label = "Item";
-	};
-	[22] = {
-		name ="Env_Sprite";
-		color = {0,1,0};
-		label = "Spr";
-	};
-	[23]={
-		name ="Env_Sound";
-		color = {0,1,0};
-		label = "Sound";
-	};
-	[24]={
-		name ="Env_Decal";
-		color = {0,1,0};
-		label = "Decal";
-	};
-	[25]={
-		name ="Env_Breakable";
-		color = {0,1,0};
-		label = "Spr";
-	};
-	[26]={
-		name ="Env_Explode";
-		color = {0,1,0};
-		label = "Explode";
-	};
-	[27]={
-		name ="Env_Hurt";
-		color = {0,1,0};
-		label = "Hurt";
-	};
-	[28]={
-		name ="Env_Image";
-		color = {0,1,0};
-		label = "Image";
-	};
-	[29]={
-		name ="Env_Object";
-		color = {0,1,0};
-		label = "Object";
-	};
-	[30]={
-		name ="Env_Building";
-		color = {0,1,0};
-		label = "Build";
-	};
-	[31]={
-		name ="Env_NPC";
-		color = {0,1,0};
-		label = "NPC";
-	};
-	[32]={
-		name ="Env_Room";
-		color = {0,1,0};
-		label = "Room";
-	};
-	[33]={
-		name ="Env_Light";
-		color = {0,1,0};
-		label = "Light";
-	};
-	[34]={
-		name ="Env_LightStripe";
-		color = {0,1,0};
-		label = "LStripe";
-	};
-	[35]={
-		name ="Env_Cube3D";
-		color = {0,1,0};
-		label = "C3D";
-	};
-}
+local DEFAULT_MOD = enum.DEFAULT_MOD
+local TILE_PROPERTY = enum.TILE_PROPERTY
+local TILE_BLEND_DIR = enum.TILE_BLEND_DIR
+local TILE_MODE_HEIGHT = enum.TILE_MODE_HEIGHT
+local ENTITY_TYPE = enum.ENTITY_TYPE
 
 
+effect.register(dofile "core/particle/fire.lua", "fire")
+effect.register(dofile "core/particle/sparkle.lua", "sparkle")
 --[[---------------------------------------------------------
 	Lib
 --]]---------------------------------------------------------
@@ -933,6 +786,9 @@ end
 function MapObject:update(dt)
 	local time = love.timer.getTime()
 	self._oscillation = (sin( time * math.pi * 2) + 1)/2
+
+
+	effect.update(dt)
 end
 
 function MapObject:isOnScreen(x, y)
@@ -1006,22 +862,27 @@ function MapObject:draw_ceiling()
 	love.graphics.setShader()
 	love.graphics.setBlendMode("alpha")
 	love.graphics.setColor(1, 1, 1, 1)
+
+	-- Draw effect particles above everything!
+	effect.draw()
 end
 
 function MapObject:draw_bullets(share, home, client)
 	local camera = self._camera
 	local render = self._render
 	local bullets = share.bullets
+	local cache = client.cache
 	local sw, sh = love.graphics.getWidth(), love.graphics.getHeight()
 	-- Change camera perspective
 	love.graphics.push()
 	love.graphics.translate(-camera.x + sw/2, -camera.y + sh/2)
 	-- Bullets
-	for _, bul in pairs(bullets) do
+	for id, bullet in pairs(bullets) do
+		local bullet_cache = cache.bullets[id]
 		love.graphics.push()
-		love.graphics.translate(bul.x, bul.y)
-		love.graphics.rotate(math.atan2(bul.dirY, bul.dirX))
-		--love.graphics.setColor(bul.r, bul.g, bul.b) -- Fill
+		love.graphics.translate(bullet.x, bullet.y)
+		--love.graphics.translate(bullet_cache.x, bullet_cache.y)
+		love.graphics.rotate(math.atan2(bullet.dy, bullet.dx))
 		love.graphics.setColor(1, 1, 1, 1)
 		love.graphics.ellipse('fill', 0, 0, 24, 1)
 		love.graphics.setColor(1, 1, 1, 0.38)
@@ -1041,8 +902,6 @@ end
 ---@param client client
 function MapObject:draw_playersc(client)
 	local camera = self._camera
-	local render = self._render
-
 	local players = client.share.players
 	local cache = client.cache
 	local sw, sh = love.graphics.getWidth(), love.graphics.getHeight()
@@ -1059,11 +918,11 @@ function MapObject:draw_playersc(client)
 		local stance = itemdata.player_stance
 		local texture = client.gfx.player[player.p].texture
 		local quad = client.gfx.player[player.p][stance]
-		--local width, height = quad:getTextureDimensions()
 		love.graphics.draw(texture, quad, 0, 0, angle, 1, 1, 16, 16)
+		--Debug for player collision
 		--love.graphics.points(0, 0)
-		love.graphics.setColor(1,0,0,0.5)
-		love.graphics.rectangle("fill", -13, -13, 26, 26)
+		--love.graphics.setColor(1,0,0,0.5)
+		--love.graphics.rectangle("fill", -13, -13, 26, 26)
 		love.graphics.pop()
 	end
 	love.graphics.pop()
@@ -1071,7 +930,6 @@ end
 
 function MapObject:draw_players(share, home, client) -- get info from server!
 	local camera = self._camera
-	local render = self._render
 	local players = share.players -- get info from server
 	local sw, sh = love.graphics.getWidth(), love.graphics.getHeight()
 	-- Change camera perspective
@@ -1094,7 +952,6 @@ function MapObject:draw_players(share, home, client) -- get info from server!
 		local stance = itemdata.player_stance
 		local texture = client.gfx.player[player.p].texture
 		local quad = client.gfx.player[player.p][stance]
-		local width, height = quad:getTextureDimensions()
 		love.graphics.draw(texture, quad, 0, 0, angle, 1, 1, 16, 16)
 		love.graphics.pop()
 	end
@@ -1169,7 +1026,7 @@ function MapObject:draw_entities()
 			self:draw_entity(e)
 		end
 	end
---[[ 	-- Change font of small entity sprites
+ 	-- Change font of small entity sprites
 	love.graphics.setFont(self._smallfont)
 	-- Set blend mode
 	love.graphics.setBlendMode("add")
@@ -1182,7 +1039,7 @@ function MapObject:draw_entities()
 		love.graphics.printf(t.label or "", e.x*32+20, e.y*32+20, 48 ,"left")
 	end
 	love.graphics.setBlendMode("alpha")
-	love.graphics.setFont(self._normalfont) ]]
+	love.graphics.setFont(self._normalfont)
 	-- Reset the transformation stack
 	love.graphics.pop()
 end
@@ -1289,6 +1146,10 @@ end
 function MapObject:getPixelHeight()
 	local mapdata  = self._mapdata
 	return mapdata.height*32
+end
+
+function MapObject:spawn_effect(x,y)
+	effect.new("sparkle", x, y)
 end
 
 

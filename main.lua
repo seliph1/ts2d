@@ -1,12 +1,10 @@
 ---@diagnostic disable: duplicate-set-field
-
-Console = require "interface/console"
+Console = require "core/interface/console"
 --require "lib/lovedebug"
 local loveframes = require "lib/loveframes"
 local client = require "client"
 
 function love.load()
-	love.graphics.setBackgroundColor(1,1,1,1)
 	client.load()
 end
 
@@ -18,6 +16,9 @@ end
 function love.draw()
 	client.draw()
 	loveframes.draw()
+
+
+	love.graphics.setBlendMode("alpha")
 end
 
 function love.mousepressed(x, y, button)
@@ -47,7 +48,7 @@ function love.keyreleased(key, unicode)
 	loveframes.keyreleased(key)
 end
 
-function love.mousemoved( x, y, dx, dy, istouch )
+function love.mousemoved(x, y, dx, dy, istouch)
 	client.mousemoved(x, y)
 end
 

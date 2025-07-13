@@ -41,6 +41,7 @@ client.camera = {
 client.cache = {
 	tween_speed = 20,
 	players = {},
+	bullets = {},
 }
 client.key = {}
 client.gfx = {
@@ -287,17 +288,44 @@ function client.move_player(id, player, dt) -- `home` is used to apply controls 
 	local cache = client.cache.players[id]
 	local cx = cache.x
 	local cy = cache.y
-
-	-- Interpolate the movement
-	cache.x = b.lerp(cx, x, client.cache.tween_speed * dt)
-	cache.y = b.lerp(cy, y, client.cache.tween_speed * dt)
+	if math.abs(cache.x - player.x) > 16 or math.abs(cache.y - player.y) > 16 then
+		cache.x = x
+		cache.y = y
+	else
+		-- Interpolate the movement
+		cache.x = b.lerp(cx, x, client.cache.tween_speed * dt)
+		cache.y = b.lerp(cy, y, client.cache.tween_speed * dt)
+	end
 end
 
 --- Bullet movement updater
----@param bul table Bullet object
+---@param id number
+---@param bullet table Bullet object
 ---@param dt number Delta time
-function client.move_bullet(bul, dt)
-    bul.x, bul.y = bul.x + 800 * bul.dirX * dt, bul.y + 800 * bul.dirY * dt
+function client.move_bullet(id, bullet, dt)
+	-- Receive the actual position from server
+	local x = bullet.x
+	local y = bullet.y
+
+	-- Remove old data if applicable
+	if client.cache.bullets[id] and not share.bullets[id] then
+		client.cache.bullets[id] = nil
+	end
+
+	-- Get the last position received from cache
+	client.cache.bullets[id] = client.cache.bullets[id] or {x=bullet.x, y=bullet.y}
+	local cache = client.cache.bullets[id]
+	local cx = cache.x
+	local cy = cache.y
+
+	if math.abs(cache.x - bullet.x) > 16 or math.abs(cache.y - bullet.y) > 16 then
+		cache.x = x
+		cache.y = y
+	end
+
+	-- Interpolate the movement
+	cache.x = b.lerp(cx, x, 100 * dt)
+	cache.y = b.lerp(cy, y, 100 * dt)
 end
 
 --- Camera movement vector function
@@ -321,8 +349,6 @@ function client.camera_move(dt)
 	if client.connected then
 		local diff_x = (client.width/2 - home.targetX)/8
 		local diff_y = (client.height/2 - home.targetY)/8
-		--diff_x = 0
-		--diff_y = 0
 		client.camera.tx = share.players[client.id].x - diff_x
 		client.camera.ty = share.players[client.id].y - diff_y
 	end
@@ -347,18 +373,15 @@ function client.update(dt)
 		client.map:update(dt)
 	end
 
-    -- Do some client-side prediction
-    if client.connected then
-        -- Predictively move triangles
+	if client.connected then
+		-- Move players
         for id, player in pairs(share.players) do
-            -- We can use our `home` to apply controls predictively if it's our triangle
-            ---client.move_player(player, dt, id == client.id and home or nil)
 			client.move_player(id, player, dt)
         end
 
-        -- Predictively move bullets
-        for _, bul in pairs(share.bullets) do
-            client.move_bullet(bul, dt)
+		-- Move bullets
+        for id, bullet in pairs(share.bullets) do
+            client.move_bullet(id, bullet, dt)
         end
     end
 	client.postupdate(dt)
@@ -377,14 +400,13 @@ function client.draw()
 		client.map:draw_entities()
 	end
     if client.connected then
-	--if true then
-        -- Player render
-		--client.map:draw_players(share, home, client)
-		client.map:draw_playersc(client)
 		-- Bullet render
 		client.map:draw_bullets(share, home, client)
 		-- Draw items on the ground
 		client.map:draw_items(share, client)
+		-- Player render
+		--client.map:draw_players(share, home, client)
+		client.map:draw_playersc(client)
     end
 	if client.map then
 		client.map:draw_ceiling()

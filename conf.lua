@@ -2,10 +2,10 @@
 function love.conf(t)
     t.title = "Tactical Strike 2D"		-- The title of the window the game is in (string)
     t.author = "mozilla"		-- The author of the game (string)
-    --t.window.width = 800			-- The window width (number)
-    --t.window.height = 600			-- The window height (number)
-    t.window.width = 1080			-- The window width (number)
-    t.window.height = 720			-- The window height (number)	
+    t.window.width = 800			-- The window width (number)
+    t.window.height = 600			-- The window height (number)
+    --t.window.width = 1080			-- The window width (number)
+    --t.window.height = 720			-- The window height (number)	
 	--t.window.minwidth = 1280
 	--t.window.minheight = 720
 	--t.window.resizable = true

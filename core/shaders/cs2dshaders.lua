@@ -1,5 +1,5 @@
 local shader = {}
-local path = "sys/core/shaders/"
+local path = "core/shaders/"
 
 shader.mask = love.graphics.newShader [[
 extern Image tile;

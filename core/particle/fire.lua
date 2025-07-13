@@ -1,0 +1,74 @@
+--[[
+module = {
+	x=emitterPositionX, y=emitterPositionY,
+	[1] = {
+		system=particleSystem1,
+		kickStartSteps=steps1, kickStartDt=dt1, emitAtStart=count1,
+		blendMode=blendMode1, shader=shader1,
+		texturePreset=preset1, texturePath=path1,
+		shaderPath=path1, shaderFilename=filename1,
+		x=emitterOffsetX, y=emitterOffsetY
+	},
+	[2] = {
+		system=particleSystem2,
+		...
+	},
+	...
+}
+]]
+local LG        = love.graphics
+local particles = {x=0, y=0}
+
+local image1 = LG.newImage("gfx/particle/lightDot.png")
+image1:setFilter("linear", "linear")
+local image2 = LG.newImage("gfx/particle/smoke2ss.png")
+image2:setFilter("linear", "linear")
+
+local ps = LG.newParticleSystem(image1, 19)
+ps:setColors(1, 1, 1, 0, 1, 0.9609375, 0, 1, 1, 0, 0, 0.5, 1, 1, 1, 0)
+ps:setDirection(-1.5707963705063)
+ps:setEmissionArea("uniform", 20, 20, 0, false)
+ps:setEmissionRate(8)
+ps:setEmitterLifetime(-1)
+ps:setInsertMode("top")
+ps:setLinearAcceleration(0, 0, 0, 0)
+ps:setLinearDamping(0, 0)
+ps:setOffset(90, 90)
+ps:setParticleLifetime(1.7999999523163, 2.2000000476837)
+ps:setRadialAcceleration(0, 0)
+ps:setRelativeRotation(false)
+ps:setRotation(0, 0)
+ps:setSizes(0.40000000596046)
+ps:setSizeVariation(0)
+ps:setSpeed(20, 30)
+ps:setSpin(0, 0)
+ps:setSpinVariation(0)
+ps:setSpread(6.2831854820251)
+ps:setTangentialAcceleration(0, 0)
+table.insert(particles, {system=ps, kickStartSteps=0, kickStartDt=0, emitAtStart=0, blendMode="add", shader=nil, texturePath="gfx/particle/lightDot.png", texturePreset="lightDot", shaderPath="", shaderFilename="", x=0, y=0})
+
+local ps = LG.newParticleSystem(image2, 16)
+ps:setColors(0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0)
+ps:setDirection(0)
+ps:setEmissionArea("uniform", 20, 20, 0, false)
+ps:setEmissionRate(2.5294532775879)
+ps:setEmitterLifetime(-1)
+ps:setInsertMode("top")
+ps:setLinearAcceleration(0, 0, 0, 0)
+ps:setLinearDamping(0, 0)
+ps:setOffset(16, 16)
+ps:setParticleLifetime(4, 6)
+ps:setRadialAcceleration(0, 0)
+ps:setRelativeRotation(true)
+ps:setRotation(0, 0)
+ps:setSizes(1, 1.5)
+ps:setSizeVariation(1)
+ps:setSpeed(15, 25)
+ps:setSpin(0.62831854820251, 0.62831854820251)
+ps:setSpinVariation(0.5)
+ps:setSpread(6.2831854820251)
+ps:setTangentialAcceleration(0, 0)
+ps:setQuads(LG.newQuad(0, 0, 32, 32, 128, 32), LG.newQuad(32, 0, 32, 32, 128, 32), LG.newQuad(64, 0, 32, 32, 128, 32), LG.newQuad(96, 0, 32, 32, 128, 32))
+table.insert(particles, {system=ps, kickStartSteps=0, kickStartDt=0, emitAtStart=0, blendMode="alpha", shader=nil, texturePath="gfx/particle/smoke2ss.png", texturePreset="", shaderPath="", shaderFilename="", x=0, y=0})
+
+return particles

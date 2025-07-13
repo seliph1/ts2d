@@ -1,5 +1,168 @@
 local enum = {}
 
+enum.TILE_PROPERTY = {
+	[0]="normal floor without sound";
+	[1]="wall";
+	[2]="obstacle";
+	[3]="wall without shadow";
+	[4]="obstacle without shadow";
+	[5]="wall that is rendered at floor level";
+	[10]="floor dirt";
+	[11]="floor snow (with footprints and fx)";
+	[12]="floor step";
+	[13]="floor tile";
+	[14]="floor wade (water with wave fx)";
+	[15]="floor metal";
+	[16]="floor wood";
+	[50]="deadly normal";
+	[51]="deadly toxic";
+	[52]="deadly explosion";
+	[53]="deadly abyss";
+}
+
+enum.EFFECT_LIST = {
+	"sparkle",
+	"fire",
+}
+
+enum.DEFAULT_MOD = {
+	brightness = 100,
+	rotation = 0,
+	color = {
+		red = 255,
+		blue = 255,
+		green = 255,
+	},
+	modifier = 0,
+	blending = 0,
+}
+
+
+
+enum.ENTITY_TYPE = {
+	["null"] = {
+		name = "Null";
+		color = {1,1,1};
+	};
+	[0] = {
+		name = "Info_T";
+		color = {1,0,0};
+		label = "T";
+	};
+	[1] = { 
+		name = "Info_CT";
+		color = {0,0,1};
+		label = "CT";
+	};
+	[21] = {
+		name ="Env_Item";
+		color = {0,1,0};
+		label = "Item";
+	};
+	[22] = {
+		name ="Env_Sprite";
+		color = {0,1,0};
+		label = "Spr";
+	};
+	[23]={
+		name ="Env_Sound";
+		color = {0,1,0};
+		label = "Sound";
+	};
+	[24]={
+		name ="Env_Decal";
+		color = {0,1,0};
+		label = "Decal";
+	};
+	[25]={
+		name ="Env_Breakable";
+		color = {0,1,0};
+		label = "Spr";
+	};
+	[26]={
+		name ="Env_Explode";
+		color = {0,1,0};
+		label = "Explode";
+	};
+	[27]={
+		name ="Env_Hurt";
+		color = {0,1,0};
+		label = "Hurt";
+	};
+	[28]={
+		name ="Env_Image";
+		color = {0,1,0};
+		label = "Image";
+	};
+	[29]={
+		name ="Env_Object";
+		color = {0,1,0};
+		label = "Object";
+	};
+	[30]={
+		name ="Env_Building";
+		color = {0,1,0};
+		label = "Build";
+	};
+	[31]={
+		name ="Env_NPC";
+		color = {0,1,0};
+		label = "NPC";
+	};
+	[32]={
+		name ="Env_Room";
+		color = {0,1,0};
+		label = "Room";
+	};
+	[33]={
+		name ="Env_Light";
+		color = {0,1,0};
+		label = "Light";
+	};
+	[34]={
+		name ="Env_LightStripe";
+		color = {0,1,0};
+		label = "LStripe";
+	};
+	[35]={
+		name ="Env_Cube3D";
+		color = {0,1,0};
+		label = "C3D";
+	};
+}
+
+enum.TILE_BLEND_DIR = {
+	[-1] = {0, 0};
+	[0] = { 0,-1};
+	[1] = { 1,-1};
+	[2] = { 1, 0};
+	[3] = { 1, 1};
+	[4] = { 0, 1};
+	[5] = {-1, 1};
+	[6] = {-1, 0};
+	[7] = {-1,-1};
+}
+
+enum.TILE_MODE_HEIGHT = {
+	[0]=0.0,		-- 0  normal floor without sound
+	[1]=1.0,	-- 1  wall
+	[2]=0.5,	-- 2  obstacle
+	[3]=1.0,	-- 3  wall without shadow
+	[4]=0.5,	-- 4  obstacle without shadow
+	[5]=0.0,		-- 5  wall that is rendered at floor level
+	[10]=0.0,		-- 10 floor dirt
+	[11]=0.0,		-- 11 floor snow (with footprints and fx)
+	[12]=0.0,		-- 12 floor step
+	[13]=0.0,		-- 13 floor tile
+	[14]=0.0,		-- 14 floor wade (water with wave fx)
+	[15]=0.0,		-- 15 floor metal
+	[16]=0.0,		-- 16 floor wood
+	[50]=0.0,		-- 50 deadly normal
+	[51]=0.0,		-- 51 deadly toxic
+	[52]=0.0,		-- 52 deadly explosion
+	[53]=0.0,		-- 53 deadly abyss
+}
+
 enum.entity_type={
 	[0]="Info_T",
 	[1]="Info_CT",
