@@ -8,6 +8,16 @@
     entity move callback
 
 
+    callback on projectiles
+    spawning
+    colliding with wall/player/etc
+    stopping motion
+    despawning
+
+    HIDE UDP AS SOON AS POSSIBLE
+
+    add image snap on objects that has x.y property
+
     client routine:
     check files
     request files from server

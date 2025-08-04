@@ -1,5 +1,5 @@
 local cs 		= require "lib/cs"
-local b			= require "lib.battery"
+local b			= require "lib/battery"
 local enum      = require "enum"
 local MapObject = require "mapengine"
 
@@ -157,7 +157,7 @@ end
 ---@param x number
 ---@param y number
 ---@param button number
-function client.mousepressed(x, y, button)
+function client.mousepressed(x, y, button, istouch, presses)
     if button == 1 then
         home.wantShoot = true
 		--client.send(string.format("click %s-%s", home.targetX, home.targetY))
@@ -180,10 +180,17 @@ end
 ---@param x number
 ---@param y number
 ---@param button number
-function client.mousereleased(x, y, button)
+function client.mousereleased(x, y, button, istouch, presses)
     if button == 1 then
         home.wantShoot = false
+		--local tx, ty = client.map:mouseToMap(x, y)
+		--client.map:spawn_effect("fire", tx, ty)
     end
+
+	if button == 2 then
+		--local tx, ty = client.map:mouseToMap(x, y)
+		--client.map:spawn_effect("rain", tx, ty)
+	end
 end
 
 --- Callback for key press event
@@ -411,6 +418,8 @@ function client.draw()
 	if client.map then
 		client.map:draw_ceiling()
 	end
+	client.map:draw_effects()
+
 	-- Resets scissoring
 	love.graphics.pop()
 

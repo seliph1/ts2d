@@ -33,6 +33,7 @@ console_window:ShowLineNumbers(false)
 
 local console_window = loveframes.Create("panel", console_frame)
 console_window:SetPos(5, 30):SetSize(630, 400)
+console_window:SetVisible(false)
 console_window.Draw = function(self)
 	--love.graphics.print("test", self.x, self.y)
 	--if self.history then
@@ -185,6 +186,11 @@ console_input.commands = {
 		end
 	};
 }
+
+
+local console_multiline = loveframes.Create("textbox", console_frame)
+console_multiline:SetSize(630, 400):SetPos(5, 30)
+
 
 return {
 	frame = console_frame,

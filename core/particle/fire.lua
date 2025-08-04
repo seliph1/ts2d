@@ -1,21 +1,5 @@
---[[
-module = {
-	x=emitterPositionX, y=emitterPositionY,
-	[1] = {
-		system=particleSystem1,
-		kickStartSteps=steps1, kickStartDt=dt1, emitAtStart=count1,
-		blendMode=blendMode1, shader=shader1,
-		texturePreset=preset1, texturePath=path1,
-		shaderPath=path1, shaderFilename=filename1,
-		x=emitterOffsetX, y=emitterOffsetY
-	},
-	[2] = {
-		system=particleSystem2,
-		...
-	},
-	...
-}
-]]
+---@diagnostic disable: redundant-parameter
+
 local LG        = love.graphics
 local particles = {x=0, y=0}
 

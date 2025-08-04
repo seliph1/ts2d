@@ -39,6 +39,8 @@ local ENTITY_TYPE = enum.ENTITY_TYPE
 
 effect.register(dofile "core/particle/fire.lua", "fire")
 effect.register(dofile "core/particle/sparkle.lua", "sparkle")
+effect.register(dofile "core/particle/snow.lua", "snow")
+effect.register(dofile "core/particle/rain.lua", "rain")
 --[[---------------------------------------------------------
 	Lib
 --]]---------------------------------------------------------
@@ -863,8 +865,22 @@ function MapObject:draw_ceiling()
 	love.graphics.setBlendMode("alpha")
 	love.graphics.setColor(1, 1, 1, 1)
 
+end
+
+function MapObject:draw_effects()
+	local camera = self._camera
+	local sw, sh = love.graphics.getWidth(), love.graphics.getHeight()
+	-- Change camera perspective
+	love.graphics.push()
+	love.graphics.translate(-camera.x + sw/2, -camera.y + sh/2)
 	-- Draw effect particles above everything!
 	effect.draw()
+	-- Reset the transformation stack
+	love.graphics.pop()
+	-- Reset render
+	love.graphics.setShader()
+	love.graphics.setBlendMode("alpha")
+	love.graphics.setColor(1, 1, 1, 1)
 end
 
 function MapObject:draw_bullets(share, home, client)
@@ -1089,8 +1105,6 @@ end
 function MapObject:draw_items(share, client)
 	local camera = self._camera
 	local mapdata = self._mapdata
-	local render = self._render
-	local items = share.items
 	local gfx = client.gfx
 	local itemlist = client.content.itemlist
 	local sw, sh = love.graphics.getWidth(), love.graphics.getHeight()
@@ -1148,8 +1162,19 @@ function MapObject:getPixelHeight()
 	return mapdata.height*32
 end
 
-function MapObject:spawn_effect(x,y)
-	effect.new("sparkle", x, y)
+function MapObject:mouseToMap(x, y)
+	local sw, sh = love.graphics.getWidth(), love.graphics.getHeight()
+	local camera = self._camera
+	local mx = x + camera.x - sw/2
+	local my = y + camera.y - sh/2
+	return mx, my
+end
+
+function MapObject:mapToMouse(x, y)
+end
+
+function MapObject:spawn_effect(name, x, y)
+	effect.new(name, x, y)
 end
 
 

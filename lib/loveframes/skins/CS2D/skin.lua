@@ -1343,11 +1343,81 @@ function skin.label(object)
 end
 
 --[[---------------------------------------------------------
+	- func: DrawTextBox(object)
+	- desc: draws the text object
+--]]---------------------------------------------------------
+function skin.textbox(object)
+	local x = object.x
+	local y = object.y
+	local width = object:GetWidth()
+	local height = object:GetHeight()
+	local focus = object:GetFocus()
+	local field = object.field
+	-- Colors
+	local bodycolor = skin.controls.textinput_body_color
+	local textnormalcolor = skin.controls.textinput_text_normal_color
+	local textplaceholdercolor = skin.controls.textinput_text_placeholder_color
+	local textselectedcolor = skin.controls.textinput_text_selected_color
+	local highlightbarcolor = skin.controls.textinput_highlight_bar_color
+	local indicatorcolor = skin.controls.textinput_indicator_color
+
+
+	love.graphics.setColor(bodycolor)
+	love.graphics.rectangle("fill", x, y, width-20, height)
+
+
+
+	love.graphics.setColor(highlightbarcolor)
+	for _, selection_x, selection_y, selection_w, selection_h in field:eachSelection() do
+		if selection_y >= 0 and selection_y+selection_h <= height then
+			love.graphics.rectangle("fill", selection_x + x, selection_y + y, selection_w, selection_h)
+		end
+	end
+	love.graphics.setColor(textnormalcolor)
+	for index, text, line_x, line_y in field:eachVisibleLine() do
+		if line_y >= 0 and line_y <= height then
+			skin.PrintText(text, x + line_x, y + line_y)
+		end
+	end
+
+
+	if focus then
+		local cursor_x, cursor_y, cursor_height = field:getCursorLayout()
+		if cursor_x >= 0 and cursor_x <= width and cursor_y >=0 and cursor_y <= height then
+			love.graphics.setColor(indicatorcolor)
+			love.graphics.rectangle("fill", cursor_x + x, cursor_y + y, 1, cursor_height)
+		end
+	else --love.graphics.print("not focus", x-20, y-20)
+	end
+
+
+
+	local canScrollH, canScrollV                 = field:canScroll()
+	local hOffset, hCoverage, vOffset, vCoverage = field:getScrollHandles()
+	local hHandleLength = hCoverage * width
+	local vHandleLength = vCoverage * height
+	local hHandlePos    = hOffset   * width
+	local vHandlePos    = vOffset   * height
+	if canScrollV then
+		love.graphics.rectangle("fill", x+width - 2, y+vHandlePos, 2, vHandleLength)
+	end
+end
+
+function skin.textbox_over(object)
+	local x = object.x
+	local y = object.y
+	local width = object:GetWidth()
+	local height = object:GetHeight()
+
+	--love.graphics.setColor(bordercolor)
+	--skin.OutlinedRectangle(x, y, width, height)
+end
+
+--[[---------------------------------------------------------
 	- func: DrawTextInput(object)
 	- desc: draws the text input object
 --]]---------------------------------------------------------
 function skin.textinput(object)
-
 	local skin = object:GetSkin()
 	local x = object:GetX()
 	local y = object:GetY()
@@ -1382,7 +1452,7 @@ function skin.textinput(object)
 	
 	love.graphics.setColor(bodycolor)
 	love.graphics.rectangle("fill", x, y, width, height)
-	
+
 	if alltextselected then
 		local bary = 0
 		if multiline then
@@ -1495,10 +1565,8 @@ function skin.textinput(object)
 		end
 		skin.PrintText(#str > 0 and str or placeholder, textx, texty)
 	end
-	
-	love.graphics.setColor(0.9, 0.9, 0.9, 1)
+	--love.graphics.setColor(0.9, 0.9, 0.9, 1)
 	--skin.OutlinedRectangle(x + 1, y + 1, width - 2, height - 2)
-	
 end
 
 --[[---------------------------------------------------------
@@ -1506,7 +1574,6 @@ end
 	- desc: draws over the text input object
 --]]---------------------------------------------------------
 function skin.textinput_over(object)
-
 	local skin = object:GetSkin()
 	local x = object:GetX()
 	local y = object:GetY()
@@ -1515,9 +1582,7 @@ function skin.textinput_over(object)
 	
 	love.graphics.setColor(bordercolor)
 	skin.OutlinedRectangle(x, y, width, height)
-	
 end
-
 --[[---------------------------------------------------------
 	- func: skin.DrawSlider(object)
 	- desc: draws the slider object

@@ -1539,7 +1539,6 @@ function newobject:GetVerticalScrollBody()
 	end
 	
 	return item
-
 end
 
 --[[---------------------------------------------------------
@@ -1561,7 +1560,6 @@ function newobject:GetHorizontalScrollBody()
 	end
 	
 	return item
-
 end
 
 --[[---------------------------------------------------------
@@ -1812,16 +1810,6 @@ function newobject:SetMouseWheelScrollAmount(amount)
 
 	self.mousewheelscrollamount = amount
 	return self
-	
-end
-
---[[---------------------------------------------------------
-	- func: GetMouseWheelScrollAmount()
-	- desc: gets the scroll amount of the mouse wheel
---]]---------------------------------------------------------
-function newobject:GetButtonScrollAmount()
-
-	return self.mousewheelscrollamount
 	
 end
 

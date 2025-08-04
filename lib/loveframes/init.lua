@@ -23,6 +23,7 @@ loveframes.require(path .. ".libraries.skins")
 -- generic libraries
 loveframes.class = require(path .. ".third-party.middleclass")
 loveframes.utf8 = require(path .. ".third-party.utf8"):init()
+loveframes.InputField = require(path .. ".third-party.InputField")
 
 -- library info
 loveframes.author = "Kenny Shields"
@@ -72,22 +73,16 @@ love.keyboard.setKeyRepeat(true)
 	- desc: updates all library objects
 --]]---------------------------------------------------------
 function loveframes.update(dt)
-
 	local base = loveframes.base
 	local input_cursor_set = loveframes.input_cursor_set
-	
 	-- DEBUG:
 	loveframes.collisioncount = 0
 	--loveframes.objectcount = 0
-	
-	
 	loveframes.hover = false
 	loveframes.hoverobject = false
-	
 	local downobject = loveframes.downobject
 	if #loveframes.collisions > 0 then
 		local top = loveframes.collisions[#loveframes.collisions]
-		
 		if not downobject then
 			loveframes.hoverobject = top
 		else
@@ -96,7 +91,6 @@ function loveframes.update(dt)
 			end
 		end
 	end
-	
 	if loveframes.config["ENABLE_SYSTEM_CURSORS"] then 
 		local hoverobject = loveframes.hoverobject
 		local arrow = love.mouse.getSystemCursor("arrow")
@@ -178,10 +172,8 @@ function loveframes.update(dt)
 			end
 		end
 	end
-	
 	loveframes.collisions = {}
 	base:update(dt)
-
 end
 
 --[[---------------------------------------------------------
@@ -211,13 +203,22 @@ function loveframes.draw()
 end
 
 --[[---------------------------------------------------------
+	- func: mousemoved(x, y, button)
+	- desc: called when the player moves mouse
+--]]---------------------------------------------------------
+function loveframes.mousemoved(x, y, dx, dy, istouch)
+	local base = loveframes.base
+	base:mousemoved(x, y, dx, dy, istouch)
+end
+
+--[[---------------------------------------------------------
 	- func: mousepressed(x, y, button)
 	- desc: called when the player presses a mouse button
 --]]---------------------------------------------------------
-function loveframes.mousepressed(x, y, button)
+function loveframes.mousepressed(x, y, button, istouch, presses)
 
 	local base = loveframes.base
-	base:mousepressed(x, y, button)
+	base:mousepressed(x, y, button, istouch, presses)
 	
 	-- close open menus
 	local bchildren = base.children
@@ -243,10 +244,10 @@ end
 	- func: mousereleased(x, y, button)
 	- desc: called when the player releases a mouse button
 --]]---------------------------------------------------------
-function loveframes.mousereleased(x, y, button)
+function loveframes.mousereleased(x, y, button, istouch, presses)
 
 	local base = loveframes.base
-	base:mousereleased(x, y, button)
+	base:mousereleased(x, y, button, istouch, presses)
 	
 	-- reset the hover object
 	if button == 1 then
@@ -261,10 +262,8 @@ end
 	- desc: called when the player moves a mouse wheel
 --]]---------------------------------------------------------
 function loveframes.wheelmoved(x, y)
-
 	local base = loveframes.base
 	base:wheelmoved(x, y)
-
 end
 
 --[[---------------------------------------------------------
@@ -272,10 +271,8 @@ end
 	- desc: called when the player presses a key
 --]]---------------------------------------------------------
 function loveframes.keypressed(key, isrepeat)
-
 	local base = loveframes.base
 	base:keypressed(key, isrepeat)
-	
 end
 
 --[[---------------------------------------------------------
@@ -283,10 +280,8 @@ end
 	- desc: called when the player releases a key
 --]]---------------------------------------------------------
 function loveframes.keyreleased(key)
-
 	local base = loveframes.base
 	base:keyreleased(key)
-	
 end
 
 --[[---------------------------------------------------------
@@ -294,12 +289,9 @@ end
 	- desc: called when the user inputs text
 --]]---------------------------------------------------------
 function loveframes.textinput(text)
-
 	local base = loveframes.base
 	base:textinput(text)
-	
 end
-
 
 loveframes.LoadObjects(dir .. "/objects")
 loveframes.LoadTemplates(dir .. "/templates")

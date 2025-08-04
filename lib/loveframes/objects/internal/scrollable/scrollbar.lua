@@ -354,5 +354,22 @@ function newobject:GetBarType()
 	
 end
 
+--[[---------------------------------------------------------
+	- func: GetBarAmount()
+	- desc: gets the object's bar amount scrolled
+--]]---------------------------------------------------------
+function newobject:GetBarAmount()
+	local bartype = self.bartype
+
+	if bartype == "vertical" then
+		local maxRealPos = self.parent.height - self.height
+		return self.staticy/maxRealPos
+	elseif bartype == "horizontal" then
+		local maxRealPos = self.parent.width - self.width
+		return self.staticx/maxRealPos
+	end
+end
+
+
 ---------- module end ----------
 end

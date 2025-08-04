@@ -1,8 +1,9 @@
 ---@diagnostic disable: duplicate-set-field
 Console = require "core/interface/console"
---require "lib/lovedebug"
+
 local loveframes = require "lib/loveframes"
 local client = require "client"
+--require "lib/lovedebug"
 
 function love.load()
 	client.load()
@@ -16,19 +17,16 @@ end
 function love.draw()
 	client.draw()
 	loveframes.draw()
-
-
-	love.graphics.setBlendMode("alpha")
 end
 
-function love.mousepressed(x, y, button)
-	client.mousepressed(x, y, button)
-	loveframes.mousepressed(x, y, button)
+function love.mousepressed(x, y, button, istouch, presses)
+	client.mousepressed(x, y, button, istouch, presses)
+	loveframes.mousepressed(x, y, button, istouch, presses)
 end
 
-function love.mousereleased(x, y, button)
-	client.mousereleased(x, y, button)
-	loveframes.mousereleased(x, y, button)
+function love.mousereleased(x, y, button, istouch, presses)
+	client.mousereleased(x, y, button, istouch, presses)
+	loveframes.mousereleased(x, y, button, istouch, presses)
 end
 
 function love.keypressed(key, unicode)
@@ -39,8 +37,8 @@ function love.keypressed(key, unicode)
 	elseif key == "'" then
 		Console.frame:ToggleVisibility()
 	end
-	client.keypressed(key)
 	loveframes.keypressed(key, unicode)
+	client.keypressed(key)
 end
 
 function love.keyreleased(key, unicode)
@@ -50,10 +48,14 @@ end
 
 function love.mousemoved(x, y, dx, dy, istouch)
 	client.mousemoved(x, y)
+	loveframes.mousemoved(x, y, dx, dy, istouch)
 end
 
 function love.textinput(text)
 	loveframes.textinput(text)
+end
+
+function love.quit()
 end
 
 --[[

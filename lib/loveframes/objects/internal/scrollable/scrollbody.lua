@@ -183,9 +183,41 @@ end
 	- desc: gets the object's scroll bar
 --]]---------------------------------------------------------
 function newobject:GetScrollBar()
-
 	return self.internals[1].internals[1]
-	
+end
+--[[---------------------------------------------------------
+	- func: GetScrollArea()
+	- desc: gets the object's scroll area
+--]]---------------------------------------------------------
+function newobject:GetScrollArea()
+	return self.internals[1]
+end
+--[[---------------------------------------------------------
+	- func: GetScrollButtons()
+	- desc: gets the object's scroll buttons
+--]]---------------------------------------------------------
+function newobject:GetScrollButtons()
+	return self.internals[2], self.internals[3]
+end
+
+--[[---------------------------------------------------------
+	- func: GetScrollHeight()
+	- desc: gets the object's scroll true size
+--]]---------------------------------------------------------
+
+function newobject:GetScrollSize()
+	local button_back = self.internals[2]
+	local button_forward = self.internals[3]
+	local button_size
+	local body_size
+	if self.bartype == "vertical" then
+		button_size = button_back.height + button_forward.height
+		body_size = self.height
+	elseif self.bartype == "horizontal" then
+		button_size = button_back.width + button_forward.width
+		body_size = self.width
+	end
+	return body_size - button_size
 end
 
 ---------- module end ----------
