@@ -23,7 +23,9 @@ loveframes.require(path .. ".libraries.skins")
 -- generic libraries
 loveframes.class = require(path .. ".third-party.middleclass")
 loveframes.utf8 = require(path .. ".third-party.utf8"):init()
-loveframes.InputField = require(path .. ".third-party.InputField")
+loveframes.input = require(path .. ".third-party.input")
+loveframes.sysl = require(path .. ".third-party.sysl")
+loveframes.love_utf8 = require("utf8")
 
 -- library info
 loveframes.author = "Kenny Shields"

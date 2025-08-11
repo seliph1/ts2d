@@ -1,6 +1,8 @@
 local loveframes = require "lib/loveframes"
 local client = require "client"
 
+local mono_font = love.graphics.newFont("lib/loveframes/skins/CS2D/images/NotoSansMono-Regular.ttf", 12)
+
 _Print = print
 function print(...)
 	local args = {...}
@@ -22,28 +24,21 @@ console_frame:SetResizable(false)
 console_frame:ShowCloseButton(false)
 console_frame:SetScreenLocked(true)
 
---[[
-local console_window = loveframes.Create("textinput", console_frame)
-console_window:SetPos(5, 30):SetSize(630, 400)
-console_window:SetMultiline(true)
-console_window:SetEditable(false)
-console_window:SetAutoScroll(true)
-console_window:ShowLineNumbers(false)
-]]
+--local message_box = loveframes.Create("messagebox", console_frame)
+--message_box:SetPos(5, 30)
+--local console_multiline = loveframes.Create("textbox", console_frame)
+--console_multiline:SetPos(5, 30):SetSize(630, 400):SetMultiline(true)
 
 local console_window = loveframes.Create("panel", console_frame)
 console_window:SetPos(5, 30):SetSize(630, 400)
-console_window:SetVisible(false)
+console_window:SetVisible(true)
 console_window.Draw = function(self)
-	--love.graphics.print("test", self.x, self.y)
-	--if self.history then
-	--	love.graphics.print(self.history[#self.history], self.x, self.y)
-	--end
 	love.graphics.setColor(0,0,0,1)
 	love.graphics.rectangle("fill", self.x, self.y, self.width, self.height)
 	love.graphics.setFont(loveframes.skins.CS2D.controls.tinyfont)
 	love.graphics.setColor(1,1,1,1)
 	local counter = 0
+	love.graphics.setFont(mono_font)
 	for entry = #self.history, #self.history-30, -1 do
 		counter = counter + 1
 		if self.history[entry] then
@@ -52,9 +47,9 @@ console_window.Draw = function(self)
 	end
 end
 console_window.history = {}
+local console_input = loveframes.Create("textbox", console_frame)
 
-local console_input = loveframes.Create("textinput", console_frame)
-console_input:SetPos(5, 435):SetWidth(630)
+console_input:SetPos(5, 435):SetWidth(630):SetFont(mono_font)
 console_input.rollback = 1
 console_input.history = {""}
 console_input.OnEnter = function(self, text)
@@ -110,6 +105,7 @@ console_input.commands = {
 					print(status)
 				end
 			end
+			client.mode = "game"
 		end,
 		syntax = "/map <mapfile>",
 	};
@@ -122,7 +118,19 @@ console_input.commands = {
 			end
 		end
 	};
-
+	["edit"] = {
+		action = function(...)
+			local args = {...}
+			if client.map then
+				local status = client.map:read( "maps/"..table.concat(args," ")..".map" )
+				if status then
+					print(status)
+				end
+				client.mode = "editor"
+			end
+		end,
+		syntax = "/edit <mapfile>",
+	};
 	["ping"] = {
 		action = function()
 		end
@@ -171,7 +179,11 @@ console_input.commands = {
 			print(client.map)
 		end;
 	};
-
+	["scale"] = {
+		action = function(bool)
+			client.scale = (bool == "true")
+		end;
+	};
 	["tp"] = {
 		action = function()
 			local home = client.home
@@ -187,9 +199,6 @@ console_input.commands = {
 	};
 }
 
-
-local console_multiline = loveframes.Create("textbox", console_frame)
-console_multiline:SetSize(630, 400):SetPos(5, 30)
 
 
 return {

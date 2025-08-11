@@ -1983,4 +1983,12 @@ enum.player = {
 }
 
 
+enum.ui = {
+	"gfx/splash.bmp",
+	"gfx/pointer.bmp",
+	"gfx/gui_icons.bmp",
+	"gfx/gui_server.bmp",
+	"gfx/hud_nums.bmp",
+}
+
 return enum

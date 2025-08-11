@@ -31,15 +31,14 @@ function newobject:initialize()
 	self.internals = {}
 	self.OnValueChanged = nil
 	
-	local input = loveframes.objects["textinput"]:new()
+	local input = loveframes.objects["textbox"]:new()
 	input.parent = self
 	input:SetSize(50, 20)
 	input:SetUsable({"1", "2", "3", "4", "5", "6", "7", "8", "9", "0", ".", "-"})
-	input:SetTabReplacement("")
 	input:SetText(self.value)
 	input.OnTextChanged = function(object)
 		local value = self.value
-		local newvalue = tonumber(object.lines[1])
+		local newvalue = tonumber(object.field:getText())
 		if not newvalue then
 			self.value = value
 			input:SetText(value)
@@ -84,7 +83,7 @@ function newobject:initialize()
 		local canmodify = self.canmodify
 		local lastbuttonclicked = self.lastbuttonclicked
 		object:SetPos(object.parent.width - 21, 0)
-		object:SetHeight(object.parent.height/2 + 1)
+		object:SetHeight(object.parent.height/2)
 		if down and not canmodify then
 			self:ModifyValue("add")
 			self.canmodify = true
@@ -146,44 +145,35 @@ end
 	- desc: updates the element
 --]]---------------------------------------------------------
 function newobject:update(dt)
-	
 	local state = loveframes.state
 	local selfstate = self.state
-	
 	if state ~= selfstate then
 		return
 	end
-	
 	local visible = self.visible
 	local alwaysupdate = self.alwaysupdate
-	
 	if not visible then
 		if not alwaysupdate then
 			return
 		end
 	end
-	
 	local internals = self.internals
 	local parent = self.parent
 	local base = loveframes.base
 	local update = self.Update
-	
+
 	-- move to parent if there is a parent
 	if parent ~= base and parent.type ~= "list" then
 		self.x = self.parent.x + self.staticx
 		self.y = self.parent.y + self.staticy
 	end
-	
 	self:CheckHover()
-	
 	for k, v in ipairs(internals) do
 		v:update(dt)
 	end
-	
 	if update then
 		update(self, dt)
 	end
-
 end
 
 --[[---------------------------------------------------------
@@ -191,34 +181,26 @@ end
 	- desc: called when the player presses a mouse button
 --]]---------------------------------------------------------
 function newobject:mousepressed(x, y, button)
-
 	local state = loveframes.state
 	local selfstate = self.state
-	
 	if state ~= selfstate then
 		return
 	end
-	
 	local visible = self.visible
-	
 	if not visible then
 		return
 	end
-	
 	local internals = self.internals
 	local hover = self.hover
-	
 	if hover and button == 1 then
 		local baseparent = self:GetBaseParent()
 		if baseparent and baseparent.type == "frame" then
 			baseparent:MakeTop()
 		end
 	end
-	
 	for k, v in ipairs(internals) do
 		v:mousepressed(x, y, button)
 	end
-	
 end
 
 --[[---------------------------------------------------------
@@ -226,23 +208,18 @@ end
 	- desc: sets the object's value
 --]]---------------------------------------------------------
 function newobject:SetValue(value)
-
 	local min = self.min
 	local curvalue = self.value
 	local value = tonumber(value) or min
 	local internals = self.internals
 	local input = internals[1]
 	local onvaluechanged = self.OnValueChanged
-	
 	self.value = value
 	input:SetText(value)
-	
 	if value ~= curvalue and onvaluechanged then
 		onvaluechanged(self, value)
 	end
-	
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -250,11 +227,8 @@ end
 	- desc: gets the object's value
 --]]---------------------------------------------------------
 function newobject:GetValue()
-
 	return self.value
-	
 end
-
 --[[---------------------------------------------------------
 	- func: SetIncreaseAmount(amount)
 	- desc: sets the object's increase amount
@@ -302,13 +276,10 @@ end
 	- desc: sets the object's maximum value
 --]]---------------------------------------------------------
 function newobject:SetMax(max)
-
 	local internals = self.internals
 	local input = internals[1]
 	local onvaluechanged = self.OnValueChanged
-	
 	self.max = max
-	
 	if self.value > max then
 		self.value = max
 		input:SetValue(max)
@@ -316,9 +287,7 @@ function newobject:SetMax(max)
 			onvaluechanged(self, max)
 		end
 	end
-	
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -326,9 +295,7 @@ end
 	- desc: gets the object's maximum value
 --]]---------------------------------------------------------
 function newobject:GetMax()
-
 	return self.max
-	
 end
 
 --[[---------------------------------------------------------
@@ -336,13 +303,10 @@ end
 	- desc: sets the object's minimum value
 --]]---------------------------------------------------------
 function newobject:SetMin(min)
-
 	local internals = self.internals
 	local input = internals[1]
 	local onvaluechanged = self.OnValueChanged
-	
 	self.min = min
-	
 	if self.value < min then
 		self.value = min
 		input:SetValue(min)
@@ -350,9 +314,7 @@ function newobject:SetMin(min)
 			onvaluechanged(self, min)
 		end
 	end
-	
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -360,9 +322,7 @@ end
 	- desc: gets the object's minimum value
 --]]---------------------------------------------------------
 function newobject:GetMin()
-
 	return self.min
-	
 end
 
 --[[---------------------------------------------------------
@@ -479,6 +439,62 @@ function newobject:GetDecimals()
 
 	return self.decimals
 	
+end
+
+--[[---------------------------------------------------------
+	- func: SetFont(font)/GetFont()
+	- desc: sets/gets the object's font
+--]]---------------------------------------------------------
+function newobject:SetFont(font)
+	self.internals[1].font = font
+	self.internals[1].field:setFont(font)
+	return self
+end
+
+function newobject:GetFont()
+	return self.internals[1].font
+end
+
+--[[---------------------------------------------------------
+	- func: SetPadding() SetHorizontalPadding() SetVerticalPadding()
+	- desc: sets the object's padding
+--]]---------------------------------------------------------
+function newobject:SetPadding(padding)
+	self.internals[1].verticalpadding = padding
+	self.internals[1].horizontalpadding = padding
+
+	self.internals[1].field:setDimensions(
+		self.internals[1].width - math.max(padding*2, 0),
+		self.internals[1].height - math.max(padding*2, 0)
+	)
+	return self
+end
+
+function newobject:SetVerticalPadding(padding)
+	self.internals[1].verticalpadding = padding
+	self.internals[1].field:setHeight(self.internals[1].height - math.max(padding*2, 0))
+	return self
+end
+
+function newobject:SetHorizontalPadding(padding)
+	self.internals[1].horizontalpadding = padding
+	self.internals[1].field:setWidth(self.internals[1].width - math.max(padding*2, 0))
+	return self
+end
+--[[---------------------------------------------------------
+	- func: GetPadding() GetVerticalPadding() GetHorizontalPadding()
+	- desc: gets the object's padding
+--]]---------------------------------------------------------
+function newobject:GetPadding()
+	return self.internals[1].verticalpadding, self.internals[1].horizontalpadding
+end
+
+function newobject:GetVerticalPadding()
+	return self.internals[1].verticalpadding
+end
+
+function newobject:GetHorizontalPadding()
+	return self.internals[1].horizontalpadding
 end
 
 ---------- module end ----------

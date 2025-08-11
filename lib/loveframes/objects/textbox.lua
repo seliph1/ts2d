@@ -42,10 +42,18 @@ function newobject:initialize()
 	self.OnPaste = nil
 	self:SetDrawFunc()
 
+	-- Font properties
+	local skin = loveframes.GetActiveSkin()
+	local font = skin.directives.text_default_font
+
+	self.font = font or loveframes.basicfont
+	self.verticalpadding = 4
+	self.horizontalpadding = 4
 
 	-- Initialize the text input object
-	self.field = loveframes.InputField()
-	self.field:setType("multinowrap")
+	self.field = loveframes.input()
+	self.field:setType("normal")
+	self.field:setFont(font)
 	self.field:setDimensions(self.width, self.height)
 end
 
@@ -93,14 +101,11 @@ function newobject:update(dt)
 	local update = self.Update
 	local inputobject = loveframes.inputobject
 	local internals = self.internals
+	local fieldtype = self.field:getType()
 	-- move to parent if there is a parent
 	if parent ~= base then
-		local parentx = parent.x
-		local parenty = parent.y
-		local staticx = self.staticx
-		local staticy = self.staticy
-		self.x = parentx + staticx
-		self.y = parenty + staticy
+		self.x = self.parent.x + self.staticx
+		self.y = self.parent.y + self.staticy
 	end
 	-- Deselect text if the object isn't active
 	if inputobject ~= self then
@@ -112,7 +117,7 @@ function newobject:update(dt)
 	self.extrawidth = self.itemwidth - self.width
 	self.extraheight = self.itemheight - self.height
 	
-	if self.itemheight > self.height then
+	if self.itemheight > self.height and fieldtype ~= "normal" and fieldtype ~= "password"  then
 		if not self.vbar then
 			local scrollbody = loveframes.objects["scrollbody"]:new(self, "vertical")
 			--scrollbody.internals[1].internals[1].autoscroll = false
@@ -187,12 +192,14 @@ function newobject:draw()
 		stencilfunc = function() love.graphics.rectangle("fill", x, y, width - 16, height - 16) end
 	end
 	-- Begin of stencil
-	--love.graphics.stencil(stencilfunc)
-	--love.graphics.setStencilTest("greater", 0)
+	love.graphics.stencil(stencilfunc)
+	love.graphics.setStencilTest("greater", 0)
 	local drawfunc = self.Draw or self.drawfunc
 	if drawfunc then
 		drawfunc(self)
 	end
+	-- End of stencil
+	love.graphics.setStencilTest()
 
 	local internals = self.internals
 	if internals then
@@ -200,13 +207,11 @@ function newobject:draw()
 			v:draw()
 		end
 	end
+
 	local drawoverfunc = self.DrawOver or self.drawoverfunc
 	if drawoverfunc then
-		drawfunc(self)
+		drawoverfunc(self)
 	end
-
-	-- End of stencil
-	--love.graphics.setStencilTest()
 end
 
 --[[---------------------------------------------------------
@@ -231,7 +236,7 @@ function newobject:mousemoved(x, y)
 end
 
 --[[---------------------------------------------------------
-	- func: mousepressed(x, y, button)
+	- func: mousepressed(x, y, button) mousereleased(x, y, button)
 	- desc: called when the player presses a mouse button
 --]]---------------------------------------------------------
 function newobject:mousepressed(x, y, button, istouch, presses)
@@ -278,16 +283,15 @@ function newobject:mousepressed(x, y, button, istouch, presses)
 			-- Change focus status to false
 			self.focus = false
 		end
+		-- Deselect all text
+		self.field:releaseMouse()
+		self.field:selectNone()
 	end
 	for k, v in ipairs(internals) do
 		v:mousepressed(x, y, button)
 	end
 end
 
---[[---------------------------------------------------------
-	- func: mousereleased(x, y, button)
-	- desc: called when the player releases a mouse button
---]]---------------------------------------------------------
 function newobject:mousereleased(x, y, button)
 	local state = loveframes.state
 	local selfstate = self.state
@@ -307,7 +311,7 @@ function newobject:mousereleased(x, y, button)
 end
 
 --[[---------------------------------------------------------
-	- func: keypressed(key, isrepeat)
+	- func: keypressed(key, isrepeat) keyreleased(key, isrepeat)
 	- desc: called when the player presses a key
 --]]---------------------------------------------------------
 function newobject:keypressed(key, isrepeat)
@@ -325,12 +329,39 @@ function newobject:keypressed(key, isrepeat)
 	if inputobject == self then
 		self.field:keypressed(key, isrepeat)
 	end
+
+	if key == "return" then
+		if self.OnEnter then
+			self.OnEnter(self, self.field:getText())
+		end
+	end
+
+
+	local oncopy = self.OnCopy
+	local onpaste = self.OnPaste
+	local oncut = self.OnCut
+
+	if loveframes.IsCtrlDown() and focus then
+		if key == "c" then
+			if oncopy then
+				oncopy(self, love.system.getClipboardText())
+			end
+		elseif key == "x" then
+			if oncut then
+				oncut(self, love.system.getClipboardText())
+			end
+		elseif key == "v" then
+			if onpaste then
+				onpaste(self, love.system.getClipboardText())
+			end
+		end
+	end
+
+	if self.OnControlKeyPressed then
+		self.OnControlKeyPressed(self, key)
+	end
 end
 
---[[---------------------------------------------------------
-	- func: keyreleased(key)
-	- desc: called when the player releases a key
---]]---------------------------------------------------------
 function newobject:keyreleased(key, isrepeat)
 	local state = loveframes.state
 	local selfstate = self.state
@@ -350,50 +381,102 @@ end
 
 --[[---------------------------------------------------------
 	- func: textinput(text)
-	- desc: called when the inputs text
+	- desc: called when the user inputs text
 --]]---------------------------------------------------------
 function newobject:textinput(text)
 	local inputobject = loveframes.inputobject
+	local ontextchanged = self.OnTextChanged
 	if inputobject == self then
-		self.field:textinput(text)
+		local event, textedited = self.field:textinput(text)
+		if event and textedited and ontextchanged then
+			ontextchanged(self, text)
+		end
 	end
 end
 --[[---------------------------------------------------------
-	- func: SetFont(font)
-	- desc: sets the object's font
+	- func: SetFont(font)GetFont()
+	- desc: sets/gets the object's font
 --]]---------------------------------------------------------
 function newobject:SetFont(font)
 	self.font = font
+	self.field:setFont(font)
 	return self
 end
---[[---------------------------------------------------------
-	- func: GetFont()
-	- desc: gets the object's font
---]]---------------------------------------------------------
+
 function newobject:GetFont()
 	return self.font
 end
-
 --[[---------------------------------------------------------
-	- func: SetSize(font)
-	- desc: sets the object's size
+	- func: SetSize(x, y) SetWidth(x, y) SetHeight(x, y) GetSize()
+	- desc: sets/gets the object's size
 --]]---------------------------------------------------------
 function newobject:SetSize(x, y)
 	self.width = x
 	self.height = y
-	self.field:setDimensions(x, y)
+	local hpadding = math.max(self.horizontalpadding*2, 0)
+	local vpadding = math.max(self.verticalpadding*2, 0)
+	self.field:setDimensions(x - hpadding, y - vpadding)
 	return self
 end
---[[---------------------------------------------------------
-	- func: GetSize()
-	- desc: gets the object's size
---]]---------------------------------------------------------
+
+function newobject:SetWidth(x)
+	self.width = x
+	local padding = math.max(self.horizontalpadding*2, 0)
+	self.field:setWidth(x - padding)
+	return self
+end
+
+function newobject:SetHeight(y)
+	self.height = y
+	local padding = math.max(self.verticalpadding*2, 0)
+	self.field:setHeight(y - padding)
+	return self
+end
+
 function newobject:GetSize()
 	return self.width, self.height
 end
 --[[---------------------------------------------------------
-	- func: SetFocus(focus)
-	- desc: sets the object's focus
+	- func: SetPadding() SetHorizontalPadding() SetVerticalPadding()
+	- desc: sets the object's padding
+--]]---------------------------------------------------------
+function newobject:SetPadding(padding)
+	self.verticalpadding = padding
+	self.horizontalpadding = padding
+
+	self.field:setDimensions(self.width - math.max(padding*2, 0), self.height - math.max(padding*2, 0))
+	return self
+end
+
+function newobject:SetVerticalPadding(padding)
+	self.verticalpadding = padding
+	self.field:setHeight(self.height - math.max(padding*2, 0))
+	return self
+end
+
+function newobject:SetHorizontalPadding(padding)
+	self.horizontalpadding = padding
+	self.field:setWidth(self.width - math.max(padding*2, 0))
+	return self
+end
+--[[---------------------------------------------------------
+	- func: GetPadding() GetVerticalPadding() GetHorizontalPadding()
+	- desc: gets the object's padding
+--]]---------------------------------------------------------
+function newobject:GetPadding()
+	return self.verticalpadding, self.horizontalpadding
+end
+
+function newobject:GetVerticalPadding()
+	return self.verticalpadding
+end
+
+function newobject:GetHorizontalPadding()
+	return self.horizontalpadding
+end
+--[[---------------------------------------------------------
+	- func: SetFocus(focus) GetFocus()
+	- desc: sets/gets the object's focus
 --]]---------------------------------------------------------
 function newobject:SetFocus(focus)
 	local inputobject = loveframes.inputobject
@@ -416,10 +499,6 @@ function newobject:SetFocus(focus)
 	return self
 end
 
---[[---------------------------------------------------------
-	- func: GetFocus()
-	- desc: gets the object's focus
---]]---------------------------------------------------------
 function newobject:GetFocus()
 	return self.focus
 end
@@ -429,6 +508,7 @@ end
 	- desc: clears the object's text
 --]]---------------------------------------------------------
 function newobject:Clear()
+	self.field:reset()
 end
 
 --[[---------------------------------------------------------
@@ -438,6 +518,108 @@ end
 function newobject:SetText(text)
 	self.field:setText(text)
 	return self
+end
+
+--[[---------------------------------------------------------
+	- func: SetMultiline(text)
+	- desc: sets the object's multiline functionality
+--]]---------------------------------------------------------
+function newobject:SetMultiline(bool)
+	--self.field:setText(bool)
+	self.multiline = bool
+	if self.multiline then
+		self.field:setType("multinowrap")
+	else
+		self.field:setType("normal")
+	end
+	return self
+end
+--[[---------------------------------------------------------
+	- func: SetType(text)
+	- desc: sets the object's input type property
+--]]---------------------------------------------------------
+---@param mode "multiwrap"|"multinowrap"|"password"|"normal"
+function newobject:SetType(mode)
+	if mode == "multiwrap" or mode == "multinowrap" then
+		self.multiline = true
+		self.field:setType(mode)
+	else
+		self.multiline = false
+		self.field:setType(mode)
+	end
+	return self
+end
+
+--[[---------------------------------------------------------
+	- func: SetPasswordCharacter(text)
+	- desc: sets the object's password character to display
+--]]---------------------------------------------------------
+function newobject:SetPasswordCharacter(character)
+	self.field:setPasswordCharacter(character)
+	return self
+end
+
+--[[---------------------------------------------------------
+	- func: SetUsable(table)
+	- desc: sets the object's allowed characters
+--]]---------------------------------------------------------
+function newobject:SetUsable(tbl)
+	local filterFunction = function(input)
+		--print(input, type(input))
+		local filter = tbl
+		for k,v in pairs(filter) do
+			print(k, v, input)
+			if v == input then
+				return false
+			end
+		end
+		return true
+	end
+
+	self.field:setFilter(filterFunction)
+	return self
+end
+--[[---------------------------------------------------------
+	- func: SetUnusable(table)
+	- desc: sets the object's forbidden characters
+--]]---------------------------------------------------------
+function newobject:SetUnusable(tbl)
+	local filterFunction = function(input)
+		--print(input, type(input))
+		local filter = tbl
+		for k,v in pairs(filter) do
+			print(k, v, input)
+			if v == input then
+				return true
+			end
+		end
+		return false
+	end
+
+	self.field:setFilter(filterFunction)
+	return self
+end
+
+--[[---------------------------------------------------------
+	- func: SetCharacterLimit(table)
+	- desc: sets the object's forbidden characters
+--]]---------------------------------------------------------
+function newobject:SetCharacterLimit(limit)
+	self.field:setCharacterLimit(limit)
+	return self
+end
+
+--[[---------------------------------------------------------
+	- func: SetPlaceholderText(text) GetPLaceholderText()
+	- desc: sets the object's default text to display
+--]]---------------------------------------------------------
+function newobject:SetPlaceholderText(text)
+	self.field:setPlaceholderText(text)
+	return self
+end
+
+function newobject:GetPlaceholderText()
+	return self.field:GetPlaceholderText()
 end
 
 --[[---------------------------------------------------------

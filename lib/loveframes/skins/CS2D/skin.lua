@@ -19,17 +19,19 @@ local bordercolor = {0.5, 0.5, 0.5, 1}
 -- add skin directives to this table
 skin.directives = {}
 -- Text
+skin.directives.text_global = "lib/loveframes/skins/CS2D/images/NotoSansKR-Regular.ttf"
+--skin.directives.text_global = "lib/loveframes/skins/CS2D/images/liberationsans.ttf"
 skin.directives.text_default_color		 				= {1, 1, 1, 1};
 skin.directives.text_default_shadowcolor 				= {1, 1, 1, 1};
-skin.directives.text_default_font_src	 				= "lib/loveframes/skins/CS2D/images/liberationsans.ttf"
-skin.directives.text_default_font		 				= love.graphics.newFont(skin.directives.text_default_font_src, 15)
+skin.directives.text_default_font_src	 				= skin.directives.text_global
+skin.directives.text_default_font		 				= love.graphics.newFont(skin.directives.text_default_font_src, 13)
 
 skin.directives.radiobutton_text_default_color 		 	= {1, 1, 1, 1};
 skin.directives.radiobutton_text_default_shadowcolor 	= {1, 1, 1, 1};
-skin.directives.radiobutton_text_default_font_src	 	= "lib/loveframes/skins/CS2D/images/liberationsans.ttf"
-skin.directives.radiobutton_text_default_font		 	= love.graphics.newFont(skin.directives.radiobutton_text_default_font_src, 15)
+skin.directives.radiobutton_text_default_font_src	 	= skin.directives.text_global
+skin.directives.radiobutton_text_default_font		 	= love.graphics.newFont(skin.directives.radiobutton_text_default_font_src, 13)
 
-skin.directives.tooltip_default_font_src	 			= "lib/loveframes/skins/CS2D/images/liberationsans.ttf"
+skin.directives.tooltip_default_font_src	 			= skin.directives.text_global
 skin.directives.tooltip_default_font					= love.graphics.newFont(skin.directives.tooltip_default_font_src, 12)
 skin.directives.tooltip_default_color 		 			= {1, 1, 1, 1};
 
@@ -119,8 +121,9 @@ skin.controls.tab_text_nohover_color                = {0.5, 0.5, 0.5, 1}
 skin.controls.tab_text_hover_color                  = {1, 1, 1, 1}
 skin.controls.tab_text_font                         = skin.controls.smallfont
 
+
 -- multichoice
-skin.controls.multichoice_body_color                = {0.2, 0.2, 0.2, 1}
+skin.controls.multichoice_body_color                = {0.1, 0.1, 0.1, 1}
 skin.controls.multichoice_text_color                = {1, 1, 1, 1}
 skin.controls.multichoice_text_font                 = skin.controls.tinyfont
 
@@ -142,7 +145,7 @@ skin.controls.tooltip_font_color                    = {0.5, 0.5, 0.5, 1}
 skin.controls.textinput_body_color                  = {0.1, 0.1, 0.1, 1}
 skin.controls.textinput_indicator_color             = {1, 1, 1, 1}
 skin.controls.textinput_text_normal_color           = {1, 1, 1, 1}
-skin.controls.textinput_text_placeholder_color      = {0.7, 0.7, 0.7, 1}
+skin.controls.textinput_text_placeholder_color      = {0.22, 0.22, 0.22, 1}
 skin.controls.textinput_text_selected_color         = {0, 0, 0, 1}
 skin.controls.textinput_highlight_bar_color         = {0.2, 0.8, 1, 1}
 
@@ -249,37 +252,30 @@ end
 	- desc: creates and outlined rectangle
 --]]---------------------------------------------------------
 function skin.OutlinedRectangle(x, y, width, height, ovt, ovb, ovl, ovr)
-
 	local ovt = ovt or false
 	local ovb = ovb or false
 	local ovl = ovl or false
 	local ovr = ovr or false
-	
 	-- top
 	if not ovt then
 		love.graphics.rectangle("fill", x, y, width, 1)
 	end
-	
 	-- bottom
 	if not ovb then
 		love.graphics.rectangle("fill", x, y + height - 1, width, 1)
 	end
-	
 	-- left
 	if not ovl then
 		love.graphics.rectangle("fill", x, y, 1, height)
 	end
-	
 	-- right
 	if not ovr then
 		love.graphics.rectangle("fill", x + width - 1, y, 1, height)
 	end
-	
 end
 
 function skin.EmbossedRectangle(x, y, width, height)
 	local r,g,b,a = love.graphics.getColor()
-
 	local br = 0.8
 	-- top
 	love.graphics.setColor(r,g,b, 1)
@@ -314,18 +310,14 @@ function skin.frame(object)
 	local topcolor = skin.controls.frame_top_color
 	local namecolor = skin.controls.frame_name_color
 	local font = skin.controls.frame_name_font
-		
 	-- frame body
 	love.graphics.setColor(unpack(skin.controls.frame_body_color))
 	love.graphics.rectangle("fill", x, y, width, height, 5, 5)
-	
 	-- frame top bar
 	love.graphics.setColor(1, 1, 1, 0.3)
 	love.graphics.rectangle("fill", x+10, y+25, width-25, 1)
-	
 	-- frame name section
 	love.graphics.setFont(font)
-	
 	if icon then
 		local iconwidth = icon:getWidth()
 		local iconheight = icon:getHeight()
@@ -338,7 +330,6 @@ function skin.frame(object)
 		love.graphics.setColor(namecolor)
 		skin.PrintText(name, x + 10, y + 5)
 	end
-	
 	-- frame border
 	--love.graphics.setColor(bordercolor)
 	--love.graphics.rectangle("line", x, y, width, height, 5, 5)
@@ -349,7 +340,6 @@ end
 	- desc: draws the button object
 --]]---------------------------------------------------------
 function skin.button(object)
-
 	local skin = object:GetSkin()
 	local x = object:GetX()
 	local y = object:GetY()
@@ -535,7 +525,6 @@ end
 	- desc: draws the close button object
 --]]---------------------------------------------------------
 function skin.closebutton(object)
-
 	local skin = object:GetSkin()
 	local x = object:GetX()
 	local y = object:GetY()
@@ -937,6 +926,15 @@ function skin.panel(object)
 	
 	love.graphics.setColor(bordercolor)
 	skin.OutlinedRectangle(x, y, width, height)
+end
+
+--[[---------------------------------------------------------
+	- func: DrawContainer(object)
+	- desc: draws the panel object
+--]]---------------------------------------------------------
+function skin.container(object)
+	local x = object:GetX()
+	local y = object:GetY()
 end
 
 --[[---------------------------------------------------------
@@ -1343,6 +1341,50 @@ function skin.label(object)
 end
 
 --[[---------------------------------------------------------
+	- func: skin.MessageBox(object)
+	- desc: draws the text object
+--]]---------------------------------------------------------
+function skin.messagebox(object)
+	local x = object.x
+	local y = object.y
+	local textmesh_normal = object.textmesh
+	local textmesh_hover = object.hovertextmesh
+	local hover = object:GetHover()
+	local hoverenabled = object.hoverenabled
+
+
+	love.graphics.setColor(1,1,1,1)
+	if hover and hoverenabled then
+		love.graphics.draw(textmesh_hover, x, y)
+	else
+		love.graphics.draw(textmesh_normal, x, y)
+	end
+end
+--[[
+function skin.messagebox_over(object)
+	local x = object.x
+	local y = object.y
+end
+]]
+
+--[[---------------------------------------------------------
+	- func: skin.rtf(object)
+	- desc: draws the rich text format object
+--]]---------------------------------------------------------
+function skin.rtf(object)
+	local x = object.x
+	local y = object.y
+
+	local field = object.field
+	love.graphics.setColor(1,1,1,1)
+	field:draw(x, y)
+end
+
+function skin.rtf_over(object)
+	local x = object.x
+	local y = object.y
+end
+--[[---------------------------------------------------------
 	- func: DrawTextBox(object)
 	- desc: draws the text object
 --]]---------------------------------------------------------
@@ -1351,8 +1393,16 @@ function skin.textbox(object)
 	local y = object.y
 	local width = object:GetWidth()
 	local height = object:GetHeight()
+	local vpadding = object:GetVerticalPadding()
+	local hpadding = object:GetHorizontalPadding()
 	local focus = object:GetFocus()
 	local field = object.field
+	local font = object:GetFont()
+	local font_height = font:getHeight()
+	local blink_phase = field:getBlinkPhase()
+	local placeholder_text = field:getPlaceholderText()
+	local text_length = field:getTextLength()
+
 	-- Colors
 	local bodycolor = skin.controls.textinput_body_color
 	local textnormalcolor = skin.controls.textinput_text_normal_color
@@ -1361,37 +1411,45 @@ function skin.textbox(object)
 	local highlightbarcolor = skin.controls.textinput_highlight_bar_color
 	local indicatorcolor = skin.controls.textinput_indicator_color
 
+	love.graphics.setFont(font)
 
+	-- Draw body
 	love.graphics.setColor(bodycolor)
-	love.graphics.rectangle("fill", x, y, width-20, height)
+	love.graphics.rectangle("fill", x, y, width, height)
 
+	-- Draw placeholder text
+	love.graphics.setColor(textplaceholdercolor)
+	if text_length == 0 and placeholder_text ~= "" then
+		skin.PrintText(placeholder_text, x + hpadding, y + vpadding)
+	end
 
-
+	-- Draw the selected text
 	love.graphics.setColor(highlightbarcolor)
 	for _, selection_x, selection_y, selection_w, selection_h in field:eachSelection() do
-		if selection_y >= 0 and selection_y+selection_h <= height then
-			love.graphics.rectangle("fill", selection_x + x, selection_y + y, selection_w, selection_h)
+		if selection_y >= -font_height and selection_y + selection_h <= height + font_height then
+			love.graphics.rectangle("fill", selection_x + x + hpadding, selection_y + y + vpadding, selection_w, selection_h)
 		end
 	end
+
+	-- Draw text
 	love.graphics.setColor(textnormalcolor)
-	for index, text, line_x, line_y in field:eachVisibleLine() do
-		if line_y >= 0 and line_y <= height then
-			skin.PrintText(text, x + line_x, y + line_y)
+	for _, text, line_x, line_y in field:eachVisibleLine() do
+		if line_y >= -font_height and line_y <= height + font_height then
+			skin.PrintText(text, x + hpadding + line_x, y + vpadding + line_y)
 		end
 	end
 
-
-	if focus then
+	-- Draw cursor blinking
+	if focus and (blink_phase/ 0.90) % 1 < .5 then
 		local cursor_x, cursor_y, cursor_height = field:getCursorLayout()
 		if cursor_x >= 0 and cursor_x <= width and cursor_y >=0 and cursor_y <= height then
 			love.graphics.setColor(indicatorcolor)
-			love.graphics.rectangle("fill", cursor_x + x, cursor_y + y, 1, cursor_height)
+			love.graphics.rectangle("fill", cursor_x + x + hpadding, cursor_y + y + vpadding, 1, cursor_height)
 		end
-	else --love.graphics.print("not focus", x-20, y-20)
+	else
 	end
 
-
-
+	-- Draw the scroll bar
 	local canScrollH, canScrollV                 = field:canScroll()
 	local hOffset, hCoverage, vOffset, vCoverage = field:getScrollHandles()
 	local hHandleLength = hCoverage * width
@@ -1399,7 +1457,8 @@ function skin.textbox(object)
 	local hHandlePos    = hOffset   * width
 	local vHandlePos    = vOffset   * height
 	if canScrollV then
-		love.graphics.rectangle("fill", x+width - 2, y+vHandlePos, 2, vHandleLength)
+		--love.graphics.rectangle("fill", x+width - 2, y+vHandlePos, 2, vHandleLength)
+		love.graphics.rectangle("fill", x+hHandlePos, y+height-2, hHandleLength, 2)
 	end
 end
 
@@ -1409,180 +1468,10 @@ function skin.textbox_over(object)
 	local width = object:GetWidth()
 	local height = object:GetHeight()
 
-	--love.graphics.setColor(bordercolor)
-	--skin.OutlinedRectangle(x, y, width, height)
-end
-
---[[---------------------------------------------------------
-	- func: DrawTextInput(object)
-	- desc: draws the text input object
---]]---------------------------------------------------------
-function skin.textinput(object)
-	local skin = object:GetSkin()
-	local x = object:GetX()
-	local y = object:GetY()
-	local width = object:GetWidth()
-	local height = object:GetHeight()
-	local font = object:GetFont()
-	local focus = object:GetFocus()
-	local showindicator = object:GetIndicatorVisibility()
-	local alltextselected = object:IsAllTextSelected()
-	local textx = object:GetTextX()
-	local texty = object:GetTextY()
-	local text = object:GetText()
-	local multiline = object:GetMultiLine()
-	local lines = object:GetLines()
-	local placeholder = object:GetPlaceholderText()
-	local offsetx = object:GetOffsetX()
-	local offsety = object:GetOffsetY()
-	local indicatorx = object:GetIndicatorX()
-	local indicatory = object:GetIndicatorY()
-	local vbar = object:HasVerticalScrollBar()
-	local hbar = object:HasHorizontalScrollBar()
-	local linenumbers = object:GetLineNumbersEnabled()
-	local itemwidth = object:GetItemWidth()
-	local masked = object:GetMasked()
-	local theight = font:getHeight("a")
-	local bodycolor = skin.controls.textinput_body_color
-	local textnormalcolor = skin.controls.textinput_text_normal_color
-	local textplaceholdercolor = skin.controls.textinput_text_placeholder_color
-	local textselectedcolor = skin.controls.textinput_text_selected_color
-	local highlightbarcolor = skin.controls.textinput_highlight_bar_color
-	local indicatorcolor = skin.controls.textinput_indicator_color
-	
-	love.graphics.setColor(bodycolor)
-	love.graphics.rectangle("fill", x, y, width, height)
-
-	if alltextselected then
-		local bary = 0
-		if multiline then
-			for i=1, #lines do
-				local str = lines[i]
-				if masked then
-					str = loveframes.utf8.gsub(str, ".", "*")
-				end
-				local twidth = font:getWidth(str)
-				if twidth == 0 then
-					twidth = 5
-				end
-				love.graphics.setColor(highlightbarcolor)
-				love.graphics.rectangle("fill", textx, texty + bary, twidth, theight)
-				bary = bary + theight
-			end
-		else
-			local twidth = 0
-			if masked then
-				local maskchar = object:GetMaskChar()
-				twidth = font:getWidth(loveframes.utf8.gsub(text, ".", maskchar))
-			else
-				twidth = font:getWidth(text)
-			end
-			love.graphics.setColor(highlightbarcolor)
-			love.graphics.rectangle("fill", textx, texty, twidth, theight)
-		end
-	end
-	
-	if showindicator and focus then
-		love.graphics.setColor(indicatorcolor)
-		love.graphics.rectangle("fill", indicatorx, indicatory, 1, theight)
-	end
-	
-	if not multiline then
-		object:SetTextOffsetY(height/2 - theight/2)
-		if offsetx ~= 0 then
-			object:SetTextOffsetX(0)
-		else
-			object:SetTextOffsetX(5)
-		end
-	else
-		if vbar then
-			if offsety ~= 0 then
-				if hbar then
-					object:SetTextOffsetY(5)
-				else
-					object:SetTextOffsetY(-5)
-				end
-			else
-				object:SetTextOffsetY(5)
-			end
-		else
-			object:SetTextOffsetY(5)
-		end
-		
-		if hbar then
-			if offsety ~= 0 then
-				if linenumbers then
-					local panel = object:GetLineNumbersPanel()
-					if vbar then
-						object:SetTextOffsetX(5)
-					else
-						object:SetTextOffsetX(-5)
-					end
-				else
-					if vbar then
-						object:SetTextOffsetX(5)
-					else
-						object:SetTextOffsetX(-5)
-					end
-				end
-			else
-				object:SetTextOffsetX(5)
-			end
-		else
-			object:SetTextOffsetX(5)
-		end
-		
-	end
-	
-	textx = object:GetTextX()
-	texty = object:GetTextY()
-	
-	love.graphics.setFont(font)
-	
-	if alltextselected then
-		love.graphics.setColor(textselectedcolor)
-	elseif #lines == 1 and lines[1] == "" then
-		love.graphics.setColor(textplaceholdercolor)
-	else
-		love.graphics.setColor(textnormalcolor)
-	end
-	
-	local str = ""
-	if multiline then
-		for i=1, #lines do
-			str = lines[i]
-			if masked then
-				local maskchar = object:GetMaskChar()
-				str = loveframes.utf8.gsub(str, ".", maskchar)
-			end
-			skin.PrintText(#str > 0 and str or (#lines == 1 and placeholder or ""), textx, texty + theight * i - theight)
-		end
-	else
-		str = lines[1]
-		if masked then
-			local maskchar = object:GetMaskChar()
-			str = loveframes.utf8.gsub(str, ".", maskchar)
-		end
-		skin.PrintText(#str > 0 and str or placeholder, textx, texty)
-	end
-	--love.graphics.setColor(0.9, 0.9, 0.9, 1)
-	--skin.OutlinedRectangle(x + 1, y + 1, width - 2, height - 2)
-end
-
---[[---------------------------------------------------------
-	- func: DrawOverTextInput(object)
-	- desc: draws over the text input object
---]]---------------------------------------------------------
-function skin.textinput_over(object)
-	local skin = object:GetSkin()
-	local x = object:GetX()
-	local y = object:GetY()
-	local width = object:GetWidth()
-	local height = object:GetHeight()
-	
 	love.graphics.setColor(bordercolor)
 	skin.OutlinedRectangle(x, y, width, height)
 end
+
 --[[---------------------------------------------------------
 	- func: skin.DrawSlider(object)
 	- desc: draws the slider object
@@ -2051,7 +1940,6 @@ end
 function skin.numberbox(object)
 
 end
-
 --[[---------------------------------------------------------
 	- func: skin.DrawGrid(object)
 	- desc: draws the grid object

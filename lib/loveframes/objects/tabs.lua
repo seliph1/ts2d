@@ -14,7 +14,6 @@ local newobject = loveframes.NewObject("tabs", "loveframes_object_tabs", true)
 	- desc: initializes the object
 --]]---------------------------------------------------------
 function newobject:initialize()
-	
 	self.type = "tabs"
 	self.width = 100
 	self.height = 50
@@ -603,9 +602,7 @@ end
 			buttons
 --]]---------------------------------------------------------
 function newobject:GetButtonScrollAmount()
-
 	return self.buttonscrollamount
-	
 end
 
 --[[---------------------------------------------------------
@@ -623,10 +620,8 @@ end
 	- func: GetMouseWheelScrollAmount()
 	- desc: gets the scroll amount of the mouse wheel
 --]]---------------------------------------------------------
-function newobject:GetButtonScrollAmount()
-
+function newobject:GetMouseWheelScrollAmount()
 	return self.mousewheelscrollamount
-	
 end
 
 --[[---------------------------------------------------------
@@ -682,10 +677,8 @@ end
 	- desc: sets the x position of the object's button area
 --]]---------------------------------------------------------
 function newobject:SetButtonAreaX(x)
-
 	self.buttonareax = x
 	return self
-	
 end
 
 --[[---------------------------------------------------------

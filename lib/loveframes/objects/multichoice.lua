@@ -256,43 +256,32 @@ end
 	- desc: sets the object's text
 --]]---------------------------------------------------------
 function newobject:SetText(text)
-
 	self.text = text
 	return self
-	
 end
-
 --[[---------------------------------------------------------
 	- func: GetText()
 	- desc: gets the object's text
 --]]---------------------------------------------------------
 function newobject:GetText()
-
 	return self.text
-	
 end
-
 --[[---------------------------------------------------------
 	- func: SetButtonScrollAmount(speed)
 	- desc: sets the scroll amount of the object's scrollbar
 			buttons
 --]]---------------------------------------------------------
 function newobject:SetButtonScrollAmount(amount)
-
 	self.buttonscrollamount = amount
 	return self
-	
 end
-
 --[[---------------------------------------------------------
 	- func: GetButtonScrollAmount()
 	- desc: gets the scroll amount of the object's scrollbar
 			buttons
 --]]---------------------------------------------------------
 function newobject:GetButtonScrollAmount()
-
 	return self.buttonscrollamount
-	
 end
 
 --[[---------------------------------------------------------
@@ -310,10 +299,8 @@ end
 	- func: GetMouseWheelScrollAmount()
 	- desc: gets the scroll amount of the mouse wheel
 --]]---------------------------------------------------------
-function newobject:GetButtonScrollAmount()
-
+function newobject:GetMouseWheelScrollAmount()
 	return self.mousewheelscrollamount
-	
 end
 
 --[[---------------------------------------------------------
@@ -322,10 +309,8 @@ end
 			time when scrolling
 --]]---------------------------------------------------------
 function newobject:SetDTScrolling(bool)
-
 	self.dtscrolling = bool
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -334,27 +319,20 @@ end
 			time when scrolling
 --]]---------------------------------------------------------
 function newobject:GetDTScrolling()
-
 	return self.dtscrolling
-	
 end
-
 --[[---------------------------------------------------------
 	- func: Sort(func)
 	- desc: sorts the object's choices
 --]]---------------------------------------------------------
 function newobject:Sort(func)
-
 	local default = self.sortfunc
-	
 	if func then
 		table.sort(self.choices, func)
 	else
 		table.sort(self.choices, default)
 	end
-	
 	return self
-	
 end
 
 --[[---------------------------------------------------------

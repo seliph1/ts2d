@@ -37,10 +37,10 @@ local TILE_MODE_HEIGHT = enum.TILE_MODE_HEIGHT
 local ENTITY_TYPE = enum.ENTITY_TYPE
 
 
-effect.register(dofile "core/particle/fire.lua", "fire")
-effect.register(dofile "core/particle/sparkle.lua", "sparkle")
-effect.register(dofile "core/particle/snow.lua", "snow")
-effect.register(dofile "core/particle/rain.lua", "rain")
+--effect.register(dofile "core/particle/fire.lua", "fire")
+--effect.register(dofile "core/particle/sparkle.lua", "sparkle")
+--effect.register(dofile "core/particle/snow.lua", "snow")
+--effect.register(dofile "core/particle/rain.lua", "rain")
 --[[---------------------------------------------------------
 	Lib
 --]]---------------------------------------------------------
@@ -817,11 +817,18 @@ function MapObject:draw_background()
 		end
 		end
 	else
-		love.graphics.clear(
+		--[[
+		love.graphics.setBackgroundColor(
 			mapdata.background_color_red/255,
 			mapdata.background_color_green/255,
 			mapdata.background_color_blue/255
 		)
+		]]
+		--love.graphics.clear(
+			--mapdata.background_color_red/255,
+			--mapdata.background_color_green/255,
+			--mapdata.background_color_blue/255
+		--)
 	end
 end
 

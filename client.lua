@@ -10,6 +10,7 @@ if love.filesystem.isFused() then
 else
 	fs:cd(love.filesystem.getSource() )
 end
+
 --- Client base framework
 --- @class client
 --- @field home table
@@ -21,13 +22,16 @@ end
 --- @field id number
 --- @field send fun(message:string)
 --- @field start fun(address:string)
+--- @field mode "lobby"|"game"|"editor"
 local client = cs.client
 client.enabled = true
 client.map = MapObject.new(50, 50)
 client.content = enum
 client.width = 800
 client.height = 600
-client.scale = 1
+client.scale = false
+client.mode = "lobby"
+client.canvas = love.graphics.newCanvas()
 client.camera = {
 	x = 0,
 	y = 0,
@@ -49,6 +53,7 @@ client.gfx = {
 	hud = {};
 	objects = {};
 	player = {};
+	ui = {};
 }
 
 --- Table that gets info from server
@@ -96,6 +101,10 @@ do
 		for entry, value in pairs(player.stance) do
 			client.gfx.player[name][entry] = love.graphics.newQuad(value[1], value[2], value[3], value[4], texture) --fs:loadImage(player.path)
 		end
+	end
+
+	for _, item in pairs(client.content.ui) do
+		client.gfx.ui[item] = fs:loadImage(item)
 	end
 end
 
@@ -374,12 +383,10 @@ function client.update(dt)
 	client.preupdate(dt)
 	client.camera_move(dt)
 	client.camera_tween(dt)
-
 	if client.map then
 		client.map:scroll(client.camera.x, client.camera.y)
 		client.map:update(dt)
 	end
-
 	if client.connected then
 		-- Move players
         for id, player in pairs(share.players) do
@@ -392,16 +399,28 @@ function client.update(dt)
         end
     end
 	client.postupdate(dt)
+	client.render()
 end
 
----Main game render loop
-function client.draw()
-    love.graphics.push('all')
-    -- Center and scale display
-    local w, h = client.scale * client.width, client.scale * client.height
-    local ox, oy = 0.5 * (love.graphics.getWidth() - w), 0.5 * (love.graphics.getHeight() - h)
-    love.graphics.setScissor(ox, oy, w, h)
-	--love.graphics.scale(client.scale)
+
+function client.draw_splash(ox, oy)
+	local splash_art = client.gfx.ui["gfx/splash.bmp"]
+	local splash_width = love.graphics.getWidth() / splash_art:getWidth()
+	local splash_height = love.graphics.getHeight() / splash_art:getHeight()
+	love.graphics.draw(splash_art, ox, oy, 0, splash_width, splash_height)
+end
+
+function client.render()
+	love.graphics.push('all')
+	love.graphics.setCanvas(client.canvas)
+
+    -- Center display
+    local ox = 0.5 * (love.graphics.getWidth() - client.width)
+	local oy = 0.5 * (love.graphics.getHeight() - client.height)
+
+	-- Set the boundaries to render engine
+	love.graphics.setScissor(ox, oy, client.width, client.height)
+
 	if client.map then
 		client.map:draw_floor()
 		client.map:draw_entities()
@@ -420,17 +439,44 @@ function client.draw()
 	end
 	client.map:draw_effects()
 
-	-- Resets scissoring
+	-- Resets scissoring and canvas
 	love.graphics.pop()
+	love.graphics.setCanvas()
+end
+
+---Main game render loop
+function client.draw()
+	-- Draw background if it's in lobby mode
+	if client.mode == "lobby" then
+		client.draw_splash(0, 0)
+	else
+		--love.graphics.clear(255, 255, 255)
+	end
+
+    -- Center and scale display
+    local ox = 0.5 * (love.graphics.getWidth() - client.width)
+	local oy = 0.5 * (love.graphics.getHeight() - client.height)
+
+	if client.scale then
+		love.graphics.push()
+		love.graphics.setDefaultFilter("linear", "linear")
+		love.graphics.scale(love.graphics.getWidth() / client.width, love.graphics.getHeight() / client.height)
+		love.graphics.draw(client.canvas, -ox, -oy)
+		love.graphics.pop()
+	else
+		love.graphics.draw(client.canvas, 0, 0)
+	end
+
 
 	-- Draw the rest of hud
-	local label = string.format("Camera: %dpx|%dpx  Ping: %s  FPS: %s  Target: %d|%d",
+	local label = string.format("Camera: %dpx|%dpx  Ping: %s  FPS: %s  Target: %d|%d   Memory: %.2f MB",
 		client.camera.x,
 		client.camera.y,
 		client.getPing(),
 		love.timer.getFPS(),
 		home.targetX,
-		home.targetY
+		home.targetY,
+		collectgarbage("count") / 1024
 	)
 	love.graphics.printf(label, 0, love.graphics.getHeight()-20, love.graphics.getWidth(), "center")
 

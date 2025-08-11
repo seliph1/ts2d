@@ -636,23 +636,23 @@ end
 	- desc: sets the object's parent
 --]]---------------------------------------------------------
 function newobject:SetParent(parent)
-
 	local tparent = parent
 	local cparent = self.parent
 	local ptype = tparent.type
 	local stype = self.type
-	
-	if ptype ~= "frame" and ptype ~= "panel" and ptype ~= "list" then
+
+	if ptype ~= "frame"
+	and ptype ~= "panel"
+	and ptype ~= "list"
+	and ptype ~= "container"
+	then
 		return
 	end
-	
 	self:Remove()
 	self.parent = tparent
 	self:SetState(tparent.state)
-	
 	table.insert(tparent.children, self)
 	return self
-
 end
 
 --[[---------------------------------------------------------

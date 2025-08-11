@@ -87,9 +87,7 @@ function newobject:SetImage(image)
 	
 	self.width = self.image:getWidth()
 	self.height = self.image:getHeight()
-	
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -97,9 +95,7 @@ end
 	- desc: gets the object's image
 --]]---------------------------------------------------------
 function newobject:GetImage()
-
 	return self.image
-	
 end
 
 --[[---------------------------------------------------------
@@ -107,31 +103,23 @@ end
 	- desc: sets the object's color 
 --]]---------------------------------------------------------
 function newobject:SetColor(r, g, b, a)
-
 	self.imagecolor = {r, g, b, a}
 	return self
-	
 end
-
 --[[---------------------------------------------------------
 	- func: GetColor()
 	- desc: gets the object's color 
 --]]---------------------------------------------------------
 function newobject:GetColor()
-
 	return unpack(self.imagecolor)
-	
 end
-
 --[[---------------------------------------------------------
 	- func: SetOrientation(orientation)
 	- desc: sets the object's orientation
 --]]---------------------------------------------------------
 function newobject:SetOrientation(orientation)
-
 	self.orientation = orientation
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -139,30 +127,22 @@ end
 	- desc: gets the object's orientation
 --]]---------------------------------------------------------
 function newobject:GetOrientation()
-
 	return self.orientation
-	
 end
-
 --[[---------------------------------------------------------
 	- func: SetScaleX(scalex)
 	- desc: sets the object's x scale
 --]]---------------------------------------------------------
 function newobject:SetScaleX(scalex)
-
 	self.scalex = scalex
 	return self
-	
 end
-
 --[[---------------------------------------------------------
 	- func: GetScaleX()
 	- desc: gets the object's x scale
 --]]---------------------------------------------------------
 function newobject:GetScaleX()
-
 	return self.scalex
-	
 end
 
 --[[---------------------------------------------------------
@@ -170,10 +150,8 @@ end
 	- desc: sets the object's y scale
 --]]---------------------------------------------------------
 function newobject:SetScaleY(scaley)
-
 	self.scaley = scaley
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -181,43 +159,31 @@ end
 	- desc: gets the object's y scale
 --]]---------------------------------------------------------
 function newobject:GetScaleY()
-
 	return self.scaley
-	
 end
-
 --[[---------------------------------------------------------
 	- func: SetScale(scalex, scaley)
 	- desc: sets the object's x and y scale
 --]]---------------------------------------------------------
 function newobject:SetScale(scalex, scaley)
-
 	self.scalex = scalex
 	self.scaley = scaley
-	
 	return self
-	
 end
-
 --[[---------------------------------------------------------
 	- func: GetScale()
 	- desc: gets the object's x and y scale
 --]]---------------------------------------------------------
 function newobject:GetScale()
-
 	return self.scalex, self.scaley
-	
 end
-
 --[[---------------------------------------------------------
 	- func: SetOffsetX(x)
 	- desc: sets the object's x offset
 --]]---------------------------------------------------------
 function newobject:SetOffsetX(x)
-
 	self.offsetx = x
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -225,9 +191,7 @@ end
 	- desc: gets the object's x offset
 --]]---------------------------------------------------------
 function newobject:GetOffsetX()
-
 	return self.offsetx
-	
 end
 
 --[[---------------------------------------------------------
@@ -235,33 +199,24 @@ end
 	- desc: sets the object's y offset
 --]]---------------------------------------------------------
 function newobject:SetOffsetY(y)
-
 	self.offsety = y
 	return self
-	
 end
-
 --[[---------------------------------------------------------
 	- func: GetOffsetY()
 	- desc: gets the object's y offset
 --]]---------------------------------------------------------
 function newobject:GetOffsetY()
-
 	return self.offsety
-	
 end
-
 --[[---------------------------------------------------------
 	- func: SetOffset(x, y)
 	- desc: sets the object's x and y offset
 --]]---------------------------------------------------------
 function newobject:SetOffset(x, y)
-
 	self.offsetx = x
 	self.offsety = y
-	
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -269,20 +224,15 @@ end
 	- desc: gets the object's x and y offset
 --]]---------------------------------------------------------
 function newobject:GetOffset()
-
 	return self.offsetx, self.offsety
-	
 end
-
 --[[---------------------------------------------------------
 	- func: SetShearX(shearx)
 	- desc: sets the object's x shear
 --]]---------------------------------------------------------
 function newobject:SetShearX(shearx)
-
 	self.shearx = shearx
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -290,9 +240,7 @@ end
 	- desc: gets the object's x shear
 --]]---------------------------------------------------------
 function newobject:GetShearX()
-
 	return self.shearx
-	
 end
 
 --[[---------------------------------------------------------
@@ -300,10 +248,8 @@ end
 	- desc: sets the object's y shear
 --]]---------------------------------------------------------
 function newobject:SetShearY(sheary)
-
 	self.sheary = sheary
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -311,22 +257,16 @@ end
 	- desc: gets the object's y shear
 --]]---------------------------------------------------------
 function newobject:GetShearY()
-
 	return self.sheary
-	
 end
-
 --[[---------------------------------------------------------
 	- func: SetShear(shearx, sheary)
 	- desc: sets the object's x and y shear
 --]]---------------------------------------------------------
 function newobject:SetShear(shearx, sheary)
-
 	self.shearx = shearx
 	self.sheary = sheary
-	
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -334,52 +274,37 @@ end
 	- desc: gets the object's x and y shear
 --]]---------------------------------------------------------
 function newobject:GetShear()
-
 	return self.shearx, self.sheary
-	
 end
-
 --[[---------------------------------------------------------
 	- func: GetImageSize()
 	- desc: gets the size of the object's image
 --]]---------------------------------------------------------
 function newobject:GetImageSize()
-
 	local image = self.image
-	
 	if image then
 		return image:getWidth(), image:getHeight()
 	end
-	
 end
-
 --[[---------------------------------------------------------
 	- func: GetImageWidth()
 	- desc: gets the width of the object's image
 --]]---------------------------------------------------------
 function newobject:GetImageWidth()
-
 	local image = self.image
-	
 	if image then
 		return image:getWidth()
 	end
-	
 end
-
 --[[---------------------------------------------------------
 	- func: GetImageWidth()
 	- desc: gets the height of the object's image
 --]]---------------------------------------------------------
 function newobject:GetImageHeight()
-
 	local image = self.image
-	
 	if image then
 		return image:getHeight()
 	end
-	
 end
-
 ---------- module end ----------
 end
