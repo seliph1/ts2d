@@ -14,11 +14,10 @@ local newobject = loveframes.NewObject("button", "loveframes_object_button", tru
 	- desc: initializes the object
 --]]---------------------------------------------------------
 function newobject:initialize()
-	
 	self.type = "button"
 	self.text = "Button"
 	self.width = 80
-	self.height = 25
+	self.height = 20
 	self.internal = false
 	self.down = false
 	self.clickable = true
@@ -28,7 +27,6 @@ function newobject:initialize()
 	self.OnClick = nil
 	self.groupIndex = 0
 	self.checked = false
-	
 	self:SetDrawFunc()
 end
 
@@ -189,9 +187,7 @@ end
 	- desc: gets the object's text
 --]]---------------------------------------------------------
 function newobject:GetText()
-
 	return self.text
-	
 end
 
 --[[---------------------------------------------------------
@@ -199,7 +195,6 @@ end
 	- desc: adds an image to the object
 --]]---------------------------------------------------------
 function newobject:SetImage(image)
-
 	if type(image) == "string" then
 		self.image = love.graphics.newImage(image)
 		self.image:setFilter("nearest", "nearest")
@@ -213,9 +208,7 @@ end
 	- desc: gets the object's image
 --]]---------------------------------------------------------
 function newobject:GetImage()
-
 	return self.image
-	
 end
 
 --[[---------------------------------------------------------
@@ -223,10 +216,8 @@ end
 	- desc: sets whether the object can be clicked or not
 --]]---------------------------------------------------------
 function newobject:SetClickable(bool)
-
 	self.clickable = bool
 	return self
-	
 end
 
 --[[---------------------------------------------------------

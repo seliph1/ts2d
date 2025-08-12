@@ -14,7 +14,6 @@ local newobject = loveframes.NewObject("numberbox", "loveframes_object_numberbox
 	- desc: initializes the object
 --]]---------------------------------------------------------
 function newobject:initialize()
-	
 	self.type = "numberbox"
 	self.width = 80
 	self.height = 20
@@ -30,7 +29,11 @@ function newobject:initialize()
 	self.lastbuttonclicked = false
 	self.internals = {}
 	self.OnValueChanged = nil
-	
+
+	local skin = loveframes.GetActiveSkin()
+	local uparrow = skin.images["arrow-up.png"]
+	local downarrow = skin.images["arrow-down.png"]
+
 	local input = loveframes.objects["textbox"]:new()
 	input.parent = self
 	input:SetSize(50, 20)
@@ -66,7 +69,8 @@ function newobject:initialize()
 	local increasebutton = loveframes.objects["button"]:new()
 	increasebutton.parent = self
 	increasebutton:SetWidth(21)
-	increasebutton:SetText("+")
+	increasebutton:SetText("")
+	increasebutton:SetImage(uparrow)
 	increasebutton.OnClick = function()
 		local canmodify = self.canmodify
 		if not canmodify then
@@ -97,11 +101,11 @@ function newobject:initialize()
 			self.delay = time + 0.80
 		end
 	end
-	
 	local decreasesbutton = loveframes.objects["button"]:new()
 	decreasesbutton.parent = self
 	decreasesbutton:SetWidth(21)
-	decreasesbutton:SetText("-")
+	decreasesbutton:SetText("")
+	decreasesbutton:SetImage(downarrow)
 	decreasesbutton.OnClick = function()
 		local canmodify = self.canmodify
 		if not canmodify then
@@ -234,10 +238,8 @@ end
 	- desc: sets the object's increase amount
 --]]---------------------------------------------------------
 function newobject:SetIncreaseAmount(amount)
-
 	self.increaseamount = amount
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -245,9 +247,7 @@ end
 	- desc: gets the object's increase amount
 --]]---------------------------------------------------------
 function newobject:GetIncreaseAmount()
-
 	return self.increaseamount
-	
 end
 
 --[[---------------------------------------------------------
@@ -255,10 +255,8 @@ end
 	- desc: sets the object's decrease amount
 --]]---------------------------------------------------------
 function newobject:SetDecreaseAmount(amount)
-
 	self.decreaseamount = amount
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -266,9 +264,7 @@ end
 	- desc: gets the object's decrease amount
 --]]---------------------------------------------------------
 function newobject:GetDecreaseAmount()
-
 	return self.decreaseamount
-	
 end
 
 --[[---------------------------------------------------------
@@ -330,14 +326,11 @@ end
 	- desc: sets the object's minimum and maximum values
 --]]---------------------------------------------------------
 function newobject:SetMinMax(min, max)
-
 	local internals = self.internals
 	local input = internals[1]
 	local onvaluechanged = self.OnValueChanged
-	
 	self.min = min
 	self.max = max
-	
 	if self.value > max then
 		self.value = max
 		input:SetValue(max)
@@ -345,7 +338,6 @@ function newobject:SetMinMax(min, max)
 			onvaluechanged(self, max)
 		end
 	end
-	
 	if self.value < min then
 		self.value = min
 		input:SetValue(min)
@@ -353,9 +345,7 @@ function newobject:SetMinMax(min, max)
 			onvaluechanged(self, min)
 		end
 	end
-	
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -363,9 +353,7 @@ end
 	- desc: gets the object's minimum and maximum values
 --]]---------------------------------------------------------
 function newobject:GetMinMax()
-
 	return self.min, self.max
-	
 end
 
 --[[---------------------------------------------------------
@@ -373,17 +361,14 @@ end
 	- desc: modifies the object's value
 --]]---------------------------------------------------------
 function newobject:ModifyValue(type)
-
 	local value = self.value
 	local internals = self.internals
 	local input = internals[1]
 	local decimals = self.decimals
 	local onvaluechanged = self.OnValueChanged
-	
 	if not value then
 		return
 	end
-	
 	if type == "add" then
 		local increaseamount = self.increaseamount
 		local max = self.max
@@ -413,9 +398,7 @@ function newobject:ModifyValue(type)
 			end
 		end
 	end
-	
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -424,10 +407,8 @@ end
 			can have
 --]]---------------------------------------------------------
 function newobject:SetDecimals(decimals)
-
 	self.decimals = decimals
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -436,9 +417,7 @@ end
 			can have
 --]]---------------------------------------------------------
 function newobject:GetDecimals()
-
 	return self.decimals
-	
 end
 
 --[[---------------------------------------------------------

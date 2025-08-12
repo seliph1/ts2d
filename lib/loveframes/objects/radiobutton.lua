@@ -169,37 +169,15 @@ end
 	- desc: sets the object's text
 --]]---------------------------------------------------------
 function newobject:SetText(text)
-
 	local boxwidth = self.boxwidth
 	local boxheight = self.boxheight
 	
 	if text ~= "" then
 		self.internals = {}
-		local textobject = loveframes.Create("text")
-		local skin = loveframes.GetActiveSkin()
-		if not skin then
-			skin = loveframes.config["DEFAULTSKIN"]
-		end
-		local directives = skin.directives
-		if directives then
-			local default_color = directives.radiobutton_text_default_color
-			local default_shadowcolor = directives.radiobutton_text_default_shadowcolor
-			local default_font = directives.radiobutton_text_default_font
-			if default_color then
-				textobject.defaultcolor = default_color
-			end
-			if default_shadowcolor then
-				textobject.shadowcolor = default_shadowcolor
-			end
-			if default_font then
-				self.font = default_font
-			end
-		end
+		local textobject = loveframes.Create("messagebox")
 		textobject:Remove()
 		textobject.parent = self
 		textobject.state = self.state
-		textobject.collide = false
-		textobject:SetFont(self.font)
 		textobject:SetText(text)
 		textobject.Update = function(object, dt)
 			if object.height > boxheight then
@@ -214,9 +192,7 @@ function newobject:SetText(text)
 		self.height = boxheight
 		self.internals = {}
 	end
-	
 	return self
-	
 end
 
 --[[---------------------------------------------------------

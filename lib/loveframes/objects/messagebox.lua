@@ -21,19 +21,21 @@ local newobject = loveframes.NewObject("messagebox", "loveframes_object_messageb
 function newobject:initialize()
 	-- Font properties
 	local skin = loveframes.GetActiveSkin()
-	local font = skin.directives.text_default_font
+	local default_font = skin.directives.text_default_font
+	local default_color = skin.directives.text_default_color
 
 	self.type = "messagebox"
 	self.text = ""
 	self.hovertext = ""
 	self.formattedtext = ""
 	self.formattedhovertext = ""
+	self.defaultcolor = default_color or {1,1,1,1}
 	self.hoverenabled = false
-	self.font = font or loveframes.basicfont
+	self.font = default_font or loveframes.basicfont
 	self.textmesh = love.graphics.newText(self.font, "")
 	self.hovertextmesh = love.graphics.newText(self.font, "")
 
-	self.width = font:getWidth(" ")
+	self.width = self.font:getWidth(" ")
 	self.height = self.width
 	self.internal = false
 	
@@ -166,7 +168,7 @@ end
 function newobject:ParseText(str)
 	local formattedchunks = {}
 	local formattedstring = {}
-    local defaultColor = {1, 1, 1}
+    local defaultColor = self.defaultcolor
 
 	if not str:find("©") then
 		return {defaultColor,str}, str
@@ -278,6 +280,11 @@ function newobject:SetFont(font)
 	self.font = font
 	self.textmesh:setFont(font)
 	self.hovertextmesh:setFont(font)
+
+	-- Refresh the text width size
+	-- Resize the message width/height
+	self.width = self.textmesh:getWidth()
+	self.height = self.textmesh:getHeight()
 	return self
 end
 

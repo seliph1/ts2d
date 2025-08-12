@@ -16,50 +16,37 @@ loveframes.objects = {}
 			object or objects for further manipulation
 --]]---------------------------------------------------------
 function loveframes.Create(data, parent)
-	
 	if type(data) == "string" then
-	
 		local objects = loveframes.objects
 		local object = objects[data]
-		
 		if not object then
 			loveframes.Error("Error creating object: Invalid object '" ..data.. "'.")
 		end
-		
 		-- create the object
 		local newobject = object:new()
-		
 		-- apply template properties to the object
 		loveframes.ApplyTemplatesToObject(newobject)
-		
 		-- if the object is a tooltip, return it and go no further
 		if data == "tooltip" then
 			return newobject
 		end
-		
 		-- remove the object if it is an internal
 		if newobject.internal then
 			newobject:Remove()
 			return
 		end
-		
 		-- parent the new object by default to the base gui object
 		newobject.parent = loveframes.base
 		table.insert(loveframes.base.children, newobject)
-		
 		-- if the parent argument is not nil, make that argument the object's new parent
 		if parent then
 			newobject:SetParent(parent)
 		end
-		
 		-- return the object for further manipulation
 		return newobject
-		
 	elseif type(data) == "table" then
-
 		-- table for creation of multiple objects
 		local objects = {}
-		
 		-- this function reads a table that contains a layout of object properties and then
 		-- creates objects based on those properties
 		local function CreateObjects(t, o, c)
@@ -100,14 +87,10 @@ function loveframes.Create(data, parent)
 				end
 			end
 		end
-		
 		-- create the objects
 		CreateObjects(data)
-		
 		return objects
-		
 	end
-	
 end
 
 --[[---------------------------------------------------------
@@ -115,10 +98,8 @@ end
 	- desc: creates a new object
 --]]---------------------------------------------------------
 function loveframes.NewObject(id, name, inherit_from_base)
-	
 	local objects = loveframes.objects
 	local object = false
-	
 	if inherit_from_base then
 		local base = objects["base"]
 		object = loveframes.class(name, base)
@@ -127,9 +108,7 @@ function loveframes.NewObject(id, name, inherit_from_base)
 		object = loveframes.class(name)
 		objects[id] = object
 	end
-	
 	return object
-	
 end
 
 function loveframes.LoadObjects(dir)

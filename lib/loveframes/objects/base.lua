@@ -29,24 +29,19 @@ function newobject:update(dt)
 	if loveframes.state ~= self.state then
 		return
 	end
-	
 	local width, height = love.graphics.getDimensions()
-	
 	if self.width ~= width then
 		self.width = width
 	end
-	
 	if self.height ~= height then
 		self.height = height
 	end
-	
 	local children = self.children
 	if children then
 		for k, v in ipairs(children) do
 			v:update(dt)
 		end
 	end
-	
 	local internals = self.internals
 	if internals then
 		for k, v in ipairs(internals) do
@@ -63,32 +58,26 @@ function newobject:draw()
 	if loveframes.state ~= self.state then
 		return
 	end
-	
 	if not self.visible then
 		return
 	end
-	
 	self:SetDrawOrder()
-	
 	local drawfunc = self.Draw or self.drawfunc
 	if drawfunc then
 		drawfunc(self)
 	end
-	
 	local children = self.children
 	if children then
 		for k, v in ipairs(children) do
 			v:draw()
 		end
 	end
-	
 	local internals = self.internals
 	if internals then
 		for k, v in ipairs(internals) do
 			v:draw()
 		end
 	end
-	
 	drawfunc = self.DrawOver or self.drawoverfunc
 	if drawfunc then
 		drawfunc(self)
@@ -128,18 +117,15 @@ function newobject:mousepressed(x, y, button)
 	if loveframes.state ~= self.state then
 		return
 	end
-	
 	if not self.visible then
 		return
 	end
-	
 	local children = self.children
 	if children then
 		for k, v in ipairs(children) do
 			v:mousepressed(x, y, button)
 		end
 	end
-	
 	local internals = self.internals
 	if internals then
 		for k, v in ipairs(internals) do
@@ -156,18 +142,15 @@ function newobject:mousereleased(x, y, button)
 	if loveframes.state ~= self.state then
 		return
 	end
-	
 	if not self.visible then
 		return
 	end
-	
 	local children = self.children
 	if children then
 		for k, v in ipairs(children) do
 			v:mousereleased(x, y, button)
 		end
 	end
-	
 	local internals = self.internals
 	if internals then
 		for k, v in ipairs(internals) do
@@ -184,18 +167,15 @@ function newobject:wheelmoved(x, y)
 	if loveframes.state ~= self.state then
 		return
 	end
-	
 	if not self.visible then
 		return
 	end
-	
 	local children = self.children
 	if children then
 		for k, v in ipairs(children) do
 			v:wheelmoved(x, y)
 		end
 	end
-	
 	local internals = self.internals
 	if internals then
 		for k, v in ipairs(internals) do
@@ -295,17 +275,14 @@ end
 	- desc: sets the object's position
 --]]---------------------------------------------------------
 function newobject:SetPos(x, y, center)
-	
 	local base = loveframes.base
 	local parent = self.parent
-	
 	if center then
 		local width = self.width
 		local height = self.height
 		x = x - width/2
 		y = y - height/2
 	end
-	
 	if parent == base then
 		self.x = x
 		self.y = y
@@ -313,9 +290,7 @@ function newobject:SetPos(x, y, center)
 		self.staticx = x
 		self.staticy = y
 	end
-	
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -371,9 +346,7 @@ end
 	- desc: gets the object's position
 --]]---------------------------------------------------------
 function newobject:GetPos()
-
 	return self.x, self.y
-	
 end
 
 --[[---------------------------------------------------------
@@ -381,9 +354,7 @@ end
 	- desc: gets the object's x position
 --]]---------------------------------------------------------
 function newobject:GetX()
-
 	return self.x
-	
 end
 
 --[[---------------------------------------------------------
@@ -391,9 +362,7 @@ end
 	- desc: gets the object's y position
 --]]---------------------------------------------------------
 function newobject:GetY()
-
 	return self.y
-	
 end
 
 --[[---------------------------------------------------------
@@ -401,9 +370,7 @@ end
 	- desc: gets the object's static position
 --]]---------------------------------------------------------
 function newobject:GetStaticPos()
-
 	return self.staticx, self.staticy
-	
 end
 
 --[[---------------------------------------------------------
@@ -411,9 +378,7 @@ end
 	- desc: gets the object's static x position
 --]]---------------------------------------------------------
 function newobject:GetStaticX()
-
 	return self.staticx
-	
 end
 
 --[[---------------------------------------------------------
@@ -421,9 +386,7 @@ end
 	- desc: gets the object's static y position
 --]]---------------------------------------------------------
 function newobject:GetStaticY()
-
 	return self.staticy
-	
 end
 
 --[[---------------------------------------------------------
@@ -432,10 +395,8 @@ end
 			its parent if it has one
 --]]---------------------------------------------------------
 function newobject:Center()
-
 	local base = loveframes.base
 	local parent = self.parent
-	
 	if parent == base then
 		local width = love.graphics.getWidth()
 		local height = love.graphics.getHeight()
@@ -447,9 +408,7 @@ function newobject:Center()
 		self.staticx = width/2 - self.width * (self.scalex or 1)/2
 		self.staticy = height/2 - self.height * (self.scaley or 1)/2
 	end
-	
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -457,10 +416,8 @@ end
 	- desc: centers the object by its x value
 --]]---------------------------------------------------------
 function newobject:CenterX()
-
 	local base = loveframes.base
 	local parent = self.parent
-	
 	if parent == base then
 		local width = love.graphics.getWidth()
 		self.x = width/2 - self.width * (self.scalex or 1)/2
@@ -468,9 +425,7 @@ function newobject:CenterX()
 		local width = parent.width
 		self.staticx = width/2 - self.width * (self.scalex or 1)/2
 	end
-	
 	return self
-	
 end
 
 --[[---------------------------------------------------------

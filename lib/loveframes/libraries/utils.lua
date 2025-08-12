@@ -407,29 +407,25 @@ end
 	- desc: draws debug information
 --]]---------------------------------------------------------
 loveframes.debugwindow = {type = "None", children = nil, parent = nil, x = 0, y = 0, width = 0, height = 0}
+loveframes.love_version = table.concat({love.getVersion()}, ".")
 
 function loveframes.DebugDraw()
-
 	local infox = 5
 	local infoy = 40
 	local topcol = loveframes.debugwindow
 	local hoverobject = loveframes.hoverobject
-	
 	local objects = loveframes.GetObjectCount() --loveframes.objectcount
 	local collisions = loveframes.collisioncount
-	
 	local version = loveframes.version
 	local stage = loveframes.stage
 	local basedir = loveframes.config["DIRECTORY"]
-	local loveversion = love._version
+	local loveversion = loveframes.love_version
 	local fps = love.timer.getFPS()
 	local deltatime = love.timer.getDelta()
 	local font = loveframes.basicfontsmall
-	
 	if hoverobject then
 		topcol = hoverobject
 	end
-	
 	-- show frame docking zones
 	if topcol.type == "frame" then
 		for k, v in pairs(topcol.dockzones) do

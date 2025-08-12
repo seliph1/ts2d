@@ -14,7 +14,6 @@ local newobject = loveframes.NewObject("closebutton", "loveframes_object_closebu
 	- desc: initializes the object
 --]]---------------------------------------------------------
 function newobject:initialize()
-
 	self.type = "closebutton"
 	self.width = 16
 	self.height = 16
@@ -23,10 +22,8 @@ function newobject:initialize()
 	self.down = false
 	self.autoposition = true
 	self.OnClick = function(x, y, object) end
-	
 	-- apply template properties to the object
 	loveframes.ApplyTemplatesToObject(self)
-	
 	self:SetDrawFunc()
 end
 
@@ -67,8 +64,8 @@ function newobject:update(dt)
 	end
 	
 	if self.autoposition then
-		self.staticx = self.parent.width - self.width - 4
-		self.staticy = 4
+		self.staticx = self.parent.width - self.width - 16
+		self.staticy = 2
 	end
 	
 	-- move to parent if there is a parent
@@ -80,7 +77,6 @@ function newobject:update(dt)
 	if update then
 		update(self, dt)
 	end
-
 end
 
 --[[---------------------------------------------------------

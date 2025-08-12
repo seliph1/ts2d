@@ -14,12 +14,11 @@ local newobject = loveframes.NewObject("multichoicelist", "loveframes_object_mul
 	- desc: initializes the object
 --]]---------------------------------------------------------
 function newobject:initialize(object)
-	
 	self.type = "multichoicelist"
 	self.parent = loveframes.base
 	self.list = object
 	self.x = object.x
-	self.y = object.y + self.list.height
+	self.y = object.y + self.list.height + 1
 	self.width = self.list.width
 	self.height = 0
 	self.clickx = 0
@@ -44,9 +43,7 @@ function newobject:initialize(object)
 		row:SetText(v)
 		self:AddItem(row)
 	end
-	
 	table.insert(loveframes.base.internals, self)
-	
 	-- apply template properties to the object
 	loveframes.ApplyTemplatesToObject(self)
 	self:SetDrawFunc()
@@ -57,23 +54,18 @@ end
 	- desc: updates the object
 --]]---------------------------------------------------------
 function newobject:update(dt)
-	
 	local state = loveframes.state
 	local selfstate = self.state
-	
 	if state ~= selfstate then
 		return
 	end
-	
 	local visible = self.visible
 	local alwaysupdate = self.alwaysupdate
-	
 	if not visible then
 		if not alwaysupdate then
 			return
 		end
 	end
-	
 	local width = love.graphics.getWidth()
 	local height = love.graphics.getHeight()
 	local x, y = love.mouse.getPosition()

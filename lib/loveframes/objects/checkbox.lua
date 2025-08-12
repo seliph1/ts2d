@@ -17,8 +17,8 @@ function newobject:initialize()
 	self.type = "checkbox"
 	self.width = 0
 	self.height = 0
-	self.boxwidth = 16
-	self.boxheight = 16
+	self.boxwidth = 14
+	self.boxheight = 14
 	self.font = loveframes.basicfont
 	self.checked = false
 	self.lastvalue = false
@@ -196,37 +196,15 @@ end
 	- desc: sets the object's text
 --]]---------------------------------------------------------
 function newobject:SetText(text)
-
 	local boxwidth = self.boxwidth
 	local boxheight = self.boxheight
 	
 	if text ~= "" then
 		self.internals = {}
 		local textobject = loveframes.Create("label")
-		local skin = loveframes.GetActiveSkin()
-		if not skin then
-			skin = loveframes.config["DEFAULTSKIN"]
-		end
-		local directives = skin.directives
-		if directives then
-			local default_color = directives.checkbox_text_default_color
-			local default_shadowcolor = directives.checkbox_text_default_shadowcolor
-			local default_font = directives.checkbox_text_default_font
-			if default_color then
-				textobject.defaultcolor = default_color
-			end
-			if default_shadowcolor then
-				textobject.shadowcolor = default_shadowcolor
-			end
-			if default_font then
-				self.font = default_font
-			end
-		end
 		textobject:Remove()
 		textobject.parent = self
 		textobject.state = self.state
-		textobject.collide = false
-		textobject:SetFont(self.font)
 		textobject:SetText(text)
 		textobject.Update = function(object, dt)
 			if object.height > boxheight then
@@ -251,16 +229,13 @@ end
 	- desc: gets the object's text
 --]]---------------------------------------------------------
 function newobject:GetText()
-
 	local internals = self.internals
 	local text = internals[1]
-	
 	if text then
 		return text.text
 	else
 		return false
 	end
-	
 end
 
 --[[---------------------------------------------------------
@@ -268,21 +243,17 @@ end
 	- desc: sets the object's size
 --]]---------------------------------------------------------
 function newobject:SetSize(width, height, r1, r2)
-
 	if r1 then
 		self.boxwidth = self.parent.width * width
 	else
 		self.boxwidth = width
 	end
-	
 	if r2 then
 		self.boxheight = self.parent.height * height
 	else
 		self.boxheight = height
 	end
-	
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -290,15 +261,12 @@ end
 	- desc: sets the object's width
 --]]---------------------------------------------------------
 function newobject:SetWidth(width, relative)
-
 	if relative then
 		self.boxwidth = self.parent.width * width
 	else
 		self.boxwidth = width
 	end
-	
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -306,15 +274,12 @@ end
 	- desc: sets the object's height
 --]]---------------------------------------------------------
 function newobject:SetHeight(height, relative)
-
 	if relative then
 		self.boxheight = self.parent.height * height
 	else
 		self.boxheight = height
 	end
-	
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -322,17 +287,12 @@ end
 	- desc: sets whether the object is checked or not
 --]]---------------------------------------------------------
 function newobject:SetChecked(bool)
-
 	local onchanged = self.OnChanged
-	
 	self.checked = bool
-	
 	if onchanged then
 		onchanged(self)
 	end
-	
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -340,9 +300,7 @@ end
 	- desc: gets whether the object is checked or not
 --]]---------------------------------------------------------
 function newobject:GetChecked()
-
 	return self.checked
-	
 end
 
 --[[---------------------------------------------------------
@@ -350,28 +308,20 @@ end
 	- desc: sets the font of the object's text
 --]]---------------------------------------------------------
 function newobject:SetFont(font)
-
 	local internals = self.internals
 	local text = internals[1]
-	
 	self.font = font
-	
 	if text then
 		text:SetFont(font)
 	end
-	
 	return self
-	
 end
-
 --[[---------------------------------------------------------
 	- func: newobject:GetFont()
 	- desc: gets the font of the object's text
 --]]---------------------------------------------------------
 function newobject:GetFont()
-
 	return self.font
-
 end
 
 --[[---------------------------------------------------------
@@ -379,9 +329,7 @@ end
 	- desc: gets the object's box size
 --]]---------------------------------------------------------
 function newobject:GetBoxSize()
-
 	return self.boxwidth, self.boxheight
-	
 end
 
 --[[---------------------------------------------------------
@@ -389,9 +337,7 @@ end
 	- desc: gets the object's box width
 --]]---------------------------------------------------------
 function newobject:GetBoxWidth()
-
 	return self.boxwidth
-	
 end
 
 --[[---------------------------------------------------------
@@ -399,9 +345,7 @@ end
 	- desc: gets the object's box height
 --]]---------------------------------------------------------
 function newobject:GetBoxHeight()
-
 	return self.boxheight
-	
 end
 
 --[[---------------------------------------------------------
@@ -409,10 +353,8 @@ end
 	- desc: sets whether or not the object is enabled
 --]]---------------------------------------------------------
 function newobject:SetEnabled(bool)
-
 	self.enabled = bool
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -420,10 +362,7 @@ end
 	- desc: gets whether or not the object is enabled
 --]]---------------------------------------------------------
 function newobject:GetEnabled()
-
 	return self.enabled
-	
 end
-
 ---------- module end ----------
 end

@@ -183,22 +183,16 @@ end
 	- desc: draws all library objects
 --]]---------------------------------------------------------
 function loveframes.draw()
-
 	local base = loveframes.base
 	local r, g, b, a = love.graphics.getColor()
 	local font = love.graphics.getFont()
-	
 	base:draw()
-	
 	loveframes.drawcount = 0
-	
 	if loveframes.config["DEBUG"] then
 		loveframes.DebugDraw()
 	end
-	
 	love.graphics.setColor(r, g, b, a)
 	love.graphics.reset()
-	
 	if font then
 		love.graphics.setFont(font)
 	end
@@ -218,7 +212,6 @@ end
 	- desc: called when the player presses a mouse button
 --]]---------------------------------------------------------
 function loveframes.mousepressed(x, y, button, istouch, presses)
-
 	local base = loveframes.base
 	base:mousepressed(x, y, button, istouch, presses)
 	
@@ -239,7 +232,6 @@ function loveframes.mousepressed(x, y, button, istouch, presses)
 			end
 		end
 	end
-	
 end
 
 --[[---------------------------------------------------------
@@ -247,16 +239,13 @@ end
 	- desc: called when the player releases a mouse button
 --]]---------------------------------------------------------
 function loveframes.mousereleased(x, y, button, istouch, presses)
-
 	local base = loveframes.base
 	base:mousereleased(x, y, button, istouch, presses)
-	
 	-- reset the hover object
 	if button == 1 then
 		loveframes.downobject = false
 		loveframes.selectedobject = false
 	end
-	
 end
 
 --[[---------------------------------------------------------
