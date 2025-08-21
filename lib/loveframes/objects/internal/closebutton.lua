@@ -32,25 +32,20 @@ end
 	- desc: updates the object
 --]]---------------------------------------------------------
 function newobject:update(dt)
-	
 	local visible = self.visible
 	local alwaysupdate = self.alwaysupdate
-	
 	if not visible then
 		if not alwaysupdate then
 			return
 		end
 	end
-	
 	self:CheckHover()
-	
 	local hover = self.hover
 	local down = self.down
 	local downobject = loveframes.downobject
 	local parent = self.parent
 	local base = loveframes.base
 	local update = self.Update
-	
 	if not hover then
 		self.down = false
 	else
@@ -58,22 +53,18 @@ function newobject:update(dt)
 			self.down = true
 		end
 	end
-	
 	if not down and downobject == self then
 		self.hover = true
 	end
-	
 	if self.autoposition then
 		self.staticx = self.parent.width - self.width - 16
 		self.staticy = 2
 	end
-	
 	-- move to parent if there is a parent
 	if parent ~= base then
 		self.x = parent.x + self.staticx
 		self.y = parent.y + self.staticy
 	end
-	
 	if update then
 		update(self, dt)
 	end
@@ -84,15 +75,11 @@ end
 	- desc: called when the player presses a mouse button
 --]]---------------------------------------------------------
 function newobject:mousepressed(x, y, button)
-	
 	local visible = self.visible
-	
 	if not visible then
 		return
 	end
-	
 	local hover = self.hover
-	
 	if hover and button == 1 then
 		local baseparent = self:GetBaseParent()
 		if baseparent and baseparent.type == "frame" then
@@ -101,7 +88,6 @@ function newobject:mousepressed(x, y, button)
 		self.down = true
 		loveframes.downobject = self
 	end
-	
 end
 
 --[[---------------------------------------------------------
@@ -109,24 +95,18 @@ end
 	- desc: called when the player releases a mouse button
 --]]---------------------------------------------------------
 function newobject:mousereleased(x, y, button)
-	
 	local visible = self.visible
-	
 	if not visible then
 		return
 	end
-	
 	local hover = self.hover
 	local onclick = self.OnClick
-	
 	if hover and self.down then
 		if button == 1 then
 			onclick(x, y, self)
 		end
 	end
-	
 	self.down = false
-
 end
 
 --[[---------------------------------------------------------
@@ -135,9 +115,7 @@ end
 			positioned automatically
 --]]---------------------------------------------------------
 function newobject:SetAutoPosition(bool)
-
 	self.autoposition = bool
-	
 end
 
 --[[---------------------------------------------------------
@@ -146,9 +124,7 @@ end
 			positioned automatically
 --]]---------------------------------------------------------
 function newobject:GetAutoPosition()
-
 	return self.autoposition
-	
 end
 
 ---------- module end ----------

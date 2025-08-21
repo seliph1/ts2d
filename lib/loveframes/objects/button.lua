@@ -14,8 +14,12 @@ local newobject = loveframes.NewObject("button", "loveframes_object_button", tru
 	- desc: initializes the object
 --]]---------------------------------------------------------
 function newobject:initialize()
+	-- Font properties
+	local skin = loveframes.GetActiveSkin()
+	local default_font = skin.directives.text_default_font
+	local default_color = skin.directives.button_text_color
+
 	self.type = "button"
-	self.text = "Button"
 	self.width = 80
 	self.height = 20
 	self.internal = false
@@ -27,6 +31,12 @@ function newobject:initialize()
 	self.OnClick = nil
 	self.groupIndex = 0
 	self.checked = false
+	self.font = default_font or loveframes.basicfont
+	self.defaultcolor = default_color or {1,1,1,1}
+	self.textmesh = love.graphics.newText(self.font, "Button")
+	self.text = "Button"
+	self.formattedtext = "Button"
+	self.align = "center"
 	self:SetDrawFunc()
 end
 
@@ -35,32 +45,25 @@ end
 	- desc: updates the object
 --]]---------------------------------------------------------
 function newobject:update(dt)
-	
 	local state = loveframes.state
 	local selfstate = self.state
-	
 	if state ~= selfstate then
 		return
 	end
-	
 	local visible = self.visible
 	local alwaysupdate = self.alwaysupdate
-	
 	if not visible then
 		if not alwaysupdate then
 			return
 		end
 	end
-	
 	self:CheckHover()
-	
 	local hover = self.hover
 	local down = self.down
 	local downobject = loveframes.downobject
 	local parent = self.parent
 	local base = loveframes.base
 	local update = self.Update
-	
 	if not hover then
 		self.down = false
 		if downobject == self then
@@ -71,17 +74,14 @@ function newobject:update(dt)
 			self.down = true
 		end
 	end
-	
 	-- move to parent if there is a parent
 	if parent ~= base then
 		self.x = self.parent.x + self.staticx
 		self.y = self.parent.y + self.staticy
 	end
-	
 	if update then
 		update(self, dt)
 	end
-
 end
 
 --[[---------------------------------------------------------
@@ -89,22 +89,16 @@ end
 	- desc: called when the player presses a mouse button
 --]]---------------------------------------------------------
 function newobject:mousepressed(x, y, button)
-
 	local state = loveframes.state
 	local selfstate = self.state
-	
 	if state ~= selfstate then
 		return
 	end
-	
 	local visible = self.visible
-	
 	if not visible then
 		return
 	end
-	
 	local hover = self.hover
-	
 	if hover and button == 1 then
 		local baseparent = self:GetBaseParent()
 		if baseparent and baseparent.type == "frame" then
@@ -113,7 +107,6 @@ function newobject:mousepressed(x, y, button)
 		self.down = true
 		loveframes.downobject = self
 	end
-	
 end
 
 --[[---------------------------------------------------------
@@ -121,26 +114,20 @@ end
 	- desc: called when the player releases a mouse button
 --]]---------------------------------------------------------
 function newobject:mousereleased(x, y, button)
-	
 	local state = loveframes.state
 	local selfstate = self.state
-	
 	if state ~= selfstate then
 		return
 	end
-	
 	local visible = self.visible
-	
 	if not visible then
 		return
 	end
-	
 	local hover = self.hover
 	local down = self.down
 	local clickable = self.clickable
 	local enabled = self.enabled
 	local onclick = self.OnClick
-	
 	if hover and down and clickable and button == 1 then
 		if enabled then
 			if self.groupIndex ~= 0 then
@@ -168,26 +155,127 @@ function newobject:mousereleased(x, y, button)
 			end
 		end
 	end
-	
 	self.down = false
-
 end
 
 --[[---------------------------------------------------------
 	- func: SetText(text)
 	- desc: sets the object's text
 --]]---------------------------------------------------------
-function newobject:SetText(text, fixed)
-	self.text = text
+
+function newobject:RedoLayout()
+	self:SetText(self.text)
 	return self
 end
 
+function newobject:ParseText(str)
+	local formattedchunks = {}
+	local formattedstring = {}
+    local defaultColor = self.defaultcolor
+
+	if not str:find("©") then
+		return {defaultColor,str}, str
+	end
+
+	for leading, capture in string.gmatch(str, "(.-)©([^©]+)") do
+		--print(color, text)
+		if leading then
+			table.insert(formattedchunks, defaultColor)
+			table.insert(formattedchunks, leading)
+			table.insert(formattedstring, leading)
+		end
+		local r, g, b = string.match(capture, "(%d%d%d)(%d%d%d)(%d%d%d)")
+		local text = string.sub(capture, 10, -1)
+		if r and g and b then
+			table.insert(formattedchunks,
+				{tonumber(r)/255, tonumber(g)/255, tonumber(b)/255}
+			)
+			table.insert(formattedchunks, text)
+			table.insert(formattedstring, text)
+		else
+			text = "©"..capture
+		end
+	end
+
+	return formattedchunks, table.concat(formattedstring)
+end
+
+function newobject:fixUTF8(s, replacement)
+  local p, len, invalid = 1, #s, {}
+  while p <= len do
+    if     p == s:find("[%z\1-\127]", p) then p = p + 1
+    elseif p == s:find("[\194-\223][\128-\191]", p) then p = p + 2
+    elseif p == s:find(       "\224[\160-\191][\128-\191]", p)
+        or p == s:find("[\225-\236][\128-\191][\128-\191]", p)
+        or p == s:find(       "\237[\128-\159][\128-\191]", p)
+        or p == s:find("[\238-\239][\128-\191][\128-\191]", p) then p = p + 3
+    elseif p == s:find(       "\240[\144-\191][\128-\191][\128-\191]", p)
+        or p == s:find("[\241-\243][\128-\191][\128-\191][\128-\191]", p)
+        or p == s:find(       "\244[\128-\143][\128-\191][\128-\191]", p) then p = p + 4
+    else
+      s = s:sub(1, p-1)..replacement..s:sub(p+1)
+      table.insert(invalid, p)
+    end
+  end
+  return s, invalid
+end
+
+function newobject:SetText(text)
+	self.textmesh:clear()
+	-- Validate UTF8 and fix broken strings
+	text = self:fixUTF8(text, "?")
+	-- Parse the string received
+	local parsedtext, formattedtext = self:ParseText(text)
+	-- Set the text cache
+	--self.textmesh:setf(parsedtext, self.width, "left")
+	self.textmesh:setf(parsedtext, self.width, self.align)
+	-- Refresh the internal variables
+	self.text = text
+	self.formattedtext = formattedtext
+	return self
+end
+
+function newobject:SetAlign(mode)
+	self.align = mode
+	self:SetText(self.text)
+	return self
+end
 --[[---------------------------------------------------------
 	- func: GetText()
 	- desc: gets the object's text
 --]]---------------------------------------------------------
 function newobject:GetText()
 	return self.text
+end
+
+function newobject:GetFormattedText()
+	return self.formattedtext
+end
+
+function newobject:GetDrawableText()
+	return self.textmesh
+end
+
+function newobject:GetAlign()
+	return self.align
+end
+--[[---------------------------------------------------------
+	- func: SetFont(font)
+	- desc: sets the object's font
+	- note: font argument must be a font object
+--]]---------------------------------------------------------
+function newobject:SetFont(font)
+	self.font = font
+	self.textmesh:setFont(font)
+	return self
+end
+
+--[[---------------------------------------------------------
+	- func: GetFont()
+	- desc: gets the object's font
+--]]---------------------------------------------------------
+function newobject:GetFont()
+	return self.font
 end
 
 --[[---------------------------------------------------------
@@ -201,6 +289,7 @@ function newobject:SetImage(image)
 	else
 		self.image = image
 	end
+	return self
 end
 
 --[[---------------------------------------------------------
@@ -210,7 +299,6 @@ end
 function newobject:GetImage()
 	return self.image
 end
-
 --[[---------------------------------------------------------
 	- func: SetClickable(bool)
 	- desc: sets whether the object can be clicked or not
@@ -225,9 +313,7 @@ end
 	- desc: gets whether the object can be clicked or not
 --]]---------------------------------------------------------
 function newobject:GetClickable()
-
 	return self.clickable
-	
 end
 
 --[[---------------------------------------------------------
@@ -235,10 +321,8 @@ end
 	- desc: sets whether or not the object is enabled
 --]]---------------------------------------------------------
 function newobject:SetEnabled(bool)
-
 	self.enabled = bool
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -246,9 +330,7 @@ end
 	- desc: gets whether or not the object is enabled
 --]]---------------------------------------------------------
 function newobject:GetEnabled()
-
 	return self.enabled
-	
 end
 
 --[[---------------------------------------------------------
@@ -257,9 +339,7 @@ end
 	        being pressed
 --]]---------------------------------------------------------
 function newobject:GetDown()
-
 	return self.down
-	
 end
 
 --[[---------------------------------------------------------
@@ -267,10 +347,8 @@ end
 	- desc: sets whether or not the object is toggleable
 --]]---------------------------------------------------------
 function newobject:SetToggleable(bool)
-
 	self.toggleable = bool
 	return self
-
 end
 
 --[[---------------------------------------------------------
@@ -278,9 +356,7 @@ end
 	- desc: gets whether or not the object is toggleable
 --]]---------------------------------------------------------
 function newobject:GetToggleable()
-
 	return self.toggleable
-
 end
 
 ---------- module end ----------

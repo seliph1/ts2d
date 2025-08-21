@@ -70,9 +70,9 @@ end
 	- desc: gets all objects colliding with the mouse
 --]]---------------------------------------------------------
 function loveframes.GetCollisions(object, t)
+	object = object or loveframes.base
 	local x, y = love.mouse.getPosition()
 	local curstate = loveframes.state
-	local object = object or loveframes.base
 	local visible = object.visible
 	local children = object.children
 	local internals = object.internals
@@ -234,6 +234,24 @@ function loveframes.Round(num, idp)
 end
 
 --[[---------------------------------------------------------
+	- func: Mix(num, idp)
+	- desc: -- clamp(x, minVal, maxVal): Returns x limited to the [minVal, maxVal] range.
+--]]---------------------------------------------------------
+function loveframes.Mix(a, b, t)
+	return a * (1 - t) + b * t
+end
+
+--[[---------------------------------------------------------
+	- func: Clamp(x, minVal, maxVal)
+	- desc: Returns a value "between" a e b, controlled by T
+	- (where t = 0 returns a, t = 1 returns b, and in-between values do a linear transition).
+--]]---------------------------------------------------------
+function loveframes.Clamp(x, minVal, maxVal)
+    if x < minVal then return minVal end
+    if x > maxVal then return maxVal end
+    return x
+end
+--[[---------------------------------------------------------
 	- func: SplitString(string, pattern)
 	- desc: splits a string into a table based on a given pattern
 	- note: I take no credit for this function
@@ -390,7 +408,7 @@ end
 			paste, and such. On OS X it actually looks for cmd.
 --]]---------------------------------------------------------
 function loveframes.IsCtrlDown()
-	if love._os == "OS X" then
+	if love.system.getOS() == "OS X" then
 		return love.keyboard.isDown("lgui") or love.keyboard.isDown("rgui")
 	end
 	return love.keyboard.isDown("lctrl") or love.keyboard.isDown("rctrl")
@@ -458,31 +476,33 @@ function loveframes.DebugDraw()
 	-- draw object information if needed
 	if topcol.type ~= "base" then
 		love.graphics.setColor(0,0,0,0.8)
-		love.graphics.rectangle("fill", infox, infoy + 85, 200, 100)
+		love.graphics.rectangle("fill", infox, infoy + 85, 200, 150)
 		love.graphics.setColor(1,0,0,1)
-		love.graphics.print("Object Information", infox + 5, infoy + 80)
+		love.graphics.print("Object Information", infox + 5, infoy + 90)
 		love.graphics.setColor(1,1,1,1)
-		love.graphics.print("Type: " ..topcol.type, infox + 10, infoy + 95)
+		love.graphics.print("Type: " ..topcol.type, infox + 10, infoy + 105)
 		if topcol.parent then
-			love.graphics.print("Parent: " ..topcol.parent.type, infox + 10, infoy + 105)
+			love.graphics.print("Parent: " ..topcol.parent.type, infox + 10, infoy + 115)
 		else
-			love.graphics.print("Parent: None", infox + 10, infoy + 105)
+			love.graphics.print("Parent: None", infox + 10, infoy + 115)
 		end
 		
 		if topcol.children then
-			love.graphics.print("# of children: " .. #topcol.children, infox + 10, infoy + 115)
+			love.graphics.print("# of children: " .. #topcol.children, infox + 10, infoy + 125)
 		else
-			love.graphics.print("# of children: 0", infox + 10, infoy + 115)
+			love.graphics.print("# of children: 0", infox + 10, infoy + 125)
 		end
 		if topcol.internals then
-			love.graphics.print("# of internals: " .. #topcol.internals, infox + 10, infoy + 125)
+			love.graphics.print("# of internals: " .. #topcol.internals, infox + 10, infoy + 135)
 		else
-			love.graphics.print("# of internals: 0", infox + 10, infoy + 125)
+			love.graphics.print("# of internals: 0", infox + 10, infoy + 135)
 		end
-		love.graphics.print("X: " ..topcol.x, infox + 10, infoy + 135)
-		love.graphics.print("Y: " ..topcol.y, infox + 10, infoy + 145)
-		love.graphics.print("Width: " ..topcol.width, infox + 10, infoy + 155)
-		love.graphics.print("Height: " ..topcol.height, infox + 10, infoy + 165)
+		love.graphics.print("X: " ..topcol.x, infox + 10, infoy + 145)
+		love.graphics.print("Y: " ..topcol.y, infox + 10, infoy + 155)
+		love.graphics.print("Static X: " ..(topcol.staticx or "0"), infox + 10, infoy + 165)
+		love.graphics.print("Static Y: " ..(topcol.staticy or "0"), infox + 10, infoy + 175)
+		love.graphics.print("Width: " ..topcol.width, infox + 10, infoy + 185)
+		love.graphics.print("Height: " ..topcol.height, infox + 10, infoy + 195)
 	end
 
 end

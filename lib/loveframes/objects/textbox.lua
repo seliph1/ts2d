@@ -116,11 +116,10 @@ function newobject:update(dt)
 	self.itemheight = self.field:getTextHeight()
 	self.extrawidth = self.itemwidth - self.width
 	self.extraheight = self.itemheight - self.height
-	
+
 	if self.itemheight > self.height and fieldtype ~= "normal" and fieldtype ~= "password"  then
 		if not self.vbar then
 			local scrollbody = loveframes.objects["scrollbody"]:new(self, "vertical")
-			--scrollbody.internals[1].internals[1].autoscroll = false
 			table.insert(self.internals, scrollbody)
 			self.vbar = true
 		end
@@ -135,6 +134,7 @@ function newobject:update(dt)
 		end
 	end
 
+	--[[
 	local scrollbody = self:GetVerticalScrollBody()
 	if scrollbody then
 		local scrollbar = scrollbody:GetScrollBar()
@@ -157,7 +157,18 @@ function newobject:update(dt)
 		if area.down then
 			self.field:setScroll(0, position * self.extraheight)
 		end
+	end]]
+	local scrollbody = self:GetVerticalScrollBody()
+	if scrollbody then
+		--local scrollbar = scrollbody:GetScrollBar()
+		--local x,y, h = self.field:getCursorLayout()
+		--print(x, y, h)
+		--scrollbar:ScrollTo(x)
 	end
+
+	self.field:setScroll(self.offsetx, self.offsety)
+
+
 
 	-- Update children
 	for k, v in ipairs(internals) do
@@ -186,20 +197,12 @@ function newobject:draw()
 	local height = self.height
 	-- set the object's draw order
 	self:SetDrawOrder()
-	-- Set the stencil function to cut out the stuff
-	local stencilfunc = function() love.graphics.rectangle("fill", x, y, width, height) end
-	if self.vbar and self.hbar then
-		stencilfunc = function() love.graphics.rectangle("fill", x, y, width - 16, height - 16) end
-	end
-	-- Begin of stencil
-	love.graphics.stencil(stencilfunc)
-	love.graphics.setStencilTest("greater", 0)
+	love.graphics.setScissor(x, y, width, height)
 	local drawfunc = self.Draw or self.drawfunc
 	if drawfunc then
 		drawfunc(self)
 	end
-	-- End of stencil
-	love.graphics.setStencilTest()
+	love.graphics.setScissor()
 
 	local internals = self.internals
 	if internals then
@@ -225,8 +228,13 @@ function newobject:wheelmoved(x, y)
 	if not self.visible then
 		return
 	end
+	local internals = self.internals
+	if internals then
+		for k, v in ipairs(internals) do
+			v:wheelmoved(x, y)
+		end
+	end
 end
-
 --[[---------------------------------------------------------
 	- func: mousemoved(x, y, button)
 	- desc: called when the player moves mouse
@@ -627,7 +635,7 @@ end
 	- desc: gets the object's text
 --]]---------------------------------------------------------
 function newobject:GetText()
-	return self.text
+	return self.field:getText()
 end
 
 --[[---------------------------------------------------------
@@ -636,6 +644,11 @@ end
 --]]---------------------------------------------------------
 function newobject:SetVisible(bool)
 	self.visible = bool
+	return self
+end
+
+function newobject:SetMaxHistory(size)
+	self.field:setMaxHistory(size)
 	return self
 end
 

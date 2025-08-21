@@ -1,10 +1,11 @@
 ---@diagnostic disable: duplicate-set-field
 
-local loveframes 	= require "lib/loveframes"
+local loveframes 	= require "lib.loveframes"
 local client 		= require "client"
-local ui 			= require "core/interface/ui"
+local ui 			= require "core.interface.ui"
+--local profile 		= require "lib.profi"
 
---Console = require "core/interface/console"
+
 --require "lib/lovedebug"
 
 function love.load()
@@ -31,15 +32,21 @@ function love.mousereleased(x, y, button, istouch, presses)
 	loveframes.mousereleased(x, y, button, istouch, presses)
 end
 
+function love.mousemoved(x, y, dx, dy, istouch)
+	client.mousemoved(x, y)
+	loveframes.mousemoved(x, y, dx, dy, istouch)
+end
+
+function love.wheelmoved(x, y)
+	loveframes.wheelmoved(x, y)
+end
+
 function love.keypressed(key, unicode)
 	if (key == "escape") then os.exit(0) end
 	if (key=="f1") then
 		local state = loveframes.config["DEBUG"]
 		loveframes.config["DEBUG"] = not state
 	elseif key == "'" then
-		if Console then
-			Console.frame:ToggleVisibility()
-		end
 	end
 	loveframes.keypressed(key, unicode)
 	client.keypressed(key)
@@ -48,11 +55,6 @@ end
 function love.keyreleased(key, unicode)
 	client.keyreleased(key)
 	loveframes.keyreleased(key)
-end
-
-function love.mousemoved(x, y, dx, dy, istouch)
-	client.mousemoved(x, y)
-	loveframes.mousemoved(x, y, dx, dy, istouch)
 end
 
 function love.textinput(text)

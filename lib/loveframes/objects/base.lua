@@ -220,18 +220,15 @@ function newobject:keyreleased(key)
 	if loveframes.state ~= self.state then
 		return
 	end
-	
 	if not self.visible then
 		return
 	end
-	
 	local children = self.children
 	if children then
 		for k, v in ipairs(children) do
 			v:keyreleased(key)
 		end
 	end
-	
 	local internals = self.internals
 	if internals then
 		for k, v in ipairs(internals) do
@@ -239,8 +236,6 @@ function newobject:keyreleased(key)
 		end
 	end
 end
-
-
 --[[---------------------------------------------------------
 	- func: textinput(text)
 	- desc: called when the user inputs text
@@ -249,18 +244,15 @@ function newobject:textinput(text)
 	if loveframes.state ~= self.state then
 		return
 	end
-	
 	if not self.visible then
 		return
 	end
-	
 	local children = self.children
 	if children then
 		for k, v in ipairs(children) do
 			v:textinput(text)
 		end
 	end
-	
 	local internals = self.internals
 	if internals then
 		for k, v in ipairs(internals) do
@@ -268,8 +260,6 @@ function newobject:textinput(text)
 		end
 	end
 end
-
-
 --[[---------------------------------------------------------
 	- func: SetPos(x, y, center)
 	- desc: sets the object's position
@@ -290,6 +280,10 @@ function newobject:SetPos(x, y, center)
 		self.staticx = x
 		self.staticy = y
 	end
+
+	if parent.container and parent.RedoLayout then
+		parent:RedoLayout()
+	end
 	return self
 end
 
@@ -298,23 +292,21 @@ end
 	- desc: sets the object's x position
 --]]---------------------------------------------------------
 function newobject:SetX(x, center)
-
 	local base = loveframes.base
 	local parent = self.parent
-	
 	if center then
 		local width = self.width
 		x = x - width/2
 	end
-	
 	if parent == base then
 		self.x = x
 	else
 		self.staticx = x
 	end
-	
+	if parent.container and parent.RedoLayout then
+		parent:RedoLayout()
+	end
 	return self
-
 end
 
 --[[---------------------------------------------------------
@@ -322,25 +314,22 @@ end
 	- desc: sets the object's y position
 --]]---------------------------------------------------------
 function newobject:SetY(y, center)
-
 	local base = loveframes.base
 	local parent = self.parent
-	
 	if center then
 		local height = self.height
 		y = y - height/2
 	end
-	
 	if parent == base then
 		self.y = y
 	else
 		self.staticy = y
 	end
-	
+	if parent.container and parent.RedoLayout then
+		parent:RedoLayout()
+	end
 	return self
-	
 end
-
 --[[---------------------------------------------------------
 	- func: GetPos()
 	- desc: gets the object's position
@@ -408,6 +397,9 @@ function newobject:Center()
 		self.staticx = width/2 - self.width * (self.scalex or 1)/2
 		self.staticy = height/2 - self.height * (self.scaley or 1)/2
 	end
+	if parent.container and parent.RedoLayout then
+		parent:RedoLayout()
+	end
 	return self
 end
 
@@ -425,6 +417,9 @@ function newobject:CenterX()
 		local width = parent.width
 		self.staticx = width/2 - self.width * (self.scalex or 1)/2
 	end
+	if parent.container and parent.RedoLayout then
+		parent:RedoLayout()
+	end
 	return self
 end
 
@@ -433,10 +428,8 @@ end
 	- desc: centers the object by its y value
 --]]---------------------------------------------------------
 function newobject:CenterY()
-
 	local base = loveframes.base
 	local parent = self.parent
-	
 	if parent == base then
 		local height = love.graphics.getHeight()
 		self.y = height/2 - self.height * (self.scaley or 1)/2
@@ -444,47 +437,49 @@ function newobject:CenterY()
 		local height = parent.height
 		self.staticy = height/2 - self.height * (self.scaley or 1)/2
 	end
-	
+	if parent.container and parent.RedoLayout then
+		parent:RedoLayout()
+	end
 	return self
-	
 end
-
 --[[---------------------------------------------------------
 	- func: CenterWithinArea()
 	- desc: centers the object within the given area
 --]]---------------------------------------------------------
 function newobject:CenterWithinArea(x, y, width, height)
-
+	local parent = self.parent
 	local selfwidth = self.width
 	local selfheight = self.height
-	
 	self.x = x + width/2 - selfwidth/2
 	self.y = y + height/2 - selfheight/2
-	
+	if parent.container and parent.RedoLayout then
+		parent:RedoLayout()
+	end
 	return self
-	
 end
-
 --[[---------------------------------------------------------
 	- func: SetSize(width, height, r1, r2)
 	- desc: sets the object's size
 --]]---------------------------------------------------------
 function newobject:SetSize(width, height, r1, r2)
-
+	local parent = self.parent
 	if r1 then
 		self.width = self.parent.width * width
 	else
 		self.width = width
 	end
-	
 	if r2 then
 		self.height = self.parent.height * height
 	else
 		self.height = height
 	end
-	
+	if parent.container and parent.RedoLayout then
+		parent:RedoLayout()
+	end
+	if self.RedoLayout then
+		self:RedoLayout()
+	end
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -492,15 +487,20 @@ end
 	- desc: sets the object's width
 --]]---------------------------------------------------------
 function newobject:SetWidth(width, relative)
-
+	local parent = self.parent
 	if relative then
 		self.width = self.parent.width * width
 	else
 		self.width = width
 	end
-	
+	if parent.container and parent.RedoLayout then
+		parent:RedoLayout()
+	end
+
+	if self.RedoLayout then
+		self:RedoLayout()
+	end
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -508,15 +508,19 @@ end
 	- desc: sets the object's height
 --]]---------------------------------------------------------
 function newobject:SetHeight(height, relative)
-
+	local parent = self.parent
 	if relative then
 		self.height = self.parent.height * height
 	else
 		self.height = height
 	end
-	
+	if parent.container and parent.RedoLayout then
+		parent:RedoLayout()
+	end
+	if self.RedoLayout then
+		self:RedoLayout()
+	end
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -524,9 +528,7 @@ end
 	- desc: gets the object's size
 --]]---------------------------------------------------------
 function newobject:GetSize()
-
 	return self.width, self.height
-	
 end
 
 --[[---------------------------------------------------------
@@ -534,9 +536,7 @@ end
 	- desc: gets the object's width
 --]]---------------------------------------------------------
 function newobject:GetWidth()
-
 	return self.width
-	
 end
 
 --[[---------------------------------------------------------
@@ -544,9 +544,7 @@ end
 	- desc: gets the object's height
 --]]---------------------------------------------------------
 function newobject:GetHeight()
-
 	return self.height
-	
 end
 
 --[[---------------------------------------------------------
@@ -554,26 +552,20 @@ end
 	- desc: sets the object's visibility
 --]]---------------------------------------------------------
 function newobject:SetVisible(bool)
-
 	local children = self.children
 	local internals = self.internals
-	
 	self.visible = bool
-
 	if children then
 		for k, v in ipairs(children) do
 			v:SetVisible(bool)
 		end
 	end
-	
 	if internals then
 		for k, v in ipairs(internals) do
 			v:SetVisible(bool)
 		end
 	end
-	
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -581,32 +573,31 @@ end
 	- desc: gets the object's visibility
 --]]---------------------------------------------------------
 function newobject:GetVisible()
-
 	return self.visible
-	
 end
-
 --[[---------------------------------------------------------
 	- func: SetParent(parent)
 	- desc: sets the object's parent
 --]]---------------------------------------------------------
 function newobject:SetParent(parent)
-	local tparent = parent
-	local cparent = self.parent
-	local ptype = tparent.type
-	local stype = self.type
-
-	if ptype ~= "frame"
-	and ptype ~= "panel"
-	and ptype ~= "list"
-	and ptype ~= "container"
-	then
+	local container = parent.container
+	if self.type == "frame"  then
+		-- Dont add frames inside objects
 		return
 	end
+
+	if container then
+		-- Call the override function if available
+		if parent.AddItemIntoContainer then
+			parent:AddItemIntoContainer(self)
+			return
+		end
+	end
+
 	self:Remove()
-	self.parent = tparent
-	self:SetState(tparent.state)
-	table.insert(tparent.children, self)
+	self.parent = parent
+	self:SetState(parent.state)
+	table.insert(parent.children, self)
 	return self
 end
 
@@ -615,21 +606,16 @@ end
 	- desc: gets the object's parent
 --]]---------------------------------------------------------
 function newobject:GetParent()
-
 	local parent = self.parent
 	return parent
-	
 end
-
 --[[---------------------------------------------------------
 	- func: Remove()
 	- desc: removes the object
 --]]---------------------------------------------------------
 function newobject:Remove()
-	
 	local pinternals = self.parent.internals
 	local pchildren = self.parent.children
-	
 	if pinternals then
 		for k, v in ipairs(pinternals) do
 			if v == self then
@@ -637,7 +623,6 @@ function newobject:Remove()
 			end
 		end
 	end
-	
 	if pchildren then
 		for k, v in ipairs(pchildren) do
 			if v == self then
@@ -645,9 +630,7 @@ function newobject:Remove()
 			end
 		end
 	end
-	
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -656,26 +639,25 @@ end
 			detection
 --]]---------------------------------------------------------
 function newobject:SetClickBounds(x, y, width, height)
-
 	local internals = self.internals
 	local children = self.children
-	
-	self.clickbounds = {x = x, y = y, width = width, height = height}
-	
+	self.clickbounds = self.clickbounds or {x = x, y = y, width = width, height = height}
+	self.clickbounds.x = x
+	self.clickbounds.y = y
+	self.clickbounds.width = width
+	self.clickbounds.height = height
+
 	if internals then
 		for k, v in ipairs(internals) do
 			v:SetClickBounds(x, y, width, height)
 		end
 	end
-	
 	if children then
 		for k, v in ipairs(children) do
 			v:SetClickBounds(x, y, width, height)
 		end
 	end
-	
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -684,9 +666,7 @@ end
 			detection
 --]]---------------------------------------------------------
 function newobject:GetClickBounds()
-
 	return self.clickbounds
-	
 end
 
 --[[---------------------------------------------------------
@@ -763,7 +743,6 @@ end
 			hover state
 --]]---------------------------------------------------------
 function newobject:CheckHover()
-	
 	local x = self.x
 	local y = self.y
 	local width = self.width
@@ -776,7 +755,7 @@ function newobject:CheckHover()
 	local visible = self.visible
 	local type = self.type
 	local hoverobject = loveframes.hoverobject
-	
+
 	-- check if the mouse is colliding with the object
 	if state == curstate and visible then
 		local collide = self.collide
@@ -797,21 +776,19 @@ function newobject:CheckHover()
 			end
 		end
 	end
-	
 	-- check if the object is being hovered
 	if hoverobject == self and type ~= "base" then
 		self.hover = true
 	else
 		self.hover = false
 	end
-	
 	local hover = self.hover
 	local calledmousefunc = self.calledmousefunc
-	
 	-- check for mouse enter and exit events
 	if hover then
 		loveframes.hover = true
 		if not calledmousefunc then
+			self.hovertime = love.timer.getTime()
 			local on_mouse_enter = self.OnMouseEnter
 			if on_mouse_enter then
 				on_mouse_enter(self)
@@ -822,6 +799,7 @@ function newobject:CheckHover()
 		end
 	else
 		if calledmousefunc then
+			self.hovertime = 0
 			local on_mouse_exit = self.OnMouseExit
 			if on_mouse_exit then
 				on_mouse_exit(self)
@@ -831,7 +809,6 @@ function newobject:CheckHover()
 			end
 		end
 	end
-	
 end
 
 --[[---------------------------------------------------------
@@ -839,9 +816,7 @@ end
 	- desc: return if the object is in a hover state or not
 --]]---------------------------------------------------------
 function newobject:GetHover()
-
 	return self.hover
-
 end
 
 --[[---------------------------------------------------------
@@ -849,13 +824,10 @@ end
 	- desc: returns the object's children
 --]]---------------------------------------------------------
 function newobject:GetChildren()
-
 	local children = self.children
-	
 	if children then
 		return children
 	end
-	
 end
 
 --[[---------------------------------------------------------
@@ -863,13 +835,10 @@ end
 	- desc: returns the object's internals
 --]]---------------------------------------------------------
 function newobject:GetInternals()
-
 	local internals = self.internals
-	
 	if internals then
 		return internals
 	end
-	
 end
 
 
@@ -879,13 +848,11 @@ end
 			object or false if not
 --]]---------------------------------------------------------
 function newobject:IsTopList()
-
 	local cols = loveframes.GetCollisions()
 	local children = self:GetChildren()
 	local order = self.draworder
 	local top = true
 	local found = false
-	
 	local function IsChild(object)
 		local parents = object:GetParents()
 		for k, v in ipairs(parents) do
@@ -895,7 +862,6 @@ function newobject:IsTopList()
 		end
 		return false
 	end
-	
 	for k, v in ipairs(cols) do
 		if v == self then
 			found = true
@@ -908,13 +874,10 @@ function newobject:IsTopList()
 			end
 		end
 	end
-	
 	if found == false then
 		top = false
 	end
-	
 	return top
-	
 end
 
 --[[---------------------------------------------------------
@@ -923,16 +886,13 @@ end
 			in its parent's children table or false if not
 --]]---------------------------------------------------------
 function newobject:IsTopChild()
-
 	local children = self.parent.children
 	local num = #children
-	
 	if children[num] == self then
 		return true
 	else
 		return false
 	end
-	
 end
 
 --[[---------------------------------------------------------
@@ -941,12 +901,9 @@ end
 			children table
 --]]---------------------------------------------------------
 function newobject:MoveToTop()
-
 	local pchildren = self.parent.children
 	local pinternals = self.parent.internals
-	
 	local internal = false
-	
 	if pinternals then
 		for k, v in ipairs(pinternals) do
 			if v == self then
@@ -954,17 +911,13 @@ function newobject:MoveToTop()
 			end
 		end
 	end
-	
 	self:Remove()
-	
 	if internal then
 		table.insert(pinternals, self)
 	else
 		table.insert(pchildren, self)
 	end
-	
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -975,10 +928,8 @@ function newobject:SetDrawFunc()
 	local skins = loveframes.skins
 	local activeskin  = skins[loveframes.config["ACTIVESKIN"]]
 	--local defaultskin = skins[loveframes.config["DEFAULTSKIN"]]
-	
 	local funcname = self.type
 	self.drawfunc = activeskin[funcname] -- or defaultskin[funcname]
-	
 	funcname = self.type .. "_over"
 	self.drawoverfunc = activeskin[funcname] -- or defaultskin[funcname]
 end
@@ -988,33 +939,24 @@ end
 	- desc: sets the object's skin
 --]]---------------------------------------------------------
 function newobject:SetSkin(name)
-
 	local children = self.children
 	local internals = self.internals
-	
 	self.skin = name
-	
 	local selfskin = loveframes.skins[name]
-	
 	local funcname = self.type
-
 	self.drawfunc = selfskin[funcname]
 	self.drawoverfunc = selfskin[funcname.."_over"]
-	
 	if children then
 		for k, v in ipairs(children) do
 			v:SetSkin(name)
 		end
 	end
-	
 	if internals then
 		for k, v in ipairs(internals) do
 			v:SetSkin(name)
 		end
 	end
-	
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -1022,15 +964,12 @@ end
 	- desc: gets the object's skin
 --]]---------------------------------------------------------
 function newobject:GetSkin()
-	
 	local skins = loveframes.skins
 	local skinindex = loveframes.config["ACTIVESKIN"]
 	local defaultskin = loveframes.config["DEFAULTSKIN"]
 	local selfskin = self.skin
 	local skin = skins[selfskin] or skins[skinindex]
-	
 	return skin
-	
 end
 
 --[[---------------------------------------------------------
@@ -1038,9 +977,7 @@ end
 	- desc: gets the name of the object's skin
 --]]---------------------------------------------------------
 function newobject:GetSkinName()
-
 	return self.skin
-	
 end
 
 --[[---------------------------------------------------------

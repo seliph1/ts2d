@@ -81,20 +81,15 @@ function newobject:update(dt)
 		self.x = self.parent.x + self.staticx
 		self.y = self.parent.y + self.staticy
 	end
-	
 	self:CheckHover()
-	
 	if numchildren > 0 and tab == 0 then
 		self.tab = 1
 	end
-	
 	if autobuttonareawidth then
 		local width = self.width
 		self.buttonareawidth = width
 	end
-	
 	local pos = 0
-	
 	for k, v in ipairs(internals) do
 		v:update(dt)
 		if v.type == "tabbutton" then
@@ -103,16 +98,12 @@ function newobject:update(dt)
 			pos = pos + v.width - 1
 		end
 	end
-	
 	if #self.children > 0 then
 		self.children[self.tab]:update(dt)
-		self.children[self.tab]:SetPos(padding, tabheight + padding)
 	end
-	
 	if update then
 		update(self, dt)
 	end
-
 end
 
 --[[---------------------------------------------------------
@@ -123,28 +114,20 @@ function newobject:draw()
 	if loveframes.state ~= self.state then
 		return
 	end
-	
 	if not self.visible then
 		return
 	end
-	
 	local x = self.x
 	local y = self.y
 	local width = self.width
 	local height = self.height
 	local tabheight = self:GetHeightOfButtons()
-	local stencilfunc = function() love.graphics.rectangle("fill", x + self.buttonareax, y, self.buttonareawidth, height) end
-	
+	love.graphics.setScissor(x + self.buttonareax, y, self.buttonareawidth, height)
 	self:SetDrawOrder()
-	
 	local drawfunc = self.Draw or self.drawfunc
 	if drawfunc then
 		drawfunc(self)
 	end
-	
-	love.graphics.stencil(stencilfunc)
-	love.graphics.setStencilTest("greater", 0)
-	
 	local internals = self.internals
 	if internals then
 		for k, v in ipairs(internals) do
@@ -154,14 +137,11 @@ function newobject:draw()
 			end
 		end
 	end
-	
-	love.graphics.setStencilTest()
-	
+	love.graphics.setScissor()
 	local children = self.children
 	if #children > 0 then
 		children[self.tab]:draw()
 	end
-	
 	drawfunc = self.DrawOver or self.drawoverfunc
 	if drawfunc then
 		drawfunc(self)
@@ -297,7 +277,6 @@ end
 	- desc: adds a new tab to the tab panel
 --]]---------------------------------------------------------
 function newobject:AddTab(name, object, tip, image, onopened, onclosed)
-
 	local padding = self.padding
 	local autosize = self.autosize
 	local retainsize = self.retainsize
@@ -305,29 +284,23 @@ function newobject:AddTab(name, object, tip, image, onopened, onclosed)
 	local tabheight = self.tabheight
 	local internals = self.internals
 	local state = self.state
-	
+
 	object:Remove()
 	object.parent = self
 	object:SetState(state)
-	object.staticx = 0
-	object.staticy = 0
-	
+	object.staticx = padding
+	object.staticy = tabheight + padding
 	if tabnumber ~= 1 then
 		object.visible = false
 	end
-	
 	local tab = loveframes.objects["tabbutton"]:new(self, name, tabnumber, tip, image, onopened, onclosed)
-	
 	table.insert(self.children, object)
 	table.insert(self.internals, #self.internals - 1, tab)
 	self.tabnumber = tabnumber + 1
-	
 	if autosize and not retainsize then
 		object:SetSize(self.width - padding * 2, (self.height - tabheight) - padding * 2)
 	end
-	
 	return tab
-	
 end
 
 --[[---------------------------------------------------------
@@ -336,16 +309,13 @@ end
 	- note: for internal use only
 --]]---------------------------------------------------------
 function newobject:AddScrollButtons()
-
 	local internals = self.internals
 	local state = self.state
-	
 	for k, v in ipairs(internals) do
 		if v.type == "scrollbutton" then
 			table.remove(internals, k)
 		end
 	end
-	
 	local leftbutton = loveframes.objects["scrollbutton"]:new("left")
 	leftbutton.parent = self
 	leftbutton:SetPos(0, 0)
@@ -420,18 +390,14 @@ end
 	- desc: gets the total width of all of the tab buttons
 --]]---------------------------------------------------------
 function newobject:GetWidthOfButtons()
-
 	local width = 0
 	local internals = self.internals
-	
 	for k, v in ipairs(internals) do
 		if v.type == "tabbutton" then
 			width = width + v.width
 		end
 	end
-	
 	return width
-	
 end
 
 --[[---------------------------------------------------------
@@ -439,9 +405,7 @@ end
 	- desc: gets the height of one tab button
 --]]---------------------------------------------------------
 function newobject:GetHeightOfButtons()
-	
 	return self.tabheight
-	
 end
 
 --[[---------------------------------------------------------

@@ -6,17 +6,14 @@
     health info style: (health bar, percentage)
     sv_forcecamera
     entity move callback
-
-
-    callback on projectiles
-    spawning
-    colliding with wall/player/etc
-    stopping motion
-    despawning
-
-    HIDE UDP AS SOON AS POSSIBLE
-
+    callback on projectiles:  spawning/colliding with wall/player/etc/stopping motion/despawning
+    udp crypto/security
     add image snap on objects that has x.y property
+    add search bar in new game window
+    add vehicles
+    NPC AI: [leaving the box will use the default AI]
+
+
 
     client routine:
     check files

@@ -15,6 +15,7 @@ local newobject = loveframes.NewObject("container", "loveframes_object_container
 --]]---------------------------------------------------------
 function newobject:initialize()
 	self.type = "container"
+	self.container = false
 	self.width = 200
 	self.height = 50
 	self.internal = false

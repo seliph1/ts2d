@@ -1,5 +1,5 @@
 -- Mount a file system here
-require "lib/lovefs/lovefs"
+require "lib.lovefs.lovefs"
 local fs = lovefs()
 if love.filesystem.isFused() then
 	fs:cd(love.filesystem.getSourceBaseDirectory() )
@@ -9,9 +9,9 @@ end
 
 -- Loading some libs
 local ffi = require "ffi"
-local List = require "lib/list"
-local bump = require "lib/bump"
-local shader = require "core/shaders/cs2dshaders"
+local List = require "lib.list"
+local bump = require "lib.bump"
+local shader = require "core.shaders.cs2dshaders"
 local effect = require "effect"
 local enum = require "enum"
 
@@ -312,7 +312,7 @@ function MapObject:read(path, noindexing)
 			end
 			if bytearray[cursor+index]~=13 then
 				str = str .. chr
-			end	
+			end
 		end
 	end
 	-- Read short integer as unsigned endian.
@@ -817,6 +817,13 @@ function MapObject:draw_background()
 		end
 		end
 	else
+		love.graphics.setColor(
+			mapdata.background_color_red/255,
+			mapdata.background_color_green/255,
+			mapdata.background_color_blue/255
+		)
+		love.graphics.rectangle("fill", 0, 0, love.graphics.getWidth(), love.graphics.getHeight())
+		love.graphics.setColor(1,1,1,1)
 		--[[
 		love.graphics.setBackgroundColor(
 			mapdata.background_color_red/255,
@@ -850,7 +857,7 @@ function MapObject:draw_floor()
 	-- Reset render
 	love.graphics.setShader()
 	love.graphics.setBlendMode("alpha")
-	love.graphics.setColor(1, 1, 1, 1)	
+	love.graphics.setColor(1, 1, 1, 1)
 end
 
 function MapObject:draw_ceiling()

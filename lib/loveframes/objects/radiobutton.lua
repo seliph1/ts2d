@@ -18,8 +18,8 @@ function newobject:initialize()
 	self.type = "radiobutton"
 	self.width = 0
 	self.height = 0
-	self.boxwidth = 20
-	self.boxheight = 20
+	self.boxwidth = 14
+	self.boxheight = 14
 	self.font = loveframes.basicfont
 	self.checked = false
 	self.lastvalue = false
@@ -174,7 +174,7 @@ function newobject:SetText(text)
 	
 	if text ~= "" then
 		self.internals = {}
-		local textobject = loveframes.Create("messagebox")
+		local textobject = loveframes.Create("label")
 		textobject:Remove()
 		textobject.parent = self
 		textobject.state = self.state

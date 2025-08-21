@@ -36,7 +36,7 @@ function newobject:initialize()
 
 	local input = loveframes.objects["textbox"]:new()
 	input.parent = self
-	input:SetSize(50, 20)
+	input:SetSize(60, 20)
 	input:SetUsable({"1", "2", "3", "4", "5", "6", "7", "8", "9", "0", ".", "-"})
 	input:SetText(self.value)
 	input.OnTextChanged = function(object)
@@ -62,14 +62,16 @@ function newobject:initialize()
 			end
 		end
 	end
+	--[[
 	input.Update = function(object)
-		object:SetSize(object.parent.width - 20, object.parent.height)
+		object:SetSize(object.parent.width - 19, object.parent.height)
 	end
-	
+	]]
 	local increasebutton = loveframes.objects["button"]:new()
 	increasebutton.parent = self
-	increasebutton:SetWidth(21)
 	increasebutton:SetText("")
+	increasebutton:SetSize(20, self.height/2)
+	increasebutton:SetPos(self.width - 20, 0)
 	increasebutton:SetImage(uparrow)
 	increasebutton.OnClick = function()
 		local canmodify = self.canmodify
@@ -86,8 +88,8 @@ function newobject:initialize()
 		local down = object.down
 		local canmodify = self.canmodify
 		local lastbuttonclicked = self.lastbuttonclicked
-		object:SetPos(object.parent.width - 21, 0)
-		object:SetHeight(object.parent.height/2)
+		--object:SetPos(object.parent.width - 20, 0)
+		--object:SetHeight(object.parent.height/2)
 		if down and not canmodify then
 			self:ModifyValue("add")
 			self.canmodify = true
@@ -103,7 +105,8 @@ function newobject:initialize()
 	end
 	local decreasesbutton = loveframes.objects["button"]:new()
 	decreasesbutton.parent = self
-	decreasesbutton:SetWidth(21)
+	decreasesbutton:SetSize(20, self.height/2)
+	decreasesbutton:SetPos(self.width - 20, self.height/2)
 	decreasesbutton:SetText("")
 	decreasesbutton:SetImage(downarrow)
 	decreasesbutton.OnClick = function()
@@ -121,8 +124,8 @@ function newobject:initialize()
 		local down = object.down
 		local canmodify = self.canmodify
 		local lastbuttonclicked = self.lastbuttonclicked
-		object:SetPos(object.parent.width - 21, object.parent.height/2)
-		object:SetHeight(object.parent.height/2)
+		--object:SetPos(object.parent.width - 20, object.parent.height/2)
+		--object:SetHeight(object.parent.height/2)
 		if down and not canmodify then
 			self:ModifyValue("subtract")
 			self.canmodify = true
@@ -136,11 +139,9 @@ function newobject:initialize()
 			self.delay = time + 0.80
 		end
 	end
-	
 	table.insert(self.internals, input)
 	table.insert(self.internals, increasebutton)
 	table.insert(self.internals, decreasesbutton)
-	
 	self:SetDrawFunc()
 end
 
@@ -172,7 +173,7 @@ function newobject:update(dt)
 		self.y = self.parent.y + self.staticy
 	end
 	self:CheckHover()
-	for k, v in ipairs(internals) do
+	for _, v in ipairs(internals) do
 		v:update(dt)
 	end
 	if update then
@@ -214,7 +215,7 @@ end
 function newobject:SetValue(value)
 	local min = self.min
 	local curvalue = self.value
-	local value = tonumber(value) or min
+	value = tonumber(value) or min
 	local internals = self.internals
 	local input = internals[1]
 	local onvaluechanged = self.OnValueChanged
@@ -233,6 +234,16 @@ end
 function newobject:GetValue()
 	return self.value
 end
+--[[---------------------------------------------------------
+	- func: SetIncreaseAmount(amount)
+	- desc: sets the object's increase amount
+--]]---------------------------------------------------------
+function newobject:SetStepAmount(amount)
+	self.increaseamount = amount
+	self.decreaseamount = amount
+	return self
+end
+
 --[[---------------------------------------------------------
 	- func: SetIncreaseAmount(amount)
 	- desc: sets the object's increase amount

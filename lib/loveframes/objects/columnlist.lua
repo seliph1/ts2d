@@ -482,7 +482,7 @@ end
 	- func: GetMouseWheelScrollAmount()
 	- desc: gets the scroll amount of the mouse wheel
 --]]---------------------------------------------------------
-function newobject:GetButtonScrollAmount()
+function newobject:GetMouseWheelScrollAmount()
 
 	return self.mousewheelscrollamount
 	

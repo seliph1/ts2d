@@ -25,6 +25,8 @@ loveframes.class = require(path .. ".third-party.middleclass")
 loveframes.utf8 = require(path .. ".third-party.utf8"):init()
 loveframes.input = require(path .. ".third-party.input")
 loveframes.sysl = require(path .. ".third-party.sysl")
+--loveframes.shash = require(path .. ".third-party.shash")
+loveframes.bump = require(path .. ".third-party.bump")
 loveframes.love_utf8 = require("utf8")
 
 -- library info
@@ -148,9 +150,9 @@ function loveframes.update(dt)
 						end
 					else
 						if not loveframes.resizeobject then
-							local arrow = love.mouse.getSystemCursor("arrow")
+							local sarrow = love.mouse.getSystemCursor("arrow")
 							if curcursor ~= arrow then
-								love.mouse.setCursor(arrow)
+								love.mouse.setCursor(sarrow)
 							end
 						end
 					end
@@ -174,7 +176,7 @@ function loveframes.update(dt)
 			end
 		end
 	end
-	loveframes.collisions = {}
+	--loveframes.collisions = {}
 	base:update(dt)
 end
 

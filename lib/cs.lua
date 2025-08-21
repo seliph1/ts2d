@@ -1,8 +1,8 @@
-local state = require 'lib/state'
+local state = require 'lib.state'
 local enet = require 'enet' -- Network
 -- local marshal = require 'marshal' -- Serialization
--- local serpent = require 'lib/serpent'
-local bitser = require 'lib/bitser'
+-- local serpent = require 'lib.serpent'
+local bitser = require 'lib.bitser'
 
 local encode = bitser.dumps
 local decode = bitser.loads

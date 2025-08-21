@@ -89,7 +89,7 @@ function loveframes.RegisterSkin(skin)
 		for k, v in ipairs(imagelist) do
 			extension = v.extension
 			filename = v.name .. "." .. extension
-			if extension == "png" then
+			if extension == "png" or extension == "bmp" then
 				image = love.graphics.newImage(v.fullpath)
 				image:setFilter("nearest", "nearest")
 				images[filename] = image

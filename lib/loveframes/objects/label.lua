@@ -64,7 +64,7 @@ function newobject:update(dt)
 		self.y = self.parent.y + self.staticy
 	end
 	-- Check if the parent is a checkbox/radiobutton to propagate hover status
-	if parent.type == "checkbox" then
+	if parent.type == "checkbox" or parent.type == "radiobutton" then
 		parent:CheckHover()
 	end
 
@@ -167,6 +167,7 @@ end
 	- func: SetWidth(width, relative)
 	- desc: sets the object's width
 --]]---------------------------------------------------------
+--[[
 function newobject:SetWidth(width, relative)
 	if relative then
 		self:SetMaxWidth(self.parent.width * width)
@@ -175,27 +176,12 @@ function newobject:SetWidth(width, relative)
 	end
 	return self
 end
-
---[[---------------------------------------------------------
-	- func: SetHeight()
-	- desc: sets the object's height
---]]---------------------------------------------------------
-function newobject:SetHeight(height)
-	self.height = height
-	return self
-end
---[[---------------------------------------------------------
-	- func: GetHeight()
-	- desc: sets the object's height
---]]---------------------------------------------------------
-function newobject:GetHeight(height)
-	return self.height
-end
-
+]]
 --[[---------------------------------------------------------
 	- func: SetSize(width, height, relative)
 	- desc: sets the object's size
 --]]---------------------------------------------------------
+--[[
 function newobject:SetSize(width, height, relative)
 	if relative then
 		self:SetMaxWidth(self.parent.width * width)
@@ -205,7 +191,7 @@ function newobject:SetSize(width, height, relative)
 	self.SetHeight(height)
 	return self
 end
-
+--]]
 --[[---------------------------------------------------------
 	- func: SetFont(font)
 	- desc: sets the object's font

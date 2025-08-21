@@ -1,9 +1,9 @@
-local cs 		= require "lib/cs"
-local b			= require "lib/battery"
+local cs 		= require "lib.cs"
+local b			= require "lib.battery"
 local enum      = require "enum"
 local MapObject = require "mapengine"
 
-require "lib/lovefs/lovefs"
+require "lib.lovefs.lovefs"
 local fs = lovefs()
 if love.filesystem.isFused() then
 	fs:cd(love.filesystem.getSourceBaseDirectory() )
@@ -253,6 +253,7 @@ client.actions = {
 			if status then
 				print(status)
 			end
+			client.mode = "game"
 		end,
 	};
     filecheck = {
@@ -421,20 +422,21 @@ function client.render()
 	-- Set the boundaries to render engine
 	love.graphics.setScissor(ox, oy, client.width, client.height)
 
-	if client.map then
+	if (client.mode == "game" or client.mode == "editor") and client.map then
 		client.map:draw_floor()
 		client.map:draw_entities()
 	end
+
     if client.connected then
 		-- Bullet render
 		client.map:draw_bullets(share, home, client)
 		-- Draw items on the ground
-		client.map:draw_items(share, client)
+		client.map:draw_items(share, client) 
 		-- Player render
 		--client.map:draw_players(share, home, client)
 		client.map:draw_playersc(client)
     end
-	if client.map then
+	if (client.mode == "game" or client.mode == "editor") and client.map then
 		client.map:draw_ceiling()
 	end
 	client.map:draw_effects()
@@ -466,23 +468,30 @@ function client.draw()
 	else
 		love.graphics.draw(client.canvas, 0, 0)
 	end
-
-
-	-- Draw the rest of hud
+	
+	-- Advanced debug
+	--[[
 	local label = string.format("Camera: %dpx|%dpx  Ping: %s  FPS: %s  Target: %d|%d   Memory: %.2f MB",
 		client.camera.x,
 		client.camera.y,
 		client.getPing(),
 		love.timer.getFPS(),
-		home.targetX,
-		home.targetY,
+		client.home.targetX,
+		client.home.targetY,
+		collectgarbage("count") / 1024
+	)
+	love.graphics.printf(label, 0, love.graphics.getHeight()-20, love.graphics.getWidth(), "center")
+	]]
+	-- Simple debug
+	local label = string.format("FPS: %s  Memory: %.2f MB",
+		love.timer.getFPS(),
 		collectgarbage("count") / 1024
 	)
 	love.graphics.printf(label, 0, love.graphics.getHeight()-20, love.graphics.getWidth(), "center")
 
 	-- Draw middle screen
-	love.graphics.line(love.graphics.getWidth()/2-5, love.graphics.getHeight()/2, love.graphics.getWidth()/2+5, love.graphics.getHeight()/2)
-	love.graphics.line(love.graphics.getWidth()/2, love.graphics.getHeight()/2-5, love.graphics.getWidth()/2, love.graphics.getHeight()/2+5)
+	--love.graphics.line(love.graphics.getWidth()/2-5, love.graphics.getHeight()/2, love.graphics.getWidth()/2+5, love.graphics.getHeight()/2)
+	--love.graphics.line(love.graphics.getWidth()/2, love.graphics.getHeight()/2-5, love.graphics.getWidth()/2, love.graphics.getHeight()/2+5)
 end
 
 --- Returns the client object to the main code block

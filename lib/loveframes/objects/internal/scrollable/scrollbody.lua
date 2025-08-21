@@ -132,29 +132,23 @@ end
 	- desc: updates the object
 --]]---------------------------------------------------------
 function newobject:update(dt)
-	
 	local visible = self.visible
 	local alwaysupdate = self.alwaysupdate
-	
 	if not visible then
 		if not alwaysupdate then
 			return
 		end
 	end
-	
 	self:CheckHover()
-	
 	local parent = self.parent
 	local base = loveframes.base
 	local update = self.Update
 	local internals = self.internals
-	
 	-- move to parent if there is a parent
 	if parent ~= base then
 		self.x = parent.x + self.staticx
 		self.y = parent.y + self.staticy
 	end
-	
 	-- resize to parent
 	if parent ~= base then
 		if self.bartype == "vertical" then
@@ -167,15 +161,33 @@ function newobject:update(dt)
 			if parent.vbar then self.width = self.width - parent:GetVerticalScrollBody().width end
 		end
 	end
-	
 	for k, v in ipairs(internals) do
 		v:update(dt)
 	end
-	
 	if update then
 		update(self, dt)
 	end
-	
+end
+
+--[[---------------------------------------------------------
+	- func: wheelmoved(x, y)
+	- desc: called when the player moves a mouse wheel
+--]]---------------------------------------------------------
+function newobject:wheelmoved(x, y)
+	if loveframes.state ~= self.state then
+		return
+	end
+	if not self.visible then
+		return
+	end
+	local bar = self.internals[1].internals[1]
+	if self.parent.hover then
+		if self.bartype == "vertical" then
+			bar:Scroll(-y * self.parent.buttonscrollamount * 5)
+		elseif self.bartype == "horizontal"	then
+			bar:Scroll(-x * self.parent.buttonscrollamount * 5)
+		end
+	end
 end
 
 --[[---------------------------------------------------------

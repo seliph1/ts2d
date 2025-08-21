@@ -19,8 +19,7 @@ local bordercolor = {0.5, 0.5, 0.5, 1}
 -- add skin directives to this table
 skin.directives = {}
 -- Text
---skin.directives.text_global = "lib/loveframes/skins/CS2D/images/NotoSansKR-Regular.ttf"
-skin.directives.text_global = "lib/loveframes/skins/CS2D/images/liberationsans.ttf"
+skin.directives.text_global = "gfx/fonts/liberationsans.ttf"
 skin.directives.text_font_height = 1
 
 skin.directives.text_default_color		 				= {0.59, 0.59, 0.59, 1};
@@ -80,27 +79,30 @@ skin.controls.border_active_color			= {1, 1, 1, 1}
 
 skin.controls.body_color					= {0.25, 0.25, 0.25, 0.90}
 
-
 -- frame
 skin.controls.frame_body_color                      = {0.25, 0.25, 0.25, 0.90}
 skin.controls.frame_name_color                      = {1, 1, 1, 1}
 skin.controls.frame_name_font                       = skin.controls.titlefont
 
 -- button
-skin.controls.button_round_corner					= 5
+skin.controls.button_round_corner					= 0
 skin.controls.button_body_color						= {1, 1, 1, 1}
-skin.controls.button_down_color						= {0.15, 0.15, 0.16, 1}
-skin.controls.button_nohover_color					= {0.15, 0.15, 0.16, 1}
-skin.controls.button_hover_color					= {0.15, 0.15, 0.16, 1}
-skin.controls.button_toggle_color					= {0.18, 0.18, 0.18, 1}
-skin.controls.button_nonclickable_color				= {0.1, 0.1, 0.1, 1}
+skin.controls.button_down_color						= {0.15, 0.15, 0.15, 1}
+skin.controls.button_nohover_color					= {0.15, 0.15, 0.15, 1}
+skin.controls.button_hover_color					= {0.15, 0.15, 0.15, 1}
+skin.controls.button_toggle_color					= {0.15, 0.15, 0.15, 1}
+skin.controls.button_nonclickable_color				= {0.15, 0.15, 0.15, 1}
 
+skin.controls.button_text_color						= {1, 1, 1, 1}
 skin.controls.button_text_down_color                = {1, 1, 1, 1}
 skin.controls.button_text_nohover_color             = {0.59, 0.59, 0.59, 1}
 skin.controls.button_text_hover_color               = {0.78, 0.78, 0.78, 1}
 skin.controls.button_text_toggle_color				= {0.4, 0.4, 0.4, 1}
 skin.controls.button_text_nonclickable_color        = {0.3, 0.3, 0.3, 1}
 skin.controls.button_text_font                      = skin.controls.smallfont
+
+skin.controls.button_border_disabled_color        	= {0.2, 0.2, 0.2, 1}
+skin.controls.button_border_enabled_color			= {0.5, 0.5, 0.5, 1}
 
 -- imagebutton
 skin.controls.imagebutton_text_down_color           = {1, 1, 1, 1}
@@ -176,6 +178,17 @@ skin.controls.multichoicerow_text_nohover_color     = {0.59, 0.59, 0.59, 1}
 skin.controls.multichoicerow_text_hover_color       = {1, 1, 1, 1}
 skin.controls.multichoicerow_text_font              = skin.controls.smallfont
 
+-- droplist
+skin.controls.droplist_body_nohover_color			= {0.11, 0.11, 0.11, 1}
+skin.controls.droplist_body_hover_color				= {0.21, 0.21, 0.21, 1}
+skin.controls.droplist_body_active_color         	= {0.31, 0.31, 0.31, 1}
+skin.controls.droplist_body_odd_color				= {0.11, 0.11, 0.11, 1}
+skin.controls.droplist_body_even_color				= {0.13, 0.13, 0.13, 1}
+skin.controls.droplist_text_nohover_color			= {0.59, 0.59, 0.59, 1}
+skin.controls.droplist_text_hover_color				= {1, 1, 1, 1}
+skin.controls.droplist_text_active_color			= {1, 1, 1, 1}
+skin.controls.droplist_text_font					= skin.controls.smallfont
+
 -- tooltip
 skin.controls.tooltip_body_color                    = {0, 0, 0, 0.5}
 skin.controls.tooltip_font_color                    = {0.5, 0.5, 0.5, 1}
@@ -190,7 +203,7 @@ skin.controls.textinput_text_normal_color           = {0.59, 0.59, 0.59, 1}
 skin.controls.textinput_text_active_color           = {1, 1, 1, 1}
 skin.controls.textinput_text_placeholder_color      = {0.22, 0.22, 0.22, 1}
 skin.controls.textinput_text_selected_color         = {1, 1, 1, 1}
-skin.controls.textinput_highlight_bar_color         = {0.2, 0.8, 1, 1}
+skin.controls.textinput_highlight_bar_color         = {0.2, 0.8, 1, 0.2}
 
 -- checkbox
 skin.controls.checkbox_body_color                   = {0.1, 0.1, 0.1, 1}
@@ -199,8 +212,10 @@ skin.controls.checkbox_hover_color                  = {1, 1, 1, 1}
 skin.controls.checkbox_text_font                    = skin.controls.smallfont
 
 -- radiobutton
-skin.controls.radiobutton_body_color                = {1, 1, 1, 1}
-skin.controls.radiobutton_check_color               = {0.5, 0.8, 1, 1}
+skin.controls.radiobutton_body_color                = {0.1, 0.1, 0.1, 1}
+skin.controls.radiobutton_check_color               = {0.59, 0.59, 0.59, 1}
+skin.controls.radiobutton_checkinner_color        	= {0.3, 0.3, 0.3, 1}
+skin.controls.radiobutton_hover_color               = {1, 1, 1, 1}
 skin.controls.radiobutton_inner_border_color        = {0.3, 0.72, 1, 1}
 skin.controls.radiobutton_text_font                 = skin.controls.smallfont
 
@@ -375,148 +390,128 @@ end
 	- desc: draws the button object
 --]]---------------------------------------------------------
 function skin.button(object)
-	local skin = object:GetSkin()
 	local x = object:GetX()
 	local y = object:GetY()
 	local width = object:GetWidth()
 	local height = object:GetHeight()
 	local hover = object:GetHover()
 	local text = object:GetText()
-	local font = skin.controls.button_text_font
-	local twidth = font:getWidth(object.text)
-	local theight = font:getHeight(object.text)
+	local formattedtext = object:GetFormattedText()
+	local textmesh = object:GetDrawableText()
+	local text_height = textmesh:getHeight()
+	local text_width = textmesh:getWidth()
 	local down = object:GetDown()
 	local checked = object.checked
 	local enabled = object:GetEnabled()
 	local clickable = object:GetClickable()
+	local align = object:GetAlign()
+	-- Default color
+	local defaultcolor = skin.controls.button_text_color
+	-- Text colors
 	local textdowncolor = skin.controls.button_text_down_color
 	local texthovercolor = skin.controls.button_text_hover_color
 	local textnohovercolor = skin.controls.button_text_nohover_color
 	local texttogglecolor = skin.controls.button_text_toggle_color
 	local textnonclickablecolor = skin.controls.button_text_nonclickable_color
 	-- Body colors
-	local bodycolor = skin.controls.button_body_color
 	local downcolor = skin.controls.button_down_color
 	local hovercolor = skin.controls.button_hover_color
 	local nohovercolor = skin.controls.button_nohover_color
 	local togglecolor = skin.controls.button_toggle_color
-	local nonclickablecolor = skin.controls.button_nonclickable_color	
+	local nonclickablecolor = skin.controls.button_nonclickable_color
+	-- Border colors
+	local borderdisabled = skin.controls.button_border_disabled_color
+	local borderenabled = skin.controls.button_border_enabled_color
+	-- Color pointers
+	local textcolor, bodycolor =  textnohovercolor, nohovercolor
+	local bordercolor = bordercolor
 	-- Image pointers
 	local image_hover = skin.images["button-hover.png"]
 	local image_hover_sh = height/image_hover:getHeight()
-	local roundcorner = 1 --skin.controls.button_round_corner
-	-- Image gradient when hovering button
-	local function image_hover_draw()
-		love.graphics.setColor(1, 1, 1, 0.5)
-		love.graphics.draw(image_hover, x, y, 0, width, image_hover_sh/2)
-	end
-	-- Disabled button colors
-	if not enabled or not clickable then
-		-- button body
-		love.graphics.setColor(nonclickablecolor)
-		love.graphics.rectangle("fill", x, y, width, height, roundcorner, roundcorner)
-		-- button text
-		love.graphics.setFont(font)
-		love.graphics.setColor(textnonclickablecolor)
-		skin.PrintText(text, x + width/2 - twidth/2, y + height/2 - theight/2)
-		return
-	end
-	-- If the buttion is toggleable
-	if object.toggleable then
-		if hover then
-			if object.toggle then
-				-- button body
-				love.graphics.setColor(togglecolor)
-				love.graphics.rectangle("fill", x, y, width, height, roundcorner, roundcorner)
-				-- button text
-				love.graphics.setFont(font)
-				love.graphics.setColor(texttogglecolor)
-				skin.PrintText(text, x + width/2 - twidth/2 + 1, y + height/2 - theight/2 + 1)
-			else
-				-- button body
-				love.graphics.setColor(bodycolor)
-				love.graphics.rectangle("fill", x, y, width, height, roundcorner, roundcorner)
-				-- Button hover shade
-				image_hover_draw()
-				-- button text
-				love.graphics.setFont(font)
-				love.graphics.setColor(texthovercolor)
-				skin.PrintText(text, x + width/2 - twidth/2, y + height/2 - theight/2)
-			end
-		else
-			if object.toggle then
-				-- button body
-				love.graphics.setColor(togglecolor)
-				love.graphics.rectangle("fill", x, y, width, height, roundcorner, roundcorner)
-				-- button text
-				love.graphics.setFont(font)
-				love.graphics.setColor(texttogglecolor)
-				skin.PrintText(text, x + width/2 - twidth/2 +1, y + height/2 - theight/2 +1)
-			else
-				-- button body
-				love.graphics.setColor(bodycolor)
-				love.graphics.rectangle("fill", x, y, width, height, roundcorner, roundcorner)
-				-- button text
-				love.graphics.setFont(font)
-				love.graphics.setColor(textnohovercolor)
-				skin.PrintText(text, x + width/2 - twidth/2, y + height/2 - theight/2)
-			end
-		end
-	else -- NOT TOGGLEABLE
-		if down or checked then
-			-- button body
-			love.graphics.setColor(downcolor)
-			love.graphics.rectangle("fill", x, y, width, height, roundcorner, roundcorner)
-			-- button text
-			love.graphics.setFont(font)
-			if object.image then
-				love.graphics.setColor(1, 1, 1)
-				love.graphics.draw(object.image, x + 2,  y + height/2 - object.image:getHeight()/2)
-				love.graphics.setColor(textdowncolor)
-				skin.PrintText(text, x + object.image:getWidth() + 4, y + height/2 - theight/2)
-			else
-				love.graphics.setColor(textdowncolor)
-				skin.PrintText(text, x + width/2 - twidth/2 + 1, y + height/2 - theight/2 + 1)
-			end
-		elseif hover then
-			-- button body
-			love.graphics.setColor(hovercolor)
-			love.graphics.rectangle("fill", x, y, width, height, roundcorner, roundcorner)
-			-- button hover shade
-			image_hover_draw()
-			-- button text
-			love.graphics.setFont(font)
-			if object.image then
-				love.graphics.setColor(1, 1, 1)
-				love.graphics.draw(object.image, x + 2,  y + height/2 - object.image:getHeight()/2)
-				love.graphics.setColor(texthovercolor)
+	local roundcorner = skin.controls.button_round_corner
+	local xoffset, yoffset, padding = 0, 0, 2
+	local image_x, image_y, image_width, image_height = 0,0,0,0
+	local text_x, text_y = 0, 0
 
-				skin.PrintText(text, x + object.image:getWidth() + 4, y + height/2 - theight/2)
-			else
-				love.graphics.setColor(texthovercolor)
-				skin.PrintText(text, x + width/2 - twidth/2, y + height/2 - theight/2)
-			end
-		else
-			-- button body
-			love.graphics.setColor(nohovercolor)
-			love.graphics.rectangle("fill", x, y, width, height, roundcorner, roundcorner)
-			-- button text
-			love.graphics.setFont(font)
-			if object.image then
-				love.graphics.setColor(1, 1, 1)
-				love.graphics.draw(object.image, object:GetX() + 2,  object:GetY() + object:GetHeight()/2 - object.image:getHeight()/2)
-				love.graphics.setColor(textnohovercolor)
-
-				skin.PrintText(text, x + object.image:getWidth() + 4, y + height/2 - theight/2)
-			else
-				love.graphics.setColor(textnohovercolor)
-				skin.PrintText(text, x + width/2 - twidth/2, y + height/2 - theight/2)
-			end
-		end
+	if hover then
+		bodycolor = hovercolor
+		textcolor = texthovercolor
+		bordercolor = borderenabled
 	end
+	if down then
+		-- Apply -1 -1 offset to make illusion of pressing
+		xoffset = xoffset + 1
+		yoffset = yoffset + 1
+		bodycolor = downcolor
+		textcolor = textdowncolor
+	end
+	if not enabled then
+		xoffset = 0 -- Reset the offset if the text isn't clickable
+		yoffset = 0
+		bordercolor = borderdisabled
+		bodycolor = nonclickablecolor
+		textcolor = textnonclickablecolor
+		hover = false
+		down = false
+	end
+	if object.image then
+		image_width = object.image:getWidth()
+		image_height = object.image:getHeight()
+		if align == "center" then
+			image_x = math.floor(x + xoffset + padding + (width - image_width - text_width)/2 )
+			xoffset = math.floor(xoffset + image_width/2 + padding)
+		elseif align == "left" then
+			image_x = math.floor(x + xoffset + padding)
+			xoffset = math.floor(xoffset + image_width + padding)
+		elseif align == "right" then
+			image_x = math.floor(x + xoffset - padding + width - text_width - image_width)
+			xoffset = math.floor(xoffset + padding)
+		end
+		image_y = math.floor(y + yoffset + (height - image_height)/2)
+	end
+
+	if text ~= formattedtext then -- Colored text
+		--textcolor = defaultcolor -- (0,0,0,0)
+	end
+
+	if align == "right" then
+		text_x = math.floor(x + xoffset - padding)
+	else
+		text_x = math.floor(x + xoffset + padding)
+	end
+	text_y = math.floor((y + (height - text_height)/2) + yoffset)
+
+	-- Draw body
+	love.graphics.setColor(bodycolor)
+	love.graphics.rectangle("fill", x, y, width, height, roundcorner, roundcorner)
+
+	-- Draw text
+	love.graphics.setColor(textcolor)
+	love.graphics.draw(textmesh, text_x, text_y)
+
+	-- Image
+	if object.image then
+		love.graphics.setColor(1, 1, 1, 1)
+		love.graphics.draw(object.image, image_x, image_y)
+		--love.graphics.print(image_x.."|"..image_y, x-200, y)
+	end
+
+	local hovertime = 0
+	if hover and object.hovertime > 0 then
+		hovertime = love.timer.getTime() - object.hovertime
+	end
+	local brightness =  loveframes.Mix(0.1, 0.3, loveframes.Clamp(hovertime*5, 0, 1) )
+
+	-- Button hover shade
+	love.graphics.setColor(1, 1, 1, brightness)
+	if hover then
+		love.graphics.setColor(1, 1, 1, brightness)
+	end
+	love.graphics.draw(image_hover, x, y, 0, width, image_hover_sh/2)
+
+	-- Draw border
 	love.graphics.setColor(bordercolor)
 	skin.OutlinedRectangle(x, y, width, height)
-	love.graphics.setLineWidth(1)
 end
 
 --[[---------------------------------------------------------
@@ -524,7 +519,6 @@ end
 	- desc: draws the close button object
 --]]---------------------------------------------------------
 function skin.closebutton(object)
-	local skin = object:GetSkin()
 	local x = object:GetX()
 	local y = object:GetY()
 	local parent = object.parent
@@ -535,9 +529,7 @@ function skin.closebutton(object)
 	local bodydowncolor = skin.controls.closebutton_body_down_color
 	local bodyhovercolor = skin.controls.closebutton_body_hover_color
 	local bodynohovercolor = skin.controls.closebutton_body_nohover_color
-	
 	image:setFilter("nearest", "nearest")
-	
 	if down then
 		-- button body
 		love.graphics.setColor(bodydowncolor)
@@ -559,8 +551,6 @@ end
 	- desc: draws the image object
 --]]---------------------------------------------------------
 function skin.image(object)
-	
-	local skin = object:GetSkin()
 	local x = object:GetX()
 	local y = object:GetY()
 	local orientation = object:GetOrientation()
@@ -573,11 +563,9 @@ function skin.image(object)
 	local image = object.image
 	local color = object.imagecolor
 	local stretch = object.stretch
-	
 	if stretch then
 		scalex, scaley = object:GetWidth() / image:getWidth(), object:GetHeight() / image:getHeight()
 	end
-
 	if color then
 		love.graphics.setColor(color)
 		love.graphics.draw(image, x, y, orientation, scalex, scaley, offsetx, offsety, shearx, sheary)
@@ -589,8 +577,6 @@ function skin.image(object)
 end
 
 function skin.imagelink(object)
-	
-	local skin = object:GetSkin()
 	local x = object:GetX()
 	local y = object:GetY()
 	local orientation = object:GetOrientation()
@@ -604,12 +590,9 @@ function skin.imagelink(object)
 	local color = object.imagecolor
 	local stretch = object.stretch
 	local hover = object:GetHover()
-	
-	
 	if stretch then
 		scalex, scaley = object:GetWidth() / image:getWidth(), object:GetHeight() / image:getHeight()
 	end
-
 	if color then
 		love.graphics.setColor(color)
 		love.graphics.draw(image, x, y, orientation, scalex, scaley, offsetx, offsety, shearx, sheary)
@@ -617,17 +600,13 @@ function skin.imagelink(object)
 		love.graphics.setColor(1, 1, 1, 1)
 		love.graphics.draw(image, x, y, orientation, scalex, scaley, offsetx, offsety, shearx, sheary)
 	end
-	
 end
-
 
 --[[---------------------------------------------------------
 	- func: DrawImageButton(object)
 	- desc: draws the image button object
 --]]---------------------------------------------------------
 function skin.imagebutton(object)
-
-	local skin = object:GetSkin()
 	local x = object:GetX()
 	local y = object:GetY()
 	local width = object:GetWidth()
@@ -639,7 +618,7 @@ function skin.imagebutton(object)
 	local down = object.down
 	local font = skin.controls.imagebutton_text_font
 	local twidth = font:getWidth(object.text)
-	local theight = font:getHeight(object.text)
+	local theight = font:getHeight()
 	local textdowncolor = skin.controls.imagebutton_text_down_color
 	local texthovercolor = skin.controls.imagebutton_text_hover_color
 	local textnohovercolor = skin.controls.imagebutton_text_nohover_color
@@ -656,7 +635,6 @@ function skin.imagebutton(object)
 		love.graphics.setColor(textdowncolor)
 		skin.PrintText(text, x + width/2 - twidth/2 + 1, y + height - theight - 6 + 1)
 	elseif hover then
-		
 		if image then
 			love.graphics.setColor(imagecolor)
 			love.graphics.draw(image, x, y)
@@ -732,27 +710,15 @@ end
 	- desc: draws the scroll area object
 --]]---------------------------------------------------------
 function skin.scrollarea(object)
-
-	local skin = object:GetSkin()
 	local x = object:GetX()
 	local y = object:GetY()
 	local width = object:GetWidth()
 	local height = object:GetHeight()
 	local bartype = object:GetBarType()
 	local bodycolor = skin.controls.scrollarea_body_color
-	--local bordercolor = 
-	
+
 	love.graphics.setColor(bodycolor)
 	love.graphics.rectangle("fill", x, y, width, height)
-	--love.graphics.setColor(bordercolor)
-	--love.graphics.rectangle("line", x, y, width, height)
-	
-	if bartype == "vertical" then
-		--skin.OutlinedRectangle(x, y, width, height, true, true)
-	elseif bartype == "horizontal" then
-		--skin.OutlinedRectangle(x, y, width, height, false, false, true, true)
-	end
-	
 end
 
 --[[---------------------------------------------------------
@@ -760,8 +726,6 @@ end
 	- desc: draws the scroll bar object
 --]]---------------------------------------------------------
 function skin.scrollbar(object)
-
-	local skin = object:GetSkin()
 	local x = object:GetX()
 	local y = object:GetY()
 	local width = object:GetWidth()
@@ -772,8 +736,6 @@ function skin.scrollbar(object)
 	local bodydowncolor = skin.controls.scrollbar_body_down_color
 	local bodyhovercolor = skin.controls.scrollbar_body_hover_color
 	local bodynohovercolor = skin.controls.scrollbar_body_nohover_color
-
-
 	local ox = 2
 	local oy = 2
 	if dragging then
@@ -785,13 +747,10 @@ function skin.scrollbar(object)
 	else
 		love.graphics.setColor(bodynohovercolor)
 		love.graphics.rectangle("fill", x+ox, y+oy, width-ox*2, height-oy*2)
-		
 	end
-	
 	love.graphics.setColor(bordercolor)
 	--skin.OutlinedRectangle(x+ox, y+oy, width-ox*2, height-oy*2)
 	skin.EmbossedRectangle(x+ox, y+oy, width-ox*2, height-oy*2)
-	
 end
 
 --[[---------------------------------------------------------
@@ -799,17 +758,13 @@ end
 	- desc: draws the scroll body object
 --]]---------------------------------------------------------
 function skin.scrollbody(object)
-
-	local skin = object:GetSkin()
 	local x = object:GetX()
 	local y = object:GetY()
 	local width = object:GetWidth()
 	local height = object:GetHeight()
 	local bodycolor = skin.controls.scrollbody_body_color
-	
 	love.graphics.setColor(bodycolor)
 	love.graphics.rectangle("fill", x, y, width, height)
-	
 	love.graphics.setColor(bordercolor)
 	skin.OutlinedRectangle(x, y, width, height)
 end
@@ -819,8 +774,6 @@ end
 	- desc: draws the scroll button object
 --]]---------------------------------------------------------
 function skin.scrollbutton(object)
-
-	local skin = object:GetSkin()
 	local x = object:GetX()
 	local y = object:GetY()
 	local width = object:GetWidth()
@@ -828,20 +781,16 @@ function skin.scrollbutton(object)
 	local hover = object:GetHover()
 	local scrolltype = object:GetScrollType()
 	local down = object.down
-	
 	local bodydowncolor = skin.controls.scrollbar_body_down_color
 	local bodyhovercolor = skin.controls.scrollbar_body_hover_color
 	local bodynohovercolor = skin.controls.scrollbar_body_nohover_color
-	
 	if down then
 		-- button body
 		love.graphics.setColor(bodydowncolor)
 		love.graphics.rectangle("fill", x, y, width, height)
-		
 		-- button border
 		love.graphics.setColor(bordercolor)
 		skin.OutlinedRectangle(x, y, width, height)
-		
 	elseif hover then
 		-- button body
 		love.graphics.setColor(bodyhovercolor)
@@ -857,7 +806,6 @@ function skin.scrollbutton(object)
 		love.graphics.setColor(bordercolor)
 		skin.OutlinedRectangle(x, y, width, height)
 	end
-	
 	if scrolltype == "up" then
 		local image = skin.images["arrow-up.png"]
 		local imagewidth = image:getWidth()
@@ -912,17 +860,13 @@ end
 	- desc: draws the panel object
 --]]---------------------------------------------------------
 function skin.panel(object)
-
-	local skin = object:GetSkin()
 	local x = object:GetX()
 	local y = object:GetY()
 	local width = object:GetWidth()
 	local height = object:GetHeight()
 	local bodycolor = skin.controls.panel_body_color
-	
 	love.graphics.setColor(bodycolor)
 	love.graphics.rectangle("fill", x, y, width, height)
-	
 	love.graphics.setColor(bordercolor)
 	skin.OutlinedRectangle(x, y, width, height)
 end
@@ -941,8 +885,6 @@ end
 	- desc: draws the list object
 --]]---------------------------------------------------------
 function skin.list(object)
-
-	local skin = object:GetSkin()
 	local x = object:GetX()
 	local y = object:GetY()
 	local width = object:GetWidth()
@@ -958,8 +900,6 @@ end
 	- desc: used to draw over the object and its children
 --]]---------------------------------------------------------
 function skin.list_over(object)
-
-	local skin = object:GetSkin()
 	local x = object:GetX()
 	local y = object:GetY()
 	local width = object:GetWidth()
@@ -967,7 +907,6 @@ function skin.list_over(object)
 	
 	love.graphics.setColor(bordercolor)
 	skin.OutlinedRectangle(x, y, width, height)
-	
 end
 
 --[[---------------------------------------------------------
@@ -975,29 +914,8 @@ end
 	- desc: draws the tab panel object
 --]]---------------------------------------------------------
 function skin.tabs(object)
-	--[[
-	local x = object:GetX()
-	local y = object:GetY()
-	local width = object:GetWidth()
-	local height = object:GetHeight()
-	local buttonheight = object:GetHeightOfButtons()
-	local bodycolor = skin.controls.tabpanel_body_color
-
-	love.graphics.setColor(bodycolor)
-	love.graphics.rectangle("fill", x, y + buttonheight, width, height - buttonheight)
-	love.graphics.setColor(bordercolor)
-	skin.OutlinedRectangle(x, y + buttonheight - 1, width, height - buttonheight + 2)
-	skin.OutlinedRectangle(x, y , width, height)
-	object:SetScrollButtonSize(15, buttonheight)
-	--love.graphics.setColor(1, 1, 1, 1)
-	--love.graphics.rectangle("fill", x, y, width, height)
-	]]
 end
 
---[[---------------------------------------------------------
-	- func: DrawOverTabPanel(object)
-	- desc: draws over the tab panel object
---]]---------------------------------------------------------
 function skin.tabs_over(object)
 	local x = object:GetX()
 	local y = object:GetY()
@@ -1010,14 +928,6 @@ function skin.tabs_over(object)
 
 	love.graphics.setColor(bordercolor)
 	love.graphics.rectangle("fill", x + buttonarea - padding, y + tabheight - padding, buttonareawidth, 1)
-	--[[
-	local x = object:GetX()
-	local y = object:GetY()
-	local width = object:GetWidth()
-	local height = object:GetHeight()
-	love.graphics.setColor(0,0,0,1)
-	love.graphics.rectangle("fill", x, y, width, height)
-	]]
 end
 --[[---------------------------------------------------------
 	- func: DrawTabButton(object)
@@ -1244,17 +1154,14 @@ end
 	- desc: draws the tool tip object
 --]]---------------------------------------------------------
 function skin.tooltip(object)
-	
 	local skin = object:GetSkin()
 	local x = object:GetX()
 	local y = object:GetY()
 	local width = object:GetWidth()
 	local height = object:GetHeight()
 	local bodycolor = skin.controls.tooltip_body_color
-	
 	love.graphics.setColor(bodycolor)
 	love.graphics.rectangle("fill", x, y, width, height, 5, 5)
-	
 	--love.graphics.setColor(bordercolor)
 	--skin.OutlinedRectangle(x, y, width, height)
 end
@@ -1343,19 +1250,17 @@ function skin.label(object)
 	local parent = object.parent
 	local nohovercolor = skin.directives.text_default_color
 
-	if parent and parent.type == "checkbox" then
-		local hovercolor = skin.controls.checkbox_hover_color
-		if parent.hover and parent.enabled then
+	love.graphics.setColor(nohovercolor)
+	if parent and parent.hover then
+		if parent.type == "checkbox" and parent.enabled then
+			local hovercolor = skin.controls.checkbox_hover_color
 			love.graphics.setColor(hovercolor)
-			love.graphics.draw(textmesh, x, y)
-		else
-			love.graphics.setColor(nohovercolor)
-			love.graphics.draw(textmesh, x, y)
+		elseif parent.type == "radiobutton" and parent.enabled then
+			local hovercolor = skin.controls.checkbox_hover_color
+			love.graphics.setColor(hovercolor)
 		end
-	else
-		love.graphics.setColor(nohovercolor)
-		love.graphics.draw(textmesh, x, y)
 	end
+	love.graphics.draw(textmesh, x, y)
 end
 
 --[[---------------------------------------------------------
@@ -1464,7 +1369,7 @@ function skin.textbox(object)
 	-- Draw cursor blinking
 	if focus and (blink_phase/ 0.90) % 1 < .5 then
 		local cursor_x, cursor_y, cursor_height = field:getCursorLayout()
-		if cursor_x >= 0 and cursor_x <= width and cursor_y >=0 and cursor_y <= height then
+		if cursor_x >= 0 and cursor_x <= width and cursor_y >= -font_height and cursor_y <= height + font_height then
 			love.graphics.setColor(indicatorcolor)
 			love.graphics.rectangle("fill", cursor_x + x + hpadding, cursor_y + y + vpadding, 1, cursor_height)
 		end
@@ -1514,17 +1419,13 @@ end
 	- desc: draws the slider object
 --]]---------------------------------------------------------
 function skin.slider(object)
-	
-	local skin = object:GetSkin()
 	local x = object:GetX()
 	local y = object:GetY()
 	local width = object:GetWidth()
 	local height = object:GetHeight()
 	local slidtype = object:GetSlideType()
 	local baroutlinecolor = skin.controls.slider_bar_outline_color
-	
 	local wideness_v, wideness_h = object:GetButtonSize()
-	
 	if slidtype == "horizontal" then
 		love.graphics.setColor(baroutlinecolor)
 		love.graphics.rectangle("fill", x, y + height/2 - wideness_h/2, width, wideness_h)
@@ -1546,8 +1447,6 @@ end
 	- desc: draws the slider button object
 --]]---------------------------------------------------------
 function skin.sliderbutton(object)
-
-	local skin = object:GetSkin()
 	local x = object:GetX()
 	local y = object:GetY()
 	local width = object:GetWidth()
@@ -1564,7 +1463,6 @@ function skin.sliderbutton(object)
 
 	local ox = 2
 	local oy = 2
-	
 	if not enabled then
 		-- button body
 		love.graphics.setColor(nonclickablecolor)
@@ -1574,7 +1472,6 @@ function skin.sliderbutton(object)
 		skin.EmbossedRectangle(x+ox, y+oy, width-ox*2, height-oy*2)
 		return
 	end
-	
 	if down then
 		-- button body
 		love.graphics.setColor(bodydowncolor)
@@ -1597,7 +1494,6 @@ function skin.sliderbutton(object)
 		love.graphics.setColor(bordercolor)
 		skin.EmbossedRectangle(x+ox, y+oy, width-ox*2, height-oy*2)
 	end
-	
 end
 
 --[[---------------------------------------------------------
@@ -1655,33 +1551,48 @@ end
 	- desc: draws the radio button object
 --]]---------------------------------------------------------
 function skin.radiobutton(object)
-	local skin = object:GetSkin()
 	local x = object:GetX()
 	local y = object:GetY()
-	local width = object:GetBoxWidth()
-	local height = object:GetBoxHeight()
+	local width = object:GetWidth()
+	local height = object:GetHeight()
+	local box_width = object:GetBoxWidth()
+	local box_height = object:GetBoxHeight()
 	local checked = object:GetChecked()
 	local hover = object:GetHover()
+	local enabled = object:GetEnabled()
 	local bodycolor = skin.controls.radiobutton_body_color
 	local checkcolor = skin.controls.radiobutton_check_color
+	local checkinnercolor = skin.controls.radiobutton_checkinner_color
+	local hovercolor = skin.controls.radiobutton_hover_color
 	local inner_border = skin.controls.radiobutton_inner_border_color
-	
-	love.graphics.setColor(bordercolor)
+	local radius = (box_width+box_height)/4
+	local offset = radius
+	-- Circle
+	love.graphics.setColor(bodycolor)
+	love.graphics.circle("fill", x + offset, y + offset, radius, 15)
+	if hover then
+		love.graphics.setColor(hovercolor)
+	else
+		love.graphics.setColor(bordercolor)
+	end
 	love.graphics.setLineStyle("smooth")
 	love.graphics.setLineWidth(1)
-	love.graphics.circle("line", x + 10, y + 10, 8, 15)
+	love.graphics.circle("line", x + offset, y + offset, radius, 15)
 	
 	if checked then
 		love.graphics.setColor(checkcolor)
-		love.graphics.circle("fill", x + 10, y + 10, 5, 360)
-		love.graphics.setColor(inner_border)
-		love.graphics.circle("line", x + 10, y + 10, 5, 360)
+		love.graphics.circle("fill", x + offset, y + offset, radius/2, 360)
+		love.graphics.setColor(checkinnercolor)
+		love.graphics.circle("line", x + offset, y + offset, radius/2, 360)
 	end
 	
-	if hover then
-		love.graphics.setColor(bordercolor)
-		love.graphics.circle("line", x + 10, y + 10, 5, 360)
+	-- Gray area
+	--[[
+	if not enabled then
+		love.graphics.setColor(0, 0, 0, 0.5)
+		love.graphics.rectangle("fill", x - margin/2, y - margin/2, width + margin, height + margin, 2, 20, 8)
 	end
+	]]
 end
 
 --[[---------------------------------------------------------
@@ -1689,7 +1600,6 @@ end
 	- desc: draws the collapsible category object
 --]]---------------------------------------------------------
 function skin.collapsiblecategory(object)
-	local skin = object:GetSkin()
 	local x = object:GetX()
 	local y = object:GetY()
 	local width = object:GetWidth()
@@ -1727,13 +1637,97 @@ function skin.collapsiblecategory(object)
 	love.graphics.setColor(textcolor)
 	skin.PrintText(text, x + 5, y + 5)
 end
+--[[---------------------------------------------------------
+	- func: skin.DrawDropList(object)
+	- desc: draws the drop list object
+--]]---------------------------------------------------------
+function skin.droplist(object)
+	local highlight = object.highlight
+	local zebra_list = object.zebra_list
+	local even_list = object.even_list
+	local odd_list = object.odd_list
+	local height = object:GetHeight()
+	local width = object:GetWidth()
+	local font = object:GetFont()
+	local font_height = font:getHeight()
+	local padding = object:GetPadding()
+	local x = object:GetX()
+	local y = object:GetY()
+	local text = object.texthash
+	local selected = object.selected
+	local hovered = object.hovered
+	local elements = object.elements
+	local background = object.background
+	local body1color = skin.controls.columnlistrow_body1_color
+	local body2color = skin.controls.columnlistrow_body2_color
 
+	-- droplist
+	local bodynohovercolor = skin.controls.droplist_body_nohover_color
+	local bodyhovercolor = skin.controls.droplist_body_hover_color
+	local bodyactivecolor = skin.controls.droplist_body_active_color
+	local bodyoddcolor = skin.controls.droplist_body_odd_color
+	local bodyevencolor = skin.controls.droplist_body_even_color
+	local texthovercolor = skin.controls.droplist_text_hover_color
+	local textnohovercolor = skin.controls.droplist_text_nohover_color
+	local textactivecolor = skin.controls.droplist_text_active_color
+
+	-- Retrieve the cell size
+	local cell_width = width
+	local cell_height = font_height + padding
+	
+	--love.graphics.setColor(bodycolor)
+	if background then
+		love.graphics.setColor(background)
+		love.graphics.rectangle("fill", x, y, width, height)
+	elseif zebra_list then
+		love.graphics.setColor(bodyoddcolor)
+		love.graphics.draw(odd_list, x, y)
+
+		love.graphics.setColor(bodyevencolor)
+		love.graphics.draw(even_list, x, y)
+	else
+		love.graphics.setColor(bodynohovercolor)
+		love.graphics.rectangle("fill", x, y, width, height)
+	end
+	love.graphics.setColor(textnohovercolor)
+	love.graphics.draw(text, x, y)
+
+	if highlight and hovered ~= 0 then
+		local cell_x = x
+		local cell_y = y + (hovered-1) * cell_height
+		local text_y = y + (hovered-1) * cell_height + padding/2
+		local h_text = elements[hovered] or ""
+
+		love.graphics.setColor(bodyhovercolor)
+		love.graphics.rectangle("fill", cell_x, cell_y, cell_width, cell_height)
+
+		love.graphics.setColor(texthovercolor)
+		love.graphics.setFont(font)
+		love.graphics.print(h_text, cell_x, text_y)
+	end
+
+	if highlight and selected ~= 0 then
+		local cell_x = x
+		local cell_y = y + (selected-1) * cell_height
+		local text_y = y + (selected-1) * cell_height + padding/2
+		local h_text = elements[selected] or ""
+
+		love.graphics.setColor(bodyactivecolor)
+		love.graphics.rectangle("fill", cell_x, cell_y, cell_width, cell_height)
+
+		love.graphics.setColor(textactivecolor)
+		love.graphics.setFont(font)
+		love.graphics.print(h_text, cell_x, text_y)
+	end
+end
+
+function skin.droplist_over(object)
+end
 --[[---------------------------------------------------------
 	- func: skin.DrawColumnList(object)
 	- desc: draws the column list object
 --]]---------------------------------------------------------
 function skin.columnlist(object)
-	local skin = object:GetSkin()
 	local x = object:GetX()
 	local y = object:GetY()
 	local width = object:GetWidth()
@@ -1748,8 +1742,6 @@ end
 	- desc: draws the column list header object
 --]]---------------------------------------------------------
 function skin.columnlistheader(object)
-	
-	local skin = object:GetSkin()
 	local x = object:GetX()
 	local y = object:GetY()
 	local width = object:GetWidth()
@@ -1757,7 +1749,7 @@ function skin.columnlistheader(object)
 	local hover = object:GetHover()
 	local down = object.down
 	local font = skin.controls.columnlistheader_text_font
-	local theight = font:getHeight(object.name)
+	local theight = font:getHeight()
 	
 	local bodydowncolor = skin.controls.columnlistheader_body_down_color
 	local textdowncolor = skin.controls.columnlistheader_text_down_color
@@ -1836,7 +1828,6 @@ end
 	- desc: draws over the column list area object
 --]]---------------------------------------------------------
 function skin.columnlistarea_over(object)
-	local skin = object:GetSkin()
 	local x = object:GetX()
 	local y = object:GetY()
 	local width = object:GetWidth()
@@ -1850,7 +1841,6 @@ end
 	- desc: draws the column list row object
 --]]---------------------------------------------------------
 function skin.columnlistrow(object)
-	local skin = object:GetSkin()
 	local x = object:GetX()
 	local y = object:GetY()
 	local width = object:GetWidth()
@@ -1914,7 +1904,6 @@ end
 	- desc: draws the modal background object
 --]]---------------------------------------------------------
 function skin.modalbackground(object)
-	local skin = object:GetSkin()
 	local x = object:GetX()
 	local y = object:GetY()
 	local width = object:GetWidth()
@@ -1929,7 +1918,6 @@ end
 	- desc: draws the line numbers panel object
 --]]---------------------------------------------------------
 function skin.linenumberspanel(object)
-	local skin = object:GetSkin()
 	local x = object:GetX()
 	local y = object:GetY()
 	local width = object:GetWidth()
@@ -1979,8 +1967,6 @@ end
 	- desc: draws the grid object
 --]]---------------------------------------------------------
 function skin.grid(object)
-
-	local skin = object:GetSkin()
 	local x = object:GetX()
 	local y = object:GetY()
 	local width = object:GetWidth()
@@ -2022,8 +2008,6 @@ end
 	- desc: draws the form object
 --]]---------------------------------------------------------
 function skin.form(object)
-
-	local skin = object:GetSkin()
 	local x = object:GetX()
 	local y = object:GetY()
 	local width = object:GetWidth()
@@ -2052,7 +2036,6 @@ end
 	- desc: draws the menu object
 --]]---------------------------------------------------------
 function skin.menu(object)
-	local skin = object:GetSkin()
 	local x = object:GetX()
 	local y = object:GetY()
 	local width = object:GetWidth()
@@ -2069,7 +2052,6 @@ end
 	- desc: draws the menuoption object
 --]]---------------------------------------------------------
 function skin.menuoption(object)
-	local skin = object:GetSkin()
 	local x = object:GetX()
 	local y = object:GetY()
 	local width = object:GetWidth()
@@ -2110,7 +2092,6 @@ function skin.menuoption(object)
 end
 
 function skin.tree(object)
-	local skin = object:GetSkin()
 	local x = object:GetX()
 	local y = object:GetY()
 	local width = object:GetWidth()
