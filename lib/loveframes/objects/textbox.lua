@@ -21,6 +21,7 @@ function newobject:initialize()
 	self.offsety = 0
 
 	self.internals = {}
+	self.cursor = loveframes.cursors.ibeam
 	self.showindicator = true
 	self.focus = false
 	self.vbar = false

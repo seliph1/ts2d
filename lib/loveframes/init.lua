@@ -19,15 +19,14 @@ loveframes.require(path .. ".libraries.utils")
 loveframes.require(path .. ".libraries.templates")
 loveframes.require(path .. ".libraries.objects")
 loveframes.require(path .. ".libraries.skins")
+loveframes.require(path .. ".libraries.bind")
 
 -- generic libraries
 loveframes.class = require(path .. ".third-party.middleclass")
 loveframes.utf8 = require(path .. ".third-party.utf8"):init()
 loveframes.input = require(path .. ".third-party.input")
 loveframes.sysl = require(path .. ".third-party.sysl")
---loveframes.shash = require(path .. ".third-party.shash")
 loveframes.bump = require(path .. ".third-party.bump")
-loveframes.love_utf8 = require("utf8")
 
 -- library info
 loveframes.author = "Kenny Shields"
@@ -48,19 +47,33 @@ loveframes.state = "none"
 loveframes.drawcount = 0
 loveframes.collisioncount = 0
 loveframes.objectcount = 0
-loveframes.hoverobject = false
-loveframes.modalobject = false
-loveframes.inputobject = false
-loveframes.downobject = false
+loveframes.hoverobject = nil
+loveframes.draggingobject = nil
+loveframes.modalobject = nil
+loveframes.inputobject = nil
+loveframes.downobject = nil
+loveframes.hover = nil
 loveframes.resizeobject = false
 loveframes.dragobject = false
-loveframes.hover = false
-loveframes.input_cursor_set = false
-loveframes.prevcursor = nil
+
 loveframes.opacity = 1
 loveframes.basicfont = love.graphics.newFont(12)
 loveframes.basicfontsmall = love.graphics.newFont(10)
-loveframes.collisions = {}
+loveframes.collisions = nil
+loveframes.cursors = {
+	ibeam = love.mouse.getSystemCursor("ibeam"),
+	arrow = love.mouse.getSystemCursor("arrow"),
+	wait = love.mouse.getSystemCursor("wait"),
+	waitarrow = love.mouse.getSystemCursor("waitarrow"),
+	crosshair = love.mouse.getSystemCursor("crosshair"),
+	hand = love.mouse.getSystemCursor("hand"),
+	sizewe = love.mouse.getSystemCursor("sizewe"),
+	sizens = love.mouse.getSystemCursor("sizens"),
+	sizenesw = love.mouse.getSystemCursor("sizenesw"),
+	sizenwse = love.mouse.getSystemCursor("sizenwse"),
+	sizeall = love.mouse.getSystemCursor("sizeall"),
+	no = love.mouse.getSystemCursor("no"),
+}
 
 -- install directory of the library
 local dir = loveframes.config["DIRECTORY"] or path
@@ -78,15 +91,15 @@ love.keyboard.setKeyRepeat(true)
 --]]---------------------------------------------------------
 function loveframes.update(dt)
 	local base = loveframes.base
-	local input_cursor_set = loveframes.input_cursor_set
-	-- DEBUG:
+
 	loveframes.collisioncount = 0
-	--loveframes.objectcount = 0
-	loveframes.hover = false
-	loveframes.hoverobject = false
+	loveframes.objectcount = 0
+	loveframes.hover = nil
+	loveframes.hoverobject = nil
+
 	local downobject = loveframes.downobject
-	if #loveframes.collisions > 0 then
-		local top = loveframes.collisions[#loveframes.collisions]
+	if loveframes.collisions then
+		local top = loveframes.collisions
 		if not downobject then
 			loveframes.hoverobject = top
 		else
@@ -95,88 +108,28 @@ function loveframes.update(dt)
 			end
 		end
 	end
-	if loveframes.config["ENABLE_SYSTEM_CURSORS"] then 
-		local hoverobject = loveframes.hoverobject
-		local arrow = love.mouse.getSystemCursor("arrow")
-		local curcursor = love.mouse.getCursor()
-		if hoverobject then
-			local ibeam = love.mouse.getSystemCursor("ibeam")
-			local mx, my = love.mouse.getPosition()
-			if hoverobject.type == "textinput" and not loveframes.resizeobject then
-				if curcursor ~= ibeam then
-					love.mouse.setCursor(ibeam)
-				end
-			elseif hoverobject.type == "frame" then
-				if not hoverobject.dragging and hoverobject.canresize then
-					if loveframes.BoundingBox(hoverobject.x, mx, hoverobject.y, my, 5, 1, 5, 1) then
-						local sizenwse = love.mouse.getSystemCursor("sizenwse")
-						if curcursor ~= sizenwse then
-							love.mouse.setCursor(sizenwse)
-						end
-					elseif loveframes.BoundingBox(hoverobject.x + hoverobject.width - 5, mx, hoverobject.y + hoverobject.height - 5, my, 5, 1, 5, 1) then
-						local sizenwse = love.mouse.getSystemCursor("sizenwse")
-						if curcursor ~= sizenwse then
-							love.mouse.setCursor(sizenwse)
-						end
-					elseif loveframes.BoundingBox(hoverobject.x + hoverobject.width - 5, mx, hoverobject.y, my, 5, 1, 5, 1) then
-						local sizenesw = love.mouse.getSystemCursor("sizenesw")
-						if curcursor ~= sizenesw then
-							love.mouse.setCursor(sizenesw)
-						end
-					elseif loveframes.BoundingBox(hoverobject.x, mx, hoverobject.y + hoverobject.height - 5, my, 5, 1, 5, 1) then
-						local sizenesw = love.mouse.getSystemCursor("sizenesw")
-						if curcursor ~= sizenesw then
-							love.mouse.setCursor(sizenesw)
-						end
-					elseif loveframes.BoundingBox(hoverobject.x + 5, mx, hoverobject.y, my, hoverobject.width - 10, 1, 2, 1) then
-						local sizens = love.mouse.getSystemCursor("sizens")
-						if curcursor ~= sizens then
-							love.mouse.setCursor(sizens)
-						end
-					elseif loveframes.BoundingBox(hoverobject.x + 5, mx, hoverobject.y + hoverobject.height - 2, my, hoverobject.width - 10, 1, 2, 1) then
-						local sizens = love.mouse.getSystemCursor("sizens")
-						if curcursor ~= sizens then
-							love.mouse.setCursor(sizens)
-						end
-					elseif loveframes.BoundingBox(hoverobject.x, mx, hoverobject.y + 5, my, 2, 1, hoverobject.height - 10, 1) then
-						local sizewe = love.mouse.getSystemCursor("sizewe")
-						if curcursor ~= sizewe then
-							love.mouse.setCursor(sizewe)
-						end
-					elseif loveframes.BoundingBox(hoverobject.x + hoverobject.width - 2, mx, hoverobject.y + 5, my, 2, 1, hoverobject.height - 10, 1) then
-						local sizewe = love.mouse.getSystemCursor("sizewe")
-						if curcursor ~= sizewe then
-							love.mouse.setCursor(sizewe)
-						end
-					else
-						if not loveframes.resizeobject then
-							local sarrow = love.mouse.getSystemCursor("arrow")
-							if curcursor ~= arrow then
-								love.mouse.setCursor(sarrow)
-							end
-						end
-					end
-				end
-			elseif hoverobject.type == "text" and hoverobject.linkcol and not loveframes.resizeobject then
-				local hand = love.mouse.getSystemCursor("hand")
-				if curcursor ~= hand then
-					love.mouse.setCursor(hand)
-				end
+
+	if loveframes.config["ENABLE_SYSTEM_CURSORS"] then
+		local hoverobject = loveframes.GetHoverObject()
+		local draggingobject = loveframes.GetDraggingObject()
+		local current = love.mouse.getCursor()
+		local cursors = loveframes.cursors
+
+		if hoverobject and hoverobject.cursor then
+			if current ~= hoverobject.cursor then
+				love.mouse.setCursor(hoverobject.cursor)
 			end
-			if curcursor ~= arrow then
-				if hoverobject.type ~= "textinput" and hoverobject.type ~= "frame" and not hoverobject.linkcol and not loveframes.resizeobject then
-					love.mouse.setCursor(arrow)
-				elseif hoverobject.type ~= "textinput" and curcursor == ibeam then
-					love.mouse.setCursor(arrow)
-				end
+		elseif draggingobject and draggingobject.cursor then
+			if current ~= draggingobject.cursor then
+				love.mouse.setCursor(draggingobject.cursor)
 			end
 		else
-			if curcursor ~= arrow and not loveframes.resizeobject then
-				love.mouse.setCursor(arrow)
+			if current ~= cursors.arrow then
+				love.mouse.setCursor(cursors.arrow)
 			end
 		end
 	end
-	--loveframes.collisions = {}
+	loveframes.collisions = nil
 	base:update(dt)
 end
 
@@ -216,10 +169,15 @@ end
 function loveframes.mousepressed(x, y, button, istouch, presses)
 	local base = loveframes.base
 	base:mousepressed(x, y, button, istouch, presses)
-	
+
+	local hoverobject = loveframes.GetHoverObject()
+	if hoverobject then
+		loveframes.draggingobject = hoverobject
+	end
+
 	-- close open menus
 	local bchildren = base.children
-	local hoverobject = loveframes.hoverobject
+	local hoverobject = loveframes.GetHoverObject()
 	for k, v in ipairs(bchildren) do
 		local otype = v.type
 		local visible = v.visible
@@ -243,6 +201,9 @@ end
 function loveframes.mousereleased(x, y, button, istouch, presses)
 	local base = loveframes.base
 	base:mousereleased(x, y, button, istouch, presses)
+
+	loveframes.draggingobject = nil
+
 	-- reset the hover object
 	if button == 1 then
 		loveframes.downobject = false
@@ -266,6 +227,13 @@ end
 function loveframes.keypressed(key, isrepeat)
 	local base = loveframes.base
 	base:keypressed(key, isrepeat)
+
+	local keyhandler = loveframes.keyhandlers[loveframes.getModKeys()][key]
+	if keyhandler then
+		return keyhandler(key, isrepeat)
+	else
+		return false, false
+	end
 end
 
 --[[---------------------------------------------------------

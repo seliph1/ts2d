@@ -6,8 +6,8 @@
 return function(loveframes)
 ---------- module start ----------
 
--- panel object
-local newobject = loveframes.NewObject("droplist", "loveframes_object_droplist", true)
+-- log panel that self-contains itself?
+local newobject = loveframes.NewObject("log", "loveframes_object_log", true)
 
 --[[---------------------------------------------------------
 	- func: initialize()
@@ -21,26 +21,35 @@ function newobject:initialize()
 	--local color = skin.directives.text_default_color
 	local color
 
-	self.type = "droplist"
+	self.type = "log"
 	self.width = 200
 	self.height = 50
 	self.internal = false
 	self.children = {}
+    self.internals = {}
 	self.elements = {}
-	self.internals = {}
 	self.padding = 5
 	self.selected = 0
 	self.hovered = 0
-	self.zebra_list = false
-	self.highlight = 0
+	self.spacing = 0
 	self.background = nil
 	self.font = font
 	self.texthash = love.graphics.newText(font)
 	self.defaultcolor = color or {1,1,1,1}
 	self:SetDrawFunc()
-	self.odd_list = love.graphics.newMesh(1)
-	self.even_list = love.graphics.newMesh(1)
-	self.cursor = loveframes.cursors.hand
+	self.cursor = loveframes.cursors.ibeam
+
+	local verticalbody = loveframes.objects["scrollbody"]:new(self, "vertical")
+	table.insert(self.internals, verticalbody)
+	self.verticalbody = verticalbody
+
+	self.itemwidth = self.width
+	self.itemheight = self.height
+    self.extraheight = 0
+    self.extrawidth = 0
+	self.offsety = 0
+	self.offsetx = 0
+	self.buttonscrollamount = 1
 end
 
 --[[---------------------------------------------------------
@@ -60,19 +69,19 @@ function newobject:update(dt)
 			return
 		end
 	end
-	local children = self.children
+	local internals = self.internals
 	local parent = self.parent
 	local base = loveframes.base
 	local update = self.Update
 	-- move to parent if there is a parent
-	if parent ~= base and parent.type ~= "list" then
+	if parent ~= base then
 		self.x = self.parent.x + self.staticx
 		self.y = self.parent.y + self.staticy
 	end
-	--self:SetClickBounds(0,0, 32, 32)
+
 	self:CheckHover()
-	for k, v in ipairs(children) do
-		v:update(dt)
+    for _, internal in ipairs(internals) do
+		internal:update(dt)
 	end
 	if update then
 		update(self, dt)
@@ -80,36 +89,40 @@ function newobject:update(dt)
 end
 
 --[[---------------------------------------------------------
-	- func: mousepressed(x, y, button)
-	- desc: called when the player presses a mouse button
+	- func: draw()
+	- desc: draws the object
 --]]---------------------------------------------------------
-function newobject:mousemoved(x, y, dx, dy, istouch)
+function newobject:draw()
 	if loveframes.state ~= self.state then
 		return
 	end
 	if not self.visible then
 		return
 	end
-	-- If object isn't being hovered, dont calculate
-	if not (self.hover) then
-		self.hovered = 0
-		return
+	local x = self.x
+	local y = self.y
+	local width = self.width
+	local height = self.height
+	local drawfunc = self.Draw or self.drawfunc
+	local drawoverfunc = self.DrawOver or self.drawoverfunc
+	local internals = self.internals
+	love.graphics.setScissor(x, y, width, height)
+	if drawfunc then
+		drawfunc(self)
 	end
-	-- Retrieve the cell size
-	local cell_x = self.width
-	local cell_y = self.font:getHeight() + self.padding
-
-	-- Get the relative position from mouse
-	local rel_x = x - self.x
-	local rel_y = y - self.y
-
-	-- Chech which cell is selected
-	-- Ceil is used so it always return element id >= 1
-	local element_id = math.min( math.ceil( rel_y /  cell_y ), #self.elements )
-
-	self.hovered = element_id
+	love.graphics.setScissor()
+	if drawoverfunc then
+		drawoverfunc(self)
+	end
+	for k, v in ipairs(internals) do
+		v:draw()
+	end
 end
 
+--[[---------------------------------------------------------
+	- func: mousepressed(x, y, button)
+	- desc: called when the player presses a mouse button
+--]]---------------------------------------------------------
 function newobject:mousepressed(x, y, button)
 	local state = loveframes.state
 	local selfstate = self.state
@@ -119,6 +132,9 @@ function newobject:mousepressed(x, y, button)
 	local visible = self.visible
 	if not visible then
 		return
+	end
+	for k, v in ipairs(self.internals) do
+		v:mousepressed(x, y, button)
 	end
 	if not self.hover then
 		-- Dont select, but dont deselect also
@@ -156,6 +172,37 @@ function newobject:mousereleased(x, y, button)
 	if not visible then
 		return
 	end
+	for k, v in ipairs(self.internals) do
+		v:mousereleased(x, y, button)
+	end
+end
+--[[---------------------------------------------------------
+	- func: wheelmoved(x, y)
+	- desc: called when the player moves a mouse wheel
+--]]---------------------------------------------------------
+function newobject:wheelmoved(x, y)
+	if loveframes.state ~= self.state then
+		return
+	end
+	if not self.visible then
+		return
+	end
+	for k, v in ipairs(self.internals) do
+		v:wheelmoved(x, y)
+	end
+end
+--[[---------------------------------------------------------
+	- func: RedoLayout()
+	- desc: redo the layout of the scrollpane
+--]]---------------------------------------------------------
+function newobject:RedoLayout()
+	local elements = self.elements
+	local fontheight = self.font:getHeight()
+
+    self.itemwidth = self.width
+    self.itemheight = (fontheight + self.padding) * #elements--math.max(self.height, (fontheight + self.padding) * #elements)
+    self.extraheight = self.itemheight - self.height
+    self.extrawidth = self.itemwidth - self.width
 end
 
 --[[---------------------------------------------------------
@@ -220,7 +267,6 @@ function newobject:ParseText(str)
 	end
 
 	for leading, capture in string.gmatch(str, "(.-)©([^©]+)") do
-		--print(color, text)
 		if leading then
 			table.insert(formattedchunks, defaultColor)
 			table.insert(formattedchunks, leading)
@@ -242,7 +288,7 @@ function newobject:ParseText(str)
 	return formattedchunks, table.concat(formattedstring)
 end
 
-function newobject:ParseElements(filter)
+function newobject:ParseElements()
 	self.texthash:clear()
 	local elements = self.elements
 	local maxwidth = 0
@@ -269,16 +315,12 @@ function newobject:ParseElements(filter)
 		-- Add the fixed, formatted text to the texthash
 		self.texthash:add(value, 0, height + self.padding/2)
 	end
+	self:RedoLayout()
 
-	-- Resize the structure to accomodate new elements in scroll body
-	if maxwidth > self.width then
-		self:SetSize(maxwidth, math.max(50, (fontheight + self.padding) * #elements))
-	else
-		self:SetSize(self.width, math.max(50, (fontheight + self.padding) * #elements))
+	local scrollbar = self.verticalbody:GetScrollBar()
+	if scrollbar then
+		scrollbar:ScrollBottom()
 	end
-
-	-- Create the alternating list rectangle mesh background
-	self:createBackgroundMesh(elements, 0, 0, self.width, fontheight + self.padding)
 end
 
 function newobject:AppendElement(value)
@@ -305,44 +347,11 @@ function newobject:AppendElement(value)
 	end
 	-- Add the fixed, formatted text to the texthash
 	self.texthash:add(value, 0, height + self.padding/2)
+	self:RedoLayout()
 
-	-- Resize the structure to accomodate new elements in scroll body
-	if maxwidth > self.width then
-		self:SetSize(maxwidth, math.max(50, (fontheight + self.padding) * #elements))
-	else
-		self:SetSize(self.width, math.max(50, (fontheight + self.padding) * #elements))
-	end
-
-	-- Create the alternating list rectangle mesh background
-	self:createBackgroundMesh(elements, 0, 0, self.width, fontheight + self.padding)
-end
-
-function newobject:createBackgroundMesh(list, x, y, width, height)
-    local oddVertices = {}
-	local evenVertices = {}
-	local r,g,b = 1, 1, 1
-    for i = 1, #list do
-		local vertices = oddVertices
-		-- Alterna os vertices de 2 em 2
-		if i % 2 == 0 then vertices = evenVertices end
-        local topY = y + (i-1) * height
-        -- Cada retângulo são 2 triângulos (6 vértices)
-        -- A ordem é (x,y,u,v,r,g,b,a)
-        -- u,v não serão usados (0,0)
-		-- triangulo 1
-        table.insert(vertices, {x,          topY,          0,0, r,g,b,1})
-        table.insert(vertices, {x+width,    topY,          0,0, r,g,b,1})
-        table.insert(vertices, {x+width,    topY+height,   0,0, r,g,b,1})
-		-- triangulo 2
-        table.insert(vertices, {x,          topY,          0,0, r,g,b,1})
-        table.insert(vertices, {x+width,    topY+height,   0,0, r,g,b,1})
-        table.insert(vertices, {x,          topY+height,   0,0, r,g,b,1})
-    end
-	if #oddVertices > 1 then
-		self.odd_list = love.graphics.newMesh(oddVertices, "triangles", "static")
-	end
-	if #evenVertices > 1 then
-		self.even_list = love.graphics.newMesh(evenVertices, "triangles", "static")
+	local scrollbar = self.verticalbody:GetScrollBar()
+	if scrollbar then
+		scrollbar:ScrollBottom()
 	end
 end
 --[[---------------------------------------------------------
@@ -353,21 +362,6 @@ function newobject:SetFont(font)
 	self.texthash:setFont(font)
 	self.font = font
 	self:ParseElements()
-	return self
-end
-
-function newobject:SetBackground(r, g, b, a)
-	assert( type(r) == "table" or (type(r) == "number" and type(b) == "number" and type(g) == "number") )
-	if type(r)=="table" then
-		self.background = r
-	elseif type(r) == "number" then
-		self.background = {r,g,b,a}
-	end
-	return self
-end
-
-function newobject:RemoveBackground()
-	self.background = nil
 	return self
 end
 
@@ -387,31 +381,26 @@ function newobject:GetPadding()
 	return padding
 end
 
-
-function newobject:SetZebra(bool)
-	self.zebra_list = bool
-	return self
-end
-
-function newobject:SetHighlight(bool)
-	self.highlight = bool
-	return self
-end
-
-function newobject:Sort(f)
-	if not f then
-		f = function(a, b)
-			return a:lower() < b:lower()
+--[[---------------------------------------------------------
+	- func: GetHorizontalScrollBody() GetVerticalScrollBody()
+	- desc: gets the object's scroll body
+--]]---------------------------------------------------------
+function newobject:GetHorizontalScrollBody()
+	for k, v in pairs(self.internals) do
+		if v.bartype == "horizontal" then
+			return v
 		end
 	end
-	table.sort(self.elements, f)
-	self:ParseElements()
+	return false
 end
 
-function newobject:SetFilter(filter)
-	self.filter = filter
-	self:ParseElements(filter)
-	return self
+function newobject:GetVerticalScrollBody()
+	for k, v in pairs(self.internals) do
+		if v.bartype == "vertical" then
+			return v
+		end
+	end
+	return false
 end
 
 ---------- module end ----------

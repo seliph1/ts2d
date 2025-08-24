@@ -12,7 +12,7 @@ function love.conf(t)
     t.window.fullscreen = false		-- Enable fullscreen (boolean)
     t.window.vsync = false			-- Enable vertical sync (boolean)
 	t.physics = false
-    t.console = true
+    t.console = false
 	--t.window.msaa = 1
 	--t.window.depth = 1
 	--t.window.highdpi = true            -- Enable high-dpi mode for the window on a Retina display (boolean)

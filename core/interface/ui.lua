@@ -12,6 +12,32 @@ local ui = {
 	font_mono_small = LG.newFont("gfx/fonts/NotoSansMono-Regular.ttf", 12),
 }
 
+ui.setCursor = function(cursorType, cursorImageData, scale)
+	local ow, oh = cursorImageData:getWidth(), cursorImageData:getHeight()
+	local nw, nh = math.floor(ow * scale), math.floor(oh * scale)
+	cursorImageData:mapPixel(function(x, y, r, g, b, a)
+		-- Remove magenta (255,0,255) → alpha = 0
+		if r == 1 and g == 0 and b == 1 then
+			return r, g, b, 0
+		else
+			return r, g, b, a
+		end
+	end)
+	local cursorImage = love.graphics.newImage(cursorImageData)
+	local canvas = LG.newCanvas(nw, nh)
+	love.graphics.push("all")
+	love.graphics.setCanvas(canvas)
+	love.graphics.draw(cursorImage, 0, 0, 0, scale)
+	love.graphics.pop()
+	love.graphics.setCanvas()
+	local imageData = canvas:newImageData()
+	--return imageData
+	LF.SetCursor(cursorType, imageData, nw/2, nh/2)
+end
+
+local _, pointers =  LF.CreateSpriteSheet("gfx/pointer.bmp", 46, 46)
+ui.setCursor("arrow", pointers[0], 0.6)
+
 -- Gera uma string aleatória com o tamanho especificado
 local function random_string(length)
     local charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
@@ -37,45 +63,55 @@ ui.editor.frame:SetVisible(false)
 --------------------------------------------------------------------------------------------------
 ui.main_menu = LF.Create("container")
 ui.main_menu:SetSize(100, 300):SetPos(20, 200)
-ui.main_menu.Update = function(self)
-	if client.mode ~= "lobby" then
-		self:SetVisible(false)
-	end
-end
 
 ui.console_button = LF.Create("messagebox", ui.main_menu)
-ui.console_button:SetPos(0, 0):SetFont(ui.font_small):SetText("©192192192Console"):SetHoverText("©255255255Console")
+:SetPos(0, 0):SetFont(ui.font_small):SetCursor(LF.cursors.hand)
+:SetText("©192192192Console"):SetHoverText("©255255255Console")
 ui.console_button.OnClick = function(object)
 	local bool = ui.console_frame:GetVisible()
-	ui.console_frame:SetVisible(not bool)
+	ui.console_frame:SetVisible(not bool):Center():MoveToTop()
 end
 --Main menu group 1-------------------------------------------------------------------------------
 ui.quickplay_button = LF.Create("messagebox", ui.main_menu)
-ui.quickplay_button:SetText("©192192192Quick Play"):SetHoverText("©255255255Quick Play"):SetPos(0, 40):SetFont(ui.font)
+:SetPos(0, 40):SetFont(ui.font):SetCursor(LF.cursors.hand)
+:SetText("©192192192Quick Play"):SetHoverText("©255255255Quick Play")
 ui.quickplay_button.OnClick = function(self)
 end
 
 ui.newgame_button = LF.Create("messagebox", ui.main_menu)
-ui.newgame_button:SetText("©192192192New Game"):SetHoverText("©255255255New Game"):SetPos(0, 60):SetFont(ui.font)
+:SetText("©192192192New Game"):SetHoverText("©255255255New Game")
+:SetPos(0, 60):SetFont(ui.font):SetCursor(LF.cursors.hand)
 ui.newgame_button.OnClick = function(self)
 	local bool = ui.new_game_frame:GetVisible()
-	ui.new_game_frame:SetVisible(not bool):Center()
+	ui.new_game_frame:SetVisible(not bool):Center():MoveToTop()
 end
 
 ui.findservers_button = LF.Create("messagebox", ui.main_menu)
-ui.findservers_button:SetText("©192192192Find Servers"):SetHoverText("©255255255Find Servers"):SetPos(0, 80):SetFont(ui.font)
+:SetText("©192192192Find Servers"):SetHoverText("©255255255Find Servers")
+:SetPos(0, 80):SetFont(ui.font):SetCursor(LF.cursors.hand)
 --Main menu group 2---------------------------------------------------------------------------
 ui.options_button = LF.Create("messagebox", ui.main_menu)
-ui.options_button:SetText("©192192192Options"):SetHoverText("©255255255Options"):SetPos(0, 120):SetFont(ui.font)
+:SetText("©192192192Options"):SetHoverText("©255255255Options")
+:SetPos(0, 120):SetFont(ui.font):SetCursor(LF.cursors.hand)
+ui.options_button.OnClick = function(self)
+	local bool = ui.options_frame:GetVisible()
+	ui.options_frame:SetVisible(not bool):Center():MoveToTop()
+end
 
 ui.friends_button = LF.Create("messagebox", ui.main_menu)
-ui.friends_button:SetText("©192192192Friends"):SetHoverText("©255255255Friends"):SetPos(0, 140):SetFont(ui.font)
+:SetText("©192192192Friends"):SetHoverText("©255255255Friends")
+:SetPos(0, 140):SetFont(ui.font):SetCursor(LF.cursors.hand)
+ui.friends_button.OnClick = function(self)
+	local testframe = LF.Create("frame"):SetResizable(true)
+end
 
 ui.mods_button = LF.Create("messagebox", ui.main_menu)
-ui.mods_button:SetText("©192192192Mods"):SetHoverText("©255255255Mods"):SetPos(0, 160):SetFont(ui.font)
+:SetText("©192192192Mods"):SetHoverText("©255255255Mods")
+:SetPos(0, 160):SetFont(ui.font):SetCursor(LF.cursors.hand)
 
 ui.editor_button = LF.Create("messagebox", ui.main_menu)
-ui.editor_button:SetText("©192192192Editor"):SetHoverText("©255255255Editor"):SetPos(0, 180):SetFont(ui.font)
+:SetText("©192192192Editor"):SetHoverText("©255255255Editor")
+:SetPos(0, 180):SetFont(ui.font):SetCursor(LF.cursors.hand)
 ui.editor_button.OnClick = function(self)
     if client.map then
         local status = client.map:read( "maps/fun_roleplay.map" )
@@ -84,43 +120,42 @@ ui.editor_button.OnClick = function(self)
         end
     end
     client.mode = "editor"
+	LF.SetState("editor")
+	ui.console_frame:SetState("editor")
 end
 
 ui.help_button = LF.Create("messagebox", ui.main_menu)
-ui.help_button:SetText("©192192192Help"):SetHoverText("©255255255Help"):SetPos(0, 200):SetFont(ui.font)
+:SetText("©192192192Help"):SetHoverText("©255255255Help")
+:SetPos(0, 200):SetFont(ui.font):SetCursor(LF.cursors.hand)
 
 ui.discord_button = LF.Create("messagebox", ui.main_menu)
-ui.discord_button:SetText("©192192192Discord"):SetHoverText("©255255255Discord"):SetPos(0, 220):SetFont(ui.font)
-ui.discord_button.OnClick = function(self, key) end
+:SetText("©192192192Discord"):SetHoverText("©255255255Discord")
+:SetPos(0, 220):SetFont(ui.font):SetCursor(LF.cursors.hand)
+--ui.discord_button.OnClick = function(self, key) end
 --Main menu group 3-------------------------------------------------------------------------------
 ui.quit_button = LF.Create("messagebox", ui.main_menu)
-ui.quit_button:SetText("©192192192Quit"):SetHoverText("©255255255Quit"):SetPos(0, 260):SetFont(ui.font)
+:SetText("©192192192Quit"):SetHoverText("©255255255Quit")
+:SetPos(0, 260):SetFont(ui.font):SetCursor(LF.cursors.hand)
 ui.quit_button.OnClick = function() love.event.quit() end
 
 --------------------------------------------------------------------------------------------------
 --Console Window Frame---------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------
-ui.console_frame = LF.Create("frame")
-:SetSize(640, 480)
-:SetName("Console")
-:SetResizable(false)
-:SetScreenLocked(true)
-:SetCloseAction("hide")
+ui.console_frame = LF.Create("frame"):SetSize(640, 480):SetResizable(false):SetScreenLocked(true)
+:SetName("Console"):SetCloseAction("hide")
 
-ui.console_window_scroll = LF.Create("scrollpane", ui.console_frame):SetSize(630, 400):SetPos(5, 30)
-ui.console_window = LF.Create("droplist", ui.console_window_scroll):SetSize(630, 400):SetFont(ui.font_mono_small)
-ui.console_window:SetHighlight(false):SetPadding(0):SetBackground(0,0,0,0)
+ui.console_window_panel = LF.Create("panel", ui.console_frame):SetSize(630, 400):SetPos(5, 30)
+ui.console_window = LF.Create("log", ui.console_window_panel):SetSize(630, 400):SetFont(ui.font_mono_small):SetPadding(0)
 ui.console_window.history = {}
 
 ui.console_input = LF.Create("textbox", ui.console_frame)
-ui.console_input:SetPos(5, 435):SetWidth(630):SetPadding(0):SetFont(ui.font_mono)
-ui.console_input:SetMaxHistory(1)
+ui.console_input:SetPos(5, 435):SetWidth(630):SetFont(ui.font_mono):SetMaxHistory(1)
 ui.console_input.rollback = 1
 ui.console_input.history = {""}
 ui.console_input.OnEnter = function(self, text)
     if not(self.focus) then
         return
-    end
+    end 
 	self:SetText("")
 	self.parse(text)
 	table.insert(self.history, text)
@@ -440,24 +475,238 @@ local commands = {
 ui.command_list:AddElementsFromTable(commands)
 
 
-
+--------------------------------------------------------------------------------------------------
+--10-pick menu frame------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------
 ui.menu_frame = LF.Create("frame"):SetSize(272, 440):SetName("Menu"):SetCloseAction("hide"):Center()
 ui.menu_buttons = {}
 for i = 1,9 do
-	ui.menu_buttons[i] = LF.Create("button", ui.menu_frame)
-	:SetText(string.format("©128128128%s", i)):SetAlign("left")
-	:SetSize(240, 25):SetPos(16, 30+(i-1)*30)
-end
-ui.cancel_button = LF.Create("button", ui.menu_frame)
-:SetPos(16, 394):SetSize(240, 25):SetText("©1281281280 ©255255255Cancel"):SetAlign("left")
+	local button = LF.Create("button", ui.menu_frame)
+	:SetAlign("left"):SetSize(240, 25):SetPos(16, 30+(i-1)*30):SetImage("gfx/gametitle.png")
 
+	ui.menu_buttons[i] = button
+end
+--[[
+ui.debug_button = LF.Create("slider", ui.menu_frame):SetText("Orientation"):SetPos(16, 30+9*30):SetWidth(240)
+
+ui.debug_button = LF.Create("button", ui.menu_frame):SetText("Orientation"):SetPos(16, 30+9*30):SetWidth(240)
+ui.debug_button.OnClick = function(object)
+	for i = 1,9 do
+		local button = ui.menu_buttons[i]
+		local align = button:GetAlign()
+		if align == "center" then
+			button:SetAlign("left")
+		elseif align == "left" then
+			button:SetAlign("right")
+		elseif align == "right" then
+			button:SetAlign("center")
+		end
+	end
+end
+]]
+
+ui.cancel_button = LF.Create("button", ui.menu_frame)
+:SetPos(16, 394):SetSize(240, 25):SetText("©1641641640 ©255255255Cancel"):SetAlign("left")
 ui.cancel_button.OnClick = function(object)
 	object.parent:SetVisible(false)
 end
+ui.menu_constructor = function(str)
+	local title = ui.menu_frame
+	local constructors = {}
+	for constructor in (str..","):gmatch("(.-),") do
+		table.insert(constructors, constructor)
+	end
+	title:SetName(string.format("%s", constructors[1])):SetVisible(true):MoveToTop()
+	for i = 1, 9 do
+		local constructor = constructors[i + 1]
+		--print(constructor)
+		local button = ui.menu_buttons[i]
+		local disabled = false
+		local invisible = false
+		if constructor then
+			if constructor == "" then
+				button:SetVisible(false)
+			end
+			local brackets = constructor:match("^%((.*)%)$")
+			local text, caption
+			if brackets then
+				constructor = brackets
+				button:SetEnabled(false)
+			else
+				button:SetEnabled(true)
+			end
+			text, caption = constructor:match("^(.-)|(.-)$")
+			if not text then
+				text, caption = constructor, ""
+			end
 
-------------------------------------------------
+			button:SetText( string.format("©164164164%s ©255255255%s", i, text ))
+			button:SetCaption( caption )
+		else -- no constructor
+			button:SetEnabled(false)
+			button:SetVisible(false)
+			button:SetText(string.format("©164164164%s", i))
+			button:SetCaption("")
+		end
+	end
+end
+--------------------------------------------------------------------------------------------------
+--options-----------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------
+ui.options_frame = LF.Create("frame")
+:SetCloseAction("hide"):SetSize(430, 460):SetName("Options")
+ui.options_tabs = LF.Create("tabs", ui.options_frame):SetSize(410, 420):SetPos(10, 30)
+ui.options_tabs_player = LF.Create("container"):SetPos(410, 420)
+ui.options_tabs_controls = LF.Create("container"):SetPos(410, 420)
+ui.options_tabs_game = LF.Create("container"):SetPos(410, 420)
+ui.options_tabs_graphics = LF.Create("container"):SetPos(410, 420)
+ui.options_tabs_sound = LF.Create("container"):SetPos(410, 420)
+ui.options_tabs_net = LF.Create("container"):SetPos(410, 420)
+ui.options_tabs_more = LF.Create("container"):SetPos(410, 420)
+
+--tabs--------------------------------------------------------------------------------------------
+ui.options_tabs:AddTab("Player", ui.options_tabs_player)
+ui.options_tabs:AddTab("Controls", ui.options_tabs_controls)
+ui.options_tabs:AddTab("Game", ui.options_tabs_game)
+ui.options_tabs:AddTab("Graphics", ui.options_tabs_graphics)
+ui.options_tabs:AddTab("Sound", ui.options_tabs_sound)
+ui.options_tabs:AddTab("Net", ui.options_tabs_net)
+ui.options_tabs:AddTab("More", ui.options_tabs_more)
+
+--player tab--------------------------------------------------------------------------------------
+ui.options_player_name = LF.Create("label", ui.options_tabs_player):SetText("Player Name: "):SetPos(0, 0+4)
+ui.options_player_spraylogo = LF.Create("label", ui.options_tabs_player):SetText("Spray Logo: "):SetPos(0, 60+4)
+ui.options_player_crosshair = LF.Create("label", ui.options_tabs_player):SetText("Crosshair: "):SetPos(0, 200+4)
+
+ui.options_player_name_input = LF.Create("textbox", ui.options_tabs_player):SetPos(150, 0+2):SetSize(200, 20)
+
+ui.options_mark_own_player = LF.Create("checkbox", ui.options_tabs_player):SetPos(150, 120+2)
+:SetText("Mark own Player")
+ui.options_lefthanded_players = LF.Create("checkbox", ui.options_tabs_player):SetPos(150, 140+2)
+:SetText("Lefthand Players")
+ui.options_recoil_animations = LF.Create("checkbox", ui.options_tabs_player):SetPos(150, 160+2)
+:SetText("Recoil Animations")
+ui.options_wiggle_animations = LF.Create("checkbox", ui.options_tabs_player):SetPos(150, 180+2)
+:SetText("Wiggle Animations")
+
+ui.options_spray_panel = LF.Create("panel", ui.options_tabs_player):SetPos(150, 40):SetSize(60, 60)
+ui.options_spray_images = {}
+for _, filename in ipairs(love.filesystem.getDirectoryItems("logos")) do
+	if filename:find(".bmp") then
+		table.insert(ui.options_spray_images, "logos/"..filename)
+	end
+end
+
+ui.options_spray_pointer = 1
+ui.options_spray_image = LF.Create("image", ui.options_spray_panel)
+ui.options_spray_image:SetImage(ui.options_spray_images[ui.options_spray_pointer]):Center()
+
+ui.options_spray_left = LF.Create("button", ui.options_tabs_player):SetPos(150, 100):SetText("L"):SetSize(20,20)
+ui.options_spray_left.OnClick = function (object)
+	ui.options_spray_pointer = ui.options_spray_pointer - 1
+	if ui.options_spray_pointer <= 0 then
+		ui.options_spray_pointer = #ui.options_spray_images
+	end
+	ui.options_spray_image:SetImage(ui.options_spray_images[ui.options_spray_pointer]):Center()
+end
+ui.options_spray_right = LF.Create("button", ui.options_tabs_player):SetPos(190, 100):SetText("R"):SetSize(20,20)
+ui.options_spray_right.OnClick = function (object)
+	ui.options_spray_pointer = ui.options_spray_pointer + 1
+	if ui.options_spray_pointer > #ui.options_spray_images then
+		ui.options_spray_pointer = 1
+	end
+	ui.options_spray_image:SetImage(ui.options_spray_images[ui.options_spray_pointer]):Center()
+end
+
+ui.options_spray_r = LF.Create("slider", ui.options_tabs_player):SetPos(220, 40):SetMinMax(0,255):SetDecimals(0):SetValue(255)
+ui.options_spray_g = LF.Create("slider", ui.options_tabs_player):SetPos(220, 60):SetMinMax(0,255):SetDecimals(0):SetValue(255)
+ui.options_spray_b = LF.Create("slider", ui.options_tabs_player):SetPos(220, 80):SetMinMax(0,255):SetDecimals(0):SetValue(255)
+
+ui.options_spray_r.OnValueChanged = function(object, value)
+	ui.options_spray_image:SetColor(value/255, nil, nil)
+end
+ui.options_spray_g.OnValueChanged = function(object, value)
+	ui.options_spray_image:SetColor(nil, value/255, nil)
+end
+ui.options_spray_b.OnValueChanged = function(object, value)
+	ui.options_spray_image:SetColor(nil, nil, value/255)
+end
+
+
+
+ui.options_crosshair_panel = LF.Create("panel", ui.options_tabs_player):SetPos(150, 210):SetSize(96, 96)
+ui.options_crosshair_label = LF.Create("label", ui.options_tabs_player):SetPos(250, 310):SetText("")
+ui.options_crosshair_image = LF.Create("image", ui.options_crosshair_panel)
+:SetImage(pointers[0]):SetCentered(true):Center()
+
+ui.options_crosshair_slider = LF.Create("slider", ui.options_tabs_player)
+:SetPos(150, 310):SetWidth(97):SetMinMax(0.2, 1.5)
+ui.options_crosshair_slider.OnValueChanged = function(object, value)
+	ui.options_crosshair_image:SetScale(value, value)
+	ui.options_crosshair_label:SetText(tostring(value))
+end
+ui.options_crosshair_slider:SetValue(1)
+
+ui.options_button_help = LF.Create("button", ui.options_frame):SetText("Help"):SetPos(0+10, 430):SetWidth(50)
+ui.options_button_okay = LF.Create("button", ui.options_frame):SetText("Okay"):SetPos(195+10, 430):SetWidth(100)
+ui.options_button_okay.OnClick = function(object)
+	local slider = ui.options_crosshair_slider:GetValue()
+	ui.setCursor("arrow", pointers[0], slider)
+end
+ui.options_button_cancel = LF.Create("button", ui.options_frame):SetText("Cancel"):SetPos(300+10, 430):SetWidth(100)
+
+
+
+
+
+
+--controls tab------------------------------------------------------------------------------------
+--game tab----------------------------------------------------------------------------------------
+--graphics tab------------------------------------------------------------------------------------
+--net tab-----------------------------------------------------------------------------------------
+--more options tab--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------------------------
+--chat--------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------
+ui.chat_frame = LF.Create("frame"):SetSize(400, 400)
+ui.chat_log = LF.Create("log", ui.chat_frame):SetSize(400, 370):SetPos(0, 30)
+ui.chat_insert = LF.Create("button", ui.chat_frame):SetPos(100, 0)
+ui.chat_insert.OnClick = function(object)
+	for i = 1, 5 do
+		ui.chat_log:AddElement(random_color()..random_string(math.random(50)), true)
+	end
+end
+
+--------------------------------------------------------------------------------------------------
+--bindings----------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------
+local action_quit = function(key, isrepeat)
+	love.event.quit()
+end
+
+local action_debug = function(key, isrepeat)
+	local state = LF.config["DEBUG"]
+	LF.config["DEBUG"] = not state
+end
+
+local action_console = function(key, isrepeat)
+	local bool = ui.console_frame:GetVisible()
+	ui.console_frame:SetVisible(not bool)
+end
+
+LF.bind("all", "", "escape", action_quit)
+LF.bind("all", "", "f1", action_debug)
+LF.bind("all", "", "'", action_console)
+
+--------------------------------------------------------------------------------------------------
+--final wrapping of windows-----------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------
 ui.new_game_frame:SetVisible(false)
 ui.console_frame:SetVisible(false)
 ui.menu_frame:SetVisible(false)
-
+ui.options_frame:SetVisible(false)
+--------------------------------------------------------------------------------------------------
+--end of module-----------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------
 return ui

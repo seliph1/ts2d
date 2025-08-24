@@ -14,7 +14,6 @@ local newobject = loveframes.NewObject("scrollbody", "loveframes_object_scrollbo
 	- desc: initializes the object
 --]]---------------------------------------------------------
 function newobject:initialize(parent, bartype)
-	
 	self.type = "scrollbody"
 	self.bartype = bartype
 	self.parent = parent
@@ -22,7 +21,7 @@ function newobject:initialize(parent, bartype)
 	self.y = 0
 	self.internal = true
 	self.internals = {}
-	
+	self.position = "right"
 	if self.bartype == "vertical" then
 		self.width = 16
 		self.height = self.parent.height
@@ -34,11 +33,8 @@ function newobject:initialize(parent, bartype)
 		self.staticx = 0
 		self.staticy = self.parent.height - self.height
 	end
-	
 	table.insert(self.internals, loveframes.objects["scrollarea"]:new(self, bartype))
-	
 	local bar = self.internals[1].internals[1]
-	
 	if self.bartype == "vertical" then 
 		local upbutton = loveframes.objects["scrollbutton"]:new("up")
 		upbutton.staticx = 0 + self.width - upbutton.width
@@ -216,7 +212,6 @@ end
 	- func: GetScrollHeight()
 	- desc: gets the object's scroll true size
 --]]---------------------------------------------------------
-
 function newobject:GetScrollSize()
 	local button_back = self.internals[2]
 	local button_forward = self.internals[3]
@@ -231,6 +226,5 @@ function newobject:GetScrollSize()
 	end
 	return body_size - button_size
 end
-
 ---------- module end ----------
 end

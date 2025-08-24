@@ -68,7 +68,7 @@ function newobject:update(dt)
 			self.menu:MoveToTop()
 			self.activated = true
 		elseif not hover and activated then
-			local hoverobject = loveframes.hoverobject
+			local hoverobject = loveframes.GetHoverObject()
 			if hoverobject and hoverobject:GetBaseParent() == self.parent then
 				self.menu:SetVisible(false)
 				self.activated = false

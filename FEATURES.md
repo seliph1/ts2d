@@ -12,6 +12,7 @@
     add search bar in new game window
     add vehicles
     NPC AI: [leaving the box will use the default AI]
+     Hide number option for menu api (for example menu(uid,"title@b@n,abcdefg,hijk"))
 
 
 

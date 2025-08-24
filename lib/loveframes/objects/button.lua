@@ -31,12 +31,17 @@ function newobject:initialize()
 	self.OnClick = nil
 	self.groupIndex = 0
 	self.checked = false
+	self.text = "Button"
+	self.caption = ""
+	self.formattedtext = "Button"
+	self.formattedcaption = "Button"
+	self.align = "center"
+	self.captionalign = "right"
 	self.font = default_font or loveframes.basicfont
 	self.defaultcolor = default_color or {1,1,1,1}
-	self.textmesh = love.graphics.newText(self.font, "Button")
-	self.text = "Button"
-	self.formattedtext = "Button"
-	self.align = "center"
+	self.textmesh = love.graphics.newText(self.font, "")
+	self.textmesh:setf(self.text, self.width, self.align)
+	self.captionmesh = love.graphics.newText(self.font, "")
 	self:SetDrawFunc()
 end
 
@@ -162,9 +167,9 @@ end
 	- func: SetText(text)
 	- desc: sets the object's text
 --]]---------------------------------------------------------
-
 function newobject:RedoLayout()
 	self:SetText(self.text)
+	self:SetCaption(self.caption)
 	return self
 end
 
@@ -220,7 +225,14 @@ function newobject:fixUTF8(s, replacement)
   return s, invalid
 end
 
+--[[---------------------------------------------------------
+	- func: GetText()
+	- desc: gets/sets the object's text and aligment
+--]]---------------------------------------------------------
 function newobject:SetText(text)
+	if not text then
+		text = ""
+	end
 	self.textmesh:clear()
 	-- Validate UTF8 and fix broken strings
 	text = self:fixUTF8(text, "?")
@@ -240,10 +252,7 @@ function newobject:SetAlign(mode)
 	self:SetText(self.text)
 	return self
 end
---[[---------------------------------------------------------
-	- func: GetText()
-	- desc: gets the object's text
---]]---------------------------------------------------------
+
 function newobject:GetText()
 	return self.text
 end
@@ -260,11 +269,58 @@ function newobject:GetAlign()
 	return self.align
 end
 --[[---------------------------------------------------------
+	- func: Caption
+	- desc: gets/sets the object's caption and alignment
+--]]---------------------------------------------------------
+function newobject:SetCaption(caption)
+	if not caption then
+		caption = ""
+	end
+	self.captionmesh:clear()
+	-- Validate UTF8 and fix broken strings
+	caption = self:fixUTF8(caption, "?")
+	-- Parse the string received
+	local parsedcaption, formattedcaption = self:ParseText(caption)
+	-- Set the text cache
+	--self.textmesh:setf(parsedtext, self.width, "left")
+	self.captionmesh:setf(parsedcaption, self.width, self.captionalign)
+	-- Refresh the internal variables
+	self.caption = caption
+	self.formattedcaption = formattedcaption
+	return self
+end
+
+function newobject:GetCaption()
+	return self.caption
+end
+
+function newobject:SetCaptionAlign(mode)
+	self.captionalign = mode
+	self:SetCaption(self.caption)
+	return self
+end
+
+
+function newobject:GetFormattedCaption()
+	return self.formattedcaption
+end
+
+function newobject:GetDrawableCaption()
+	return self.captionmesh
+end
+
+function newobject:GetCaptionAlign()
+	return self.captionalign
+end
+--[[---------------------------------------------------------
 	- func: SetFont(font)
 	- desc: sets the object's font
 	- note: font argument must be a font object
 --]]---------------------------------------------------------
 function newobject:SetFont(font)
+	if not font then
+		font = loveframes.basicfont
+	end
 	self.font = font
 	self.textmesh:setFont(font)
 	return self
@@ -277,7 +333,6 @@ end
 function newobject:GetFont()
 	return self.font
 end
-
 --[[---------------------------------------------------------
 	- func: SetImage(image)
 	- desc: adds an image to the object
@@ -359,5 +414,22 @@ function newobject:GetToggleable()
 	return self.toggleable
 end
 
+
+--[[---------------------------------------------------------
+	- func: GetChecked()
+	- desc: gets whether or not the object is checked
+--]]---------------------------------------------------------
+function newobject:GetChecked()
+	return self.checked
+end
+
+--[[---------------------------------------------------------
+	- func: SetChecked()
+	- desc: sets the check status of this button
+--]]---------------------------------------------------------
+function newobject:SetChecked(bool)
+	self.checked = bool
+	return self
+end
 ---------- module end ----------
 end

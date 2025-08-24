@@ -38,7 +38,6 @@ skin.directives.tooltip_default_font					= love.graphics.newFont(skin.directives
 skin.directives.tooltip_default_color 		 			= {1, 1, 1, 1};
 
 
-
 -- controls 
 skin.controls = {}
 local default_font = skin.directives.text_default_font_src
@@ -396,12 +395,15 @@ function skin.button(object)
 	local height = object:GetHeight()
 	local hover = object:GetHover()
 	local text = object:GetText()
+	local caption = object:GetCaption()
 	local formattedtext = object:GetFormattedText()
+	local formattedcaption = object:GetFormattedCaption()
 	local textmesh = object:GetDrawableText()
+	local captionmesh = object:GetDrawableCaption()
 	local text_height = textmesh:getHeight()
 	local text_width = textmesh:getWidth()
 	local down = object:GetDown()
-	local checked = object.checked
+	local checked = object:GetChecked()
 	local enabled = object:GetEnabled()
 	local clickable = object:GetClickable()
 	local align = object:GetAlign()
@@ -423,22 +425,22 @@ function skin.button(object)
 	local borderdisabled = skin.controls.button_border_disabled_color
 	local borderenabled = skin.controls.button_border_enabled_color
 	-- Color pointers
-	local textcolor, bodycolor =  textnohovercolor, nohovercolor
+	local textcolor, bodycolor, captioncolor =  textnohovercolor, nohovercolor, textnonclickablecolor
 	local bordercolor = bordercolor
 	-- Image pointers
 	local image_hover = skin.images["button-hover.png"]
 	local image_hover_sh = height/image_hover:getHeight()
 	local roundcorner = skin.controls.button_round_corner
-	local xoffset, yoffset, padding = 0, 0, 2
+	local xoffset, yoffset, padding = 0, 0, 3
 	local image_x, image_y, image_width, image_height = 0,0,0,0
-	local text_x, text_y = 0, 0
+	local text_x, text_y, caption_x, caption_y = 0, 0, 0, 0
 
 	if hover then
 		bodycolor = hovercolor
 		textcolor = texthovercolor
 		bordercolor = borderenabled
 	end
-	if down then
+	if down or checked then
 		-- Apply -1 -1 offset to make illusion of pressing
 		xoffset = xoffset + 1
 		yoffset = yoffset + 1
@@ -458,28 +460,34 @@ function skin.button(object)
 		image_width = object.image:getWidth()
 		image_height = object.image:getHeight()
 		if align == "center" then
-			image_x = math.floor(x + xoffset + padding + (width - image_width - text_width)/2 )
-			xoffset = math.floor(xoffset + image_width/2 + padding)
+			image_x = math.floor(x + xoffset + (width - image_width - text_width)/2 )
 		elseif align == "left" then
 			image_x = math.floor(x + xoffset + padding)
-			xoffset = math.floor(xoffset + image_width + padding)
 		elseif align == "right" then
 			image_x = math.floor(x + xoffset - padding + width - text_width - image_width)
-			xoffset = math.floor(xoffset + padding)
 		end
 		image_y = math.floor(y + yoffset + (height - image_height)/2)
 	end
+
+	if align == "right" then
+		text_x = math.floor(x + xoffset - padding)
+	elseif align == "left" then
+		text_x = math.floor(x + xoffset + padding + image_width)
+	elseif align == "center" then
+		text_x = math.floor(x + xoffset + image_width/2)
+	end
+	text_y = math.floor((y + (height - text_height)/2) + yoffset)
+
+	caption_x = math.floor( x + xoffset - padding )
+	caption_y = math.floor( (y + (height - text_height)/2) + yoffset)
 
 	if text ~= formattedtext then -- Colored text
 		--textcolor = defaultcolor -- (0,0,0,0)
 	end
 
-	if align == "right" then
-		text_x = math.floor(x + xoffset - padding)
-	else
-		text_x = math.floor(x + xoffset + padding)
+	if caption ~= formattedcaption then
+		captioncolor = defaultcolor
 	end
-	text_y = math.floor((y + (height - text_height)/2) + yoffset)
 
 	-- Draw body
 	love.graphics.setColor(bodycolor)
@@ -488,12 +496,14 @@ function skin.button(object)
 	-- Draw text
 	love.graphics.setColor(textcolor)
 	love.graphics.draw(textmesh, text_x, text_y)
+	-- Draw caption
+	love.graphics.setColor(captioncolor)
+	love.graphics.draw(captionmesh, caption_x, caption_y)
 
 	-- Image
 	if object.image then
 		love.graphics.setColor(1, 1, 1, 1)
 		love.graphics.draw(object.image, image_x, image_y)
-		--love.graphics.print(image_x.."|"..image_y, x-200, y)
 	end
 
 	local hovertime = 0
@@ -563,9 +573,24 @@ function skin.image(object)
 	local image = object.image
 	local color = object.imagecolor
 	local stretch = object.stretch
+	local centered = object.centered
+
+	if not object.image then
+		return
+	end
+
 	if stretch then
 		scalex, scaley = object:GetWidth() / image:getWidth(), object:GetHeight() / image:getHeight()
 	end
+
+	if centered then
+		offsetx = offsetx + object.image:getWidth()/2
+		offsety = offsety + object.image:getHeight()/2
+
+		x = x + object.image:getWidth()/2
+		y = y + object.image:getHeight()/2
+	end
+
 	if color then
 		love.graphics.setColor(color)
 		love.graphics.draw(image, x, y, orientation, scalex, scaley, offsetx, offsety, shearx, sheary)
@@ -573,7 +598,6 @@ function skin.image(object)
 		love.graphics.setColor(1, 1, 1, 1)
 		love.graphics.draw(image, x, y, orientation, scalex, scaley, offsetx, offsety, shearx, sheary)
 	end
-	
 end
 
 function skin.imagelink(object)
@@ -1724,6 +1748,21 @@ end
 function skin.droplist_over(object)
 end
 --[[---------------------------------------------------------
+	- func: skin.DrawDropList(object)
+	- desc: draws the drop list object
+--]]---------------------------------------------------------
+function skin.log(object)
+	local x = object:GetX()
+	local y = object:GetY()
+	local offsetx = object.offsetx
+	local offsety = object.offsety
+	local text = object.texthash
+	-- Retrieve the cell size
+	love.graphics.setColor(1,1,1,1)
+	love.graphics.draw(text, x - offsetx, y - offsety)
+end
+
+--[[---------------------------------------------------------
 	- func: skin.DrawColumnList(object)
 	- desc: draws the column list object
 --]]---------------------------------------------------------
@@ -2064,8 +2103,7 @@ function skin.menuoption(object)
 	local text_hover_color = skin.controls.menuoption_text_hover_color
 	local text_color = skin.controls.menuoption_text_color
 	local twidth = skin.controls.smallfont:getWidth(text)
-	
-	
+
 	if option_type == "divider" then
 		love.graphics.setColor(0.78, 0.78, 0.78, 1)
 		love.graphics.rectangle("fill", x + 4, y + 2, width - 8, 1)

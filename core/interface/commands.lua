@@ -122,40 +122,26 @@ local commands = {
 		---Invokes a server-side menu
 		---@param ... string
 		action = function(...)
-			local menu_constructor = table.concat({...}," ")
 			local ui = require "core.interface.ui"
-			local title = ui.menu_frame
-			local constructors = {}
-			for constructor in (menu_constructor..","):gmatch("(.-),") do
-				table.insert(constructors, constructor)
-			end
-			title:SetName(string.format("%s", constructors[1])):SetVisible(true):MoveToTop()
-			for i = 1, 9 do
-				local constructor = constructors[i + 1]
-				print(constructor)
-				local button = ui.menu_buttons[i]
-				local disabled = false
-				local invisible = false
-				if constructor then
-					if constructor == "" then
-						button:SetVisible(false)
-					end
-					local brackets = constructor:match("^%((.*)%)$")
-					if brackets then
-						button:SetEnabled(false)
-						button:SetText(string.format("©128128128%s ©255255255%s", i, brackets))
-					else
-						button:SetEnabled(true)
-						button:SetText(string.format("©128128128%s ©255255255%s", i, constructor))
-					end
-				else -- no constructor
-					button:SetEnabled(true)
-					button:SetVisible(false)
-					button:SetText(string.format("©128128128%s", i))
+			ui.menu_constructor(table.concat({...}," "))
+		end;
+	};
+
+	lua = {
+		---Evaluates a lua expression
+		---@param ... string
+		action = function(...)
+			local expression, error_message = loadstring(table.concat({...}," "))
+			if expression then
+				local status, error_message = pcall(expression)
+				if not status then
+					print("©255000000LUA ERROR: "..error_message)
 				end
+			else
+				print("©255000000LUA ERROR: "..error_message)
 			end
 		end;
-	}
+	};
 }
 
 return commands

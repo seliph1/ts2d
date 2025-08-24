@@ -289,6 +289,15 @@ client.actions = {
 		action = function(...)
 		end;
 	};
+
+	menu = {
+		---Invokes a server-side menu
+		---@param ... string
+		action = function(...)
+			local ui = require "core.interface.ui"
+			ui.menu_constructor(table.concat({...}," "))
+		end;
+	}
 }
 
 --- Move player in smooth intervals

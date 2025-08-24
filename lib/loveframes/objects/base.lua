@@ -754,7 +754,7 @@ function newobject:CheckHover()
 	local state = self.state
 	local visible = self.visible
 	local type = self.type
-	local hoverobject = loveframes.hoverobject
+	local hoverobject = loveframes.GetHoverObject()
 
 	-- check if the mouse is colliding with the object
 	if state == curstate and visible then
@@ -769,10 +769,11 @@ function newobject:CheckHover()
 				local cheight = clickbounds.height
 				local clickcol = loveframes.BoundingBox(mx, cx, my, cy, 1, cwidth, 1, cheight)
 				if clickcol then
-					table.insert(loveframes.collisions, self)
+					--table.insert(loveframes.collisions, self)
+					loveframes.collisions = self
 				end
 			else
-				table.insert(loveframes.collisions, self)
+				loveframes.collisions = self
 			end
 		end
 	end
@@ -1129,6 +1130,23 @@ function newobject:GetDrawOrder()
 
 	return self.draworder
 	
+end
+
+--[[---------------------------------------------------------
+	- func: SetCursor(name, value)
+	- desc: sets the system cursor used when hovering this object
+--]]---------------------------------------------------------
+function newobject:SetCursor(cursor)
+	self.cursor = cursor
+	return self
+end
+
+--[[---------------------------------------------------------
+	- func: GetProperty(name)
+	- desc: gets the system cursor used when hovering this object
+--]]---------------------------------------------------------
+function newobject:GetCursor(name)
+	return self.cursor
 end
 
 --[[---------------------------------------------------------

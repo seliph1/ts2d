@@ -28,6 +28,7 @@ function newobject:initialize()
 	self.internal = false
 	self.image = nil
 	self.imagecolor = {1, 1, 1, 1}
+	self.centered = false
 	
 	self:SetDrawFunc()
 end
@@ -37,39 +38,30 @@ end
 	- desc: updates the object
 --]]---------------------------------------------------------
 function newobject:update(dt)
-
 	local state = loveframes.state
 	local selfstate = self.state
-	
 	if state ~= selfstate then
 		return
 	end
-	
 	local visible = self.visible
 	local alwaysupdate = self.alwaysupdate
-	
 	if not visible then
 		if not alwaysupdate then
 			return
 		end
 	end
-	
 	local parent = self.parent
 	local base = loveframes.base
 	local update = self.Update
-	
 	self:CheckHover()
-	
 	-- move to parent if there is a parent
 	if parent ~= base then
 		self.x = self.parent.x + self.staticx
 		self.y = self.parent.y + self.staticy
 	end
-	
 	if update then
 		update(self, dt)
 	end
-	
 end
 
 --[[---------------------------------------------------------
@@ -77,10 +69,11 @@ end
 	- desc: sets the object's image
 --]]---------------------------------------------------------
 function newobject:SetImage(image)
-
 	if type(image) == "string" then
 		self.image = love.graphics.newImage(image)
 		self.image:setFilter("nearest", "nearest")
+	elseif type(image) == "userdata" and tostring(image):find("ImageData") then
+		self.image = love.graphics.newImage(image)
 	else
 		self.image = image
 	end
@@ -103,7 +96,10 @@ end
 	- desc: sets the object's color 
 --]]---------------------------------------------------------
 function newobject:SetColor(r, g, b, a)
-	self.imagecolor = {r, g, b, a}
+	self.imagecolor[1] = r or self.imagecolor[1]
+	self.imagecolor[2] = g or self.imagecolor[2]
+	self.imagecolor[3] = b or self.imagecolor[3]
+	self.imagecolor[4] = a or self.imagecolor[4]
 	return self
 end
 --[[---------------------------------------------------------
@@ -305,6 +301,15 @@ function newobject:GetImageHeight()
 	if image then
 		return image:getHeight()
 	end
+end
+
+--[[---------------------------------------------------------
+	- func: SetCentered(bool)
+	- desc: sets if the image should be rendered at center
+--]]---------------------------------------------------------
+function newobject:SetCentered(bool)
+	self.centered = bool
+	return self
 end
 ---------- module end ----------
 end

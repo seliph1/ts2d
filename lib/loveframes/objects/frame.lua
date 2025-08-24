@@ -421,6 +421,7 @@ function newobject:mousepressed(x, y, button)
 	local dragging = self.dragging
 	local parent = self.parent
 	local base = loveframes.base
+
 	if button == 1 then
 		-- initiate dragging if not currently dragging
 		if not dragging and self.hover and self.draggable  then
@@ -440,9 +441,10 @@ function newobject:mousepressed(x, y, button)
 				end
 				self.dragging = true
 				loveframes.dragobject = self
+				self.cursor = loveframes.cursors.sizeall
 			end
 		end
-		if not self.resizing and self.canresize and loveframes.hoverobject == self then
+		if not self.resizing and self.canresize and loveframes.GetHoverObject() == self then
 			if loveframes.BoundingBox(self.x, x, self.y, y, 5, 1, 5, 1) then
 				self.resizing = true
 				self.dragging = false
@@ -459,6 +461,7 @@ function newobject:mousepressed(x, y, button)
 				if y ~= self.y then
 					self.resizeymod = y - self.y
 				end
+				self.cursor = loveframes.cursors.sizenwse
 			elseif loveframes.BoundingBox(self.x + self.width - 5, x, self.y + self.height - 5, y, 5, 1, 5, 1) then
 				self.resizing = true
 				self.resize_mode = "bottom_right"
@@ -473,6 +476,7 @@ function newobject:mousepressed(x, y, button)
 				if y ~= self.y + self.height then
 					self.resizeymod = (self.y + self.height) - y
 				end
+				self.cursor = loveframes.cursors.sizenwse
 			elseif loveframes.BoundingBox(self.x + self.width - 5, x, self.y, y, 5, 1, 5, 1) then
 				self.resizing = true
 				self.dragging = false
@@ -489,6 +493,7 @@ function newobject:mousepressed(x, y, button)
 				if y ~= self.y then
 					self.resizeymod = y - self.y
 				end
+				self.cursor = loveframes.cursors.sizenesw
 			elseif loveframes.BoundingBox(self.x, x, self.y + self.height - 5, y, 5, 1, 5, 1) then
 				self.resizing = true
 				self.dragging = false
@@ -505,6 +510,7 @@ function newobject:mousepressed(x, y, button)
 				if y ~= self.y + self.height then
 					self.resizeymod = (self.y + self.height) - y
 				end
+				self.cursor = loveframes.cursors.sizenesw
 			elseif loveframes.BoundingBox(self.x + 5, x, self.y, y, self.width - 10, 1, 2, 1) then
 				self.resizing = true
 				self.dragging = false
@@ -518,6 +524,7 @@ function newobject:mousepressed(x, y, button)
 				if y ~= self.y then
 					self.resizeymod = y - self.y
 				end
+				self.cursor = loveframes.cursors.sizens
 			elseif loveframes.BoundingBox(self.x + 5, x, self.y + self.height - 2, y, self.width - 10, 1, 2, 1) then
 				self.resizing = true
 				self.dragging = false
@@ -529,8 +536,9 @@ function newobject:mousepressed(x, y, button)
 				self.resizeheight = self.height
 				loveframes.resizeobject = self
 				if y ~= self.y then
-					self.resizeymod = (self.y + self.height) - y 
+					self.resizeymod = (self.y + self.height) - y
 				end
+				self.cursor = loveframes.cursors.sizens
 			elseif loveframes.BoundingBox(self.x, x, self.y + 5, y, 2, 1, self.height - 10, 1) then
 				self.resizing = true
 				self.dragging = false
@@ -544,6 +552,7 @@ function newobject:mousepressed(x, y, button)
 				if x ~= self.x then
 					self.resizexmod = x - self.x
 				end
+				self.cursor = loveframes.cursors.sizewe
 			elseif loveframes.BoundingBox(self.x + self.width - 2, x, self.y + 5, y, 2, 1, self.height - 10, 1) then
 				self.resizing = true
 				self.dragging = false
@@ -557,12 +566,14 @@ function newobject:mousepressed(x, y, button)
 				if x ~= self.x + self.width then
 					self.resizexmod = (self.x + self.width) - x
 				end
+				self.cursor = loveframes.cursors.sizewe
 			end
 		end
 		if self.hover and button == 1 then
 			self:MakeTop()
 		end
 	end
+
 	for k, v in ipairs(internals) do
 		v:mousepressed(x, y, button)
 	end
@@ -599,6 +610,7 @@ function newobject:mousereleased(x, y, button)
 		self.resizing = false
 		loveframes.resizeobject = false
 	end
+	self.cursor = nil
 	for k, v in ipairs(internals) do
 		v:mousereleased(x, y, button)
 	end
