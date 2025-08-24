@@ -48,18 +48,8 @@ end
 	- desc: updates the element
 --]]---------------------------------------------------------
 function newobject:update(dt)
-	local state = loveframes.state
-	local selfstate = self.state
-	if state ~= selfstate then
-		return
-	end
-	local visible = self.visible
-	local alwaysupdate = self.alwaysupdate
-	if not visible then
-		if not alwaysupdate then
-			return
-		end
-	end
+	if not self:OnState() then return end
+	if not self:IsVisible() then return end
 	local children = self.children
 	local parent = self.parent
 	local base = loveframes.base
@@ -84,12 +74,8 @@ end
 	- desc: called when the player presses a mouse button
 --]]---------------------------------------------------------
 function newobject:mousemoved(x, y, dx, dy, istouch)
-	if loveframes.state ~= self.state then
-		return
-	end
-	if not self.visible then
-		return
-	end
+	if not self:OnState() then return end
+	if not self:IsVisible() then return end
 	-- If object isn't being hovered, dont calculate
 	if not (self.hover) then
 		self.hovered = 0
@@ -111,15 +97,8 @@ function newobject:mousemoved(x, y, dx, dy, istouch)
 end
 
 function newobject:mousepressed(x, y, button)
-	local state = loveframes.state
-	local selfstate = self.state
-	if state ~= selfstate then
-		return
-	end
-	local visible = self.visible
-	if not visible then
-		return
-	end
+	if not self:OnState() then return end
+	if not self:IsVisible() then return end
 	if not self.hover then
 		-- Dont select, but dont deselect also
 		return
@@ -146,16 +125,8 @@ end
 	- desc: called when the player releases a mouse button
 --]]---------------------------------------------------------
 function newobject:mousereleased(x, y, button)
-	local state = loveframes.state
-	local selfstate = self.state
-	if state ~= selfstate then
-		return
-	end
-	local visible  = self.visible
-	local children = self.children
-	if not visible then
-		return
-	end
+	if not self:OnState() then return end
+	if not self:IsVisible() then return end
 end
 
 --[[---------------------------------------------------------

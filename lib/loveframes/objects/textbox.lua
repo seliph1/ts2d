@@ -82,18 +82,8 @@ end
 	- desc: updates the object
 --]]---------------------------------------------------------
 function newobject:update(dt)
-	local state = loveframes.state
-	local selfstate = self.state
-	if state ~= selfstate then
-		return
-	end
-	local visible = self.visible
-	local alwaysupdate = self.alwaysupdate
-	if not visible then
-		if not alwaysupdate then
-			return
-		end
-	end
+	if not self:OnState() then return end
+	if not self:IsVisible() then return end
 	-- check to see if the object is being hovered over
 	self:CheckHover()
 	local hover = self.hover
@@ -186,12 +176,8 @@ end
 	- desc: draws the object
 --]]---------------------------------------------------------
 function newobject:draw()
-	if loveframes.state ~= self.state then
-		return
-	end
-	if not self.visible then
-		return
-	end
+	if not self:OnState() then return end
+	if not self:IsVisible() then return end
 	local x = self.x
 	local y = self.y
 	local width = self.width
@@ -223,12 +209,8 @@ end
 	- desc: called when the player moves a mouse wheel
 --]]---------------------------------------------------------
 function newobject:wheelmoved(x, y)
-	if loveframes.state ~= self.state then
-		return
-	end
-	if not self.visible then
-		return
-	end
+	if not self:OnState() then return end
+	if not self:IsVisible() then return end
 	local internals = self.internals
 	if internals then
 		for k, v in ipairs(internals) do
@@ -249,15 +231,8 @@ end
 	- desc: called when the player presses a mouse button
 --]]---------------------------------------------------------
 function newobject:mousepressed(x, y, button, istouch, presses)
-	local state = loveframes.state
-	local selfstate = self.state
-	if state ~= selfstate then
-		return
-	end
-	local visible = self.visible
-	if not visible then
-		return
-	end
+	if not self:OnState() then return end
+	if not self:IsVisible() then return end
 	local hover = self.hover
 	local inputobject = loveframes.inputobject
 	local onfocusgained = self.OnFocusGained
@@ -302,16 +277,8 @@ function newobject:mousepressed(x, y, button, istouch, presses)
 end
 
 function newobject:mousereleased(x, y, button)
-	local state = loveframes.state
-	local selfstate = self.state
-	if state ~= selfstate then
-		return
-	end
-	local visible = self.visible
-	if not visible then
-		return
-	end
-
+	if not self:OnState() then return end
+	if not self:IsVisible() then return end
 	self.field:mousereleased(x - self.x, y - self.y, button)
 	local internals = self.internals
 	for k, v in ipairs(internals) do
@@ -324,16 +291,9 @@ end
 	- desc: called when the player presses a key
 --]]---------------------------------------------------------
 function newobject:keypressed(key, isrepeat)
-	local state = loveframes.state
-	local selfstate = self.state
-	if state ~= selfstate then
-		return
-	end
+	if not self:OnState() then return end
+	if not self:IsVisible() then return end
 	local focus = self.focus
-	local visible = self.visible
-	if not (visible or focus) then
-		return
-	end
 	local inputobject = loveframes.inputobject
 	if inputobject == self then
 		self.field:keypressed(key, isrepeat)
@@ -372,16 +332,8 @@ function newobject:keypressed(key, isrepeat)
 end
 
 function newobject:keyreleased(key, isrepeat)
-	local state = loveframes.state
-	local selfstate = self.state
-	if state ~= selfstate then
-		return
-	end
-	local focus = self.focus
-	local visible = self.visible
-	if not (visible or focus) then
-		return
-	end
+	if not self:OnState() then return end
+	if not self:IsVisible() then return end
 	local inputobject = loveframes.inputobject
 	if inputobject == self then
 		--self.field:keyreleased(key, isrepeat)

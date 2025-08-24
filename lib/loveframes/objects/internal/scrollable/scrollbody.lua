@@ -170,12 +170,8 @@ end
 	- desc: called when the player moves a mouse wheel
 --]]---------------------------------------------------------
 function newobject:wheelmoved(x, y)
-	if loveframes.state ~= self.state then
-		return
-	end
-	if not self.visible then
-		return
-	end
+	if not self:OnState() then return end
+	if not self:IsVisible() then return end
 	local bar = self.internals[1].internals[1]
 	if self.parent.hover then
 		if self.bartype == "vertical" then

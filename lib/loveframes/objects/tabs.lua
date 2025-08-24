@@ -45,23 +45,8 @@ end
 	- desc: updates the element
 --]]---------------------------------------------------------
 function newobject:update(dt)
-	
-	local state = loveframes.state
-	local selfstate = self.state
-	
-	if state ~= selfstate then
-		return
-	end
-	
-	local visible = self.visible
-	local alwaysupdate = self.alwaysupdate
-	
-	if not visible then
-		if not alwaysupdate then
-			return
-		end
-	end
-	
+	if not self:OnState() then return end
+	if not self:IsVisible() then return end
 	local x, y = love.mouse.getPosition()
 	local tabheight = self.tabheight
 	local padding = self.padding
@@ -111,12 +96,8 @@ end
 	- desc: draws the object
 --]]---------------------------------------------------------
 function newobject:draw()
-	if loveframes.state ~= self.state then
-		return
-	end
-	if not self.visible then
-		return
-	end
+	if not self:OnState() then return end
+	if not self:IsVisible() then return end
 	local x = self.x
 	local y = self.y
 	local width = self.width
@@ -153,19 +134,8 @@ end
 	- desc: called when the player presses a mouse button
 --]]---------------------------------------------------------
 function newobject:mousepressed(x, y, button)
-	
-	local state = loveframes.state
-	local selfstate = self.state
-	
-	if state ~= selfstate then
-		return
-	end
-	
-	local visible = self.visible
-	
-	if not visible then
-		return
-	end
+	if not self:OnState() then return end
+	if not self:IsVisible() then return end
 	
 	local children = self.children
 	local internals = self.internals
@@ -196,32 +166,18 @@ end
 	- desc: called when the player releases a mouse button
 --]]---------------------------------------------------------
 function newobject:mousereleased(x, y, button)
-
-	local state = loveframes.state
-	local selfstate = self.state
-	
-	if state ~= selfstate then
-		return
-	end
-	
-	local visible = self.visible
+	if not self:OnState() then return end
+	if not self:IsVisible() then return end
 	local children = self.children
 	local numchildren = #children
 	local tab = self.tab
 	local internals = self.internals
-	
-	if not visible then
-		return
-	end
-	
 	for k, v in ipairs(internals) do
 		v:mousereleased(x, y, button)
 	end
-	
 	if numchildren > 0 then
 		children[tab]:mousereleased(x, y, button)
 	end
-	
 end
 
 --[[---------------------------------------------------------

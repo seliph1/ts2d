@@ -54,18 +54,8 @@ end
 	- desc: updates the object
 --]]---------------------------------------------------------
 function newobject:update(dt)
-	local state = loveframes.state
-	local selfstate = self.state
-	if state ~= selfstate then
-		return
-	end
-	local visible = self.visible
-	local alwaysupdate = self.alwaysupdate
-	if not visible then
-		if not alwaysupdate then
-			return
-		end
-	end
+	if not self:OnState() then return end
+	if not self:IsVisible() then return end
 	local width = love.graphics.getWidth()
 	local height = love.graphics.getHeight()
 	local x, y = love.mouse.getPosition()
@@ -121,13 +111,8 @@ end
 --]]---------------------------------------------------------
 --[[
 function newobject:draw()
-	if loveframes.state ~= self.state then
-		return
-	end
-	
-	if not self.visible then
-		return
-	end
+	if not self:OnState() then return end
+	if not self:IsVisible() then return end
 	
 	self:SetDrawOrder()
 	
@@ -170,36 +155,20 @@ end
 	- desc: called when the player presses a mouse button
 --]]---------------------------------------------------------
 function newobject:mousepressed(x, y, button)
-	
-	local state = loveframes.state
-	local selfstate = self.state
-	
-	if state ~= selfstate then
-		return
-	end
-	
-	local visible = self.visible
-	
-	if not visible then
-		return
-	end
-	
+	if not self:OnState() then return end
+	if not self:IsVisible() then return end
 	local selfcol = loveframes.BoundingBox(x, self.x, y, self.y, 1, self.width, 1, self.height)
 	local internals = self.internals
 	local children = self.children
-	
 	if not selfcol and self.canremove and button == 1 then
 		self:Close()
 	end
-	
 	for k, v in ipairs(internals) do
 		v:mousepressed(x, y, button)
 	end
-	
 	for k, v in ipairs(children) do
 		v:mousepressed(x, y, button)
 	end
-
 end
 
 --[[---------------------------------------------------------
@@ -207,19 +176,8 @@ end
 	- desc: called when the player releases a mouse button
 --]]---------------------------------------------------------
 function newobject:mousereleased(x, y, button)
-	
-	local state = loveframes.state
-	local selfstate = self.state
-	
-	if state ~= selfstate then
-		return
-	end
-	
-	local visible = self.visible
-	
-	if not visible then
-		return
-	end
+	if not self:OnState() then return end
+	if not self:IsVisible() then return end
 	
 	local internals = self.internals
 	local children = self.children

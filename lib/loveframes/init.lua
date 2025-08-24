@@ -40,7 +40,7 @@ loveframes.config["DEFAULTSKIN"] = "CS2D"
 loveframes.config["ACTIVESKIN"] = "CS2D"
 loveframes.config["INDEXSKINIMAGES"] = true
 loveframes.config["DEBUG"] = false
-loveframes.config["ENABLE_SYSTEM_CURSORS"] = false
+loveframes.config["ENABLE_SYSTEM_CURSORS"] = true
 
 -- misc library vars
 loveframes.state = "none"

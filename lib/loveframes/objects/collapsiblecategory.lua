@@ -35,38 +35,26 @@ end
 	- desc: updates the object
 --]]---------------------------------------------------------
 function newobject:update(dt)
-	
-	local state = loveframes.state
-	local selfstate = self.state
-	
-	if state ~= selfstate then
-		return
-	end
-	
+	if not self:OnState() then return end
 	local visible = self.visible
 	local alwaysupdate = self.alwaysupdate
-	
 	if not visible then
 		if not alwaysupdate then
 			return
 		end
 	end
-	
 	local open = self.open
 	local children = self.children
 	local curobject = children[1]
 	local parent = self.parent
 	local base = loveframes.base
 	local update = self.Update
-	
 	self:CheckHover()
-	
 	-- move to parent if there is a parent
 	if parent ~= base and parent.type ~= "list" then
 		self.x = self.parent.x + self.staticx
 		self.y = self.parent.y + self.staticy
 	end
-	
 	if open and curobject then
 		curobject:SetWidth(self.width - self.padding * 2)
 		curobject:update(dt)
@@ -87,25 +75,12 @@ end
 	- desc: called when the player presses a mouse button
 --]]---------------------------------------------------------
 function newobject:mousepressed(x, y, button)
-
-	local state = loveframes.state
-	local selfstate = self.state
-	
-	if state ~= selfstate then
-		return
-	end
-	
-	local visible = self.visible
-	
-	if not visible then
-		return
-	end
-	
+	if not self:OnState() then return end
+	if not self:IsVisible() then return end
 	local hover = self.hover
 	local open = self.open
 	local children = self.children
 	local curobject = children[1]
-	
 	if hover then
 		local col = loveframes.BoundingBox(self.x, x, self.y, y, self.width, 1, self.closedheight, 1)
 		if button == 1 and col then
@@ -129,19 +104,8 @@ end
 	- desc: called when the player releases a mouse button
 --]]---------------------------------------------------------
 function newobject:mousereleased(x, y, button)
-	
-	local state = loveframes.state
-	local selfstate = self.state
-	
-	if state ~= selfstate then
-		return
-	end
-	
-	local visible = self.visible
-	
-	if not visible then
-		return
-	end
+	if not self:OnState() then return end
+	if not self:IsVisible() then return end
 	
 	local hover = self.hover
 	local down = self.down

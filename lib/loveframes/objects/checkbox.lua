@@ -37,23 +37,14 @@ end
 	- desc: updates the object
 --]]---------------------------------------------------------
 function newobject:update(dt)
-	
-	local state = loveframes.state
-	local selfstate = self.state
-	
-	if state ~= selfstate then
-		return
-	end
-	
+	if not self:OnState() then return end
 	local visible = self.visible
 	local alwaysupdate = self.alwaysupdate
-	
 	if not visible then
 		if not alwaysupdate then
 			return
 		end
 	end
-	
 	self:CheckHover()
 	
 	local hover = self.hover
@@ -114,20 +105,11 @@ end
 	- desc: called when the player presses a mouse button
 --]]---------------------------------------------------------
 function newobject:mousepressed(x, y, button)
-
-	local state = loveframes.state
-	local selfstate = self.state
-	
-	if state ~= selfstate then
-		return
-	end
-	
+	if not self:OnState() then return end
 	local visible = self.visible
-	
 	if not visible then
 		return
 	end
-	
 	local hover = self.hover
 	
 	if hover and button == 1 then
@@ -146,20 +128,11 @@ end
 	- desc: called when the player releases a mouse button
 --]]---------------------------------------------------------
 function newobject:mousereleased(x, y, button)
-	
-	local state = loveframes.state
-	local selfstate = self.state
-	
-	if state ~= selfstate then
-		return
-	end
-	
+	if not self:OnState() then return end
 	local visible = self.visible
-	
 	if not visible then
 		return
 	end
-	
 	local hover = self.hover
 	local down = self.down
 	local enabled = self.enabled

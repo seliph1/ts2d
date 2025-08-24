@@ -62,6 +62,9 @@ local commands = {
 			port = port or "36963"
 			--client.start(string.format("%s:%s", ip, port))
 			client.start(string.format("127.0.0.1:36963"))
+
+			local LF = require "lib.loveframes"
+			LF.SetState("game")
 		end,
 		syntax = "connect <ip:port>",
 	};

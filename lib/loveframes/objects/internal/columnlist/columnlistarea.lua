@@ -92,14 +92,8 @@ end
 	- desc: draws the object
 --]]---------------------------------------------------------
 function newobject:draw()
-	if loveframes.state ~= self.state then
-		return
-	end
-	
-	if not self.visible then
-		return
-	end
-	
+	if not self:OnState() then return end
+	if not self:IsVisible() then return end
 	local x = self.x
 	local y = self.y
 	local width = self.width

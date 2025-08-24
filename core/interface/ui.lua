@@ -121,7 +121,6 @@ ui.editor_button.OnClick = function(self)
     end
     client.mode = "editor"
 	LF.SetState("editor")
-	ui.console_frame:SetState("editor")
 end
 
 ui.help_button = LF.Create("messagebox", ui.main_menu)
@@ -142,12 +141,13 @@ ui.quit_button.OnClick = function() love.event.quit() end
 --Console Window Frame---------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------
 ui.console_frame = LF.Create("frame"):SetSize(640, 480):SetResizable(false):SetScreenLocked(true)
-:SetName("Console"):SetCloseAction("hide")
+:SetName("Console"):SetCloseAction("hide"):SetState("*")
 
-ui.console_window_panel = LF.Create("panel", ui.console_frame):SetSize(630, 400):SetPos(5, 30)
-ui.console_window = LF.Create("log", ui.console_window_panel):SetSize(630, 400):SetFont(ui.font_mono_small):SetPadding(0)
+ui.console_window_panel = LF.Create("panel", ui.console_frame)
+:SetSize(630, 400):SetPos(5, 30)
+ui.console_window = LF.Create("log", ui.console_window_panel)
+:SetSize(630, 400):SetFont(ui.font_mono_small):SetPadding(0)
 ui.console_window.history = {}
-
 ui.console_input = LF.Create("textbox", ui.console_frame)
 ui.console_input:SetPos(5, 435):SetWidth(630):SetFont(ui.font_mono):SetMaxHistory(1)
 ui.console_input.rollback = 1
@@ -155,7 +155,7 @@ ui.console_input.history = {""}
 ui.console_input.OnEnter = function(self, text)
     if not(self.focus) then
         return
-    end 
+    end
 	self:SetText("")
 	self.parse(text)
 	table.insert(self.history, text)
@@ -670,13 +670,19 @@ ui.options_button_cancel = LF.Create("button", ui.options_frame):SetText("Cancel
 --chat--------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------
 ui.chat_frame = LF.Create("frame"):SetSize(400, 400)
+ui.chat_frame:ShowCloseButton(false)
+
 ui.chat_log = LF.Create("log", ui.chat_frame):SetSize(400, 370):SetPos(0, 30)
+ui.chat_frame:SetState("game")
+
+--[[
 ui.chat_insert = LF.Create("button", ui.chat_frame):SetPos(100, 0)
 ui.chat_insert.OnClick = function(object)
 	for i = 1, 5 do
 		ui.chat_log:AddElement(random_color()..random_string(math.random(50)), true)
 	end
 end
+]]
 
 --------------------------------------------------------------------------------------------------
 --bindings----------------------------------------------------------------------------------------

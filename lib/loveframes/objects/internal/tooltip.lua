@@ -49,42 +49,25 @@ end
 	- desc: updates the object
 --]]---------------------------------------------------------
 function newobject:update(dt)
+	if not self:OnState() then return end
+	if not self:IsVisible() then return end
 
-	local state = loveframes.state
-	local selfstate = self.state
-	
-	if state ~= selfstate then
-		return
-	end
-	
-	local visible = self.visible
-	local alwaysupdate = self.alwaysupdate
-	
-	if not visible then
-		if not alwaysupdate then
-			return
-		end
-	end
-	
 	local internals = self.internals
 	local textobject = internals[1]
 	local padding = self.padding
 	local object = self.object
 	local draworder = self.draworder
 	local update = self.Update
-	
 	self.width = textobject.width + padding * 2
 	self.height = textobject.height + padding * 2
-	
 	if object then
 		if object == loveframes.base then
 			self:Remove()
 			return
 		end
-		--local ovisible = object.visible
 		local ohover = object.hover
 		local ostate = object.state
-		if ostate ~= state then
+		if ostate ~= loveframes.GetState() then
 			self.visible = false
 			return
 		end
@@ -112,15 +95,12 @@ function newobject:update(dt)
 			textobject:SetPos(padding, padding)
 		end
 	end
-	
 	--textobject:SetVisible(self.show)
-	textobject:SetState(selfstate)
+	textobject:SetState(self.state)
 	textobject:update(dt)
-	
 	if update then
 		update(self, dt)
 	end
-
 end
 
 --[[---------------------------------------------------------

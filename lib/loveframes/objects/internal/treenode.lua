@@ -37,23 +37,8 @@ end
 	- desc: updates the object
 --]]---------------------------------------------------------
 function newobject:update(dt)
-	
-	local state = loveframes.state
-	local selfstate = self.state
-	
-	if state ~= selfstate then
-		return
-	end
-	
-	local visible = self.visible
-	local alwaysupdate = self.alwaysupdate
-	
-	if not visible then
-		if not alwaysupdate then
-			return
-		end
-	end
-	
+	if not self:OnState() then return end
+	if not self:IsVisible() then return end
 	self:CheckHover()
 	
 	local parent = self.parent
@@ -90,14 +75,8 @@ end
 	- desc: draws the object
 --]]---------------------------------------------------------
 function newobject:draw()
-	if loveframes.state ~= self.state then
-		return
-	end
-	
-	if not self.visible then
-		return
-	end
-	
+	if not self:OnState() then return end
+	if not self:IsVisible() then return end
 	-- set the object's draw order
 	self:SetDrawOrder()
 	
@@ -125,24 +104,11 @@ end
 	- desc: called when the player presses a mouse button
 --]]---------------------------------------------------------
 function newobject:mousepressed(x, y, button)
-
-	local state = loveframes.state
-	local selfstate = self.state
-	
-	if state ~= selfstate then
-		return
-	end
-	
-	local visible = self.visible
-	
-	if not visible then
-		return
-	end
-	
+	if not self:OnState() then return end
+	if not self:IsVisible() then return end
 	for k, v in ipairs(self.internals) do
 		v:mousepressed(x, y, button)
 	end
-	
 	if self.hover and button == 1 then
 		local time = os.time()
 		if self.lastclick + 0.40 > time then
@@ -155,7 +121,6 @@ function newobject:mousepressed(x, y, button)
 			onselectnode(self.parent, self)
 		end
 	end
-	
 end
 
 --[[---------------------------------------------------------
@@ -163,24 +128,11 @@ end
 	- desc: called when the player releases a mouse button
 --]]---------------------------------------------------------
 function newobject:mousereleased(x, y, button)
-	
-	local state = loveframes.state
-	local selfstate = self.state
-	
-	if state ~= selfstate then
-		return
-	end
-	
-	local visible = self.visible
-	
-	if not visible then
-		return
-	end
-	
+	if not self:OnState() then return end
+	if not self:IsVisible() then return end
 	for k, v in ipairs(self.internals) do
 		v:mousereleased(x, y, button)
 	end
-
 end
 
 --[[---------------------------------------------------------

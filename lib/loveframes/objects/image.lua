@@ -38,18 +38,8 @@ end
 	- desc: updates the object
 --]]---------------------------------------------------------
 function newobject:update(dt)
-	local state = loveframes.state
-	local selfstate = self.state
-	if state ~= selfstate then
-		return
-	end
-	local visible = self.visible
-	local alwaysupdate = self.alwaysupdate
-	if not visible then
-		if not alwaysupdate then
-			return
-		end
-	end
+	if not self:OnState() then return end
+	if not self:IsVisible() then return end
 	local parent = self.parent
 	local base = loveframes.base
 	local update = self.Update

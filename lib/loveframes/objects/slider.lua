@@ -49,23 +49,8 @@ end
 	- desc: updates the object
 --]]---------------------------------------------------------
 function newobject:update(dt)
-
-	local state = loveframes.state
-	local selfstate = self.state
-	
-	if state ~= selfstate then
-		return
-	end
-	
-	local visible = self.visible
-	local alwaysupdate = self.alwaysupdate
-	
-	if not visible then
-		if not alwaysupdate then
-			return
-		end
-	end
-	
+	if not self:OnState() then return end
+	if not self:IsVisible() then return end
 	local internals = self.internals
 	local sliderbutton 	= internals[1]
 	local parent = self.parent
@@ -107,26 +92,12 @@ end
 	- desc: called when the player presses a mouse button
 --]]---------------------------------------------------------
 function newobject:mousepressed(x, y, button)
-
-	local state = loveframes.state
-	local selfstate = self.state
-	
-	if state ~= selfstate then
-		return
-	end
-	
-	local visible = self.visible
-	
-	if not visible then
-		return
-	end
-		
+	if not self:OnState() then return end
+	if not self:IsVisible() then return end
 	local enabled = self.enabled
-	
 	if not enabled then
 		return
 	end
-	
 	local internals = self.internals
 	local hover = self.hover
 	local slidetype = self.slidetype

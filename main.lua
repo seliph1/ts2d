@@ -7,12 +7,11 @@ local lldebugger = require "lldebugger"
 local launch_type = arg[2]
 if launch_type == "debug" then
 	lldebugger.start()
+	loveframes.config["DEBUG"] = true
 end
 
 function love.load()
 	client.load()
-
-	loveframes.config["ENABLE_SYSTEM_CURSORS"]=true
 end
 
 function love.update( dt )

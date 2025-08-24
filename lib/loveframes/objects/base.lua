@@ -26,9 +26,7 @@ end
 	- desc: updates the object
 --]]---------------------------------------------------------
 function newobject:update(dt)
-	if loveframes.state ~= self.state then
-		return
-	end
+	if not self:OnState() then return end
 	local width, height = love.graphics.getDimensions()
 	if self.width ~= width then
 		self.width = width
@@ -55,9 +53,7 @@ end
 	- desc: draws the object
 --]]---------------------------------------------------------
 function newobject:draw()
-	if loveframes.state ~= self.state then
-		return
-	end
+	if not self:OnState() then return end
 	if not self.visible then
 		return
 	end
@@ -89,9 +85,7 @@ end
 	- desc: called when the player moves mouse
 --]]---------------------------------------------------------
 function newobject:mousemoved(x, y, dx, dy, istouch)
-	if loveframes.state ~= self.state then
-		return
-	end
+	if not self:OnState() then return end
 	if not self.visible then
 		return
 	end
@@ -114,9 +108,7 @@ end
 	- desc: called when the player presses a mouse button
 --]]---------------------------------------------------------
 function newobject:mousepressed(x, y, button)
-	if loveframes.state ~= self.state then
-		return
-	end
+	if not self:OnState() then return end
 	if not self.visible then
 		return
 	end
@@ -139,9 +131,7 @@ end
 	- desc: called when the player releases a mouse button
 --]]---------------------------------------------------------
 function newobject:mousereleased(x, y, button)
-	if loveframes.state ~= self.state then
-		return
-	end
+	if not self:OnState() then return end
 	if not self.visible then
 		return
 	end
@@ -164,9 +154,7 @@ end
 	- desc: called when the player moves a mouse wheel
 --]]---------------------------------------------------------
 function newobject:wheelmoved(x, y)
-	if loveframes.state ~= self.state then
-		return
-	end
+	if not self:OnState() then return end
 	if not self.visible then
 		return
 	end
@@ -189,21 +177,16 @@ end
 	- desc: called when the player presses a key
 --]]---------------------------------------------------------
 function newobject:keypressed(key, isrepeat)
-	if loveframes.state ~= self.state then
-		return
-	end
-	
+	if not self:OnState() then return end
 	if not self.visible then
 		return
 	end
-	
 	local children = self.children
 	if children then
 		for k, v in ipairs(children) do
 			v:keypressed(key, isrepeat)
 		end
 	end
-	
 	local internals = self.internals
 	if internals then
 		for k, v in ipairs(internals) do
@@ -217,9 +200,7 @@ end
 	- desc: called when the player releases a key
 --]]---------------------------------------------------------
 function newobject:keyreleased(key)
-	if loveframes.state ~= self.state then
-		return
-	end
+	if not self:OnState() then return end
 	if not self.visible then
 		return
 	end
@@ -241,9 +222,7 @@ end
 	- desc: called when the user inputs text
 --]]---------------------------------------------------------
 function newobject:textinput(text)
-	if loveframes.state ~= self.state then
-		return
-	end
+	if not self:OnState() then return end
 	if not self.visible then
 		return
 	end
@@ -675,26 +654,20 @@ end
 			object 
 --]]---------------------------------------------------------
 function newobject:RemoveClickBounds()
-
 	local internals = self.internals
 	local children = self.children
-	
 	self.clickbounds = nil
-	
 	if internals then
 		for k, v in ipairs(internals) do
 			v:RemoveClickBounds()
 		end
 	end
-	
 	if children then
 		for k, v in ipairs(children) do
 			v:RemoveClickBounds()
 		end
 	end
-	
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -703,19 +676,15 @@ end
 			collision detection boundaries
 --]]---------------------------------------------------------
 function newobject:InClickBounds()
-
 	local x, y = love.mouse.getPosition()
 	local bounds = self.clickbounds
-	
 	if bounds then
 		local col = loveframes.BoundingBox(x, bounds.x, y, bounds.y, 1, bounds.width, 1, bounds.height)
 		return col
 	else
 		return false
 	end
-	
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -723,18 +692,14 @@ end
 	- desc: finds the object's base parent
 --]]---------------------------------------------------------
 function newobject:GetBaseParent(t)
-	
 	local t = t or {}
 	local base = loveframes.base
 	local parent = self.parent
-	
 	if parent ~= base then
 		table.insert(t, parent)
 		parent:GetBaseParent(t)
 	end
-	
 	return t[#t]
-	
 end
 
 --[[---------------------------------------------------------
@@ -750,14 +715,11 @@ function newobject:CheckHover()
 	local mx, my = love.mouse.getPosition()
 	local selfcol = loveframes.BoundingBox(mx, x, my, y, 1, width, 1, height)
 	local collisioncount = loveframes.collisioncount
-	local curstate = loveframes.state
-	local state = self.state
-	local visible = self.visible
 	local type = self.type
 	local hoverobject = loveframes.GetHoverObject()
 
 	-- check if the mouse is colliding with the object
-	if state == curstate and visible then
+	if self:OnState() and self:IsVisible() then
 		local collide = self.collide
 		if selfcol and collide then
 			loveframes.collisioncount = collisioncount + 1
@@ -986,10 +948,8 @@ end
 	- desc: sets the object's skin
 --]]---------------------------------------------------------
 function newobject:SetAlwaysUpdate(bool)
-
 	self.alwaysupdate = bool
 	return self
-
 end
 
 --[[---------------------------------------------------------
@@ -997,9 +957,7 @@ end
 	- desc: gets whether or not the object will always update
 --]]---------------------------------------------------------
 function newobject:GetAlwaysUpdate()
-
 	return self.alwaysupdate
-
 end
 
 --[[---------------------------------------------------------
@@ -1008,10 +966,8 @@ end
 			size when another object tries to resize it
 --]]---------------------------------------------------------
 function newobject:SetRetainSize(bool)
-
 	self.retainsize = bool
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -1020,9 +976,7 @@ end
 			size when another object tries to resize it
 --]]---------------------------------------------------------
 function newobject:GetRetainSize()
-	
 	return self.retainsize
-	
 end
 
 --[[---------------------------------------------------------
@@ -1031,19 +985,15 @@ end
 			its parent's child table
 --]]---------------------------------------------------------
 function newobject:IsActive()
-
 	local parent = self.parent
 	local pchildren = parent.children
 	local valid = false
-	
 	for k, v in ipairs(pchildren) do
 		if v == self then
 			valid = true
 		end
 	end
-	
 	return valid
-	
 end
 
 --[[---------------------------------------------------------
@@ -1052,7 +1002,6 @@ end
 			sub-parents
 --]]---------------------------------------------------------
 function newobject:GetParents()
-	
 	local function GetParents(object, t)
 		local t = t or {}
 		local type = object.type
@@ -1063,10 +1012,8 @@ function newobject:GetParents()
 		end
 		return t
 	end
-	
 	local parents = GetParents(self)
 	return parents
-	
 end
 
 --[[---------------------------------------------------------
@@ -1076,17 +1023,14 @@ end
 			false if not
 --]]---------------------------------------------------------
 function newobject:IsTopInternal()
-
 	local parent = self.parent
 	local internals = parent.internals
 	local topitem = internals[#internals]
-	
 	if topitem ~= self then
 		return false
 	else
 		return true
 	end
-	
 end
 
 --[[---------------------------------------------------------
@@ -1095,9 +1039,7 @@ end
 			false if not
 --]]---------------------------------------------------------
 function newobject:IsInternal()
-
 	return self.internal
-	
 end
 
 --[[---------------------------------------------------------
@@ -1105,9 +1047,7 @@ end
 	- desc: gets the type of the object
 --]]---------------------------------------------------------
 function newobject:GetType()
-
 	return self.type
-
 end
 
 --[[---------------------------------------------------------
@@ -1115,11 +1055,9 @@ end
 	- desc: sets the object's draw order
 --]]---------------------------------------------------------
 function newobject:SetDrawOrder()
-
 	loveframes.drawcount = loveframes.drawcount + 1
 	self.draworder = loveframes.drawcount
 	return self
-
 end
 
 --[[---------------------------------------------------------
@@ -1127,9 +1065,7 @@ end
 	- desc: sets the object's draw order
 --]]---------------------------------------------------------
 function newobject:GetDrawOrder()
-
 	return self.draworder
-	
 end
 
 --[[---------------------------------------------------------
@@ -1154,10 +1090,8 @@ end
 	- desc: sets a property on the object
 --]]---------------------------------------------------------
 function newobject:SetProperty(name, value)
-
 	self[name] = value
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -1165,9 +1099,7 @@ end
 	- desc: gets the value of an object's property
 --]]---------------------------------------------------------
 function newobject:GetProperty(name)
-
 	return self[name]
-	
 end
 
 --[[---------------------------------------------------------
@@ -1175,17 +1107,13 @@ end
 	- desc: checks to see if an object is in a list
 --]]---------------------------------------------------------
 function newobject:IsInList()
-	
 	local parents = self:GetParents()
-	
 	for k, v in ipairs(parents) do
 		if v.type == "list" then
 			return true, v
 		end
 	end
-	
 	return false, false
-	
 end
 
 --[[---------------------------------------------------------
@@ -1193,26 +1121,20 @@ end
 	- desc: sets the object's state
 --]]---------------------------------------------------------
 function newobject:SetState(name)
-
 	local children = self.children
 	local internals = self.internals
-	
 	self.state = name
-	
 	if children then
 		for k, v in ipairs(children) do
 			v:SetState(name)
 		end
 	end
-	
 	if internals then
 		for k, v in ipairs(internals) do
 			v:SetState(name)
 		end
 	end
-	
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -1220,9 +1142,29 @@ end
 	- desc: gets the object's state
 --]]---------------------------------------------------------
 function newobject:GetState()
-
 	return self.state
-	
+end
+
+--[[---------------------------------------------------------
+	- func: OnState()
+	- desc: compares the object's self state with the global state
+--]]---------------------------------------------------------
+function newobject:OnState()
+	local state = loveframes.state
+	local selfstate = self.state
+	if selfstate == "*" then return true end
+	if state ~= selfstate then
+		return false
+	end
+	return true
+end
+
+--[[---------------------------------------------------------
+	- func: IsVisible
+	- desc: compares the object's visibility
+--]]---------------------------------------------------------
+function newobject:IsVisible()
+	return self.visible or self.alwaysupdate
 end
 
 ---------- module end ----------

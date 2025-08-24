@@ -83,18 +83,8 @@ end
 	- desc: updates the element
 --]]---------------------------------------------------------
 function newobject:update(dt)
-	local state = loveframes.state
-	local selfstate = self.state
-	if state ~= selfstate then
-		return
-	end
-	local visible = self.visible
-	local alwaysupdate = self.alwaysupdate
-	if not visible then
-		if not alwaysupdate then
-			return
-		end
-	end
+	if not self:OnState() then return end
+	if not self:IsVisible() then return end
 	local mx, my = love.mouse.getPosition()
 	local showclose = self.showclose
 	local close = self.internals[1]
@@ -373,17 +363,20 @@ function newobject:update(dt)
 				key = k
 			end
 		end
-		if tip then
-			self:Remove()
-			self.modalbackground:Remove()
-			table.insert(basechildren, key - 2, self.modalbackground)
-			table.insert(basechildren, key - 1, self)
-		end
-		if self.modalbackground.draworder > self.draworder then
-			self:MakeTop()
-		end
-		if self.modalbackground.state ~= self.state then
-			self.modalbackground:SetState(self.state)
+		local modalbackground = self.modalbackground
+		if modalbackground then
+			if tip then
+				self:Remove()
+				modalbackground:Remove()
+				table.insert(basechildren, key - 2, modalbackground)
+				table.insert(basechildren, key - 1, self)
+			end
+			if modalbackground.draworder > self.draworder then
+				self:MakeTop()
+			end
+			if modalbackground.state ~= self.state then
+				modalbackground:SetState(self.state)
+			end
 		end
 	end
 	if parent ~= base then
@@ -405,15 +398,8 @@ end
 	- desc: called when the player presses a mouse button
 --]]---------------------------------------------------------
 function newobject:mousepressed(x, y, button)
-	local state = loveframes.state
-	local selfstate = self.state
-	if state ~= selfstate then
-		return
-	end
-	local visible = self.visible
-	if not visible then
-		return
-	end
+	if not self:OnState() then return end
+	if not self:IsVisible() then return end
 	local width = self.width
 	local height = self.height
 	local internals = self.internals
@@ -587,15 +573,8 @@ end
 	- desc: called when the player releases a mouse button
 --]]---------------------------------------------------------
 function newobject:mousereleased(x, y, button)
-	local state = loveframes.state
-	local selfstate = self.state
-	if state ~= selfstate then
-		return
-	end
-	local visible = self.visible
-	if not visible then
-		return
-	end
+	if not self:OnState() then return end
+	if not self:IsVisible() then return end
 	local children = self.children
 	local internals = self.internals
 	self.dragging = false
@@ -773,7 +752,7 @@ function newobject:SetModal(bool)
 		if modalobject == self then
 			loveframes.modalobject = false
 			if mbackground then
-				self.modalbackground:Remove()
+				mbackground:Remove()
 				self.modalbackground = false
 				self.modal = false
 			end
