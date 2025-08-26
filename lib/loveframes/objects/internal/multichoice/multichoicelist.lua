@@ -55,7 +55,7 @@ end
 --]]---------------------------------------------------------
 function newobject:update(dt)
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 	local width = love.graphics.getWidth()
 	local height = love.graphics.getHeight()
 	local x, y = love.mouse.getPosition()
@@ -112,7 +112,7 @@ end
 --[[
 function newobject:draw()
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 	
 	self:SetDrawOrder()
 	
@@ -156,7 +156,7 @@ end
 --]]---------------------------------------------------------
 function newobject:mousepressed(x, y, button)
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 	local selfcol = loveframes.BoundingBox(x, self.x, y, self.y, 1, self.width, 1, self.height)
 	local internals = self.internals
 	local children = self.children
@@ -177,7 +177,7 @@ end
 --]]---------------------------------------------------------
 function newobject:mousereleased(x, y, button)
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 	
 	local internals = self.internals
 	local children = self.children

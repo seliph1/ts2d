@@ -719,7 +719,7 @@ function newobject:CheckHover()
 	local hoverobject = loveframes.GetHoverObject()
 
 	-- check if the mouse is colliding with the object
-	if self:OnState() and self:IsVisible() then
+	if self:OnState() and self:isUpdating() then
 		local collide = self.collide
 		if selfcol and collide then
 			loveframes.collisioncount = collisioncount + 1
@@ -1160,10 +1160,10 @@ function newobject:OnState()
 end
 
 --[[---------------------------------------------------------
-	- func: IsVisible
+	- func: isUpdating
 	- desc: compares the object's visibility
 --]]---------------------------------------------------------
-function newobject:IsVisible()
+function newobject:isUpdating()
 	return self.visible or self.alwaysupdate
 end
 

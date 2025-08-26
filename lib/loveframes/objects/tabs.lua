@@ -46,7 +46,7 @@ end
 --]]---------------------------------------------------------
 function newobject:update(dt)
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 	local x, y = love.mouse.getPosition()
 	local tabheight = self.tabheight
 	local padding = self.padding
@@ -97,7 +97,7 @@ end
 --]]---------------------------------------------------------
 function newobject:draw()
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 	local x = self.x
 	local y = self.y
 	local width = self.width
@@ -135,7 +135,7 @@ end
 --]]---------------------------------------------------------
 function newobject:mousepressed(x, y, button)
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 	
 	local children = self.children
 	local internals = self.internals
@@ -167,7 +167,7 @@ end
 --]]---------------------------------------------------------
 function newobject:mousereleased(x, y, button)
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 	local children = self.children
 	local numchildren = #children
 	local tab = self.tab

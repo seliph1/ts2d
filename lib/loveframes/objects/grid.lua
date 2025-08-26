@@ -38,7 +38,7 @@ end
 --]]---------------------------------------------------------
 function newobject:update(dt)
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 	
 	self:CheckHover()
 	
@@ -88,7 +88,7 @@ end
 --]]---------------------------------------------------------
 function newobject:mousepressed(x, y, button)
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 	local children = self.children
 	local hover = self.hover
 	
@@ -111,7 +111,7 @@ end
 --]]---------------------------------------------------------
 function newobject:mousereleased(x, y, button)
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 	local children = self.children
 	for k, v in ipairs(children) do
 		v:mousereleased(x, y, button)

@@ -41,7 +41,7 @@ end
 --]]---------------------------------------------------------
 function newobject:update(dt)
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 
 	local parent = self.parent
 	local base = loveframes.base
@@ -67,7 +67,7 @@ end
 --]]---------------------------------------------------------
 function newobject:mousepressed(x, y, button)
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 	local hover = self.hover
 	local haslist = self.haslist
 	local enabled = self.enabled
@@ -91,7 +91,7 @@ end
 --]]---------------------------------------------------------
 function newobject:mousereleased(x, y, button)
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 end
 
 --[[---------------------------------------------------------

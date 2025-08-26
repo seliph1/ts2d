@@ -39,7 +39,7 @@ end
 --]]---------------------------------------------------------
 function newobject:update(dt)
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 	local parent = self.parent
 	local base = loveframes.base
 	local update = self.Update

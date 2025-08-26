@@ -50,7 +50,7 @@ end
 --]]---------------------------------------------------------
 function newobject:update(dt)
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 	local internals = self.internals
 	local sliderbutton 	= internals[1]
 	local parent = self.parent
@@ -93,7 +93,7 @@ end
 --]]---------------------------------------------------------
 function newobject:mousepressed(x, y, button)
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 	local enabled = self.enabled
 	if not enabled then
 		return

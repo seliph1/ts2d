@@ -50,7 +50,7 @@ end
 --]]---------------------------------------------------------
 function newobject:update(dt)
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 
 	local internals = self.internals
 	local textobject = internals[1]

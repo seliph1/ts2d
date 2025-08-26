@@ -83,7 +83,7 @@ end
 --]]---------------------------------------------------------
 function newobject:update(dt)
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 	-- check to see if the object is being hovered over
 	self:CheckHover()
 	local hover = self.hover
@@ -177,7 +177,7 @@ end
 --]]---------------------------------------------------------
 function newobject:draw()
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 	local x = self.x
 	local y = self.y
 	local width = self.width
@@ -210,7 +210,7 @@ end
 --]]---------------------------------------------------------
 function newobject:wheelmoved(x, y)
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 	local internals = self.internals
 	if internals then
 		for k, v in ipairs(internals) do
@@ -232,7 +232,7 @@ end
 --]]---------------------------------------------------------
 function newobject:mousepressed(x, y, button, istouch, presses)
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 	local hover = self.hover
 	local inputobject = loveframes.inputobject
 	local onfocusgained = self.OnFocusGained
@@ -278,7 +278,7 @@ end
 
 function newobject:mousereleased(x, y, button)
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 	self.field:mousereleased(x - self.x, y - self.y, button)
 	local internals = self.internals
 	for k, v in ipairs(internals) do
@@ -292,7 +292,7 @@ end
 --]]---------------------------------------------------------
 function newobject:keypressed(key, isrepeat)
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 	local focus = self.focus
 	local inputobject = loveframes.inputobject
 	if inputobject ~= self then return end
@@ -332,7 +332,7 @@ end
 
 function newobject:keyreleased(key, isrepeat)
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 	local inputobject = loveframes.inputobject
 	if inputobject == self then
 		--self.field:keyreleased(key, isrepeat)

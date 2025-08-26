@@ -59,7 +59,7 @@ end
 --]]---------------------------------------------------------
 function newobject:update(dt)
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 	local internals = self.internals
 	local parent = self.parent
 	local base = loveframes.base
@@ -85,7 +85,7 @@ end
 --]]---------------------------------------------------------
 function newobject:draw()
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 	local x = self.x
 	local y = self.y
 	local width = self.width
@@ -112,7 +112,7 @@ end
 --]]---------------------------------------------------------
 function newobject:mousepressed(x, y, button)
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 	for k, v in ipairs(self.internals) do
 		v:mousepressed(x, y, button)
 	end
@@ -143,7 +143,7 @@ end
 --]]---------------------------------------------------------
 function newobject:mousereleased(x, y, button)
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 	for _, v in ipairs(self.internals) do
 		v:mousereleased(x, y, button)
 	end
@@ -154,7 +154,7 @@ end
 --]]---------------------------------------------------------
 function newobject:wheelmoved(x, y)
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 	for _, v in ipairs(self.internals) do
 		v:wheelmoved(x, y)
 	end

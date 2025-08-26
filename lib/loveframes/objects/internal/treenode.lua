@@ -38,7 +38,7 @@ end
 --]]---------------------------------------------------------
 function newobject:update(dt)
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 	self:CheckHover()
 	
 	local parent = self.parent
@@ -76,7 +76,7 @@ end
 --]]---------------------------------------------------------
 function newobject:draw()
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 	-- set the object's draw order
 	self:SetDrawOrder()
 	
@@ -105,7 +105,7 @@ end
 --]]---------------------------------------------------------
 function newobject:mousepressed(x, y, button)
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 	for k, v in ipairs(self.internals) do
 		v:mousepressed(x, y, button)
 	end
@@ -129,7 +129,7 @@ end
 --]]---------------------------------------------------------
 function newobject:mousereleased(x, y, button)
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 	for k, v in ipairs(self.internals) do
 		v:mousereleased(x, y, button)
 	end

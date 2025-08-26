@@ -706,7 +706,10 @@ ui.options_button_cancel = LF.Create("button", ui.options_frame):SetText("Cancel
 --------------------------------------------------------------------------------------------------
 --chat--------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------
-ui.chat_frame = LF.Create("frame"):SetSize(400, 400)
+ui.chat_width = 400
+ui.chat_height = 400
+
+ui.chat_frame = LF.Create("frame"):SetSize(ui.chat_width, ui.chat_height):SetState("game")
 ui.chat_frame:SetScreenLocked(true):Center():ShowCloseButton(false)
 ui.chat_frame_message = function(player, message)
 	local game = {mode = 1}
@@ -739,23 +742,28 @@ ui.chat_frame_message = function(player, message)
 end
 
 ui.chat_frame.Draw = function(object)
-	LG.setColor(0,0,0,0.2)
-	LG.rectangle("fill", object.x, object.y, object.width, object.height, 10, 10)
-end
-
-ui.chat_log = LF.Create("log", ui.chat_frame):SetSize(400, 370):SetPos(0, 30):SetPadding(0)
-:SetFont(ui.font_chat)
-
---[[
-ui.chat_input = LF.Create("textbox", ui.chat_frame):SetPos(80, 0):SetSize(200, 20)
-ui.chat_input.OnControlKeyPressed = function(object, key)
-	if key == "return" then
-		local message = ui.chat_input:GetText()
-		ui.chat_input:SetText("")
-		player_message(1, message)
+	local hover = object:GetHover()
+	local hovertime = 0
+	if hover and object.hovertime > 0 then
+		hovertime = love.timer.getTime() - object.hovertime
 	end
+	local brightness =  LF.Mix(0.1, 0.3, LF.Clamp(hovertime*5, 0, 1) )
+
+	LG.setColor(0, 0, 0, brightness)
+	LG.rectangle("fill", object.x, object.y, object.width, object.height, 10, 10)
+
+	LG.setColor(0, 0, 0, brightness)
+
+	local skin = LF.GetActiveSkin()
+	LG.setColor(0.8,0.8,0.8, brightness)
+	local drag = skin.images["vdrag.png"]
+	local scale = 0.3
+	LG.draw(drag, object.x + object.width/2 - drag:getWidth()/2*scale, object.y + 8, 0, scale)
 end
-]]
+
+ui.chat_log = LF.Create("log", ui.chat_frame)
+:SetSize(ui.chat_width, ui.chat_height-30):SetPos(0, 30):SetPadding(0)
+:SetFont(ui.font_chat)
 
 --------------------------------------------------------------------------------------------------
 --editor------------------------------------------------------------------------------------------
@@ -774,14 +782,9 @@ local action_debug = function(key, isrepeat)
 	LF.config["DEBUG"] = not state
 end
 
-local action_console = function(key, isrepeat)
-	local bool = ui.console_frame:GetVisible()
-	ui.console_frame:SetVisible(not bool):Center():MoveToTop()
-end
-
 LF.bind("all", "", "escape", action_quit)
 LF.bind("all", "", "f1", action_debug)
-LF.bind("all", "", "'", action_console)
+LF.bind("all", "", "'", ui.console_button.OnClick)
 
 --------------------------------------------------------------------------------------------------
 --final wrapping of windows-----------------------------------------------------------------------

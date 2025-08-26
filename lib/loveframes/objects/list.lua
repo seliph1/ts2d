@@ -48,7 +48,7 @@ end
 --]]---------------------------------------------------------
 function newobject:update(dt)
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 	self:CheckHover()
 	local internals = self.internals
 	local children = self.children
@@ -104,7 +104,7 @@ end
 --]]---------------------------------------------------------
 function newobject:draw()
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 	local x = self.x
 	local y = self.y
 	local width = self.width
@@ -148,7 +148,7 @@ end
 --]]---------------------------------------------------------
 function newobject:mousepressed(x, y, button)
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 	local hover = self.hover
 	local children = self.children
 	local internals = self.internals

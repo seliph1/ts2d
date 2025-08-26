@@ -171,7 +171,7 @@ end
 --]]---------------------------------------------------------
 function newobject:wheelmoved(x, y)
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 	local bar = self.internals[1].internals[1]
 	if self.parent.hover then
 		if self.bartype == "vertical" then

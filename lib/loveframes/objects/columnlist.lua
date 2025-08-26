@@ -49,7 +49,7 @@ end
 --]]---------------------------------------------------------
 function newobject:update(dt)
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 	
 	local parent = self.parent
 	local base = loveframes.base
@@ -88,7 +88,7 @@ end
 --]]---------------------------------------------------------
 function newobject:draw()
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 	
 	local vbody = self.internals[1]:GetVerticalScrollBody()
 	local hbody = self.internals[1]:GetHorizontalScrollBody()
@@ -146,7 +146,7 @@ end
 --]]---------------------------------------------------------
 function newobject:mousepressed(x, y, button)
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 	
 	local hover = self.hover
 	local children  = self.children
@@ -175,7 +175,7 @@ end
 --]]---------------------------------------------------------
 function newobject:mousereleased(x, y, button)
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 	
 	local children = self.children
 	local internals = self.internals

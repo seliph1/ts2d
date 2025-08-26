@@ -37,7 +37,7 @@ end
 --]]---------------------------------------------------------
 function newobject:update(dt)
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 	self:CheckHover()
 	
 	local hover = self.hover
@@ -97,7 +97,7 @@ end
 --]]---------------------------------------------------------
 function newobject:mousepressed(x, y, button)
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 end
 
 --[[---------------------------------------------------------
@@ -106,7 +106,7 @@ end
 --]]---------------------------------------------------------
 function newobject:mousereleased(x, y, button)
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 	local hover = self.hover
 	local option_type = self.option_type
 	if hover and option_type ~= "divider" and button == 1 then

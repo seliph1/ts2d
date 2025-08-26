@@ -151,7 +151,7 @@ end
 --]]---------------------------------------------------------
 function newobject:update(dt)
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 	local internals = self.internals
 	local parent = self.parent
 	local base = loveframes.base
@@ -177,7 +177,7 @@ end
 --]]---------------------------------------------------------
 function newobject:mousepressed(x, y, button)
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 	local internals = self.internals
 	local hover = self.hover
 	if hover and button == 1 then

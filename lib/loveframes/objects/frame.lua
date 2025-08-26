@@ -84,7 +84,7 @@ end
 --]]---------------------------------------------------------
 function newobject:update(dt)
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 	local mx, my = love.mouse.getPosition()
 	local showclose = self.showclose
 	local close = self.internals[1]
@@ -399,7 +399,7 @@ end
 --]]---------------------------------------------------------
 function newobject:mousepressed(x, y, button)
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 	local width = self.width
 	local height = self.height
 	local internals = self.internals
@@ -574,7 +574,7 @@ end
 --]]---------------------------------------------------------
 function newobject:mousereleased(x, y, button)
 	if not self:OnState() then return end
-	if not self:IsVisible() then return end
+	if not self:isUpdating() then return end
 	local children = self.children
 	local internals = self.internals
 	self.dragging = false

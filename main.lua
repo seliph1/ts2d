@@ -24,7 +24,7 @@ local lldebugger = require "lldebugger"
 local launch_type = arg[2]
 if launch_type == "debug" then
 	lldebugger.start()
-	loveframes.config["DEBUG"] = true
+	--loveframes.config["DEBUG"] = true
 end
 
 function love.load()
