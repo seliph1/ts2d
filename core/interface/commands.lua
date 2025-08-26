@@ -94,7 +94,11 @@ local commands = {
 		end;
 	};
 	["say"] = {
-		action = function(message)
+		action = function(...)
+			local message = table.concat({...}, " ")
+			local ui = require "core.interface.ui"
+			local formatted_message = ui.chat_frame_message({name="Mozilla", health=100}, message )
+			print(formatted_message)
 		end;
 	};
 
@@ -142,6 +146,38 @@ local commands = {
 				end
 			else
 				print("©255000000LUA ERROR: "..error_message)
+			end
+		end;
+	};
+
+	clear = {
+		---Clear console
+		action = function()
+			local ui = require "core.interface.ui"
+			ui.console_window:Clear()
+		end;
+	};
+	utf8 = {
+		action = function()
+			local frases = {
+				{ idioma = "Português", frase = "Você já viu o avião de João?" },
+				{ idioma = "Inglês", frase = "The quick brown fox jumps over the lazy dog." },
+				{ idioma = "Francês", frase = "Où est l'hôtel près du marché ?" },
+				{ idioma = "Alemão", frase = "Fußgängerüberweg vor der Straße." },
+				{ idioma = "Espanhol", frase = "El niño pidió piñata para su cumpleaños." },
+				{ idioma = "Polonês", frase = "Źródło wód żółtych wciąż bije." },
+				{ idioma = "Russo", frase = "Москва — столица России." },
+				{ idioma = "Grego", frase = "Η Αθήνα είναι όμορφη πόλη." },
+				{ idioma = "Árabe", frase = "اللغة العربية جميلة جدًا." },
+				{ idioma = "Hebraico", frase = "השפה העברית עתיקה מאוד." },
+				{ idioma = "Chinês", frase = "中文字符测试示例。" },
+				{ idioma = "Japonês", frase = "日本語の文字をテストします。" },
+				{ idioma = "Coreano", frase = "한국어 문자를 시험합니다." },
+				{ idioma = "Tailandês", frase = "ภาษาไทยสวยงามมาก." },
+			}
+
+			for k,v in ipairs(frases) do
+				print(v.idioma, v.frase)
 			end
 		end;
 	};

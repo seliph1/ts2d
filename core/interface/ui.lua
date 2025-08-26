@@ -1,16 +1,38 @@
 local client = require "client"
 local LG = love.graphics
 local LF = require "lib.loveframes"
-local ui = {
-    latin_font = LG.newFont("gfx/fonts/liberationsans.ttf", 15),
-    latin_font_small = LG.newFont("gfx/fonts/liberationsans.ttf", 11),
+local ui = {}
 
-    font = LG.newFont("gfx/fonts/NotoSansKR-Regular.ttf", 15),
-    font_small = LG.newFont("gfx/fonts/NotoSansKR-Regular.ttf", 11),
-
-    font_mono = LG.newFont("gfx/fonts/NotoSansMono-Regular.ttf", 15),
-	font_mono_small = LG.newFont("gfx/fonts/NotoSansMono-Regular.ttf", 12),
+ui.font_fallbacks = {
+	"gfx/fonts/NotoSansCJK-Regular.ttc",
+	"gfx/fonts/NotoSansArabic-Regular.ttf",
+	"gfx/fonts/NotoSansThai-Regular.ttf",
+	"gfx/fonts/NotoSansHebrew-Regular.ttf",
 }
+
+ui.setFontFallbacks = function(font, size)
+	local fallbacks = {}
+	for index, fallback_src in ipairs(ui.font_fallbacks) do
+		local fallback = LG.newFont(fallback_src, size)
+		table.insert(fallbacks, fallback)
+	end
+	font:setFallbacks(unpack(fallbacks))
+end
+
+ui.font_mono = LG.newFont("gfx/fonts/NotoSansMono-Regular.ttf", 15)
+ui.setFontFallbacks(ui.font_mono, 15)
+
+ui.font_mono_small = LG.newFont("gfx/fonts/NotoSansMono-Regular.ttf", 12)
+ui.setFontFallbacks(ui.font_mono_small, 12)
+
+ui.font = LG.newFont("gfx/fonts/liberationsans.ttf", 15)
+ui.setFontFallbacks(ui.font, 15)
+
+ui.font_small = LG.newFont("gfx/fonts/liberationsans.ttf", 11)
+ui.setFontFallbacks(ui.font_small, 11)
+
+ui.font_chat = LG.newFont("gfx/fonts/liberationsans.ttf", 18)
+ui.setFontFallbacks(ui.font_chat, 18)
 
 ui.setCursor = function(cursorType, cursorImageData, scale)
 	local ow, oh = cursorImageData:getWidth(), cursorImageData:getHeight()
@@ -38,6 +60,10 @@ end
 local _, pointers =  LF.CreateSpriteSheet("gfx/pointer.bmp", 46, 46)
 ui.setCursor("arrow", pointers[0], 0.6)
 
+
+--------------------------------------------------------------------------------------------------
+--Local function helpers--------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------
 -- Gera uma string aleatória com o tamanho especificado
 local function random_string(length)
     local charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
@@ -56,8 +82,19 @@ local function random_color()
     return string.format("©%03d%03d%03d", r, g, b)
 end
 
-ui.editor = require "core.interface.editor"
-ui.editor.frame:SetVisible(false)
+local function is_rtl(str)
+	-- procura qualquer caractere nas faixas hebraico ou árabe
+	return str:find("[\u{0590}-\u{05FF}\u{0600}-\u{06FF}]") ~= nil
+end
+
+local function reverse_utf8(str)
+	local chars = {}
+	for c in str:gmatch("[%z\1-\127\194-\244][\128-\191]*") do
+		table.insert(chars, 1, c)
+	end
+	return table.concat(chars)
+end
+
 --------------------------------------------------------------------------------------------------
 --Main Menu Container-----------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------
@@ -65,7 +102,7 @@ ui.main_menu = LF.Create("container")
 ui.main_menu:SetSize(100, 300):SetPos(20, 200)
 
 ui.console_button = LF.Create("messagebox", ui.main_menu)
-:SetPos(0, 0):SetFont(ui.font_small):SetCursor(LF.cursors.hand)
+:SetPos(0, 0):SetCursor(LF.cursors.hand)
 :SetText("©192192192Console"):SetHoverText("©255255255Console")
 ui.console_button.OnClick = function(object)
 	local bool = ui.console_frame:GetVisible()
@@ -73,14 +110,14 @@ ui.console_button.OnClick = function(object)
 end
 --Main menu group 1-------------------------------------------------------------------------------
 ui.quickplay_button = LF.Create("messagebox", ui.main_menu)
-:SetPos(0, 40):SetFont(ui.font):SetCursor(LF.cursors.hand)
+:SetPos(0, 40):SetCursor(LF.cursors.hand)
 :SetText("©192192192Quick Play"):SetHoverText("©255255255Quick Play")
 ui.quickplay_button.OnClick = function(self)
 end
 
 ui.newgame_button = LF.Create("messagebox", ui.main_menu)
 :SetText("©192192192New Game"):SetHoverText("©255255255New Game")
-:SetPos(0, 60):SetFont(ui.font):SetCursor(LF.cursors.hand)
+:SetPos(0, 60):SetCursor(LF.cursors.hand)
 ui.newgame_button.OnClick = function(self)
 	local bool = ui.new_game_frame:GetVisible()
 	ui.new_game_frame:SetVisible(not bool):Center():MoveToTop()
@@ -88,11 +125,11 @@ end
 
 ui.findservers_button = LF.Create("messagebox", ui.main_menu)
 :SetText("©192192192Find Servers"):SetHoverText("©255255255Find Servers")
-:SetPos(0, 80):SetFont(ui.font):SetCursor(LF.cursors.hand)
+:SetPos(0, 80):SetCursor(LF.cursors.hand)
 --Main menu group 2---------------------------------------------------------------------------
 ui.options_button = LF.Create("messagebox", ui.main_menu)
 :SetText("©192192192Options"):SetHoverText("©255255255Options")
-:SetPos(0, 120):SetFont(ui.font):SetCursor(LF.cursors.hand)
+:SetPos(0, 120):SetCursor(LF.cursors.hand)
 ui.options_button.OnClick = function(self)
 	local bool = ui.options_frame:GetVisible()
 	ui.options_frame:SetVisible(not bool):Center():MoveToTop()
@@ -100,18 +137,18 @@ end
 
 ui.friends_button = LF.Create("messagebox", ui.main_menu)
 :SetText("©192192192Friends"):SetHoverText("©255255255Friends")
-:SetPos(0, 140):SetFont(ui.font):SetCursor(LF.cursors.hand)
+:SetPos(0, 140):SetCursor(LF.cursors.hand)
 ui.friends_button.OnClick = function(self)
 	local testframe = LF.Create("frame"):SetResizable(true)
 end
 
 ui.mods_button = LF.Create("messagebox", ui.main_menu)
 :SetText("©192192192Mods"):SetHoverText("©255255255Mods")
-:SetPos(0, 160):SetFont(ui.font):SetCursor(LF.cursors.hand)
+:SetPos(0, 160):SetCursor(LF.cursors.hand)
 
 ui.editor_button = LF.Create("messagebox", ui.main_menu)
 :SetText("©192192192Editor"):SetHoverText("©255255255Editor")
-:SetPos(0, 180):SetFont(ui.font):SetCursor(LF.cursors.hand)
+:SetPos(0, 180):SetCursor(LF.cursors.hand)
 ui.editor_button.OnClick = function(self)
     if client.map then
         local status = client.map:read( "maps/fun_roleplay.map" )
@@ -125,16 +162,16 @@ end
 
 ui.help_button = LF.Create("messagebox", ui.main_menu)
 :SetText("©192192192Help"):SetHoverText("©255255255Help")
-:SetPos(0, 200):SetFont(ui.font):SetCursor(LF.cursors.hand)
+:SetPos(0, 200):SetCursor(LF.cursors.hand)
 
 ui.discord_button = LF.Create("messagebox", ui.main_menu)
 :SetText("©192192192Discord"):SetHoverText("©255255255Discord")
-:SetPos(0, 220):SetFont(ui.font):SetCursor(LF.cursors.hand)
+:SetPos(0, 220):SetCursor(LF.cursors.hand)
 --ui.discord_button.OnClick = function(self, key) end
 --Main menu group 3-------------------------------------------------------------------------------
 ui.quit_button = LF.Create("messagebox", ui.main_menu)
 :SetText("©192192192Quit"):SetHoverText("©255255255Quit")
-:SetPos(0, 260):SetFont(ui.font):SetCursor(LF.cursors.hand)
+:SetPos(0, 260):SetCursor(LF.cursors.hand)
 ui.quit_button.OnClick = function() love.event.quit() end
 
 --------------------------------------------------------------------------------------------------
@@ -146,13 +183,14 @@ ui.console_frame = LF.Create("frame"):SetSize(640, 480):SetResizable(false):SetS
 ui.console_window_panel = LF.Create("panel", ui.console_frame)
 :SetSize(630, 400):SetPos(5, 30)
 ui.console_window = LF.Create("log", ui.console_window_panel)
-:SetSize(630, 400):SetFont(ui.font_mono_small):SetPadding(0)
-ui.console_window.history = {}
+:SetSize(630, 400):SetPadding(0):SetFont(ui.font_mono_small)
+
 ui.console_input = LF.Create("textbox", ui.console_frame)
-ui.console_input:SetPos(5, 435):SetWidth(630):SetFont(ui.font_mono):SetMaxHistory(1)
+ui.console_input:SetPos(5, 435):SetWidth(630):SetMaxHistory(1):SetFont(ui.font_mono)
 ui.console_input.rollback = 1
 ui.console_input.history = {""}
 ui.console_input.OnEnter = function(self, text)
+	if text == "" then return end
     if not(self.focus) then
         return
     end
@@ -209,7 +247,7 @@ function print(...)
 		table.insert(str, tostring(v))
 	end
 	if ui.console_window then
-		ui.console_window:AddElement(table.concat(str," "), true)
+		ui.console_window:AddElement(table.concat(str,"	"), true)
 	end
 	_Print(...)
 end
@@ -335,7 +373,7 @@ end
 
 ui.map_display_pane = LF.Create("scrollpane", ui.new_game_map):SetPos(0, 50+4):SetSize(406, 304)
 ui.map_display_list = LF.Create("droplist", ui.map_display_pane)
-:SetSize(406, 304):SetZebra(true):SetFont(ui.font):SetPadding(0)
+:SetSize(406, 304):SetZebra(true):SetPadding(0)
 local elements = {}
 for _, name in pairs(love.filesystem.getDirectoryItems("maps")) do
 	table.insert(elements, name)
@@ -425,8 +463,7 @@ ui.bots_weapons_option = LF.Create("multichoice", ui.new_game_bots):SetPos(150, 
 --Tab 6: More settings-----------------------------------------------------------------------------
 ui.command_scroll = LF.Create("scrollpane", ui.new_game_moresettings):SetPos(0, 10):SetSize(406, 304)
 ui.command_list = LF.Create("droplist", ui.command_scroll)
-:SetSize(406, 304):SetFont(ui.font):SetPadding(0):SetZebra(true)
---:SetBackground(0.15,0.15,0.15,1.0):
+:SetSize(406, 304):SetPadding(0):SetZebra(true)
 
 local commands = {
 	"mp_postspawn";
@@ -670,19 +707,60 @@ ui.options_button_cancel = LF.Create("button", ui.options_frame):SetText("Cancel
 --chat--------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------
 ui.chat_frame = LF.Create("frame"):SetSize(400, 400)
-ui.chat_frame:ShowCloseButton(false)
+ui.chat_frame:SetScreenLocked(true):Center():ShowCloseButton(false)
+ui.chat_frame_message = function(player, message)
+	local game = {mode = 1}
+	if not player then return end
+	local teamcolor = ""
+	if player.team == 0 then
+		teamcolor = "©128128128"
+	elseif player.team == 1 then
+		teamcolor = "©050150254"
+	elseif player.team == 2 then
+		teamcolor = "©254025000"
+	end
+	local messagecolor = "©255220000"
+	local deadindicator = ""
+	if player.health <= 0 then
+		deadindicator = "©255220000 *DEAD*"
+	end
+	if game.mode == 1 and player.team ~= 0 then
+		teamcolor = "©000255000"
+	end
 
-ui.chat_log = LF.Create("log", ui.chat_frame):SetSize(400, 370):SetPos(0, 30)
-ui.chat_frame:SetState("game")
+	if is_rtl(message) then
+		message = reverse_utf8(message)
+	end
+
+	local full_message = string.format("%s%s%s: %s%s", teamcolor, player.name, deadindicator, messagecolor, message)
+	ui.chat_log:AddElement(full_message)
+
+	return full_message
+end
+
+ui.chat_frame.Draw = function(object)
+	LG.setColor(0,0,0,0.2)
+	LG.rectangle("fill", object.x, object.y, object.width, object.height, 10, 10)
+end
+
+ui.chat_log = LF.Create("log", ui.chat_frame):SetSize(400, 370):SetPos(0, 30):SetPadding(0)
+:SetFont(ui.font_chat)
 
 --[[
-ui.chat_insert = LF.Create("button", ui.chat_frame):SetPos(100, 0)
-ui.chat_insert.OnClick = function(object)
-	for i = 1, 5 do
-		ui.chat_log:AddElement(random_color()..random_string(math.random(50)), true)
+ui.chat_input = LF.Create("textbox", ui.chat_frame):SetPos(80, 0):SetSize(200, 20)
+ui.chat_input.OnControlKeyPressed = function(object, key)
+	if key == "return" then
+		local message = ui.chat_input:GetText()
+		ui.chat_input:SetText("")
+		player_message(1, message)
 	end
 end
 ]]
+
+--------------------------------------------------------------------------------------------------
+--editor------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------
+ui.editor = require "core.interface.editor"
 
 --------------------------------------------------------------------------------------------------
 --bindings----------------------------------------------------------------------------------------
@@ -698,7 +776,7 @@ end
 
 local action_console = function(key, isrepeat)
 	local bool = ui.console_frame:GetVisible()
-	ui.console_frame:SetVisible(not bool)
+	ui.console_frame:SetVisible(not bool):Center():MoveToTop()
 end
 
 LF.bind("all", "", "escape", action_quit)

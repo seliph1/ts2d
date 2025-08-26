@@ -295,17 +295,16 @@ function newobject:keypressed(key, isrepeat)
 	if not self:IsVisible() then return end
 	local focus = self.focus
 	local inputobject = loveframes.inputobject
-	if inputobject == self then
-		self.field:keypressed(key, isrepeat)
-	end
+	if inputobject ~= self then return end
+
+	self.field:keypressed(key, isrepeat)
 
 	if key == "return" then
 		if self.OnEnter then
 			self.OnEnter(self, self.field:getText())
 		end
 	end
-
-
+	
 	local oncopy = self.OnCopy
 	local onpaste = self.OnPaste
 	local oncut = self.OnCut

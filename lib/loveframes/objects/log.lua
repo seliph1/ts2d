@@ -38,6 +38,7 @@ function newobject:initialize()
 	self.defaultcolor = color or {1,1,1,1}
 	self:SetDrawFunc()
 	self.cursor = loveframes.cursors.ibeam
+	self.lastheight = 0
 
 	local verticalbody = loveframes.objects["scrollbody"]:new(self, "vertical")
 	table.insert(self.internals, verticalbody)
@@ -47,8 +48,8 @@ function newobject:initialize()
 	self.itemheight = self.height
     self.extraheight = 0
     self.extrawidth = 0
-	self.offsety = 0
 	self.offsetx = 0
+	self.offsety = 0
 	self.buttonscrollamount = 1
 end
 
@@ -143,8 +144,7 @@ end
 function newobject:mousereleased(x, y, button)
 	if not self:OnState() then return end
 	if not self:IsVisible() then return end
-	local children = self.children
-	for k, v in ipairs(self.internals) do
+	for _, v in ipairs(self.internals) do
 		v:mousereleased(x, y, button)
 	end
 end
@@ -155,7 +155,7 @@ end
 function newobject:wheelmoved(x, y)
 	if not self:OnState() then return end
 	if not self:IsVisible() then return end
-	for k, v in ipairs(self.internals) do
+	for _, v in ipairs(self.internals) do
 		v:wheelmoved(x, y)
 	end
 end
@@ -168,7 +168,7 @@ function newobject:RedoLayout()
 	local fontheight = self.font:getHeight()
 
     self.itemwidth = self.width
-    self.itemheight = (fontheight + self.padding) * #elements--math.max(self.height, (fontheight + self.padding) * #elements)
+    self.itemheight = self.lastheight
     self.extraheight = self.itemheight - self.height
     self.extrawidth = self.itemwidth - self.width
 end
@@ -178,6 +178,7 @@ end
 	- desc: add an element into the list
 --]]---------------------------------------------------------
 function newobject:AddElement(item, append)
+	local append = append or true
 	if type(item) == "string" then
 		table.insert(self.elements, item)
 		if append then
@@ -228,29 +229,46 @@ end
 function newobject:ParseText(str)
 	local formattedchunks = {}
 	local formattedstring = {}
-    local defaultColor = self.defaultcolor
+	local defaultColor = self.defaultcolor
 
-	if not str:find("©") then
-		return {defaultColor,str}, str
-	end
-
-	for leading, capture in string.gmatch(str, "(.-)©([^©]+)") do
-		if leading then
+	local last = 1
+	while true do
+		local i, j = str:find("©", last)
+		if not i then 
+			-- restante
 			table.insert(formattedchunks, defaultColor)
-			table.insert(formattedchunks, leading)
-			table.insert(formattedstring, leading)
-		end	
-		local r, g, b = string.match(capture, "(%d%d%d)(%d%d%d)(%d%d%d)")
-		local text = string.sub(capture, 10, -1)
+			table.insert(formattedchunks, str:sub(last))
+			table.insert(formattedstring, str:sub(last))
+			break
+		end
+
+		-- trecho antes do ©
+		if i > last then
+			local segment = str:sub(last, i-1)
+			table.insert(formattedchunks, defaultColor)
+			table.insert(formattedchunks, segment)
+			table.insert(formattedstring, segment)
+		end
+
+		-- agora pega o próximo trecho até o próximo © ou fim
+		local k = str:find("©", j+1) or (#str+1)
+		local capture = str:sub(j+1, k-1)
+
+		local r,g,b = capture:match("(%d%d%d)(%d%d%d)(%d%d%d)")
+		local text = capture:sub(10)
 		if r and g and b then
-			table.insert(formattedchunks,
-				{tonumber(r)/255, tonumber(g)/255, tonumber(b)/255}
-			)
+			table.insert(formattedchunks, {tonumber(r)/255, tonumber(g)/255, tonumber(b)/255})
 			table.insert(formattedchunks, text)
 			table.insert(formattedstring, text)
 		else
-			text = "©"..capture
+			-- não é cor válida, volta o texto inteiro
+			local bad = "©"..capture
+			table.insert(formattedchunks, defaultColor)
+			table.insert(formattedchunks, bad)
+			table.insert(formattedstring, bad)
 		end
+
+		last = k
 	end
 
 	return formattedchunks, table.concat(formattedstring)
@@ -258,30 +276,39 @@ end
 
 function newobject:ParseElements()
 	self.texthash:clear()
+	self.lastheight = 0
 	local elements = self.elements
-	local maxwidth = 0
-	local fontheight = self.font:getHeight()
-	for index, value in ipairs(elements) do
+	for _, value in ipairs(elements) do
+		local lastheight = self.lastheight
 		local parsedvalue = ""
 		-- Fix the text
-		value = self:fixUTF8(value, " ")
+		value = self:fixUTF8(value," ")
 
 		-- Parse the obtained string with cs2d formatting
 		value, parsedvalue = self:ParseText(value)
 
-		-- Calculate height position of the line
-		local height = (index-1) * (fontheight + self.padding)
-
-		-- Calculate total wideness of the line
-		local width = self.font:getWidth(parsedvalue)
-
-		-- Resize the max width to update the layout
-		if width > maxwidth then
-			maxwidth = width
+		-- Add the fixed, formatted text to the texthash object
+		local index
+		local status, err = pcall(
+			self.texthash.addf,
+			self.texthash,
+			value,
+			self.width - self.verticalbody:GetWidth(),
+			"left",
+			0,
+			lastheight
+		)
+		if not status then
+			index = self.texthash:addf(tostring(err), self.width - self.verticalbody:GetWidth(), "left", 0, lastheight)
+		else
+			index = err
 		end
 
-		-- Add the fixed, formatted text to the texthash
-		self.texthash:add(value, 0, height + self.padding/2)
+		-- Get the total height spanned by that line
+		local addedheight = self.texthash:getHeight(index)
+
+		-- Increment the height property
+		self.lastheight = self.lastheight + addedheight
 	end
 	self:RedoLayout()
 
@@ -292,10 +319,7 @@ function newobject:ParseElements()
 end
 
 function newobject:AppendElement(value)
-	local elements = self.elements
-	local maxwidth = 0
-	local fontheight = self.font:getHeight()
-
+	local lastheight = self.lastheight
 	local parsedvalue = ""
 	-- Fix the text
 	value = self:fixUTF8(value, " ")
@@ -303,23 +327,55 @@ function newobject:AppendElement(value)
 	-- Parse the obtained string with cs2d formatting
 	value, parsedvalue = self:ParseText(value)
 
-	-- Calculate height position of the line
-	local height = (#self.elements - 1) * (fontheight + self.padding)
-
-	-- Calculate total wideness of the line
-	local width = self.font:getWidth(parsedvalue)
-
-	-- Resize the max width to update the layout
-	if width > maxwidth then
-		maxwidth = width
+	-- Add the fixed, formatted text to the texthash object
+	--local index = self.texthash:addf(value, self.width - self.verticalbody:GetWidth(), "left", 0, lastheight)
+	local index
+	local status, err = pcall(
+		self.texthash.addf,
+		self.texthash,
+		value,
+		self.width - self.verticalbody:GetWidth(),
+		"left",
+		0,
+		lastheight
+	)
+	if not status then
+		index = self.texthash:addf(tostring(err), self.width - self.verticalbody:GetWidth(), "left", 0, lastheight)
+	else
+		index = err
 	end
-	-- Add the fixed, formatted text to the texthash
-	self.texthash:add(value, 0, height + self.padding/2)
+
+	-- Get the total height spanned by that line
+	local addedheight = self.texthash:getHeight(index)
+
+	-- Increment the height property
+	self.lastheight = self.lastheight + addedheight
 	self:RedoLayout()
 
 	local scrollbar = self.verticalbody:GetScrollBar()
 	if scrollbar then
 		scrollbar:ScrollBottom()
+	end
+end
+--[[---------------------------------------------------------
+	- func: Clear()
+	- desc: clear this object of all data
+--]]---------------------------------------------------------
+function newobject:Clear()
+	self.text = ""
+	self.texthash:clear()
+	self.elements = {}
+	self.lastheight = 0
+	self.itemwidth = self.width
+    self.itemheight = 0
+    self.extraheight = 0
+    self.extrawidth = 0
+	self.offsetx = 0
+	self.offsety = 0
+
+	local scrollbar = self.verticalbody:GetScrollBar()
+	if scrollbar then
+		scrollbar:ScrollTop()
 	end
 end
 --[[---------------------------------------------------------

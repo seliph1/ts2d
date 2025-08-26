@@ -6,6 +6,8 @@
 return function(loveframes)
 ---------- module start ----------
 
+local LG = love.graphics
+
 -- skin table
 local skin = {}
 
@@ -20,27 +22,61 @@ local bordercolor = {0.5, 0.5, 0.5, 1}
 skin.directives = {}
 -- Text
 skin.directives.text_global = "gfx/fonts/liberationsans.ttf"
-skin.directives.text_font_height = 1
+skin.directives.text_fallbacks = {
+	"gfx/fonts/NotoSansCJK-Regular.ttc",
+	"gfx/fonts/NotoSansArabic-Regular.ttf",
+	"gfx/fonts/NotoSansThai-Regular.ttf",
+	"gfx/fonts/NotoSansHebrew-Regular.ttf",
+}
 
-skin.directives.text_default_color		 				= {0.59, 0.59, 0.59, 1};
-skin.directives.text_default_shadowcolor 				= {0, 0, 0, 1};
-skin.directives.text_default_font_src	 				= skin.directives.text_global
-skin.directives.text_default_font		 				= love.graphics.newFont(skin.directives.text_default_font_src, 14)
-skin.directives.text_default_font:setLineHeight(skin.directives.text_font_height)
+skin.directives.text_font_height 			= 1
+skin.directives.text_default_color		 	= {0.59, 0.59, 0.59, 1};
+skin.directives.text_default_shadowcolor 	= {0, 0, 0, 1};
+skin.directives.text_default_font_src	 	= skin.directives.text_global
+skin.directives.text_default_font_size	 	= 14
+skin.directives.text_default_font		 	= LG.newFont(skin.directives.text_default_font_src, skin.directives.text_default_font_size)
 
-skin.directives.radiobutton_text_default_color 		 	= {0.59, 0.59, 0.59, 1};
-skin.directives.radiobutton_text_default_shadowcolor 	= {0, 0, 0, 1};
-skin.directives.radiobutton_text_default_font_src	 	= skin.directives.text_global
-skin.directives.radiobutton_text_default_font		 	= love.graphics.newFont(skin.directives.radiobutton_text_default_font_src, 13)
+do
+	local fallbacks = {}
+	for index, fallback_src in ipairs(skin.directives.text_fallbacks) do
+		local fallback = LG.newFont(fallback_src, skin.directives.text_default_font_size)
+		fallback:setLineHeight(skin.directives.text_font_height )
+		table.insert(fallbacks, fallback)
+	end
+	skin.directives.text_default_font:setFallbacks(unpack(fallbacks))
+end
 
-skin.directives.tooltip_default_font_src	 			= skin.directives.text_global
-skin.directives.tooltip_default_font					= love.graphics.newFont(skin.directives.tooltip_default_font_src, 12)
-skin.directives.tooltip_default_color 		 			= {1, 1, 1, 1};
-
+skin.directives.tooltip_default_font_src	= skin.directives.text_global
+skin.directives.tooltip_default_font		= love.graphics.newFont(skin.directives.tooltip_default_font_src, 12)
+skin.directives.tooltip_default_color 		= {1, 1, 1, 1};
 
 -- controls 
 skin.controls = {}
-local default_font = skin.directives.text_default_font_src
+skin.controls.font_sizes = {
+	defaultfont 	= 14;
+	tinyfont 		= 12;
+	smallfont 		= 14;
+	titlefont 		= 15;
+	imagebuttonfont = 18;
+}
+if skin.directives.text_default_font_src then
+	for size, value in pairs(skin.controls.font_sizes) do
+		skin.controls[size] = love.graphics.newFont(skin.directives.text_default_font_src, value)
+		skin.controls[size]:setLineHeight(skin.directives.text_font_height)
+
+		if skin.directives.text_fallbacks then
+			local fallbacks = {}
+			for index, fallback_src in ipairs(skin.directives.text_fallbacks) do
+				local fallback = love.graphics.newFont(fallback_src, value)
+				fallback:setLineHeight(skin.directives.text_font_height)
+				table.insert(fallbacks, fallback)
+			end
+			skin.controls[size]:setFallbacks(unpack(fallbacks))
+		end
+	end
+end
+
+--[[
 if default_font then
 	skin.controls.tinyfont = love.graphics.newFont(default_font,12)
 	skin.controls.smallfont = love.graphics.newFont(default_font,14)
@@ -61,7 +97,7 @@ else
 	skin.controls.smallfont:setLineHeight(skin.directives.text_font_height)
 	skin.controls.titlefont:setLineHeight(skin.directives.text_font_height)
 	skin.controls.imagebuttonfont:setLineHeight(skin.directives.text_font_height)
-end
+end]]
 
 -- skin global colors
 skin.controls.text_nohover_color  			= {0.59, 0.59, 0.59, 1}
@@ -1758,8 +1794,13 @@ function skin.log(object)
 	local offsety = object.offsety
 	local text = object.texthash
 	-- Retrieve the cell size
+	local fx = math.floor(x - offsetx)
+	local fy = math.floor(y - offsety)
+
+	love.graphics.setColor(skin.directives.text_default_shadowcolor)
+	love.graphics.draw(text, fx+1, fy+1)
 	love.graphics.setColor(1,1,1,1)
-	love.graphics.draw(text, x - offsetx, y - offsety)
+	love.graphics.draw(text, fx, fy)
 end
 
 --[[---------------------------------------------------------

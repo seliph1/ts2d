@@ -242,4 +242,6 @@ local editor = {}
 		editor.resolution_label:SetText("Resolution: ")
 		editor.resolution_label:SetPos(10, 35)
 
+
+editor.frame:SetState("editor")
 return editor
