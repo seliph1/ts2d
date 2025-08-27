@@ -1,16 +1,14 @@
 local state = require 'lib.state'
 local enet = require 'enet' -- Network
--- local marshal = require 'marshal' -- Serialization
--- local serpent = require 'lib.serpent'
 local bitser = require 'lib.bitser'
 
 local encode = bitser.dumps
 local decode = bitser.loads
 
-local MAX_MAX_CLIENTS = 64
 
-local client = {}
-do
+---------- module start ----------
+    local client = {}
+
     client.enabled = false
     client.sessionToken = nil
     client.sendRate = 35
@@ -24,7 +22,7 @@ do
     client.share = share
     local home = state.new()
     home:__autoSync(true)
-    client.home = home
+    client.home = state.new()
 
     local host
     local peer
@@ -41,8 +39,8 @@ do
         if useCompression then
             host:compress_with_range_coder()
         end
-		print("client peer started ("..tostring(host)..")")
-		print("attempting connection to: "..address)
+		print("CS: client peer started ("..tostring(host)..")")
+		print("CS: attempting connection to: "..address)
 		host:connect(address, client.numChannels)
     end
 
@@ -89,14 +87,11 @@ do
                 -- Server connected?
                 if event.type == 'connect' then
                     -- Ignore this, wait till we receive id (see below)
-					print("connected")
+					print("CS: connection attempt")
                 end
 
                 -- Server disconnected?
                 if event.type == 'disconnect' then
-                    if client.disconnect then
-                        client.disconnect()
-                    end
                     client.connected = false
                     client.id = nil
                     for k in pairs(share) do
@@ -107,7 +102,10 @@ do
                     end
                     host = nil
                     peer = nil
-					print("disconnected")
+					print("CS: disconnected from server")
+                    if client.disconnect then
+                        client.disconnect()
+                    end
                 end
 
                 -- Received a request?
@@ -157,7 +155,7 @@ do
                         if client.connect then
                             client.connect()
                         end
-						print(string.format("received id %s", client.id))
+						print(string.format("CS: assigned player id %s from server", client.id))
 
                         -- Send sessionToken now that we have an id
                         peer:send(encode({
@@ -199,9 +197,5 @@ do
             host:flush() -- Tell ENet to send outgoing messages
         end
     end
-end
 
-return {
-    client = client,
-    DIFF_NIL = state.DIFF_NIL,
-}
+    return client

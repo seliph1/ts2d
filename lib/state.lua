@@ -14,7 +14,7 @@ local function nonempty(t) return next(t) ~= nil end
 
 local function serializable(v) return type(v) ~= 'userdata' end
 
-
+---@class state
 local Methods = {}
 
 
@@ -64,6 +64,11 @@ local ipairs = oldIPairs
 
 -- Make a node out of of `t` with given `name`, makes a root node if `parent` is `nil`
 local function adopt(parent, name, t)
+    ---@class userdata
+    ---@field __autoSync fun(state: userdata, sync:boolean)
+    ---@field __sync fun(state: userdata, key:any, recursive:any)
+    ---@field __diff fun(state: userdata, exact:any, alreadyExact:boolean?, cache:table?)
+    ---@field __flush fun(state: userdata, getDiff:any?, proxy:userdata?)
     local node, proxy
 
     -- Make it a node

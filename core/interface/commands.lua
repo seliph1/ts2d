@@ -30,6 +30,16 @@ local commands = {
 		end,
 		syntax = "/map <mapfile>",
 	};
+	["clearmap"] = {
+		action = function(...)
+			local args = {...}
+			if client.map then
+				print("cleared?")
+				client.map:clear()
+			end
+		end,
+		syntax = "/clearmap",
+	};
 	["scroll"] = {
 		action = function(x,y)
 			if client.map then
@@ -43,11 +53,13 @@ local commands = {
 		action = function(...)
 			local args = {...}
 			if client.map then
+				local LF = require "lib.loveframes"
 				local status = client.map:read( "maps/"..table.concat(args," ")..".map" )
 				if status then
 					print(status)
 				end
 				client.mode = "editor"
+				LF.SetState("editor")
 			end
 		end,
 		syntax = "/edit <mapfile>",
@@ -58,16 +70,26 @@ local commands = {
 	};
 	["connect"] = {
 		action = function(ip, port)
-			ip = ip or "127.0.0.1"
-			port = port or "36963"
-			--client.start(string.format("%s:%s", ip, port))
-			client.start(string.format("127.0.0.1:36963"))
-
-			local LF = require "lib.loveframes"
-			LF.SetState("game")
+			if not client.connected then
+				ip = ip or "127.0.0.1"
+				port = port or "36963"
+				client.load()
+				client.start(string.format("%s:%s", ip, port))
+			end
 		end,
 		syntax = "connect <ip:port>",
 	};
+
+	["disconnect"] = {
+		action = function()
+			local LF = require "lib.loveframes"
+			if client.connected then
+				client.kick()
+			end
+		end,
+		syntax = "connect <ip:port>",
+	};
+
 	["send"] = {
 		action = function(message)
 		end,

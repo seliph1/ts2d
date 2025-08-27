@@ -6,7 +6,7 @@
 return function(loveframes)
 ---------- module start ----------
 
--- scrollbutton clas
+-- scrollbutton class
 local newobject = loveframes.NewObject("scrollbutton", "loveframes_object_scrollbutton", true)
 
 --[[---------------------------------------------------------
@@ -14,7 +14,6 @@ local newobject = loveframes.NewObject("scrollbutton", "loveframes_object_scroll
 	- desc: initializes the object
 --]]---------------------------------------------------------
 function newobject:initialize(scrolltype)
-
 	self.type = "scrollbutton"
 	self.scrolltype = scrolltype
 	self.width = 16
@@ -22,7 +21,6 @@ function newobject:initialize(scrolltype)
 	self.down = false
 	self.internal = true
 	self.OnClick = function(x, y, object) end
-	
 	-- apply template properties to the object
 	loveframes.ApplyTemplatesToObject(self)
 	self:SetDrawFunc()
@@ -33,23 +31,13 @@ end
 	- desc: updates the object
 --]]---------------------------------------------------------
 function newobject:update(dt)
-	
-	local visible = self.visible
-	local alwaysupdate = self.alwaysupdate
-	
-	if not visible then
-		if not alwaysupdate then
-			return
-		end
-	end
-	
+	if not self:OnState() then return end
+	if not self:isUpdating() then return end
 	self:CheckHover()
-	
 	local hover = self.hover
 	local parent = self.parent
 	local base = loveframes.base
 	local update = self.Update
-	
 	if not hover then
 		self.down = false
 	else
@@ -57,21 +45,17 @@ function newobject:update(dt)
 			self.down = true
 		end
 	end
-	
 	if not self.down and loveframes.downobject == self then
 		self.hover = true
 	end
-	
 	-- move to parent if there is a parent
 	if parent ~= base then
 		self.x = parent.x + self.staticx
 		self.y = parent.y + self.staticy
 	end
-	
 	if update then
 		update(self, dt)
 	end
-
 end
 
 --[[---------------------------------------------------------

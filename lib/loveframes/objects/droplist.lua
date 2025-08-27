@@ -144,6 +144,7 @@ function newobject:AddElement(item, append)
 	end
 end
 
+newobject.AddItem = newobject.AddElement
 function newobject:AddElementsFromTable(tbl)
 	local validElements = 0
 	for _, item in ipairs(tbl) do
@@ -156,6 +157,7 @@ function newobject:AddElementsFromTable(tbl)
 		self:ParseElements()
 	end
 end
+newobject.AddItemsFromTable = newobject.AddElementsFromTable
 
 --[[---------------------------------------------------------
 	- func: ParseElements

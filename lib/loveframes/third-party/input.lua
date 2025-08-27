@@ -1496,7 +1496,7 @@ function InputField.getInfoAtCoords(field, x, y, info)
 
 		if lineI > visualLineI then
 			-- We're right before a soft wrap.
-			line, posOnLine, lineI, linePos1, linePos2 = getLineInfoAtPosition(field, curPos-1)
+			line, charPosOnLine, lineI, linePos1, linePos2 = getLineInfoAtPosition(field, curPos-1)
 			charPosOnLine                              = linePos2 - linePos1 + 1
 		end
 

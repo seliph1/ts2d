@@ -1,4 +1,5 @@
 -- Mount a file system here
+--[[
 require "lib.lovefs.lovefs"
 local fs = lovefs()
 if love.filesystem.isFused() then
@@ -6,6 +7,7 @@ if love.filesystem.isFused() then
 else
 	fs:cd(love.filesystem.getSource() )
 end
+]]
 
 -- Loading some libs
 local ffi = require "ffi"
@@ -51,7 +53,8 @@ local ENTITY_TYPE = enum.ENTITY_TYPE
 --- @param ysize number
 --- @return table spritesheet_table table containing all ImageData
 local function create_spritesheet(file, xsize, ysize)
-	local spritesheet = fs:loadImageData(file)
+	--local spritesheet = fs:loadImageData(file)
+	local spritesheet = love.image.newImageData(file)
 	local spritesheet_table = {}
 	local w, h = spritesheet:getDimensions()
 	local id = 0
@@ -160,7 +163,7 @@ function MapObject.new(width, height)
 
 	object._placeholder = love.image.newImageData(32, 32)
 	object._placeholder_img = love.graphics.newImage(object._placeholder)
-	object._flare = fs:loadImage("gfx/sprites/flare2.bmp")
+	object._flare = love.graphics.newImage("gfx/sprites/flare2.bmp") --fs:loadImage("gfx/sprites/flare2.bmp")
 	object._blendmap = create_spritesheet("gfx/blendmap.bmp", 32, 32)
 	object._hudicon = create_spritesheet("gfx/gui_icons.bmp", 16, 16)
 	object._smallfont = love.graphics.newFont("gfx/fonts/liberationsans.ttf", 10)
@@ -239,12 +242,12 @@ function MapObject.new(width, height)
 	end
 	--mapdata.shadow_render = love.graphics.newImage(mapdata.shadow_mask)
 	--mapdata.shadow_render:setFilter("nearest", "nearest")
-	local tileset_atlas = fs:loadImageData("gfx/tiles/"..mapdata.tileset)
+	local tileset_atlas = love.image.newImageData("gfx/tiles/"..mapdata.tileset)--fs:loadImageData("gfx/tiles/"..mapdata.tileset)
 	local w, h = tileset_atlas:getDimensions()
 	local s = mapdata.tile_size
 	local tile_id = 0
 	-- New spritebatch technique
-	local tileset_spritesheet = fs:loadImage("gfx/tiles/"..mapdata.tileset)
+	local tileset_spritesheet = love.graphics.newImage("gfx/tiles/"..mapdata.tileset)--fs:loadImage("gfx/tiles/"..mapdata.tileset)
 	tileset_spritesheet:setFilter("nearest", "linear")
 	mapdata.gfx.ground = love.graphics.newSpriteBatch(tileset_spritesheet, mapdata.width * mapdata.height)
 	mapdata.gfx.wall = love.graphics.newSpriteBatch(tileset_spritesheet, mapdata.width * mapdata.height)
@@ -266,17 +269,140 @@ end
 
 --- @method Clears the map
 function MapObject:clear()
+	self._updateRequest = true;
+	self._breath = 0;
+	self._oscillation = 0;
+	self._item_field = {};
+	self._world = bump.newWorld();
+
+	self._camera = {
+			x = 0,
+			y = 0,
+			width = 0,
+			height = 0,
+			chunk_x = 0,
+			chunk_y = 0,
+			tile_x = 0,
+			tile_y = 0,
+		};
+	self._render = {
+			x = 0,
+			y = 0,
+			width = 16,
+			height = 16,
+	};
+
+	local mapdata = {
+		name = "untitled";
+		header = "Unreal Software's Counter-Strike 2D Map File (max)";
+		scroll = 0;
+		modifiers = 0;
+		uptime = 0;
+		usgn = 0;
+		author = "mapengine.lua";
+		tileset = "cs2dnorm.bmp";
+		tile_count = 255;
+		width = 49;
+		height = 49;
+		write_time = "000000";
+		background_file = "";
+		background_scroll_speed_x = 0;
+		background_scroll_speed_y = 0;
+		background_color_red = 0;
+		background_color_green = 0;
+		background_color_blue = 0;
+		save_tile_heights = 0;
+		pixel_tiles_hd = 0;
+		tile_size = 32;
+		daylight = 0;
+		version = "CS2D v1.0.1.4";
+		tile = {};
+		map = {};
+		map_mod = {};
+		--shadow_mask = love.image.newImageData(width+1, height+1);
+		entity_count = 0;
+		entity_table = {};
+		gfx = {
+			tile = {};
+			entity = {};
+			background = {};
+			quad = {};
+		};
+	}
+	for i = -1, mapdata.tile_count do
+		mapdata.tile[i] = {
+			height = 0,
+			modifier = 0,
+			property = 0,
+		}
+	end
+	for x = 0, mapdata.width do
+	for y = 0, mapdata.height do
+		local id = 0
+		mapdata.map[x] = mapdata.map[x] or {}
+		mapdata.map[x][y] = id
+		--mapdata.shadow_mask:setPixel(x, y, 0.0, 0.0, 0.0)
+		mapdata.map_mod[x] = mapdata.map_mod[x] or {}
+		mapdata.map_mod[x][y] = {
+			object_type = "tile",
+			brightness = 100,
+			rotation = 0,
+			color = {
+				red = 255,
+				blue = 255,
+				green = 255,
+			},
+			modifier = 0,
+			blending = 0,
+			id = 0,
+			height = 0,
+			property = 0,
+			depth = 0,
+		}
+
+		--object._world:add( mapdata.map_mod[x][y], x*32, y*32, 32, 32 )
+	end
+	end
+	--mapdata.shadow_render = love.graphics.newImage(mapdata.shadow_mask)
+	--mapdata.shadow_render:setFilter("nearest", "nearest")
+	local tileset_atlas = love.image.newImageData("gfx/tiles/"..mapdata.tileset)--fs:loadImageData("gfx/tiles/"..mapdata.tileset)
+	local w, h = tileset_atlas:getDimensions()
+	local s = mapdata.tile_size
+	local tile_id = 0
+	-- New spritebatch technique
+	local tileset_spritesheet = love.graphics.newImage("gfx/tiles/"..mapdata.tileset)--fs:loadImage("gfx/tiles/"..mapdata.tileset)
+	tileset_spritesheet:setFilter("nearest", "linear")
+	mapdata.gfx.ground = love.graphics.newSpriteBatch(tileset_spritesheet, mapdata.width * mapdata.height)
+	mapdata.gfx.wall = love.graphics.newSpriteBatch(tileset_spritesheet, mapdata.width * mapdata.height)
+	for y = 0, floor(h/s)-1 do
+	for x = 0, floor(w/s)-1 do
+		local sprite = love.image.newImageData(s, s)
+		sprite:paste(tileset_atlas, 0, 0, x*s, y*s, s, s)
+		mapdata.gfx.tile[tile_id] = love.graphics.newImage(sprite)
+		mapdata.gfx.quad[tile_id] = love.graphics.newQuad(x*s, y*s, s, s, w, h)
+		tile_id = tile_id + 1
+	end
+	end
+	-- Entity load (This is actually a new map so no need to walk through a list )
+	-- Background load.(This is actually a new map so no need to walk through a list )
+	mapdata.gfx.background = love.graphics.newImage(self._placeholder)
+	self._mapdata = mapdata
+	self:shiftRender()
+
 	collectgarbage("collect")
+
+	print("Map: cleared")
 end
 
 --- @method Reads from a CS2D Map file
 --- @param path string file relative to maps/ path in CS2D
 function MapObject:read(path, noindexing)
 	--local filedata = love.filesystem.newFileData(path)
-	if not fs:isFile(path) then
+	if not love.filesystem.getInfo(path) then --if not fs:isFile(path) then
 		return string.format("File %q does not exist. Check your files/folders and try again!", path)
 	end
-	local filedata = fs:loadFile(path)
+	--local filedata = fs:loadFile(path)
+	local filedata = love.filesystem.newFileData(path)
 	-- Get a C pointer to read files as binary mode.
 	local size = filedata:getSize()
 	local pointer = filedata:getFFIPointer()
@@ -331,7 +457,7 @@ function MapObject:read(path, noindexing)
 	-- header first check
 	-----------------------------------------------------------------------------------------------------------
 	local header_check_a = read_string() -- Header check 
-	print("Header check 1: \""..header_check_a.."\"")
+	print("Map: Header check 1: \""..header_check_a.."\"")
 	if not (
 		string.find(header_check_a, "Unreal Software's Counter-Strike 2D Map File",1,true) or
 		string.find(header_check_a, "Unreal Software's CS2D Map File",1,true) 
@@ -526,7 +652,7 @@ function MapObject:read(path, noindexing)
 	-----------------------------------------------------------------------------------------------------------
 	mapdata.entity_count = read_integer()
 	mapdata.entity_table = {}
-	print("Entity count: " .. mapdata.entity_count)
+	print("Map: Entity count: " .. mapdata.entity_count)
 	for i = 1, mapdata.entity_count do
 		local e = {}
 		e.object_type = "entity"
@@ -560,11 +686,13 @@ function MapObject:read(path, noindexing)
 	-- Tileset load.
 	local tileset_path = string.format("gfx/tiles/%s", mapdata.tileset)
 	--local tileset_raw = fs:loadImage(path)
-	local tileset_atlas = fs:loadImageData(tileset_path)
+	--local tileset_atlas = fs:loadImageData(tileset_path)
+	local tileset_atlas = love.image.newImageData(tileset_path)
 	local w, h = tileset_atlas:getDimensions()
 	local s = mapdata.tile_size
 	local tile_id = 0
-	local tileset_spritesheet = fs:loadImage("gfx/tiles/"..mapdata.tileset)
+	--local tileset_spritesheet = fs:loadImage("gfx/tiles/"..mapdata.tileset)
+	local tileset_spritesheet = love.graphics.newImage("gfx/tiles/"..mapdata.tileset)
 	tileset_spritesheet:setFilter("nearest", "linear")
 	mapdata.gfx.ground = love.graphics.newSpriteBatch(tileset_spritesheet, mapdata.width * mapdata.height)
 	mapdata.gfx.wall = love.graphics.newSpriteBatch(tileset_spritesheet, mapdata.width * mapdata.height)
@@ -582,22 +710,24 @@ function MapObject:read(path, noindexing)
 		if e.type == 22 then
 			local sprite_path = (e.string_settings[1] or "gfx/cs2d.bmp")
 			if not mapdata.gfx.entity[sprite_path] then -- Try to load a new image
-				if fs:isFile(sprite_path) then -- Check if file exists
-					local sprite = fs:loadImage(sprite_path)
+				--if fs:isFile(sprite_path) then -- Check if file exists
+				if love.filesystem.getInfo(sprite_path) then -- Check if file exists
+					local sprite = love.graphics.newImage(sprite_path)
 					mapdata.gfx.entity[sprite_path] = sprite
-					print(string.format("Sprite loaded: %s", sprite_path))
+					print(string.format("Map: Sprite loaded: %s", sprite_path))
 				else
 					mapdata.gfx.entity[sprite_path] = love.graphics.newImage(self._placeholder)
-					print(string.format("Failed to load %s", sprite_path))
+					print(string.format("Map: Failed to load %s", sprite_path))
 				end
 			end
 		end
 	end
 	-- Background load.
 	local background_path = string.format("gfx/backgrounds/%s", mapdata.background_file)
-	if (mapdata.background_file ~= "") and fs:isFile(background_path) then
-		print(string.format("Sprite loaded: %s", background_path))
-		mapdata.gfx.background = fs:loadImage(background_path)
+	if (mapdata.background_file ~= "") and love.filesystem.getInfo(path) then --fs:isFile(background_path) then
+		print(string.format("Map: Sprite loaded: %s", background_path))
+		--mapdata.gfx.background = fs:loadImage(background_path)
+		mapdata.gfx.background = love.graphics.newImage(background_path)
 		mapdata.gfx.background:setWrap("repeat", "repeat")
 	else
 		mapdata.gfx.background = love.graphics.newImage(self._placeholder)
@@ -929,7 +1059,6 @@ function MapObject:draw_bullets(share, home, client)
 end
 
 ---Draw player from cache data
----@param client client
 function MapObject:draw_playersc(client)
 	local camera = self._camera
 	local players = client.share.players
@@ -1091,7 +1220,7 @@ function MapObject:update_items(share, client)
 
 		table.insert(self._item_field[cx][cy], item)
 	end
-	print("item field updated")
+	print("Map: item field updated")
 end
 
 function MapObject:getItemsFromCamera()
@@ -1128,6 +1257,7 @@ function MapObject:draw_items(share, client)
 	love.graphics.setShader(shader.magenta)
 	love.graphics.translate(-camera.x + sw/2, -camera.y + sh/2)
 
+	--[[
 	for chunk in pairs(self:getItemsFromCamera()) do
 		for index, item in pairs(chunk) do
 			local itemdata = itemlist[item.it]
@@ -1141,7 +1271,7 @@ function MapObject:draw_items(share, client)
 			end
 		end
 	end
-
+	]]
 	love.graphics.setShader()
 	love.graphics.pop()
 end

@@ -28,7 +28,6 @@ if launch_type == "debug" then
 end
 
 function love.load()
-	client.load()
 end
 
 function love.update( dt )

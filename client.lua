@@ -1,36 +1,16 @@
-local cs 		= require "lib.cs"
+--- Client base framework
 local b			= require "lib.battery"
-local enum      = require "enum"
 local MapObject = require "mapengine"
 
-require "lib.lovefs.lovefs"
-local fs = lovefs()
-if love.filesystem.isFused() then
-	fs:cd(love.filesystem.getSourceBaseDirectory() )
-else
-	fs:cd(love.filesystem.getSource() )
-end
-
---- Client base framework
---- @class client
---- @field home table
---- @field share table
---- @field connected function
---- @field preupdate function
---- @field postupdate function
---- @field getPing fun():number
---- @field id number
---- @field send fun(message:string)
---- @field start fun(address:string)
---- @field mode "lobby"|"game"|"editor"
-local client = cs.client
+local client = require "lib.cs2"
 client.enabled = true
 client.map = MapObject.new(50, 50)
-client.content = enum
 client.width = 800
 client.height = 600
 client.scale = false
 client.mode = "lobby"
+client.content = require "enum"
+client.actions = require "actions" (client)
 client.canvas = love.graphics.newCanvas()
 client.camera = {
 	x = 0,
@@ -56,57 +36,37 @@ client.gfx = {
 	ui = {};
 }
 
+require "loader" (client)
 --- Table that gets info from server
---- @class share
+---@class table
 --- @field bullets table
 --- @field players table
 --- @field items table
 --- @field scores table
 local share = client.share
 
---- Use `home` to store control info so the server can see it
---- @class home
+---@class userdata
 --- @field targetX integer position of our client
 --- @field targetY integer position of our client
 --- @field wantShoot boolean variable that stores our mouse keypresses
 --- @field move table direction vector
 local home = client.home
 
-do
-	for _, item in pairs(client.content.itemlist) do
-		local path = item.common_path
-		local full_path_d = path .. item.dropped_image
-		local full_path_h = path .. item.held_image
-		local full_path_k = path .. item.kill_image
-		local full_path = path .. item.display_image
 
-		if item.dropped_image ~= "" and fs:isFile(full_path) then
-			client.gfx.itemlist[full_path] = fs:loadImage(full_path)
-		end
-		if item.held_image ~= "" and fs:isFile(full_path_d) then
-			client.gfx.itemlist[full_path_d] = fs:loadImage(full_path_d)
-		end
-		if item.display_image ~= "" and fs:isFile(full_path_h) then
-			client.gfx.itemlist[full_path_h] = fs:loadImage(full_path_h)
-		end
-		if item.kill_image ~= "" and fs:isFile(full_path_k) then
-			client.gfx.itemlist[full_path_k] = fs:loadImage(full_path_k)
-		end
-	end
-
-	for name, player in pairs(client.content.player) do
-		client.gfx.player[name] = client.gfx.player[name] or {}
-		local texture = fs:loadImage(player.path)
-		client.gfx.player[name].texture = texture
-		for entry, value in pairs(player.stance) do
-			client.gfx.player[name][entry] = love.graphics.newQuad(value[1], value[2], value[3], value[4], texture) --fs:loadImage(player.path)
-		end
-	end
-
-	for _, item in pairs(client.content.ui) do
-		client.gfx.ui[item] = fs:loadImage(item)
-	end
+--- Callback for when client sucessfully connects to server
+function client.connect()
+	local LF = require "lib.loveframes"
+	LF.SetState("game")
+	client.mode = "game"
 end
+
+function client.disconnect()
+	local LF = require "lib.loveframes"
+	LF.SetState()
+	client.map:clear()
+	client.mode = "lobby"
+end
+
 
 --- Callback for information in sync with server
 ---@param payload table
@@ -206,20 +166,24 @@ end
 ---@param k string Key pressed
 function client.keypressed(k)
 	client.key[k] = true
-    if k == 'w' then home.move.up = true end
-    if k == 's' then home.move.down = true end
-    if k == 'a' then home.move.left = true end
-    if k == 'd' then home.move.right = true end
+	if client.connected then
+    	if k == 'w' then home.move.up = true end
+    	if k == 's' then home.move.down = true end
+    	if k == 'a' then home.move.left = true end
+    	if k == 'd' then home.move.right = true end
+	end
 end
 
 --- Callback for key release event
 ---@param k string Key released
 function client.keyreleased(k)
 	client.key[k] = false
-    if k == 'w' then home.move.up = false end
-    if k == 's' then home.move.down = false end
-    if k == 'a' then home.move.left = false end
-    if k == 'd' then home.move.right = false end
+	if client.connected then
+    	if k == 'w' then home.move.up = false end
+    	if k == 's' then home.move.down = false end
+    	if k == 'a' then home.move.left = false end
+    	if k == 'd' then home.move.right = false end
+	end
 end
 
 --- Client command parser
@@ -241,64 +205,6 @@ function client.parse(str)
 		print(string.format("Unknown command: %s", str))
 	end
 end
-
-client.actions = {
-    -- Server only actions
-	mapchange = {
-		---Changes map currently being drawn on screen
-		---@param ... string
-		action = function(...)
-			local args = {...}
-			local status = client.map:read( "maps/"..table.concat(args," ")..".map" )
-			if status then
-				print(status)
-			end
-			client.mode = "game"
-		end,
-	};
-    filecheck = {
-		---Checks if a file exists on client side, and send a confirmation to server
-		---@param ... string
-        action = function(...)
-            local args = {...}
-            local path = table.concat(args," ")
-            if fs:isFile(path) then
-                print(string.format("file %s exists.", path))
-            else
-                print(string.format("file %s does not exist. Requesting", path))
-            end
-        end
-    };
-	scroll = {
-		--- Scroll camera to a set position
-		---@param x number
-		---@param y number
-		action = function(x,y)
-    		x = tonumber(x) or 0
-			y = tonumber(y) or 0
-
-			client.camera.x = x
-			client.camera.y = y
-			client.map:scroll(x, y)
-			print(string.format("scrolled to %s-%s", x, y))
-		end
-	};
-	name = {
-		---Changes name of this client
-		---@param ... string
-		action = function(...)
-		end;
-	};
-
-	menu = {
-		---Invokes a server-side menu
-		---@param ... string
-		action = function(...)
-			local ui = require "core.interface.ui"
-			ui.menu_constructor(table.concat({...}," "))
-		end;
-	}
-}
 
 --- Move player in smooth intervals
 ---@param id number
@@ -388,12 +294,19 @@ function client.camera_tween(dt)
 end
 
 ---Main game loop
+function client.chat_()
+end
+
+
+
+---Main game loop
 ---@param dt number
 function client.update(dt)
 	client.preupdate(dt)
-	client.camera_move(dt)
-	client.camera_tween(dt)
-	if client.map then
+
+	if (client.mode == "game" or client.mode == "editor") and client.map then
+		client.camera_move(dt)
+		client.camera_tween(dt)
 		client.map:scroll(client.camera.x, client.camera.y)
 		client.map:update(dt)
 	end
@@ -409,7 +322,11 @@ function client.update(dt)
         end
     end
 	client.postupdate(dt)
-	client.render()
+
+	-- Update visual effects on client after data transfer take effect
+	if (client.mode == "game" or client.mode == "editor") and client.map then
+		client.render()
+	end
 end
 
 
@@ -445,10 +362,11 @@ function client.render()
 		--client.map:draw_players(share, home, client)
 		client.map:draw_playersc(client)
     end
+
 	if (client.mode == "game" or client.mode == "editor") and client.map then
 		client.map:draw_ceiling()
+		client.map:draw_effects()
 	end
-	client.map:draw_effects()
 
 	-- Resets scissoring and canvas
 	love.graphics.pop()
@@ -460,24 +378,24 @@ function client.draw()
 	-- Draw background if it's in lobby mode
 	if client.mode == "lobby" then
 		client.draw_splash(0, 0)
-	else
-		--love.graphics.clear(255, 255, 255)
 	end
 
-    -- Center and scale display
-    local ox = 0.5 * (love.graphics.getWidth() - client.width)
-	local oy = 0.5 * (love.graphics.getHeight() - client.height)
+	if client.mode == "game" or client.mode == "editor" then
+		-- Center and scale display
+		local ox = 0.5 * (love.graphics.getWidth() - client.width)
+		local oy = 0.5 * (love.graphics.getHeight() - client.height)
 
-	if client.scale then
-		love.graphics.push()
-		love.graphics.setDefaultFilter("linear", "linear")
-		love.graphics.scale(love.graphics.getWidth() / client.width, love.graphics.getHeight() / client.height)
-		love.graphics.draw(client.canvas, -ox, -oy)
-		love.graphics.pop()
-	else
-		love.graphics.draw(client.canvas, 0, 0)
+		if client.scale then
+			love.graphics.push()
+			love.graphics.setDefaultFilter("linear", "linear")
+			love.graphics.scale(love.graphics.getWidth() / client.width, love.graphics.getHeight() / client.height)
+			love.graphics.draw(client.canvas, -ox, -oy)
+			love.graphics.pop()
+		else
+			love.graphics.draw(client.canvas, 0, 0)
+		end
 	end
-	
+
 	-- Advanced debug
 	--[[
 	local label = string.format("Camera: %dpx|%dpx  Ping: %s  FPS: %s  Target: %d|%d   Memory: %.2f MB",
@@ -498,9 +416,9 @@ function client.draw()
 	)
 	love.graphics.printf(label, 0, love.graphics.getHeight()-20, love.graphics.getWidth(), "center")
 
-	-- Draw middle screen
-	--love.graphics.line(love.graphics.getWidth()/2-5, love.graphics.getHeight()/2, love.graphics.getWidth()/2+5, love.graphics.getHeight()/2)
-	--love.graphics.line(love.graphics.getWidth()/2, love.graphics.getHeight()/2-5, love.graphics.getWidth()/2, love.graphics.getHeight()/2+5)
+	-- Draw middle crosshair
+	love.graphics.line(love.graphics.getWidth()/2-5, love.graphics.getHeight()/2, love.graphics.getWidth()/2+5, love.graphics.getHeight()/2)
+	love.graphics.line(love.graphics.getWidth()/2, love.graphics.getHeight()/2-5, love.graphics.getWidth()/2, love.graphics.getHeight()/2+5)
 end
 
 --- Returns the client object to the main code block

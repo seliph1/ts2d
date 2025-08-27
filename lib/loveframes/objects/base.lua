@@ -554,6 +554,8 @@ end
 function newobject:GetVisible()
 	return self.visible
 end
+
+newobject.IsVisible = newobject.GetVisible
 --[[---------------------------------------------------------
 	- func: SetParent(parent)
 	- desc: sets the object's parent
@@ -719,7 +721,7 @@ function newobject:CheckHover()
 	local hoverobject = loveframes.GetHoverObject()
 
 	-- check if the mouse is colliding with the object
-	if self:OnState() and self:isUpdating() then
+	if self:OnState() and self:IsVisible() then
 		local collide = self.collide
 		if selfcol and collide then
 			loveframes.collisioncount = collisioncount + 1
@@ -1121,6 +1123,7 @@ end
 	- desc: sets the object's state
 --]]---------------------------------------------------------
 function newobject:SetState(name)
+	name = name or "none"
 	local children = self.children
 	local internals = self.internals
 	self.state = name

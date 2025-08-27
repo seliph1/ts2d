@@ -707,10 +707,10 @@ ui.options_button_cancel = LF.Create("button", ui.options_frame):SetText("Cancel
 --chat--------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------
 ui.chat_width = 400
-ui.chat_height = 400
+ui.chat_height = 200
 
 ui.chat_frame = LF.Create("frame"):SetSize(ui.chat_width, ui.chat_height):SetState("game")
-ui.chat_frame:SetScreenLocked(true):Center():ShowCloseButton(false)
+ui.chat_frame:SetScreenLocked(true):ShowCloseButton(false):SetPos(0, love.graphics.getHeight()-ui.chat_height-40)
 ui.chat_frame_message = function(player, message)
 	local game = {mode = 1}
 	if not player then return end
@@ -766,6 +766,42 @@ ui.chat_log = LF.Create("log", ui.chat_frame)
 :SetFont(ui.font_chat)
 
 --------------------------------------------------------------------------------------------------
+--chat input--------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------
+ui.chat_input_frame = LF.Create("frame"):SetVisible(false)
+ui.chat_input = LF.Create("textbox", ui.chat_input_frame)
+
+
+
+--------------------------------------------------------------------------------------------------
+--exit window-------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------
+ui.exit_window = LF.Create("frame"):SetSize(400, 300):SetName("Quit?"):SetCloseAction("hide")
+ui.exit_window_panel = LF.Create("panel", ui.exit_window):SetPos(16,32):SetSize(368, 230)
+ui.exit_window_message = LF.Create("messagebox",ui.exit_window_panel):SetFont(ui.font):SetPos(5, 5)
+:SetText([[
+Thank you for playing CS2D!
+
+Help, FAQ and updates are available at
+>>www.CS2D.com<<
+More free games at
+>>www.UnrealSoftware.de<<
+
+©255255000Are you really sure you want to quit?
+]])
+ui.exit_window_yesbutton = LF.Create("button", ui.exit_window)
+:SetSize(100, 20):SetPos(180, 270):SetText("Yes, Quit!")
+ui.exit_window_yesbutton.OnClick = function()
+	love.event.quit()
+end
+ui.exit_window_nobutton = LF.Create("button", ui.exit_window)
+:SetSize(100, 20):SetPos(284, 270):SetText("No")
+ui.exit_window_nobutton.OnClick = function()
+	ui.exit_window:SetVisible(false)
+end
+
+ui.exit_window:SetVisible(false)
+--------------------------------------------------------------------------------------------------
 --editor------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------
 ui.editor = require "core.interface.editor"
@@ -773,24 +809,13 @@ ui.editor = require "core.interface.editor"
 --------------------------------------------------------------------------------------------------
 --bindings----------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------
-local action_quit = function(key, isrepeat)
-	love.event.quit()
-end
-
-local action_debug = function(key, isrepeat)
-	local state = LF.config["DEBUG"]
-	LF.config["DEBUG"] = not state
-end
-
-LF.bind("all", "", "escape", action_quit)
-LF.bind("all", "", "f1", action_debug)
-LF.bind("all", "", "'", ui.console_button.OnClick)
+ui.binds = require "core.interface.binds" (ui)
 
 --------------------------------------------------------------------------------------------------
 --final wrapping of windows-----------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------
 ui.new_game_frame:SetVisible(false)
-ui.console_frame:SetVisible(false)
+ui.console_frame:SetVisible(false):SetAlwaysOnTop(true)
 ui.menu_frame:SetVisible(false)
 ui.options_frame:SetVisible(false)
 --------------------------------------------------------------------------------------------------

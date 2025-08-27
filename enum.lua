@@ -1,5 +1,4 @@
 local enum = {}
-
 enum.TILE_PROPERTY = {
 	[0]="normal floor without sound";
 	[1]="wall";

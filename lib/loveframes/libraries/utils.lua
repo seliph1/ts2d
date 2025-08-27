@@ -14,6 +14,7 @@ return function(loveframes)
 	- desc: sets the current state
 --]]---------------------------------------------------------
 function loveframes.SetState(name)
+	name = name or "none"
 	loveframes.state = name
 	loveframes.base.state = name
 end
@@ -440,6 +441,14 @@ function loveframes.GetHoverObject()
 end
 
 --[[---------------------------------------------------------
+	- func: GetInputObject()
+	- desc: returns loveframes.inputobject
+--]]---------------------------------------------------------
+function loveframes.GetInputObject()
+	return loveframes.inputobject
+end
+
+--[[---------------------------------------------------------
 	- func: GetDraggingObject()
 	- desc: returns loveframes.draggingobject
 --]]---------------------------------------------------------
@@ -519,6 +528,7 @@ function loveframes.DebugDraw()
 	love.graphics.print("Total Objects: " ..objects, infox + 10, infoy + 50)
 	love.graphics.print("Total Collisions: " ..collisions, infox + 10, infoy + 60)
 	
+	--[[
 	-- draw object information if needed
 	if topcol.type ~= "base" then
 		love.graphics.setColor(0,0,0,0.8)
@@ -553,7 +563,7 @@ function loveframes.DebugDraw()
 		love.graphics.print("Static Y: " ..(topcol.staticy or "0"), infox + 10, infoy + 175)
 		love.graphics.print("Width: " ..topcol.width, infox + 10, infoy + 185)
 		love.graphics.print("Height: " ..topcol.height, infox + 10, infoy + 195)
-	end
+	end]]
 
 	local ex_info_x = love.mouse.getX()+30
 	local ex_info_y = love.mouse.getY()+30
