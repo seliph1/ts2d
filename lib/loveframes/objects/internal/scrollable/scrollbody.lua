@@ -222,5 +222,53 @@ function newobject:GetScrollSize()
 	end
 	return body_size - button_size
 end
+
+--[[---------------------------------------------------------
+	- func: IsDragging()
+	- desc: gets the internal dragging property of bar as a method
+--]]---------------------------------------------------------
+function newobject:IsDragging()
+	return self.internals[1].internals[1].dragging
+end
+--[[---------------------------------------------------------
+	- func: IsDown()
+	- desc: gets the internal down property of buttons as a method
+--]]---------------------------------------------------------
+function newobject:IsDown()
+	local button_up = self.internals[1].internals[2]
+	local button_down = self.internals[1].internals[3]
+
+	--return 
+end
+--[[---------------------------------------------------------
+	- func: IsClicked()
+	- desc: gets the internal clickable property of area as a method
+--]]---------------------------------------------------------
+function newobject:IsClicked()
+end
+
+--[[---------------------------------------------------------
+	- func: Scroll() ScrollTop() ScrollBottom() ScrollTo()
+	- desc: methods to scroll the scrollbar internal in various ways
+--]]---------------------------------------------------------
+function newobject:ScrollTop()
+	local bar = self.internals[1].internals[1]
+	bar:ScrollTop()
+end
+
+function newobject:ScrollBottom()
+	local bar = self.internals[1].internals[1]
+	bar:ScrollBottom()
+end
+
+function newobject:ScrollTo(position)
+	local bar = self.internals[1].internals[1]
+	bar:ScrollTo(position)
+end
+
+function newobject:Scroll(amount)
+	local bar = self.internals[1].internals[1]
+	bar:Scroll(amount)
+end
 ---------- module end ----------
 end

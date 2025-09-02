@@ -1,7 +1,7 @@
-local client = require "client"
-local LG = love.graphics
-local LF = require "lib.loveframes"
-local ui = {}
+local LG 		= love.graphics
+local LF 		= require "lib.loveframes"
+local client 	= require "client"
+local ui 		= {}
 
 ui.font_fallbacks = {
 	"gfx/fonts/NotoSansCJK-Regular.ttc",
@@ -715,19 +715,19 @@ ui.chat_frame_message = function(player, message)
 	local game = {mode = 1}
 	if not player then return end
 	local teamcolor = ""
-	if player.team == 0 then
+	if player.t == 0 then
 		teamcolor = "©128128128"
-	elseif player.team == 1 then
+	elseif player.t == 1 then
 		teamcolor = "©050150254"
-	elseif player.team == 2 then
+	elseif player.t == 2 then
 		teamcolor = "©254025000"
 	end
 	local messagecolor = "©255220000"
 	local deadindicator = ""
-	if player.health <= 0 then
+	if player.h <= 0 then
 		deadindicator = "©255220000 *DEAD*"
 	end
-	if game.mode == 1 and player.team ~= 0 then
+	if game.mode == 1 and player.t ~= 0 then
 		teamcolor = "©000255000"
 	end
 
@@ -735,7 +735,7 @@ ui.chat_frame_message = function(player, message)
 		message = reverse_utf8(message)
 	end
 
-	local full_message = string.format("%s%s%s: %s%s", teamcolor, player.name, deadindicator, messagecolor, message)
+	local full_message = string.format("%s%s%s: %s%s", teamcolor, player.n, deadindicator, messagecolor, message)
 	ui.chat_log:AddElement(full_message)
 
 	return full_message
@@ -766,18 +766,100 @@ ui.chat_log = LF.Create("log", ui.chat_frame)
 :SetFont(ui.font_chat)
 
 --------------------------------------------------------------------------------------------------
+--server log--------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------
+ui.server_log_width = 200
+ui.server_log_height = 100
+
+ui.server_log_frame = LF.Create("frame")
+:SetSize(ui.server_log_width, ui.server_log_height)
+:SetState("game")
+:SetScreenLocked(true)
+:ShowCloseButton(false)
+:SetPos(love.graphics.getWidth()/2, 0)
+
+ui.server_log_frame.Draw = function(object)
+	local hover = object:GetHover()
+	local hovertime = 0
+	if hover and object.hovertime > 0 then
+		hovertime = love.timer.getTime() - object.hovertime
+	end
+	local brightness =  LF.Mix(0.1, 0.3, LF.Clamp(hovertime*5, 0, 1) )
+
+	LG.setColor(0, 0, 0, brightness)
+	LG.rectangle("fill", object.x, object.y, object.width, object.height, 10, 10)
+
+	LG.setColor(0, 0, 0, brightness)
+
+	local skin = LF.GetActiveSkin()
+	LG.setColor(0.8,0.8,0.8, brightness)
+	local drag = skin.images["vdrag.png"]
+	local scale = 0.3
+	LG.draw(drag, object.x + object.width/2 - drag:getWidth()/2*scale, object.y + 8, 0, scale)
+end
+
+ui.server_log = LF.Create("log", ui.server_log_frame)
+:SetSize(ui.server_log_width, ui.server_log_height-30)
+:SetPos(0, 30)
+:SetPadding(0)
+:SetFont(ui.font_small)
+:SetScrollBody(false)
+
+ui.server_log_push = function(message)
+	ui.server_log:AddElement(message)
+end
+
+--------------------------------------------------------------------------------------------------
 --chat input--------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------
-ui.chat_input_frame = LF.Create("frame"):SetVisible(false)
-ui.chat_input = LF.Create("textbox", ui.chat_input_frame)
 
+ui.chat_input_frame = LF.Create("container")
+:SetSize(800, 60)
+:SetY(LG.getHeight()-60)
+:CenterX()
+:SetState("game")
+:SetVisible(false)
 
+ui.chat_input_header = LF.Create("messagebox", ui.chat_input_frame)
+:SetFont(ui.font_chat)
+:SetText("©255220000Say:")
+:CenterY()
 
+local chat_offset = ui.chat_input_header:GetWidth()
+ui.chat_input = LF.Create("input", ui.chat_input_frame)
+:SetSize(800, 30):SetCharacterLimit(80):SetFont(ui.font_chat)
+:SetX(chat_offset)
+:SetColor(1.00, 0.86, 0.00, 1.00)
+:SetCursorColor(1.00, 0.86, 0.00, 1.00)
+:SetHighlightColor(1.00, 0.86, 0.00, 0.20)
+:CenterY()
+
+ui.chat_input.Draw = function(object)
+	local x = object.x
+	local y = object.y
+	local textwidth, textheight = object.field:getTextDimensions()
+	local vpadding = object:GetVerticalPadding()
+	local hpadding = object:GetHorizontalPadding()
+
+	love.graphics.setColor(0,0,0,0.5)
+	love.graphics.rectangle("fill", x, y, textwidth + hpadding*2, textheight + vpadding*2, 5)
+end
+
+ui.chat_input.OnEnter = function (object, text)
+	ui.chat_input:Clear()
+	if ui.chat_input_frame:GetVisible() and text ~= "" then
+		if text:sub(1, 1) == "/" then
+			ui.console_input.parse( text:sub(2) )
+		else
+			client.send(string.format("say %s", text))
+		end
+	end
+end
 --------------------------------------------------------------------------------------------------
 --exit window-------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------
 ui.exit_window = LF.Create("frame"):SetSize(400, 300):SetName("Quit?"):SetCloseAction("hide")
-ui.exit_window_panel = LF.Create("panel", ui.exit_window):SetPos(16,32):SetSize(368, 230)
+ui.exit_window_panel = LF.Create("panel", ui.exit_window):SetPos(16, 32):SetSize(368, 230)
 ui.exit_window_message = LF.Create("messagebox",ui.exit_window_panel):SetFont(ui.font):SetPos(5, 5)
 :SetText([[
 Thank you for playing CS2D!

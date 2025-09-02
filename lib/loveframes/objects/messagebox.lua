@@ -31,6 +31,7 @@ function newobject:initialize()
 	self.formattedhovertext = ""
 	self.defaultcolor = default_color or {1,1,1,1}
 	self.hoverenabled = false
+	self.shadow = true
 	self.font = default_font or loveframes.basicfont
 	self.textmesh = love.graphics.newText(self.font, "")
 	self.hovertextmesh = love.graphics.newText(self.font, "")
@@ -277,6 +278,18 @@ end
 --]]---------------------------------------------------------
 function newobject:GetFont()
 	return self.font
+end
+
+--[[---------------------------------------------------------
+	- func: SetShadow(bool) GetShadow(bool)
+	- desc: sets the object's shadow
+--]]---------------------------------------------------------
+function newobject:SetShadow(bool)
+    self.shadow = bool
+	return self
+end
+function newobject:GetShadow(bool)
+    return self.shadow
 end
 
 ---------- module end ----------

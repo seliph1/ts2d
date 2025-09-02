@@ -2,22 +2,7 @@ local client = require "client"
 
 -- Client only commands
 local commands = {
-	["profile"] = {
-		---@param act "start"|"stop"|"report"
-		action = function(act)
-			local profiler = require "lib.profi"
-			if act == "start" then
-				profiler:start()
-			elseif act == "stop" then
-				profiler:stop()
-			elseif act == "report" then
-				profiler:writeReport("report.txt")
-			end
-		end,
-		syntax = "/map <mapfile>",
-	};
-
-	["map"] = {
+	map = {
 		action = function(...)
 			local args = {...}
 			if client.map then
@@ -30,7 +15,8 @@ local commands = {
 		end,
 		syntax = "/map <mapfile>",
 	};
-	["clearmap"] = {
+
+	clearmap = {
 		action = function(...)
 			local args = {...}
 			if client.map then
@@ -40,7 +26,8 @@ local commands = {
 		end,
 		syntax = "/clearmap",
 	};
-	["scroll"] = {
+
+	scroll = {
 		action = function(x,y)
 			if client.map then
 				x = x or 0
@@ -49,7 +36,16 @@ local commands = {
 			end
 		end
 	};
-	["edit"] = {
+
+	log = {
+		action = function (...)
+			local ui = require "core.interface.ui"
+			local message = table.concat({...}," ")
+			ui.server_log_push(message)
+		end
+	};
+
+	edit = {
 		action = function(...)
 			local args = {...}
 			if client.map then
@@ -64,11 +60,13 @@ local commands = {
 		end,
 		syntax = "/edit <mapfile>",
 	};
-	["ping"] = {
+
+	ping = {
 		action = function()
 		end
 	};
-	["connect"] = {
+
+	connect = {
 		action = function(ip, port)
 			if not client.connected then
 				ip = ip or "127.0.0.1"
@@ -80,7 +78,7 @@ local commands = {
 		syntax = "connect <ip:port>",
 	};
 
-	["disconnect"] = {
+	disconnect = {
 		action = function()
 			local LF = require "lib.loveframes"
 			if client.connected then
@@ -90,51 +88,47 @@ local commands = {
 		syntax = "connect <ip:port>",
 	};
 
-	["send"] = {
-		action = function(message)
-		end,
-	};
-	["version"] = {
+	version = {
 		action = function()
-		end,
-	};
-	["players"] = {
-		action = function()
-		end;
-	};
-	["name"] = {
-		action = function(name)
-		end;
-	};
-	["files"] = {
-		action = function()
-			if client then
-				for k,v in pairs(client.gfx.items) do
-					print(k,v)
-				end
+			if client.connected then
+				client.send("version")
 			end
-		end;
+		end,
 	};
-	["say"] = {
-		action = function(...)
-			local message = table.concat({...}, " ")
-			local ui = require "core.interface.ui"
-			local formatted_message = ui.chat_frame_message({name="Mozilla", health=100}, message )
-			print(formatted_message)
+
+	players = {
+		action = function()
 		end;
 	};
 
-	["info"] = {
-		action = function()
-			print(1, 2, 3, 4, 5, 6)
+	setname = {
+		action = function(...)
+			if client.connected then
+				local name = table.concat({...}," ")
+				client.send("setname "..name)
+			end
 		end;
 	};
-	["scale"] = {
+
+	files = {
+		action = function()
+		end;
+	};
+
+	say = {
+		action = function(...)
+			local message = table.concat({...}, " ")
+			client.send(string.format("say %s", message))
+		end;
+	};
+
+	scale = {
 		action = function(bool)
 			client.scale = (bool == "true")
 		end;
 	};
-	["tp"] = {
+
+	tp = {
 		action = function()
 			local home = client.home
 			local share = client.share
@@ -147,6 +141,7 @@ local commands = {
 			client.send(string.format("setpos %s %s %s", client.id, pos_x, pos_y))
 		end
 	};
+
 	menu = {
 		---Invokes a server-side menu
 		---@param ... string
@@ -177,6 +172,13 @@ local commands = {
 		action = function()
 			local ui = require "core.interface.ui"
 			ui.console_window:Clear()
+		end;
+	};
+
+	debug = {
+		---Clear console
+		action = function(level)
+			client.debug_level = tonumber(level) or 0
 		end;
 	};
 	utf8 = {

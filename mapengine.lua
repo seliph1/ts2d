@@ -11,11 +11,12 @@ end
 
 -- Loading some libs
 local ffi = require "ffi"
-local List = require "lib.list"
+--local List = require "lib.list"
 local bump = require "lib.bump"
 local shader = require "core.shaders.cs2dshaders"
 local effect = require "effect"
 local enum = require "enum"
+local LF = love.filesystem
 
 -- Localise some important functions to constantly call during execution
 local max = math.max
@@ -38,11 +39,12 @@ local TILE_BLEND_DIR = enum.TILE_BLEND_DIR
 local TILE_MODE_HEIGHT = enum.TILE_MODE_HEIGHT
 local ENTITY_TYPE = enum.ENTITY_TYPE
 
+effect.register(LF.load "core/particle/sparkle.lua" (), "sparkle")
+effect.register(LF.load "core/particle/hitscan.lua" (), "hitscan")
 
 --effect.register(dofile "core/particle/fire.lua", "fire")
---effect.register(dofile "core/particle/sparkle.lua", "sparkle")
 --effect.register(dofile "core/particle/snow.lua", "snow")
---effect.register(dofile "core/particle/rain.lua", "rain")
+--effect.register(dofile "cor'e/particle/rain.lua", "rain")
 --[[---------------------------------------------------------
 	Lib
 --]]---------------------------------------------------------
@@ -129,8 +131,8 @@ MapObject.__tostring = function(self)
 end
 
 --- Creates a new MapObject handler
----@param width number map width
----@param height number map height
+---@param width number? map width
+---@param height number? map height
 ---@return table MapObject
 function MapObject.new(width, height)
 	width = width or 50
@@ -1317,8 +1319,8 @@ end
 function MapObject:mapToMouse(x, y)
 end
 
-function MapObject:spawn_effect(name, x, y)
-	effect.new(name, x, y)
+function MapObject:spawn_effect(effect_id, x, y)
+	effect.new(effect_id, x, y)
 end
 
 

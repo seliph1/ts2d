@@ -238,7 +238,7 @@ skin.controls.textinput_text_normal_color           = {0.59, 0.59, 0.59, 1}
 skin.controls.textinput_text_active_color           = {1, 1, 1, 1}
 skin.controls.textinput_text_placeholder_color      = {0.22, 0.22, 0.22, 1}
 skin.controls.textinput_text_selected_color         = {1, 1, 1, 1}
-skin.controls.textinput_highlight_bar_color         = {0.2, 0.8, 1, 0.2}
+skin.controls.textinput_highlight_bar_color         = {0.2, 0.8, 1, 0.5}
 
 -- checkbox
 skin.controls.checkbox_body_color                   = {0.1, 0.1, 0.1, 1}
@@ -1328,13 +1328,22 @@ end
 	- desc: draws the text object
 --]]---------------------------------------------------------
 function skin.messagebox(object)
-	local x = object.x
-	local y = object.y
+	local x = math.floor(object.x)
+	local y = math.floor(object.y)
 	local textmesh_normal = object.textmesh
 	local textmesh_hover = object.hovertextmesh
 	local hover = object:GetHover()
 	local hoverenabled = object.hoverenabled
+	local shadow = object.shadow
 
+	if shadow then
+		love.graphics.setColor(0,0,0,1)
+		if hover and hoverenabled then
+			love.graphics.draw(textmesh_hover, x+1, y+1)
+		else
+			love.graphics.draw(textmesh_normal, x+1, y+1)
+		end
+	end
 
 	love.graphics.setColor(1,1,1,1)
 	if hover and hoverenabled then
@@ -1444,7 +1453,9 @@ function skin.textbox(object)
 	local vHandleLength = vCoverage * height
 	local hHandlePos    = hOffset   * width
 	local vHandlePos    = vOffset   * height
+	
 	if hHandleLength < width then
+		love.graphics.setColor(textactivecolor)
 		--love.graphics.rectangle("fill", x+width - 2, y+vHandlePos, 2, vHandleLength)
 		love.graphics.rectangle("fill", x+hHandlePos, y+height-2, hHandleLength, 2)
 	end
@@ -1474,6 +1485,15 @@ function skin.textbox_over(object)
 	skin.OutlinedRectangle(x, y, width, height)
 end
 
+--[[---------------------------------------------------------
+	- func: DrawInput(object)
+	- desc: draws a simple input 
+--]]---------------------------------------------------------
+function skin.input(object)
+end
+
+function skin.input_over(object)
+end
 --[[---------------------------------------------------------
 	- func: skin.DrawSlider(object)
 	- desc: draws the slider object

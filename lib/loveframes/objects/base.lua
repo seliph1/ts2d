@@ -534,6 +534,20 @@ function newobject:SetVisible(bool)
 	local children = self.children
 	local internals = self.internals
 	self.visible = bool
+
+	if loveframes.inputobject == self then
+		loveframes.inputobject = nil
+	end
+	if loveframes.hoverobject == self then
+		loveframes.hoverobject = nil
+	end
+	if loveframes.draggingobject == self then
+		loveframes.draggingobject = nil
+	end
+	if loveframes.downobject == self then
+		loveframes.downobject = nil
+	end
+
 	if children then
 		for k, v in ipairs(children) do
 			v:SetVisible(bool)

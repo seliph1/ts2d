@@ -3,8 +3,34 @@
 return function(client)
 ---------- module start ----------
 
+-- These functions are restricted to be used by server only
+-- Only works when server sends them to this client
+
 local actions = {
--- Server only actions
+	print = {
+		action = function(...)
+			print(...)
+		end,
+	};
+
+	message = {
+        action = function(...)
+            local message = table.concat({...}," ")
+
+            local ui = require "core.interface.ui"
+            ui.chat_frame_message(message)
+		end,
+	};
+
+    log = {
+        action = function(...)
+            local message = table.concat({...}," ")
+
+            local ui = require "core.interface.ui"
+            ui.server_log_push(message)
+		end,
+    };
+
     mapchange = {
         ---Changes map currently being drawn on screen
         ---@param ... string
@@ -44,12 +70,6 @@ local actions = {
             print(string.format("scrolled to %s-%s", x, y))
         end
     };
-    name = {
-        ---Changes name of this client
-        ---@param ... string
-        action = function(...)
-        end;
-    };
 
     menu = {
         ---Invokes a server-side menu
@@ -58,7 +78,28 @@ local actions = {
             local ui = require "core.interface.ui"
             ui.menu_constructor(table.concat({...}," "))
         end;
-    }
+    };
+
+    say = {
+        action = function(peer_id, ...)
+            peer_id = tonumber(peer_id)
+            local message = table.concat({...}," ")
+            local player = client.share.players[peer_id]
+
+            if player then
+                local ui = require "core.interface.ui"
+                ui.chat_frame_message(player, message)
+            end
+        end
+    };
+
+    effect = {
+        action = function(effect_id, x, y)
+            x = tonumber(x) or 0
+            y = tonumber(y) or 0
+            client.map:spawn_effect(effect_id, x, y)
+        end
+    };
 }
 return actions
 

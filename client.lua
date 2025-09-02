@@ -1,14 +1,19 @@
 --- Client base framework
-local b			= require "lib.battery"
-local MapObject = require "mapengine"
+local b				= require "lib.battery"
+local Map 			= require "mapengine"
+local client 		= require "lib.cs"
 
-local client = require "lib.cs2"
-client.enabled = true
-client.map = MapObject.new(50, 50)
-client.width = 800
-client.height = 600
-client.scale = false
-client.mode = "lobby"
+
+client.enabled 			= true
+client.width 			= 800
+client.height 			= 600
+client.scale 			= false
+client.mode 			= "lobby"
+client.map 				= Map.new(50, 50)
+client.debug_level		= 0
+
+client.input_enabled 	= false
+
 client.content = require "enum"
 client.actions = require "actions" (client)
 client.canvas = love.graphics.newCanvas()
@@ -35,8 +40,8 @@ client.gfx = {
 	player = {};
 	ui = {};
 }
-
 require "loader" (client)
+
 --- Table that gets info from server
 ---@class table
 --- @field bullets table
@@ -52,6 +57,186 @@ local share = client.share
 --- @field move table direction vector
 local home = client.home
 
+--------------------------------------------------------------------------------------------------
+--love callbacks----------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------
+
+--- Callback for mouse movement on screen
+---@param x number
+---@param y number
+function client.mousemoved(x, y)
+    -- Transform mouse coordinates according to display centering and scaling
+	local w, h = love.graphics.getWidth(), love.graphics.getHeight()
+	local rel_x = x - (w - client.width)/2
+	local rel_y = y - (h - client.height)/2
+	-- Dont go less than 0 or more than 600/800 even if mouse is out of bounds
+	local abs_x = math.min(math.max(rel_x, 0), client.width)
+	local abs_y = math.min(math.max(rel_y, 0), client.height)
+	-- Update mouse position
+	home.targetX = abs_x
+	home.targetY = abs_y
+end
+
+--- Callback for mouse clicking on screen
+---@param x number
+---@param y number
+---@param button number
+function client.mousepressed(x, y, button, istouch, presses)
+    if button == 1 then
+        home.wantShoot = true
+    end
+
+	if button == 2 then
+		--local diff_x = (client.width/2 - home.targetX)
+		--local diff_y = (client.height/2 - home.targetY)
+
+		--local pos_x = client.camera.x - diff_x
+		--local pos_y = client.camera.y - diff_y
+
+		--client.send(string.format("setpos %s %s", pos_x, pos_y))
+	end
+end
+
+--- Callback for mouse button releasing on screen
+---@param x number
+---@param y number
+---@param button number
+function client.mousereleased(x, y, button, istouch, presses)
+    if button == 1 then
+        home.wantShoot = false
+    end
+
+	if button == 2 then
+		local tx, ty = client.map:mouseToMap(x, y)
+		--client.map:spawn_effect("rain", tx, ty)
+		client.map:spawn_effect("hitscan", tx, ty)
+	end
+end
+
+--- Callback for key press event
+---@param k string Key pressed
+function client.keypressed(k)
+	client.key[k] = true
+	if client.connected then
+		if k == "return" then
+			local ui = require "core.interface.ui"
+			local LF = require "lib.loveframes"
+
+			if ( LF.inputobject or LF.hoverobject) then return end
+
+			local bool = ui.chat_input_frame:GetVisible()
+			ui.chat_input_frame:SetVisible(not bool)
+		end
+	end
+end
+
+--- Callback for key release event
+---@param k string Key released
+function client.keyreleased(k)
+	client.key[k] = false
+	if client.connected then
+	end
+end
+
+function client.movement_handle(dt)
+	local x, y = b.get_vector("a", "d", "w", "s")
+
+	home.move_v = x
+	home.move_h = y
+end
+
+---Main game loop
+---@param dt number
+function client.update(dt)
+	client.movement_handle(dt)
+
+
+	client.preupdate(dt)
+	if (client.mode == "game" or client.mode == "editor") and client.map then
+		client.camera_move(dt)
+		client.camera_tween(dt)
+		client.map:scroll(client.camera.x, client.camera.y)
+		client.map:update(dt)
+	end
+	if client.connected then
+		-- Move players
+        for id, player in pairs(share.players) do
+			client.move_player(id, player, dt)
+        end
+
+		-- Move bullets
+        for id, bullet in pairs(share.bullets) do
+            client.move_bullet(id, bullet, dt)
+        end
+    end
+	client.postupdate(dt)
+
+	-- Update visual effects on client after data transfer take effect
+	if (client.mode == "game" or client.mode == "editor") and client.map then
+		client.render()
+	end
+end
+
+---Main game render loop
+function client.draw()
+	-- Draw background if it's in lobby mode
+	if client.mode == "lobby" then
+		client.draw_splash(0, 0)
+	end
+
+	if client.mode == "game" or client.mode == "editor" then
+		-- Center and scale display
+		local ox = 0.5 * (love.graphics.getWidth() - client.width)
+		local oy = 0.5 * (love.graphics.getHeight() - client.height)
+
+		if client.scale then
+			love.graphics.push()
+			love.graphics.setDefaultFilter("linear", "linear")
+			love.graphics.scale(love.graphics.getWidth() / client.width, love.graphics.getHeight() / client.height)
+			love.graphics.draw(client.canvas, -ox, -oy)
+			love.graphics.pop()
+		else
+			love.graphics.draw(client.canvas, 0, 0)
+		end
+	end
+
+	-- Crosshair debug
+	if client.debug_level > 0 then
+		-- Draw middle crosshair
+		love.graphics.line(love.graphics.getWidth()/2-5, love.graphics.getHeight()/2, love.graphics.getWidth()/2+5, love.graphics.getHeight()/2)
+		love.graphics.line(love.graphics.getWidth()/2, love.graphics.getHeight()/2-5, love.graphics.getWidth()/2, love.graphics.getHeight()/2+5)
+	end
+
+	if client.debug_level == 2 then
+		-- Advanced debug
+		local label = string.format("Camera: %dpx|%dpx  Ping: %s  FPS: %s  Target: %d|%d   Memory: %.2f MB",
+			client.camera.x,
+			client.camera.y,
+			client.getPing(),
+			love.timer.getFPS(),
+			client.home.targetX,
+			client.home.targetY,
+			collectgarbage("count") / 1024
+		)
+		love.graphics.printf(label, 0, love.graphics.getHeight()-20, love.graphics.getWidth(), "center")
+	elseif client.debug_level == 1 then
+		-- Simple debug
+		local label = string.format("FPS: %s  Memory: %.2f MB",
+			love.timer.getFPS(),
+			collectgarbage("count") / 1024
+		)
+		love.graphics.printf(label, 0, love.graphics.getHeight()-20, love.graphics.getWidth(), "center")
+	else
+		-- void
+	end
+
+
+end
+
+
+--------------------------------------------------------------------------------------------------
+--client callbacks--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------
 
 --- Callback for when client sucessfully connects to server
 function client.connect()
@@ -60,13 +245,13 @@ function client.connect()
 	client.mode = "game"
 end
 
+--- Callback for when client disconnects from server
 function client.disconnect()
 	local LF = require "lib.loveframes"
 	LF.SetState()
 	client.map:clear()
 	client.mode = "lobby"
 end
-
 
 --- Callback for information in sync with server
 ---@param payload table
@@ -95,6 +280,7 @@ end
 function client.receive(message)
 	-- Send the message to the command parser
     client.parse(message)
+	print(string.format("©236118000Parse: %s", message))
 end
 
 --- Client loading routine at the start of program
@@ -103,87 +289,9 @@ function client.load()
     home.targetX = 0
     home.targetY = 0
     home.wantShoot = false
-    home.move = { up = false, down = false, left = false, right = false }
-end
-
---- Callback for mouse movement on screen
----@param x number
----@param y number
-function client.mousemoved(x, y)
-    -- Transform mouse coordinates according to display centering and scaling
-	local w, h = love.graphics.getWidth(), love.graphics.getHeight()
-	local rel_x = x - (w - client.width)/2
-	local rel_y = y - (h - client.height)/2
-	-- Dont go less than 0 or more than 600/800 even if mouse is out of bounds
-	local abs_x = math.min(math.max(rel_x, 0), client.width)
-	local abs_y = math.min(math.max(rel_y, 0), client.height)
-	-- Update mouse position
-	home.targetX = abs_x
-	home.targetY = abs_y
-end
-
---- Callback for mouse clicking on screen
----@param x number
----@param y number
----@param button number
-function client.mousepressed(x, y, button, istouch, presses)
-    if button == 1 then
-        home.wantShoot = true
-		--client.send(string.format("click %s-%s", home.targetX, home.targetY))
-    end
-
-	if button == 2 then
-		local home = client.home
-		local share = client.share
-		local diff_x = (client.width/2 - home.targetX)
-		local diff_y = (client.height/2 - home.targetY)
-
-		local pos_x = client.camera.x - diff_x
-		local pos_y = client.camera.y - diff_y
-
-		client.send(string.format("setpos %s %s %s", client.id, pos_x, pos_y))
-	end
-end
-
---- Callback for mouse button releasing on screen
----@param x number
----@param y number
----@param button number
-function client.mousereleased(x, y, button, istouch, presses)
-    if button == 1 then
-        home.wantShoot = false
-		--local tx, ty = client.map:mouseToMap(x, y)
-		--client.map:spawn_effect("fire", tx, ty)
-    end
-
-	if button == 2 then
-		--local tx, ty = client.map:mouseToMap(x, y)
-		--client.map:spawn_effect("rain", tx, ty)
-	end
-end
-
---- Callback for key press event
----@param k string Key pressed
-function client.keypressed(k)
-	client.key[k] = true
-	if client.connected then
-    	if k == 'w' then home.move.up = true end
-    	if k == 's' then home.move.down = true end
-    	if k == 'a' then home.move.left = true end
-    	if k == 'd' then home.move.right = true end
-	end
-end
-
---- Callback for key release event
----@param k string Key released
-function client.keyreleased(k)
-	client.key[k] = false
-	if client.connected then
-    	if k == 'w' then home.move.up = false end
-    	if k == 's' then home.move.down = false end
-    	if k == 'a' then home.move.left = false end
-    	if k == 'd' then home.move.right = false end
-	end
+	home.move_h = 0
+	home.move_v = 0
+	home.name = "Mozilla"
 end
 
 --- Client command parser
@@ -293,43 +401,6 @@ function client.camera_tween(dt)
 	client.camera.y = b.lerp(client.camera.y, client.camera.ty, client.camera.tween_speed * dt)
 end
 
----Main game loop
-function client.chat_()
-end
-
-
-
----Main game loop
----@param dt number
-function client.update(dt)
-	client.preupdate(dt)
-
-	if (client.mode == "game" or client.mode == "editor") and client.map then
-		client.camera_move(dt)
-		client.camera_tween(dt)
-		client.map:scroll(client.camera.x, client.camera.y)
-		client.map:update(dt)
-	end
-	if client.connected then
-		-- Move players
-        for id, player in pairs(share.players) do
-			client.move_player(id, player, dt)
-        end
-
-		-- Move bullets
-        for id, bullet in pairs(share.bullets) do
-            client.move_bullet(id, bullet, dt)
-        end
-    end
-	client.postupdate(dt)
-
-	-- Update visual effects on client after data transfer take effect
-	if (client.mode == "game" or client.mode == "editor") and client.map then
-		client.render()
-	end
-end
-
-
 function client.draw_splash(ox, oy)
 	local splash_art = client.gfx.ui["gfx/splash.bmp"]
 	local splash_width = love.graphics.getWidth() / splash_art:getWidth()
@@ -371,54 +442,6 @@ function client.render()
 	-- Resets scissoring and canvas
 	love.graphics.pop()
 	love.graphics.setCanvas()
-end
-
----Main game render loop
-function client.draw()
-	-- Draw background if it's in lobby mode
-	if client.mode == "lobby" then
-		client.draw_splash(0, 0)
-	end
-
-	if client.mode == "game" or client.mode == "editor" then
-		-- Center and scale display
-		local ox = 0.5 * (love.graphics.getWidth() - client.width)
-		local oy = 0.5 * (love.graphics.getHeight() - client.height)
-
-		if client.scale then
-			love.graphics.push()
-			love.graphics.setDefaultFilter("linear", "linear")
-			love.graphics.scale(love.graphics.getWidth() / client.width, love.graphics.getHeight() / client.height)
-			love.graphics.draw(client.canvas, -ox, -oy)
-			love.graphics.pop()
-		else
-			love.graphics.draw(client.canvas, 0, 0)
-		end
-	end
-
-	-- Advanced debug
-	--[[
-	local label = string.format("Camera: %dpx|%dpx  Ping: %s  FPS: %s  Target: %d|%d   Memory: %.2f MB",
-		client.camera.x,
-		client.camera.y,
-		client.getPing(),
-		love.timer.getFPS(),
-		client.home.targetX,
-		client.home.targetY,
-		collectgarbage("count") / 1024
-	)
-	love.graphics.printf(label, 0, love.graphics.getHeight()-20, love.graphics.getWidth(), "center")
-	]]
-	-- Simple debug
-	local label = string.format("FPS: %s  Memory: %.2f MB",
-		love.timer.getFPS(),
-		collectgarbage("count") / 1024
-	)
-	love.graphics.printf(label, 0, love.graphics.getHeight()-20, love.graphics.getWidth(), "center")
-
-	-- Draw middle crosshair
-	love.graphics.line(love.graphics.getWidth()/2-5, love.graphics.getHeight()/2, love.graphics.getWidth()/2+5, love.graphics.getHeight()/2)
-	love.graphics.line(love.graphics.getWidth()/2, love.graphics.getHeight()/2-5, love.graphics.getWidth()/2, love.graphics.getHeight()/2+5)
 end
 
 --- Returns the client object to the main code block

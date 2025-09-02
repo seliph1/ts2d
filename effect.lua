@@ -32,6 +32,9 @@ function effect.new(name, x, y)
 		-- Start emitting the particles
 		if effect_instance.global then
 			x, y = 0, 0
+		else
+			x = x + new_particle.x
+			y = y + new_particle.y
 		end
 		new_particle.system:setPosition(x, y)
 		new_particle.system:start()
@@ -57,10 +60,15 @@ end
 function effect.update(dt)
 	for effect_id, effect_instance in pairs(effect.queue) do
 		for _, particle in ipairs(effect_instance) do
+			local stopped_instances = 0
 			if particle.system:isStopped() and particle.system:getCount() == 0 then
-				effect.queue[effect_id] = nil
+				stopped_instances = stopped_instances + 1
 			else
 				particle.system:update(dt)
+			end
+
+			if stopped_instances == #effect_instance then
+				effect.queue[effect_id] = nil
 			end
 		end
 	end

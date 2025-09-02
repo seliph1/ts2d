@@ -36,7 +36,6 @@ function newobject:initialize()
 	self.font = font
 	self.texthash = love.graphics.newText(font)
 	self.defaultcolor = color or {1,1,1,1}
-	self:SetDrawFunc()
 	self.cursor = loveframes.cursors.ibeam
 	self.lastheight = 0
 
@@ -51,6 +50,8 @@ function newobject:initialize()
 	self.offsetx = 0
 	self.offsety = 0
 	self.buttonscrollamount = 1
+
+	self:SetDrawFunc()
 end
 
 --[[---------------------------------------------------------
@@ -230,11 +231,12 @@ function newobject:ParseText(str)
 	local formattedchunks = {}
 	local formattedstring = {}
 	local defaultColor = self.defaultcolor
+	local currentColor = {0,0,0,1}
 
 	local last = 1
 	while true do
 		local i, j = str:find("©", last)
-		if not i then 
+		if not i then
 			-- restante
 			table.insert(formattedchunks, defaultColor)
 			table.insert(formattedchunks, str:sub(last))
@@ -263,11 +265,16 @@ function newobject:ParseText(str)
 		else
 			-- não é cor válida, volta o texto inteiro
 			local bad = "©"..capture
-			table.insert(formattedchunks, defaultColor)
+			local previousColor
+			if #formattedchunks > 0 then
+				previousColor = formattedchunks[#formattedchunks-2]
+			else
+				previousColor = defaultColor
+			end
+			table.insert(formattedchunks, previousColor)
 			table.insert(formattedchunks, bad)
 			table.insert(formattedstring, bad)
 		end
-
 		last = k
 	end
 
@@ -287,13 +294,19 @@ function newobject:ParseElements()
 		-- Parse the obtained string with cs2d formatting
 		value, parsedvalue = self:ParseText(value)
 
+		-- Adds the offset from vertical body if applicable
+		local truewidth = self.width
+		if self.verticalbody then
+			truewidth = self.width - self.verticalbody:GetWidth()
+		end
+
 		-- Add the fixed, formatted text to the texthash object
 		local index
 		local status, err = pcall(
 			self.texthash.addf,
 			self.texthash,
 			value,
-			self.width - self.verticalbody:GetWidth(),
+			truewidth,
 			"left",
 			0,
 			lastheight
@@ -312,9 +325,10 @@ function newobject:ParseElements()
 	end
 	self:RedoLayout()
 
-	local scrollbar = self.verticalbody:GetScrollBar()
-	if scrollbar then
-		scrollbar:ScrollBottom()
+	if self.verticalbody then
+		self.verticalbody:ScrollBottom()
+	else
+		self.offsety = self.itemheight - self.height
 	end
 end
 
@@ -327,6 +341,12 @@ function newobject:AppendElement(value)
 	-- Parse the obtained string with cs2d formatting
 	value, parsedvalue = self:ParseText(value)
 
+	-- Adds the offset from vertical body if applicable
+	local truewidth = self.width
+	if self.verticalbody then
+		truewidth = self.width - self.verticalbody:GetWidth()
+	end
+
 	-- Add the fixed, formatted text to the texthash object
 	--local index = self.texthash:addf(value, self.width - self.verticalbody:GetWidth(), "left", 0, lastheight)
 	local index
@@ -334,7 +354,7 @@ function newobject:AppendElement(value)
 		self.texthash.addf,
 		self.texthash,
 		value,
-		self.width - self.verticalbody:GetWidth(),
+		truewidth,
 		"left",
 		0,
 		lastheight
@@ -352,9 +372,10 @@ function newobject:AppendElement(value)
 	self.lastheight = self.lastheight + addedheight
 	self:RedoLayout()
 
-	local scrollbar = self.verticalbody:GetScrollBar()
-	if scrollbar then
-		scrollbar:ScrollBottom()
+	if self.verticalbody then
+		self.verticalbody:ScrollBottom()
+	else
+		self.offsety = self.itemheight - self.height
 	end
 end
 --[[---------------------------------------------------------
@@ -403,6 +424,26 @@ end
 function newobject:GetPadding()
 	local padding = self.padding
 	return padding
+end
+
+--[[---------------------------------------------------------
+	- func: SetScrollBody
+	- desc: removes/adds a scroll body
+--]]---------------------------------------------------------
+
+function newobject:SetScrollBody(bool)
+	if bool then
+		if (not self.verticalbody) then
+			local verticalbody = loveframes.objects["scrollbody"]:new(self, "vertical")
+			table.insert(self.internals, verticalbody)
+			self.verticalbody = verticalbody
+		end
+	else
+		self.verticalbody:Remove()
+		self.verticalbody = nil
+	end
+	self:ParseElements()
+	return self
 end
 
 --[[---------------------------------------------------------

@@ -7,14 +7,14 @@ return function(loveframes)
 ---------- module start ----------
 
 -- textinput object
-local newobject = loveframes.NewObject("textbox", "loveframes_object_textbox", true)
+local newobject = loveframes.NewObject("input", "loveframes_object_input", true)
 
 --[[---------------------------------------------------------
 	- func: initialize()
 	- desc: initializes the object
 --]]---------------------------------------------------------
 function newobject:initialize()
-	self.type = "textbox"
+	self.type = "input"
 	self.width = 200
 	self.height = 25
 	self.offsetx = 0
@@ -26,20 +26,15 @@ function newobject:initialize()
 	self.focus = false
 	self.vbar = false
 	self.hbar = false
-
-	self.itemwidth = 0
-	self.itemheight = 0
-	self.extrawidth = 0
-	self.extraheight = 0
-	self.buttonscrollamount = 1
-	self.autoscroll = true
+    self.color = {1,1,1,1}
+    self.highlightcolor = {1,1,1,1}
+    self.cursorcolor = {1,1,1,1}
+    self.shadow = true
 
 	self.OnEnter = nil
 	self.OnKeyPressed = nil
 	self.OnControlKeyPressed = nil
 	self.OnTextChanged = nil
-	self.OnFocusGained = nil
-	self.OnFocusLost = nil
 	self.OnCopy = nil
 	self.OnPaste = nil
 	self:SetDrawFunc()
@@ -57,26 +52,8 @@ function newobject:initialize()
 	self.field:setType("normal")
 	self.field:setFont(font)
 	self.field:setDimensions(self.width, self.height)
+    self.field:setCharacterLimit(30)
 end
-
---[[---------------------------------------------------------
-	- func: GetVerticalScrollBody()
-	- desc: gets the object's vertical scroll body
---]]---------------------------------------------------------
-function newobject:GetVerticalScrollBody()
-	local vbar = self.vbar
-	local internals = self.internals
-	local item = false
-	if vbar then
-		for k, v in ipairs(internals) do
-			if v.type == "scrollbody" and v.bartype == "vertical" then
-				item = v
-			end
-		end
-	end
-	return item
-end
-
 
 --[[---------------------------------------------------------
 	- func: update(deltatime)
@@ -87,57 +64,14 @@ function newobject:update(dt)
 	if not self:isUpdating() then return end
 	-- check to see if the object is being hovered over
 	self:CheckHover()
-	local parent = self.parent
-	local update = self.Update
-	local internals = self.internals
-	local fieldtype = self.field:getType()
-	local base = loveframes.base
-	local inputobject = loveframes.inputobject
 	-- move to parent if there is a parent
-
-	if parent ~= base then
+	if self.parent ~= loveframes.base then
 		self.x = self.parent.x + self.staticx
 		self.y = self.parent.y + self.staticy
 	end
-	-- Deselect text if the object isn't active
-	if inputobject ~= self then
-		self.focus = false
-	end
-	self.itemwidth = self.field:getTextWidth() + self.horizontalpadding
-	self.itemheight = self.field:getTextHeight() + self.verticalpadding
-
-	self.extrawidth = math.max(0, self.itemwidth - self.width)
-	self.extraheight = math.max(0, self.itemheight - self.height)
-
-	if self.itemheight > self.height and fieldtype ~= "normal" and fieldtype ~= "password"  then
-		if not self.vbar then
-			local scrollbody = loveframes.objects["scrollbody"]:new(self, "vertical")
-			table.insert(self.internals, scrollbody)
-			self.vbar = true
-		end
-	else
-		if self.vbar then
-			local scrollbody = self:GetVerticalScrollBody()
-			if scrollbody then
-				scrollbody:Remove()
-			end
-			self.vbar = false
-			self.offsety = 0
-		end
-	end
-
-	local scrollbody = self:GetVerticalScrollBody()
-	if scrollbody then
-		--local scrollbar = scrollbody:GetScrollBar()
-		if scrollbody:IsDragging() then
-			self.field:setScroll(self.offsetx, self.offsety)
-		end
-	end
-	-- Update children
-	for k, v in ipairs(internals) do
-		v:update(dt)
-	end
+    self.field:update(dt)
 	-- Update the callback update function
+    local update = self.Update
 	if update then
 		update(self, dt)
 	end
@@ -150,25 +84,75 @@ end
 function newobject:draw()
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
-	local x = self.x
-	local y = self.y
+	local x = math.floor(self.x)
+	local y = math.floor(self.y)
 	local width = self.width
 	local height = self.height
+    local field = self.field
+    local shadow = self.shadow
+   	local vpadding = self.verticalpadding
+	local hpadding = self.horizontalpadding
+    local color = self.color
+	local highlightcolor = self.highlightcolor
+	local cursorcolor = self.cursorcolor
+    local font = self:GetFont()
+	local font_height = font:getHeight()
+	local blink_phase = field:getBlinkPhase()
+
 	-- set the object's draw order
 	self:SetDrawOrder()
-	love.graphics.setScissor(x, y, width, height)
+    love.graphics.setScissor(x, y, width, height)
+
 	local drawfunc = self.Draw or self.drawfunc
 	if drawfunc then
 		drawfunc(self)
 	end
-	love.graphics.setScissor()
 
-	local internals = self.internals
-	if internals then
-		for k, v in ipairs(internals) do
-			v:draw()
+    love.graphics.setFont(font)
+	-- Draw text
+	for _, text, line_x, line_y in field:eachVisibleLine() do
+		if line_y >= -font_height and line_y <= height + font_height then
+			if shadow then
+				love.graphics.setColor(0,0,0,1)
+				love.graphics.print(text, x + hpadding + line_x + 1, y + vpadding + line_y + 1)
+			end
+			love.graphics.setColor(color)
+			love.graphics.print(text, x + hpadding + line_x, y + vpadding + line_y)
 		end
 	end
+
+   	-- Draw cursor blinking
+	if (blink_phase/ 0.90) % 1 < .5 then
+		local cursor_x, cursor_y, cursor_height = field:getCursorLayout()
+		if cursor_x >= 0 and cursor_x <= width and cursor_y >= -font_height and cursor_y <= height + font_height then
+			if shadow then
+				love.graphics.setColor(0,0,0,1)
+				love.graphics.rectangle("fill", cursor_x + x + hpadding + 1, cursor_y + y + vpadding + 1, 1, cursor_height)
+			end
+			love.graphics.setColor(cursorcolor)
+			love.graphics.rectangle("fill", cursor_x + x + hpadding, cursor_y + y + vpadding, 1, cursor_height)
+
+		end
+	end
+
+	-- Draw the selected text
+	love.graphics.setColor(highlightcolor)
+	for _, selection_x, selection_y, selection_w, selection_h in field:eachSelection() do
+		if selection_y >= -font_height and selection_y + selection_h <= height + font_height then
+			love.graphics.rectangle("fill", selection_x + x + hpadding, selection_y + y + vpadding, selection_w, selection_h)
+		end
+	end
+
+    -- Draw the scroll bar
+	local hOffset, hCoverage = field:getScrollHandles()
+	local hHandleLength = hCoverage * width
+	local hHandlePos    = hOffset   * width
+	if hHandleLength < width then
+		love.graphics.setColor(color)
+		love.graphics.rectangle("fill", x+hHandlePos, y+height-2, hHandleLength, 2)
+	end
+
+    love.graphics.setScissor()
 
 	local drawoverfunc = self.DrawOver or self.drawoverfunc
 	if drawoverfunc then
@@ -183,19 +167,15 @@ end
 function newobject:wheelmoved(x, y)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
-
-	self.field:wheelmoved(x, y)
-	local scrollbody = self:GetVerticalScrollBody()
-	if scrollbody then
-		local dx, dy = self.field:getScroll()
-		scrollbody:ScrollTo(dy/self.itemheight)
-	end
+    self.field:wheelmoved(x, y)
 end
 --[[---------------------------------------------------------
 	- func: mousemoved(x, y, button)
 	- desc: called when the player moves mouse
 --]]---------------------------------------------------------
 function newobject:mousemoved(x, y)
+    if not self:OnState() then return end
+	if not self:isUpdating() then return end
 	self.field:mousemoved(x - self.x, y - self.y)
 end
 
@@ -206,59 +186,13 @@ end
 function newobject:mousepressed(x, y, button, istouch, presses)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
-	local hover = self.hover
-	local inputobject = loveframes.inputobject
-	local onfocusgained = self.OnFocusGained
-	local onfocuslost = self.OnFocusLost
-	local focus = self.focus
-	local internals = self.internals
-
-	-- Check if it's hovering the object
-	if hover then
-		-- Call the callback of focus 
-		if onfocusgained and not focus then
-			onfocusgained(self)
-		end
-		-- Change focus status to true
-		self.focus = true
-		-- Change input target to the object focused
-		if button == 1 then
-			if inputobject ~= self then
-				loveframes.inputobject = self
-			end
-		end
-
-		self.field:mousepressed(x - self.x, y - self.y, button, presses)
-	else
-		-- Defocus on any button press outside the widget area
-		if inputobject == self then
-			loveframes.inputobject = false
-			-- Call the callback
-			if onfocuslost then
-				onfocuslost(self)
-			end
-			-- Change focus status to false
-			self.focus = false
-		end
-		--[[
-		-- Deselect all text
-		self.field:releaseMouse()
-		self.field:selectNone()
-		]]
-	end
-	for k, v in ipairs(internals) do
-		v:mousepressed(x, y, button)
-	end
+    self.field:mousepressed(x - self.x, y - self.y, button, presses)
 end
 
 function newobject:mousereleased(x, y, button)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
 	self.field:mousereleased(x - self.x, y - self.y, button)
-	local internals = self.internals
-	for k, v in ipairs(internals) do
-		v:mousereleased(x, y, button)
-	end
 end
 
 --[[---------------------------------------------------------
@@ -268,27 +202,20 @@ end
 function newobject:keypressed(key, isrepeat)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
-	if loveframes.inputobject ~= self then return end
-
-	self.field:keypressed(key, isrepeat)
 
 	if key == "return" then
 		if self.OnEnter then
 			self.OnEnter(self, self.field:getText())
+            return
 		end
-		--[[
-		local scrollbar = self:GetVerticalScrollBody()
-		if self.autoscroll and scrollbar then
-			scrollbar:ScrollBottom()
-		end]]
 	end
+	self.field:keypressed(key, isrepeat)
 
-	local focus = self.focus
 	local oncopy = self.OnCopy
 	local onpaste = self.OnPaste
 	local oncut = self.OnCut
 
-	if loveframes.IsCtrlDown() and focus then
+	if loveframes.IsCtrlDown() then
 		if key == "c" then
 			if oncopy then
 				oncopy(self, love.system.getClipboardText())
@@ -312,7 +239,6 @@ end
 function newobject:keyreleased(key, isrepeat)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
-	if loveframes.inputobject ~= self then return end
 end
 
 --[[---------------------------------------------------------
@@ -322,22 +248,13 @@ end
 function newobject:textinput(text)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
-	if loveframes.inputobject ~= self then return end
 
 	local ontextchanged = self.OnTextChanged
 	local event, textedited = self.field:textinput(text)
-	if event and textedited  then
+	if event and textedited then
 		if ontextchanged then
 			ontextchanged(self, text)
 		end
-
-		--[[
-		if self.autoscroll then
-			local scrollbody = self:GetVerticalScrollBody()
-			if scrollbody then
-				scrollbody:ScrollBottom()
-			end
-		end]]
 	end
 end
 --[[---------------------------------------------------------
@@ -403,34 +320,6 @@ end
 
 function newobject:GetHorizontalPadding()
 	return self.horizontalpadding
-end
---[[---------------------------------------------------------
-	- func: SetFocus(focus) GetFocus()
-	- desc: sets/gets the object's focus
---]]---------------------------------------------------------
-function newobject:SetFocus(focus)
-	local inputobject = loveframes.inputobject
-	local onfocusgained = self.OnFocusGained
-	local onfocuslost = self.OnFocusLost
-	self.focus = focus
-	if focus then
-		loveframes.inputobject = self
-		if onfocusgained then
-			onfocusgained(self)
-		end
-	else
-		if inputobject == self then
-			loveframes.inputobject = false
-		end
-		if onfocuslost then
-			onfocuslost(self)
-		end
-	end
-	return self
-end
-
-function newobject:GetFocus()
-	return self.focus
 end
 
 --[[---------------------------------------------------------
@@ -560,9 +449,69 @@ function newobject:GetText()
 	return self.field:getText()
 end
 
+--[[---------------------------------------------------------
+	- func: GetColor() SetColor()
+	- desc: gets the object's color
+--]]---------------------------------------------------------
+function newobject:GetColor()
+	return self.color
+end
+
+function newobject:SetColor(r,g,b,a)
+    self.color[1] = r or self.color[1]
+    self.color[2] = g or self.color[2]
+    self.color[3] = b or self.color[3]
+    self.color[4] = a or self.color[4]
+	return self
+end
+
+function newobject:GetHighlightColor()
+	return self.highlightcolor
+end
+
+function newobject:SetHighlightColor(r,g,b,a)
+    self.highlightcolor[1] = r or self.highlightcolor[1]
+    self.highlightcolor[2] = g or self.highlightcolor[2]
+    self.highlightcolor[3] = b or self.highlightcolor[3]
+    self.highlightcolor[4] = a or self.highlightcolor[4]
+	return self
+end
+
+function newobject:GetCursorColor()
+	return self.cursorcolor
+end
+
+function newobject:SetCursorColor(r,g,b,a)
+    self.cursorcolor[1] = r or self.cursorcolor[1]
+    self.cursorcolor[2] = g or self.cursorcolor[2]
+    self.cursorcolor[3] = b or self.cursorcolor[3]
+    self.cursorcolor[4] = a or self.cursorcolor[4]
+	return self
+end
+--[[---------------------------------------------------------
+	- func: SetShadow(bool) GetShadow(bool)
+	- desc: sets the object's shadow
+--]]---------------------------------------------------------
+function newobject:SetShadow(bool)
+    self.shadow = bool
+	return self
+end
+function newobject:GetShadow(bool)
+    return self.shadow
+end
+--[[---------------------------------------------------------
+	- func: SetVisible(bool)
+	- desc: sets the object's visibility
+--]]---------------------------------------------------------
+function newobject:SetVisible(bool)
+	self.visible = bool
+	return self
+end
+
 function newobject:SetMaxHistory(size)
 	self.field:setMaxHistory(size)
 	return self
 end
+
 ---------- module end ----------
 end

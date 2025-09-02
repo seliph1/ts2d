@@ -19,10 +19,11 @@ local loveframes 	= require "lib.loveframes"
 local client 		= require "client"
 local ui 			= require "core.interface.ui"
 
-local lldebugger = require "lldebugger"
+local lldebugger
 
 local launch_type = arg[2]
 if launch_type == "debug" then
+	lldebugger = require "lldebugger"
 	lldebugger.start()
 	--loveframes.config["DEBUG"] = true
 end
