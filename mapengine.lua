@@ -1319,8 +1319,8 @@ end
 function MapObject:mapToMouse(x, y)
 end
 
-function MapObject:spawn_effect(effect_id, x, y)
-	effect.new(effect_id, x, y)
+function MapObject:spawn_effect(effect_id, x, y, args)
+	effect.new(effect_id, x, y, args)
 end
 
 

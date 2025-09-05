@@ -13,6 +13,8 @@
     add vehicles
     NPC AI: [leaving the box will use the default AI]
      Hide number option for menu api (for example menu(uid,"title@b@n,abcdefg,hijk"))
+     stop cs2d2 working when grabbing window
+     remove threshold for removing black pixels from sprites
 
 
 

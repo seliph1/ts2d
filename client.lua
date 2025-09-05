@@ -108,8 +108,6 @@ function client.mousereleased(x, y, button, istouch, presses)
 
 	if button == 2 then
 		local tx, ty = client.map:mouseToMap(x, y)
-		--client.map:spawn_effect("rain", tx, ty)
-		client.map:spawn_effect("hitscan", tx, ty)
 	end
 end
 
@@ -387,8 +385,10 @@ function client.camera_move(dt)
 	client.camera.ty = client.camera.ty + vy
 
 	if client.connected then
-		local diff_x = (client.width/2 - home.targetX)/8
-		local diff_y = (client.height/2 - home.targetY)/8
+		--local diff_x = (client.width/2 - home.targetX)/8
+		--local diff_y = (client.height/2 - home.targetY)/8
+		local diff_x = 0
+		local diff_y = 0
 		client.camera.tx = share.players[client.id].x - diff_x
 		client.camera.ty = share.players[client.id].y - diff_y
 	end

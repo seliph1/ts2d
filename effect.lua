@@ -7,9 +7,11 @@ function effect.register(particle, name, options)
 	effect.list[name] = particle
 end
 
-function effect.new(name, x, y)
+function effect.new(name, x, y, args)
 	local effect_instance = effect.list[name]
 	local new_effect = {}
+
+	args = args or {}
 
 	for index, attribute in pairs(effect_instance) do
 		if type(index)~="number" then
@@ -25,10 +27,22 @@ function effect.new(name, x, y)
 				new_particle[k] = v
 			end
 		end
-
 		-- Clone the particle system with a new fresh seed
 		new_particle.system = particle.system:clone()
 		table.insert(new_effect, new_particle)
+
+		-- Add new args if possible
+		for k,v in pairs(args) do
+			if new_particle.system[k] then
+				local object = new_particle.system
+				if type(v) == "table" then
+ 					new_particle.system[k](object, unpack(v))
+				else
+					new_particle.system[k](object, v)
+				end
+			end
+		end
+
 		-- Start emitting the particles
 		if effect_instance.global then
 			x, y = 0, 0

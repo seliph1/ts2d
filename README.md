@@ -24,3 +24,9 @@ Make sure you have [Love2D](https://love2d.org/) installed.
 1. Clone the repository:
    ```bash
    git clone https://github.com/seliph1/ts2d.git
+   ```
+2. Run the project root folder in your terminal
+   ´´´bash
+   love .
+   ```
+   

@@ -100,6 +100,33 @@ local actions = {
             client.map:spawn_effect(effect_id, x, y)
         end
     };
+
+    hitscan = {
+        action = function(tx, ty, hit)
+            local player = client.share.players[client.id]
+            local x, y = player.x, player.y
+            tx = tonumber(tx) or 0
+            ty = tonumber(ty) or 0
+
+            local angle = math.atan2(ty-y, tx-x)
+            local length = math.sqrt( (tx-x)^2 + (ty-y)^2 )
+
+            local half = length/2
+            local hx = x + math.cos(angle)*half
+	        local hy = y + math.sin(angle)*half
+
+            client.map:spawn_effect("hitscan", hx, hy,
+                {
+                    setDirection = angle,
+                    setEmissionArea = {"uniform", half, 1, angle, false}
+                }
+		    )
+
+            if hit == "true" then
+                client.map:spawn_effect("sparkle", tx, ty)
+            end
+        end
+    }
 }
 return actions
 
