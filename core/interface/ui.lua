@@ -8,6 +8,8 @@ ui.font_fallbacks = {
 	"gfx/fonts/NotoSansArabic-Regular.ttf",
 	"gfx/fonts/NotoSansThai-Regular.ttf",
 	"gfx/fonts/NotoSansHebrew-Regular.ttf",
+	"gfx/fonts/NotoSansHindi-Regular.ttf",
+	"gfx/fonts/NotoSansCuneiform-Regular.ttf",
 }
 
 ui.setFontFallbacks = function(font, size)
@@ -82,9 +84,23 @@ local function random_color()
     return string.format("©%03d%03d%03d", r, g, b)
 end
 
-local function is_rtl(str)
-	-- procura qualquer caractere nas faixas hebraico ou árabe
-	return str:find("[\u{0590}-\u{05FF}\u{0600}-\u{06FF}]") ~= nil
+local function hasRTL(s)
+	local utf8 = require "utf8"
+    for _, cp in utf8.codes(s) do
+        if (cp >= 0x0590 and cp <= 0x05FF)    -- Hebrew
+        or (cp >= 0x0600 and cp <= 0x06FF)    -- Arabic
+        or (cp >= 0x0700 and cp <= 0x074F)    -- Syriac (às vezes usado em scripts RTL)
+        or (cp >= 0x0750 and cp <= 0x077F)    -- Arabic Supplement
+        or (cp >= 0x0780 and cp <= 0x07BF)    -- Thaana
+        or (cp >= 0x07C0 and cp <= 0x07FF)    -- NKo
+        or (cp >= 0x08A0 and cp <= 0x08FF)    -- Arabic Extended-A
+        or (cp >= 0xFB1D and cp <= 0xFDFF)    -- Presentation Forms-A (formas de apresentação árabe)
+        or (cp >= 0xFE70 and cp <= 0xFEFF)    -- Presentation Forms-B (formas de apresentação árabe)
+        then
+            return true
+        end
+    end
+    return false
 end
 
 local function reverse_utf8(str)
@@ -113,6 +129,7 @@ ui.quickplay_button = LF.Create("messagebox", ui.main_menu)
 :SetPos(0, 40):SetCursor(LF.cursors.hand)
 :SetText("©192192192Quick Play"):SetHoverText("©255255255Quick Play")
 ui.quickplay_button.OnClick = function(self)
+	ui.console_input.parse("map as_snow")
 end
 
 ui.newgame_button = LF.Create("messagebox", ui.main_menu)
@@ -616,6 +633,12 @@ ui.options_player_spraylogo = LF.Create("label", ui.options_tabs_player):SetText
 ui.options_player_crosshair = LF.Create("label", ui.options_tabs_player):SetText("Crosshair: "):SetPos(0, 200+4)
 
 ui.options_player_name_input = LF.Create("textbox", ui.options_tabs_player):SetPos(150, 0+2):SetSize(200, 20)
+ui.options_player_name_input.OnTextChanged = function(object, textadded)
+	local text = object:GetText()
+	if text ~= "" then
+		client.name = text
+	end
+end
 
 ui.options_mark_own_player = LF.Create("checkbox", ui.options_tabs_player):SetPos(150, 120+2)
 :SetText("Mark own Player")
@@ -731,7 +754,8 @@ ui.chat_frame_message = function(player, message)
 		teamcolor = "©000255000"
 	end
 
-	if is_rtl(message) then
+	if hasRTL(message) then
+		print("reverse!!")
 		message = reverse_utf8(message)
 	end
 
@@ -860,7 +884,8 @@ end
 --------------------------------------------------------------------------------------------------
 ui.exit_window = LF.Create("frame"):SetSize(400, 300):SetName("Quit?"):SetCloseAction("hide")
 ui.exit_window_panel = LF.Create("panel", ui.exit_window):SetPos(16, 32):SetSize(368, 230)
-ui.exit_window_message = LF.Create("messagebox",ui.exit_window_panel):SetFont(ui.font):SetPos(5, 5)
+ui.exit_window_message = LF.Create("messagebox",ui.exit_window_panel)
+:SetFont(ui.font):SetPos(5, 5):SetMaxWidth(368)
 :SetText([[
 Thank you for playing CS2D!
 
@@ -870,7 +895,7 @@ More free games at
 >>www.UnrealSoftware.de<<
 
 ©255255000Are you really sure you want to quit?
-]])
+]]):Center()
 ui.exit_window_yesbutton = LF.Create("button", ui.exit_window)
 :SetSize(100, 20):SetPos(180, 270):SetText("Yes, Quit!")
 ui.exit_window_yesbutton.OnClick = function()

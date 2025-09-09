@@ -2,6 +2,18 @@ local client = require "client"
 
 -- Client only commands
 local commands = {
+    warning = {
+        action = function(...)
+			local message = table.concat({...}," ")
+            local LF = require "lib.loveframes"
+			local width, height = 300, 150
+            local frame = LF.Create("frame"):SetSize(width, height)
+			local panel = LF.Create("panel", frame):SetSize(width-20, height-50):SetPos(10, 30)
+            local messagebox = LF.Create("messagebox", panel)
+            messagebox:SetMaxWidth(width-20):SetText("©255000000"..message):Center()
+        end
+    };
+
 	map = {
 		action = function(...)
 			local args = {...}
@@ -25,6 +37,14 @@ local commands = {
 			end
 		end,
 		syntax = "/clearmap",
+	};
+
+	cleareffect = {
+		action = function ()
+			if client.map then
+				client.map:clearEffects()
+			end
+		end	
 	};
 
 	scroll = {

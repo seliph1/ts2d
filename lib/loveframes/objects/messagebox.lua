@@ -36,10 +36,10 @@ function newobject:initialize()
 	self.textmesh = love.graphics.newText(self.font, "")
 	self.hovertextmesh = love.graphics.newText(self.font, "")
 
-	self.width = self.font:getWidth(" ")
-	self.height = self.width
+	self.maxwidth = 100
+	self.width = 100
+	self.height = self.font:getHeight()
 	self.internal = false
-	
 	self:SetDrawFunc()
 end
 
@@ -109,19 +109,33 @@ function newobject:fixUTF8(s, replacement)
   end
   return s, invalid
 end
-function newobject:SetText(text)
-	-- Validate UTF8 string
-    local fixedstring =  self:fixUTF8(text, "?")
-	-- Parse the string received
-	local formattedchunks, formattedstring = self:ParseText(fixedstring)
-	-- Set the text cache
-	self.textmesh:set(formattedchunks)
-	self.formattedtext = formattedstring
-	self.text = fixedstring
-	-- Resize the message width/height
-	self.width = self.textmesh:getWidth()
-	self.height = self.textmesh:getHeight()
 
+function newobject:SetText(text)
+	self.textmesh:clear()
+	-- Fix the text
+	text = self:fixUTF8(text," ")
+
+	-- Parse the obtained string with cs2d formatting
+	local parsedtext, formattedtext = self:ParseText(text)
+
+	-- Add the fixed, formatted text to the texthash object
+	local status, err = pcall(
+		self.textmesh.setf,
+		self.textmesh,
+		parsedtext,
+		self.maxwidth,
+		"left"
+	)
+	if not status then
+		self.textmesh:setf(tostring(err), self.maxwidth, "left")
+	end
+
+	self.text = text
+	self.formattedtext = formattedtext
+
+
+	local width, height = self.textmesh:getDimensions()
+	self:SetSize(width, height)
 	return self
 end
 
@@ -130,18 +144,30 @@ function newobject:SetHoverText(text)
 		self.hoverenabled = false
 	end
 
-	-- Validate UTF8 string
-    local fixedstring =  self:fixUTF8(text, "?")
-	-- Parse the string received
-	local formattedchunks, formattedstring = self:ParseText(fixedstring)
-	-- Set the text cache
-	self.hovertextmesh:set(formattedchunks)
-	self.formattedhovertext = formattedstring
-	self.hovertext = fixedstring
-	-- Dont resize..
-	--self.width = forget
-	--self.height = about it
-	self.hoverenabled = true
+	self.hovertextmesh:clear()
+	-- Fix the text
+	text = self:fixUTF8(text," ")
+
+	-- Parse the obtained string with cs2d formatting
+	local parsedtext, formattedtext = self:ParseText(text)
+
+	-- Add the fixed, formatted text to the texthash object
+	local status, err = pcall(
+		self.hovertextmesh.setf,
+		self.hovertextmesh,
+		parsedtext,
+		self.maxwidth,
+		"left"
+	)
+	if not status then
+		self.hovertextmesh:setf(tostring(err), self.maxwidth, "left")
+	end
+
+	self.hovertext = text
+	self.formattedhovertext = formattedtext
+
+
+	self.hoverenabled=true
 	return self
 end
 
@@ -152,33 +178,55 @@ end
 function newobject:ParseText(str)
 	local formattedchunks = {}
 	local formattedstring = {}
-    local defaultColor = self.defaultcolor
+	local defaultColor = self.defaultcolor
+	local currentColor = {0,0,0,1}
 
-	if not str:find("©") then
-		return {defaultColor,str}, str
-	end
-
-	for leading, capture in string.gmatch(str, "(.-)©([^©]+)") do
-		--print(color, text)
-		if leading then
+	local last = 1
+	while true do
+		local i, j = str:find("©", last)
+		if not i then
+			-- restante
 			table.insert(formattedchunks, defaultColor)
-			table.insert(formattedchunks, leading)
-			table.insert(formattedstring, leading)
+			table.insert(formattedchunks, str:sub(last))
+			table.insert(formattedstring, str:sub(last))
+			break
 		end
-		local r, g, b = string.match(capture, "(%d%d%d)(%d%d%d)(%d%d%d)")
-		local text = string.sub(capture, 10, -1)
+
+		-- trecho antes do ©
+		if i > last then
+			local segment = str:sub(last, i-1)
+			table.insert(formattedchunks, defaultColor)
+			table.insert(formattedchunks, segment)
+			table.insert(formattedstring, segment)
+		end
+
+		-- agora pega o próximo trecho até o próximo © ou fim
+		local k = str:find("©", j+1) or (#str+1)
+		local capture = str:sub(j+1, k-1)
+
+		local r,g,b = capture:match("(%d%d%d)(%d%d%d)(%d%d%d)")
+		local text = capture:sub(10)
 		if r and g and b then
-			table.insert(formattedchunks,
-				{tonumber(r)/255, tonumber(g)/255, tonumber(b)/255}
-			)
+			table.insert(formattedchunks, {tonumber(r)/255, tonumber(g)/255, tonumber(b)/255})
 			table.insert(formattedchunks, text)
 			table.insert(formattedstring, text)
 		else
-			text = "©"..capture
+			-- não é cor válida, volta o texto inteiro
+			local bad = "©"..capture
+			local previousColor
+			if #formattedchunks > 0 then
+				previousColor = formattedchunks[#formattedchunks-2]
+			else
+				previousColor = defaultColor
+			end
+			table.insert(formattedchunks, previousColor)
+			table.insert(formattedchunks, bad)
+			table.insert(formattedstring, bad)
 		end
+		last = k
 	end
 
-	return formattedchunks, formattedstring
+	return formattedchunks, table.concat(formattedstring)
 end
 --[[---------------------------------------------------------
 	- func: GetText()
@@ -200,7 +248,7 @@ end
 	- desc: sets the object's maximum width
 --]]---------------------------------------------------------
 function newobject:SetMaxWidth(width)
-	self.maxw = width
+	self.maxwidth = width
 	return self
 end
 
@@ -209,50 +257,7 @@ end
 	- desc: gets the object's maximum width
 --]]---------------------------------------------------------
 function newobject:GetMaxWidth()
-	return self.maxw
-end
-
---[[---------------------------------------------------------
-	- func: SetWidth(width, relative)
-	- desc: sets the object's width
---]]---------------------------------------------------------
-function newobject:SetWidth(width, relative)
-	if relative then
-		self:SetMaxWidth(self.parent.width * width)
-	else
-		self:SetMaxWidth(width)
-	end
-	return self
-end
-
---[[---------------------------------------------------------
-	- func: SetHeight()
-	- desc: sets the object's height
---]]---------------------------------------------------------
-function newobject:SetHeight(height)
-	self.height = height
-	return self
-end
---[[---------------------------------------------------------
-	- func: GetHeight()
-	- desc: sets the object's height
---]]---------------------------------------------------------
-function newobject:GetHeight(height)
-	return self.height
-end
-
---[[---------------------------------------------------------
-	- func: SetSize(width, height, relative)
-	- desc: sets the object's size
---]]---------------------------------------------------------
-function newobject:SetSize(width, height, relative)
-	if relative then
-		self:SetMaxWidth(self.parent.width * width)
-	else
-		self:SetMaxWidth(width)
-	end
-	self.SetHeight(height)
-	return self
+	return self.maxwidth
 end
 
 --[[---------------------------------------------------------
@@ -267,8 +272,8 @@ function newobject:SetFont(font)
 
 	-- Refresh the text width size
 	-- Resize the message width/height
-	self.width = self.textmesh:getWidth()
-	self.height = self.textmesh:getHeight()
+	local width, height = self.textmesh:getDimensions()
+	self:SetSize(width, height)
 	return self
 end
 

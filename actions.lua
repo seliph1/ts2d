@@ -7,6 +7,18 @@ return function(client)
 -- Only works when server sends them to this client
 
 local actions = {
+    warning = {
+        action = function(...)
+			local message = table.concat({...}," ")
+            local LF = require "lib.loveframes"
+			local width, height = 300, 150
+            local frame = LF.Create("frame"):SetSize(width, height)
+			local panel = LF.Create("panel", frame):SetSize(width-20, height-50):SetPos(10, 30)
+            local messagebox = LF.Create("messagebox", panel)
+            messagebox:SetMaxWidth(width-20):SetText("©255000000"..message):Center()
+        end
+    };
+
 	print = {
 		action = function(...)
 			print(...)
@@ -123,7 +135,9 @@ local actions = {
 		    )
 
             if hit == "true" then
-                client.map:spawn_effect("sparkle", tx, ty)
+                client.map:spawn_effect("sparkle", tx, ty, {
+                    setDirection = angle + math.pi
+                })
             end
         end
     }
