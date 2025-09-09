@@ -29,4 +29,6 @@ Make sure you have [Love2D](https://love2d.org/) installed.
    ```bash
    love .
    ```
+
+3. Add gfx, sfx and maps folder to load some resources into client
    

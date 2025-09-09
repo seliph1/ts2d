@@ -1,3 +1,12 @@
+# Actions:
+
+```
+connect 50.21.187.191
+
+```
+
+
+
 # Features:
 
     Increases hudtxt unique id
