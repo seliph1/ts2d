@@ -41,6 +41,7 @@ local ENTITY_TYPE = enum.ENTITY_TYPE
 
 effect.register(LF.load "core/particle/sparkle.lua" (), "sparkle")
 effect.register(LF.load "core/particle/hitscan.lua" (), "hitscan")
+effect.register(LF.load "core/particle/bullettrail.lua" (), "bullettrail")
 
 --effect.register(dofile "core/particle/fire.lua", "fire")
 --effect.register(dofile "core/particle/snow.lua", "snow")
@@ -1321,6 +1322,10 @@ end
 
 function MapObject:spawn_effect(effect_id, x, y, args)
 	effect.new(effect_id, x, y, args)
+end
+
+function MapObject:clearEffects()
+	effect.clear()
 end
 
 

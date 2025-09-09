@@ -17,7 +17,7 @@ local decode = bitser.loads
     client.connected = false
     client.id = nil
     client.backgrounded = false
-    client.name = "Mozillë"
+    client.name = "Player"
 
     local share = {}
     client.share = share

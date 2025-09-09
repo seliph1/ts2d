@@ -2,6 +2,7 @@
 
 local LG        = love.graphics
 local particles = {
+	type="particle",
 	x=0,
 	y=0,
 	global=true

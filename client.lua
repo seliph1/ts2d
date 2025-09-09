@@ -87,13 +87,12 @@ function client.mousepressed(x, y, button, istouch, presses)
     end
 
 	if button == 2 then
-		--local diff_x = (client.width/2 - home.targetX)
-		--local diff_y = (client.height/2 - home.targetY)
-
-		--local pos_x = client.camera.x - diff_x
-		--local pos_y = client.camera.y - diff_y
+		local mx, my = client.map:mouseToMap(love.mouse.getPosition())
 
 		--client.send(string.format("setpos %s %s", pos_x, pos_y))
+
+		client.map:spawn_effect("bullettrail", mx, my)
+		--client.map:spawn_effect("sparkle", mx, my)
 	end
 end
 
@@ -207,14 +206,16 @@ function client.draw()
 
 	if client.debug_level == 2 then
 		-- Advanced debug
+		local x = client.camera.x
+		local y = client.camera.y
+		local ping = client.getPing() or 0
+		local fps = love.timer.getFPS()
+		local targetX = client.home.targetX or 0
+		local targetY = client.home.targetY
+		local memory = (collectgarbage "count" / 1024) or 0
+
 		local label = string.format("Camera: %dpx|%dpx  Ping: %s  FPS: %s  Target: %d|%d   Memory: %.2f MB",
-			client.camera.x,
-			client.camera.y,
-			client.getPing(),
-			love.timer.getFPS(),
-			client.home.targetX,
-			client.home.targetY,
-			collectgarbage("count") / 1024
+			x, y, ping, fps, targetX, targetY, memory
 		)
 		love.graphics.printf(label, 0, love.graphics.getHeight()-20, love.graphics.getWidth(), "center")
 	elseif client.debug_level == 1 then
@@ -227,8 +228,6 @@ function client.draw()
 	else
 		-- void
 	end
-
-
 end
 
 
@@ -289,7 +288,7 @@ function client.load()
     home.wantShoot = false
 	home.move_h = 0
 	home.move_v = 0
-	home.name = "Mozilla"
+	home.name = "Player"
 end
 
 --- Client command parser

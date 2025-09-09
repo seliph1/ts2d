@@ -1,7 +1,7 @@
 ---@diagnostic disable: redundant-parameter
 
 local LG        = love.graphics
-local particles = {x=0, y=0}
+local particles = {type="particle",x=0, y=0}
 
 local image1 = LG.newImage("gfx/particle/lightDot.png")
 image1:setFilter("linear", "linear")

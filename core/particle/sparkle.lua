@@ -1,7 +1,11 @@
 ---@diagnostic disable: redundant-parameter
 
 local LG        = love.graphics
-local particles = {x=0, y=0}
+local particles = {
+	type="particle",
+	x=0,
+	y=0,
+}
 
 local image1 = LG.newImage("gfx/particle/ellipse.png")
 image1:setFilter("linear", "linear")
@@ -20,13 +24,27 @@ ps:setParticleLifetime(1, 1)
 ps:setRadialAcceleration(0, 0)
 ps:setRelativeRotation(true)
 ps:setRotation(0, 0)
-ps:setSizes(0.095902815461159, 0, 0)
+ps:setSizes(0.050000000745058, 0, 0)
 ps:setSizeVariation(0)
 ps:setSpeed(150, 300)
 ps:setSpin(-0.0005130753852427, 0)
 ps:setSpinVariation(0)
-ps:setSpread(6.2831854820251)
+ps:setSpread(0.62831854820251)
 ps:setTangentialAcceleration(0, 0)
-table.insert(particles, {system=ps, kickStartSteps=0, kickStartDt=0, emitAtStart=11, blendMode="add", shader=nil, texturePath="gfx/particle/ellipse.png", texturePreset="ellipse", shaderPath="", shaderFilename="", x=0, y=0})
+table.insert(particles, {
+	system=ps,
+	kickStartSteps=0,
+	kickStartDt=0,
+	emitAtStart=11,
+	blendMode="add",
+	shader=nil,
+	texturePath="gfx/particle/ellipse.png",
+	texturePreset="ellipse",
+	shaderPath="",
+	shaderFilename="",
+	x=0,
+	y=0,
+	other={},
+})
 
 return particles

@@ -1,13 +1,26 @@
 local effect = {}
+local LG = love.graphics
 
 effect.queue = {}
 effect.list = {}
+effect.imagequeue = {}
 
 function effect.register(particle, name, options)
 	effect.list[name] = particle
 end
 
 function effect.new(name, x, y, args)
+	if effect.list[name].type == "particle" then
+		local effect_id, new_effect =  effect.new_particle(name, x, y, args)
+		return effect_id, new_effect
+	end
+
+	if effect.list[name].type == "image" then
+		effect.new_image(name, x, y, args)
+	end
+end
+
+function effect.new_particle(name, x, y, args)
 	local effect_instance = effect.list[name]
 	local new_effect = {}
 
@@ -63,6 +76,40 @@ function effect.new(name, x, y, args)
 	return effect_id, new_effect
 end
 
+function effect.new_image(name, x, y, args)
+	local new_instance = {}
+	local instance = effect.list[name]
+
+	for index, attribute in pairs(instance) do
+		if type(index) ~= "number" then
+			new_instance[index] = attribute
+		end
+	end
+
+	--print(#new_instance)
+	for _, image in ipairs(instance) do
+		local new_image = {}
+		for k, v in pairs(image) do
+			new_image[k] = v
+		end
+		table.insert(new_instance, new_image)
+
+		-- Emits the image x, y 
+		if instance.global then
+			x, y = 0, 0
+		else
+			x = x + new_image.x
+			y = y + new_image.y
+		end
+		new_image.x = x
+		new_image.y = y
+	end
+	local image_id = #effect.imagequeue + 1
+
+	effect.imagequeue[image_id] = new_instance
+	return image_id, new_instance
+end
+
 function effect.dispose(effect_id)
 	local effect_instance = effect.queue[effect_id]
 	for _, particle in ipairs(effect_instance) do
@@ -86,6 +133,19 @@ function effect.update(dt)
 			end
 		end
 	end
+
+	for image_id, image_instance in pairs(effect.imagequeue) do
+		for _,image in ipairs(image_instance) do
+			local stopped_instances = 0
+			image.displayTime = image.displayTime - dt
+			if image.displayTime <= 0 then
+				stopped_instances = stopped_instances + 1
+			end
+			if stopped_instances >= #image_instance then
+				effect.imagequeue[image_id] = nil
+			end
+		end
+	end
 end
 
 function effect.clear()
@@ -95,6 +155,8 @@ function effect.clear()
 		end
 	end
 	effect.queue = {}
+	effect.imagequeue = {}
+	collectgarbage("collect")
 end
 
 function effect.draw()
@@ -111,6 +173,18 @@ function effect.draw()
 			else
 				love.graphics.draw(particle.system)
 			end
+		end
+	end
+
+	-- Draw image instances
+	for image_id, image_instance in pairs(effect.imagequeue) do
+		for _, image in ipairs(image_instance) do
+			local i = image
+			love.graphics.setColor(1,1,1,1)
+			--love.graphics.draw(i.texture, i.x, i.y, i.angle, i.scaleX, i.scaleY)
+			love.graphics.draw(i.texture, i.x, i.y, i.angle, i.scaleX, i.scaleY, i.offsetX, i.offsetY)
+			--LG.d
+			
 		end
 	end
 end
