@@ -113,6 +113,13 @@ end
 local function sort_by_depth(a,b)
 	return a.depth < b.depth
 end
+
+local function clamp(x, minVal, maxVal)
+    if x < minVal then return minVal end
+    if x > maxVal then return maxVal end
+    return x
+end
+
 --[[---------------------------------------------------------
 	MapObject 
 --]]---------------------------------------------------------
@@ -120,7 +127,7 @@ end
 --- all map related operations in our game
 local MapObject = {
 	---@method draw test
-	new = function()
+	new = function(width, height)
 	end,
 	spritesheet = create_spritesheet,
 }
@@ -249,8 +256,17 @@ function MapObject.new(width, height)
 	local w, h = tileset_atlas:getDimensions()
 	local s = mapdata.tile_size
 	local tile_id = 0
-	-- New spritebatch technique
-	local tileset_spritesheet = love.graphics.newImage("gfx/tiles/"..mapdata.tileset)--fs:loadImage("gfx/tiles/"..mapdata.tileset)
+	tileset_atlas:mapPixel(function(x, y, r, g, b, a)
+		-- Verifica se é magenta (255,0,255)
+		-- Normalmente os valores de cor vêm como floats 0..1
+		if r == 1 and g == 0 and b == 1 then
+			return 1, 0, 1, 0 -- deixa transparente (alpha=0)
+		else
+			return r, g, b, a
+		end
+	end)
+	local tileset_spritesheet = love.graphics.newImage(tileset_atlas)-- Remove magenta pixels
+
 	tileset_spritesheet:setFilter("nearest", "linear")
 	mapdata.gfx.ground = love.graphics.newSpriteBatch(tileset_spritesheet, mapdata.width * mapdata.height)
 	mapdata.gfx.wall = love.graphics.newSpriteBatch(tileset_spritesheet, mapdata.width * mapdata.height)
@@ -372,8 +388,16 @@ function MapObject:clear()
 	local w, h = tileset_atlas:getDimensions()
 	local s = mapdata.tile_size
 	local tile_id = 0
-	-- New spritebatch technique
-	local tileset_spritesheet = love.graphics.newImage("gfx/tiles/"..mapdata.tileset)--fs:loadImage("gfx/tiles/"..mapdata.tileset)
+	tileset_atlas:mapPixel(function(x, y, r, g, b, a)
+		-- Verifica se é magenta (255,0,255)
+		-- Normalmente os valores de cor vêm como floats 0..1
+		if r == 1 and g == 0 and b == 1 then
+			return 1, 0, 1, 0 -- deixa transparente (alpha=0)
+		else
+			return r, g, b, a
+		end
+	end)
+	local tileset_spritesheet = love.graphics.newImage(tileset_atlas)-- Remove magenta pixels
 	tileset_spritesheet:setFilter("nearest", "linear")
 	mapdata.gfx.ground = love.graphics.newSpriteBatch(tileset_spritesheet, mapdata.width * mapdata.height)
 	mapdata.gfx.wall = love.graphics.newSpriteBatch(tileset_spritesheet, mapdata.width * mapdata.height)
@@ -694,8 +718,16 @@ function MapObject:read(path, noindexing)
 	local w, h = tileset_atlas:getDimensions()
 	local s = mapdata.tile_size
 	local tile_id = 0
-	--local tileset_spritesheet = fs:loadImage("gfx/tiles/"..mapdata.tileset)
-	local tileset_spritesheet = love.graphics.newImage("gfx/tiles/"..mapdata.tileset)
+	tileset_atlas:mapPixel(function(x, y, r, g, b, a)
+		-- Verifica se é magenta (255,0,255)
+		-- Normalmente os valores de cor vêm como floats 0..1
+		if r == 1 and g == 0 and b == 1 then
+			return 1, 0, 1, 0 -- deixa transparente (alpha=0)
+		else
+			return r, g, b, a
+		end
+	end)
+	local tileset_spritesheet = love.graphics.newImage(tileset_atlas)-- Remove magenta pixels
 	tileset_spritesheet:setFilter("nearest", "linear")
 	mapdata.gfx.ground = love.graphics.newSpriteBatch(tileset_spritesheet, mapdata.width * mapdata.height)
 	mapdata.gfx.wall = love.graphics.newSpriteBatch(tileset_spritesheet, mapdata.width * mapdata.height)
@@ -708,6 +740,7 @@ function MapObject:read(path, noindexing)
 		tile_id = tile_id + 1
 	end
 	end
+
 	-- Entity load
 	for index, e in pairs(mapdata.entity_table) do
 		if e.type == 22 then
@@ -972,7 +1005,6 @@ function MapObject:draw_background()
 	end
 end
 
-
 function MapObject:draw_floor()
 	local camera = self._camera
 	local mapdata = self._mapdata
@@ -983,12 +1015,10 @@ function MapObject:draw_floor()
 	love.graphics.push()
 	love.graphics.translate(-camera.x + sw/2, -camera.y + sh/2)
 	-- Draw floor level
-	love.graphics.setShader(shader.magenta)
 	love.graphics.draw(mapdata.gfx.ground)
 	-- Reset the transformation stack
 	love.graphics.pop()
 	-- Reset render
-	love.graphics.setShader()
 	love.graphics.setBlendMode("alpha")
 	love.graphics.setColor(1, 1, 1, 1)
 end
@@ -1008,7 +1038,6 @@ function MapObject:draw_ceiling()
 	-- Reset the transformation stack
 	love.graphics.pop()
 	-- Reset render
-	love.graphics.setShader()
 	love.graphics.setBlendMode("alpha")
 	love.graphics.setColor(1, 1, 1, 1)
 
@@ -1025,7 +1054,6 @@ function MapObject:draw_effects()
 	-- Reset the transformation stack
 	love.graphics.pop()
 	-- Reset render
-	love.graphics.setShader()
 	love.graphics.setBlendMode("alpha")
 	love.graphics.setColor(1, 1, 1, 1)
 end
@@ -1056,71 +1084,84 @@ function MapObject:draw_bullets(share, home, client)
 	-- Reset the transformation stack
 	love.graphics.pop()
 	-- Reset render
-	love.graphics.setShader()
 	love.graphics.setBlendMode("alpha")
 	love.graphics.setColor(1, 1, 1, 1)
 end
 
----Draw player from cache data
-function MapObject:draw_playersc(client)
+function MapObject:draw_players(share, client) -- get info from server!
 	local camera = self._camera
-	local players = client.share.players
-	local cache = client.cache
 	local sw, sh = love.graphics.getWidth(), love.graphics.getHeight()
-	love.graphics.push()
-	love.graphics.translate(-camera.x + sw/2, -camera.y + sh/2)
-	for client_id, player in pairs(players) do
-		local player_cache = cache.players[client_id]
-		love.graphics.push()
-		love.graphics.translate(player_cache.x, player_cache.y)
-		local targetX, targetY = player.targetX, player.targetY
-		local angle = math.atan2(targetY - client.height/2, targetX - client.width/2) + math.pi/2
-		local holding = player.ih
-		local itemdata = client.content.itemlist[holding]
-		local stance = itemdata.player_stance
-		local texture = client.gfx.player[player.p].texture
-		local quad = client.gfx.player[player.p][stance]
-		love.graphics.draw(texture, quad, 0, 0, angle, 1, 1, 16, 16)
-		--Debug for player collision
-		--love.graphics.points(0, 0)
-		--love.graphics.setColor(1,0,0,0.5)
-		--love.graphics.rectangle("fill", -13, -13, 26, 26)
-		love.graphics.pop()
-	end
-	love.graphics.pop()
-end
+	-- Players in lerp
+	local players = share.players
+	-- Inputs
+	local home = client.home
 
-function MapObject:draw_players(share, home, client) -- get info from server!
-	local camera = self._camera
-	local players = share.players -- get info from server
-	local sw, sh = love.graphics.getWidth(), love.graphics.getHeight()
 	-- Change camera perspective
 	love.graphics.push()
 	love.graphics.translate(-camera.x + sw/2, -camera.y + sh/2)
 
-	for clientId, player in pairs(players) do
+	for peer_id, player in pairs(players) do
 		love.graphics.push()
-		love.graphics.translate(player.x, player.y)
-		local targetX, targetY
-		if clientId == client.id then -- If it's us, use `home` data directly
+		-- Direction
+		local targetX, targetY = 0,0
+		if peer_id == client.id then
 			targetX, targetY = home.targetX, home.targetY
 		else
 			targetX, targetY = player.targetX, player.targetY
 		end
 		-- Calculate drawing angle
 		local angle = math.atan2(targetY - client.height/2, targetX - client.width/2) + math.pi/2
+		-- Get the player's held weapon
 		local holding = player.ih
+		-- Check if that weapon ID exists in available list
 		local itemdata = client.content.itemlist[holding]
+		-- Check what stance should player hold that weapon
 		local stance = itemdata.player_stance
+		-- Get the player texture for that stance
 		local texture = client.gfx.player[player.p].texture
 		local quad = client.gfx.player[player.p][stance]
+		-- Get the weapon texture from weapon ID
+		local weapon_gfx_path
+		local weapon_texture
+		if itemdata.held_image ~= "" then
+			weapon_gfx_path = itemdata.common_path .. itemdata.held_image
+			weapon_texture = client.gfx.itemlist[weapon_gfx_path]
+			if not weapon_texture then
+				weapon_texture = love.graphics.newImage(weapon_gfx_path)
+				client.gfx.itemlist[weapon_gfx_path] = weapon_texture
+			end
+			if not weapon_texture then
+				-- Defaults to a placeholder
+				weapon_texture = self._placeholder
+			end
+		end
+
+		if client.debug_level >= 2 or peer_id == client.id then
+			local __player = client.share_local.players[client.id]
+			love.graphics.push()
+			love.graphics.translate(__player.x, __player.y)
+			love.graphics.setColor(1, 0, 0, 0.2)
+			love.graphics.draw(texture, quad, 0, 0, angle, 1, 1, 16, 16)
+			love.graphics.pop()
+		end
+		-- Translate to player
+		love.graphics.translate(player.x, player.y)
+		-- Set to (1,1,1,1) color
+		love.graphics.setColor(1, 1, 1, 1)
+		-- Draw the player
 		love.graphics.draw(texture, quad, 0, 0, angle, 1, 1, 16, 16)
+		-- Draw weapon held
+		if weapon_texture then
+			local width = weapon_texture:getWidth()
+			local height = weapon_texture:getHeight()
+			love.graphics.draw(weapon_texture, 0, 0, angle, 1, 1, width/2, height)
+		end
+		-- Pop for the next player
 		love.graphics.pop()
 	end
 	-- Reset the transformation stack
 	love.graphics.pop()
 	-- Reset render
-	love.graphics.setShader()
 	love.graphics.setBlendMode("alpha")
 	love.graphics.setColor(1, 1, 1, 1)
 end
@@ -1257,7 +1298,6 @@ function MapObject:draw_items(share, client)
 	local tile_size = mapdata.tile_size
 
 	love.graphics.push()
-	love.graphics.setShader(shader.magenta)
 	love.graphics.translate(-camera.x + sw/2, -camera.y + sh/2)
 
 	--[[
@@ -1275,7 +1315,6 @@ function MapObject:draw_items(share, client)
 		end
 	end
 	]]
-	love.graphics.setShader()
 	love.graphics.pop()
 end
 
@@ -1326,6 +1365,144 @@ end
 
 function MapObject:clearEffects()
 	effect.clear()
+end
+
+function MapObject:getTileSize()
+	return self._mapdata.tile_size
+end
+
+---Check if a collision is happening between `object` that has x|y property and a map tile
+---If `x` and `y` is not specified, it will calculate collision at its own camera position
+---@param tx number
+---@param ty number
+---@return boolean
+function MapObject:isCollidingTile(tx, ty)
+	tx = clamp(tx, 0, self:getWidth())
+	ty = clamp(ty, 0, self:getHeight())
+	local id, mod, property = self:tile(tx, ty)
+	if TILE_MODE_HEIGHT[property] and TILE_MODE_HEIGHT[property] >= 0.5 then
+		return true
+	end
+	return false
+end
+
+local EPSILON = 0.0001 -- deslocamento mínimo para evitar ficar preso
+--- Função auxiliar: colisão contínua com um tile
+--- @param size number
+--- @param x1 number
+--- @param y1 number
+--- @param vx number
+--- @param vy number
+--- @param tileX number
+--- @param tileY number
+function MapObject:sweptAABB(size, x1, y1, vx, vy, tileX, tileY)
+	local half 		= floor(size/2)
+	local tile_size = self:getTileSize()
+	
+    local ox1 = x1 - half
+    local oy1 = y1 - half
+    local ox2 = x1 + half
+    local oy2 = y1 + half
+
+    local tx1 = tileX * tile_size
+    local ty1 = tileY * tile_size
+    local tx2 = tx1 + tile_size
+    local ty2 = ty1 + tile_size
+
+    local xEntry, xExit, yEntry, yExit
+
+    if vx > 0 then
+        xEntry = (tx1 - ox2) / vx
+        xExit  = (tx2 - ox1) / vx
+    elseif vx < 0 then
+        xEntry = (tx2 - ox1) / vx
+        xExit  = (tx1 - ox2) / vx
+    else
+        xEntry = -math.huge
+        xExit  = math.huge
+    end
+
+    if vy > 0 then
+        yEntry = (ty1 - oy2) / vy
+        yExit  = (ty2 - oy1) / vy
+    elseif vy < 0 then
+        yEntry = (ty2 - oy1) / vy
+        yExit  = (ty1 - oy2) / vy
+    else
+        yEntry = -math.huge
+        yExit  = math.huge
+    end
+
+    local entryTime = math.max(xEntry, yEntry)
+    local exitTime  = math.min(xExit, yExit)
+
+    if entryTime > exitTime or (xEntry < 0 and yEntry < 0) or entryTime > 1 or entryTime < 0 then
+        return nil
+    end
+
+    local nx, ny = 0, 0
+    if xEntry > yEntry then
+        nx = (vx < 0) and 1 or -1
+    else
+        ny = (vy < 0) and 1 or -1
+    end
+
+    return entryTime, nx, ny
+end
+
+-- Função principal: move com colisão + sliding
+function MapObject:moveWithSliding(size, x1, y1, dx, dy)
+    -- 1ª fase: tentar mover normalmente
+    local earliest, nx, ny = 1, 0, 0
+    local hit = false
+	local half 		= floor(size/2)
+	local tile_size = self:getTileSize()
+
+    local minx = math.min(x1-half, x1 + dx - half)
+    local maxx = math.max(x1+half, x1 + dx + half)
+    local miny = math.min(y1-half, y1 + dy - half)
+    local maxy = math.max(y1+half, y1 + dy + half)
+
+    local tx1 = math.floor(minx / tile_size)
+    local ty1 = math.floor(miny / tile_size)
+    local tx2 = math.floor(maxx / tile_size)
+    local ty2 = math.floor(maxy / tile_size)
+
+    for ty = ty1, ty2 do
+        for tx = tx1, tx2 do
+            if self:isCollidingTile(tx, ty) then
+                local t, nxx, nyy = self:sweptAABB(size, x1, y1, dx, dy, tx, ty)
+                if t and t < earliest then
+                    earliest = t
+					---@diagnostic disable-next-line: cast-local-type
+                    nx, ny = nxx, nyy
+                    hit = true
+                end
+            end
+        end
+    end
+
+    if not hit then
+        -- sem colisão: move direto
+        return x1 + dx, y1 + dy, hit
+    end
+
+    -- Mover até ponto de impacto (menos um epsilon)
+    local moveX = x1 + dx * (earliest - EPSILON)
+    local moveY = y1 + dy * (earliest - EPSILON)
+
+    -- Calcula o movimento restante
+    local remaining = 1 - earliest
+    local rx = dx * remaining
+    local ry = dy * remaining
+
+    -- Remove componente na direção da colisão (faz sliding)
+    if nx ~= 0 then rx = 0 end
+    if ny ~= 0 then ry = 0 end
+
+    -- 2ª fase: tenta mover no vetor restante (slide)
+    local finalX, finalY = self:moveWithSliding(size, moveX, moveY, rx, ry)
+    return finalX, finalY, hit
 end
 
 

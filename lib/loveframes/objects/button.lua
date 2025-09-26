@@ -224,6 +224,15 @@ function newobject:SetText(text)
 	-- Refresh the internal variables
 	self.text = text
 	self.formattedtext = formattedtext
+
+	local width, height = self.textmesh:getDimensions()
+	--[[
+	if width > self.width then
+		self:SetWidth(width)
+	end]]
+	if height > self.height then
+		self:SetHeight(height)
+	end
 	return self
 end
 

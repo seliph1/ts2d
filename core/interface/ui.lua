@@ -123,6 +123,7 @@ ui.console_button = LF.Create("messagebox", ui.main_menu)
 ui.console_button.OnClick = function(object)
 	local bool = ui.console_frame:GetVisible()
 	ui.console_frame:SetVisible(not bool):Center():MoveToTop()
+	--ui.console_input:SetFocus(true)
 end
 --Main menu group 1-------------------------------------------------------------------------------
 ui.quickplay_button = LF.Create("messagebox", ui.main_menu)
@@ -221,17 +222,20 @@ ui.console_input.OnControlKeyPressed = function(self, key)
     if not(self.focus) then
         return
     end
+
 	if key=="up" then
 		local h = ui.console_input.history
 		local r = math.max(self.rollback - 1, 1)
 
 		self:SetText(h[r])
+		self:MoveCursorTo("end")
 		self.rollback = r
 	elseif key=="down" then
 		local h = self.history
 		local r = math.min(self.rollback + 1, #h)
 
 		self:SetText(h[r])
+		self:MoveCursorTo("end")
 		self.rollback = r
 	end
 end
@@ -254,7 +258,7 @@ ui.console_input.parse = function(str)
 		print(string.format("Unknown command: %s", str))
 	end
 end
-
+ui.parse = ui.console_input.parse
 --- print override
 _Print = print
 function print(...)
@@ -925,6 +929,21 @@ ui.new_game_frame:SetVisible(false)
 ui.console_frame:SetVisible(false):SetAlwaysOnTop(true)
 ui.menu_frame:SetVisible(false)
 ui.options_frame:SetVisible(false)
+--------------------------------------------------------------------------------------------------
+--temporary windows!------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------
+
+ui.temp_connect_frame = LF.Create("frame"):SetSize(400, 100):SetName("Connect")
+ui.temp_connect_local = LF.Create("button", ui.temp_connect_frame)
+:SetY(30):SetWidth(300):SetText("Connect to localhost (127.0.0.1:36963)"):CenterX()
+ui.temp_connect_local.OnClick = function(object)
+	ui.parse("connect 127.0.0.1 36963")
+end
+ui.temp_connect_remote = LF.Create("button", ui.temp_connect_frame)
+:SetY(60):SetWidth(300):SetText("Connect to remote server (50.21.187.191)"):CenterX()
+ui.temp_connect_remote.OnClick = function(object)
+	ui.parse("connect 50.21.187.191 36963")
+end
 --------------------------------------------------------------------------------------------------
 --end of module-----------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------

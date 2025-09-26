@@ -69,6 +69,7 @@ local function adopt(parent, name, t)
     ---@field __sync fun(state: userdata, key:any, recursive:any)
     ---@field __diff fun(state: userdata, exact:any, alreadyExact:boolean?, cache:table?)
     ---@field __flush fun(state: userdata, getDiff:any?, proxy:userdata?)
+    ---@field __table fun():table The node as a table
     local node, proxy
 
     -- Make it a node

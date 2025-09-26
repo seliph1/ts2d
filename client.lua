@@ -2,17 +2,20 @@
 local b				= require "lib.battery"
 local Map 			= require "mapengine"
 local client 		= require "lib.cs"
-
+local List 			= require "lib.list"
+local serpent 		= require "lib.serpent"
 
 client.enabled 			= true
+client.version 			= "v1.0.0"
 client.width 			= 800
 client.height 			= 600
 client.scale 			= false
 client.mode 			= "lobby"
 client.map 				= Map.new(50, 50)
 client.debug_level		= 0
-
 client.input_enabled 	= false
+client.input_pending 	= 0
+client.input_applied	= 0
 
 client.content = require "enum"
 client.actions = require "actions" (client)
@@ -27,12 +30,7 @@ client.camera = {
 	speed = 500, -- pixel/frame
 	tween_speed = 15, -- pixel/frame
 }
-client.cache = {
-	tween_speed = 20,
-	players = {},
-	bullets = {},
-}
-client.key = {}
+
 client.gfx = {
 	itemlist = {};
 	hud = {};
@@ -43,12 +41,15 @@ client.gfx = {
 require "loader" (client)
 
 --- Table that gets info from server
----@class table
+---@class Share
 --- @field bullets table
 --- @field players table
 --- @field items table
 --- @field scores table
 local share = client.share
+
+---@class Share
+local share_local = client.share_local
 
 ---@class userdata
 --- @field targetX integer position of our client
@@ -82,17 +83,10 @@ end
 ---@param y number
 ---@param button number
 function client.mousepressed(x, y, button, istouch, presses)
+	local mx, my = client.map:mouseToMap(love.mouse.getPosition())
     if button == 1 then
-        home.wantShoot = true
     end
-
 	if button == 2 then
-		local mx, my = client.map:mouseToMap(love.mouse.getPosition())
-
-		--client.send(string.format("setpos %s %s", pos_x, pos_y))
-
-		client.map:spawn_effect("bullettrail", mx, my)
-		--client.map:spawn_effect("sparkle", mx, my)
 	end
 end
 
@@ -102,7 +96,6 @@ end
 ---@param button number
 function client.mousereleased(x, y, button, istouch, presses)
     if button == 1 then
-        home.wantShoot = false
     end
 
 	if button == 2 then
@@ -113,7 +106,6 @@ end
 --- Callback for key press event
 ---@param k string Key pressed
 function client.keypressed(k)
-	client.key[k] = true
 	if client.connected then
 		if k == "return" then
 			local ui = require "core.interface.ui"
@@ -130,24 +122,13 @@ end
 --- Callback for key release event
 ---@param k string Key released
 function client.keyreleased(k)
-	client.key[k] = false
 	if client.connected then
 	end
-end
-
-function client.movement_handle(dt)
-	local x, y = b.get_vector("a", "d", "w", "s")
-
-	home.move_v = x
-	home.move_h = y
 end
 
 ---Main game loop
 ---@param dt number
 function client.update(dt)
-	client.movement_handle(dt)
-
-
 	client.preupdate(dt)
 	if (client.mode == "game" or client.mode == "editor") and client.map then
 		client.camera_move(dt)
@@ -155,17 +136,7 @@ function client.update(dt)
 		client.map:scroll(client.camera.x, client.camera.y)
 		client.map:update(dt)
 	end
-	if client.connected then
-		-- Move players
-        for id, player in pairs(share.players) do
-			client.move_player(id, player, dt)
-        end
-
-		-- Move bullets
-        for id, bullet in pairs(share.bullets) do
-            client.move_bullet(id, bullet, dt)
-        end
-    end
+	client.frame(dt)
 	client.postupdate(dt)
 
 	-- Update visual effects on client after data transfer take effect
@@ -206,17 +177,19 @@ function client.draw()
 
 	if client.debug_level == 2 then
 		-- Advanced debug
-		local x = client.camera.x
-		local y = client.camera.y
+		local x = client.camera.x or 0
+		local y = client.camera.y or 0
 		local ping = client.getPing() or 0
 		local fps = love.timer.getFPS()
-		local targetX = client.home.targetX or 0
-		local targetY = client.home.targetY
+		local targetX = client.mouse.x or 0
+		local targetY = client.mouse.y or 0
 		local memory = (collectgarbage "count" / 1024) or 0
+		local pendingInputs = client.inputCache:count() or 0
 
-		local label = string.format("Camera: %dpx|%dpx  Ping: %s  FPS: %s  Target: %d|%d   Memory: %.2f MB",
-			x, y, ping, fps, targetX, targetY, memory
+		local label = string.format("Camera: %dpx|%dpx  Ping: %s  FPS: %s  Target: %d|%d   Memory: %.2f MB  Pending Inputs: %s",
+			x, y, ping, fps, targetX, targetY, memory, pendingInputs
 		)
+
 		love.graphics.printf(label, 0, love.graphics.getHeight()-20, love.graphics.getWidth(), "center")
 	elseif client.debug_level == 1 then
 		-- Simple debug
@@ -234,7 +207,6 @@ end
 --------------------------------------------------------------------------------------------------
 --client callbacks--------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------
-
 --- Callback for when client sucessfully connects to server
 function client.connect()
 	local LF = require "lib.loveframes"
@@ -243,39 +215,36 @@ function client.connect()
 end
 
 --- Callback for when client disconnects from server
-function client.disconnect()
+function client.disconnect(reason)
 	local LF = require "lib.loveframes"
 	LF.SetState()
 	client.map:clear()
 	client.mode = "lobby"
+
+	if reason then
+		client.parse("warning "..reason)
+	end
 end
 
 --- Callback for information in sync with server
 ---@param payload table
 function client.changing(payload)
+	
 end
 
 --- Callback for information synced with server
 ---@param payload table
 function client.changed(payload)
-	for category, data in pairs(payload) do
-		if category == "items" then
-			client.map:update_items(share, client)
-			--client.map._updateRequest = true
-			-- This is the entire itemdata payload received by the server
-			--[[
-			for key, item in pairs(data) do
-				print(key, item.it, item.x, item.y)
-			end
-			]]
-		end
-	end
+end
+
+function client.warning(message)
+	client.parse("warning "..message)
 end
 
 ---Callback for messages/packets received by server
 ---@param message string
 function client.receive(message)
-	-- Send the message to the command parser
+	-- Send the message to the action parser
     client.parse(message)
 	print(string.format("©236118000Parse: %s", message))
 end
@@ -283,12 +252,6 @@ end
 --- Client loading routine at the start of program
 function client.load()
 	-- Set up initial values for client
-    home.targetX = 0
-    home.targetY = 0
-    home.wantShoot = false
-	home.move_h = 0
-	home.move_v = 0
-	home.name = "Player"
 end
 
 --- Client command parser
@@ -311,58 +274,110 @@ function client.parse(str)
 	end
 end
 
---- Move player in smooth intervals
----@param id number
----@param player table player object table
----@param dt number delta time
-function client.move_player(id, player, dt) -- `home` is used to apply controls if given
-	-- Receive the actual position from server
-	local x = player.x
-	local y = player.y
+function client.get_vector_direction()
+    local nx = love.keyboard.isDown "a" and 1 or 0
+    local px = love.keyboard.isDown "d" and 1 or 0
+    local ny = love.keyboard.isDown "w" and 1 or 0
+    local py = love.keyboard.isDown "s" and 1 or 0
+	return px-nx, py-ny
+end
 
-	-- Get the last position received from cache
-	client.cache.players[id] = client.cache.players[id] or {x=player.x, y=player.y}
-	local cache = client.cache.players[id]
-	local cx = cache.x
-	local cy = cache.y
-	if math.abs(cache.x - player.x) > 16 or math.abs(cache.y - player.y) > 16 then
-		cache.x = x
-		cache.y = y
-	else
-		-- Interpolate the movement
-		cache.x = b.lerp(cx, x, client.cache.tween_speed * dt)
-		cache.y = b.lerp(cy, y, client.cache.tween_speed * dt)
+function client.tick(dt)
+	if client.connected then
+		local move_h, move_v = client.get_vector_direction()
+		-- Send corresponding input to server
+		if move_h > 0 then
+			client.sendInput("right")
+		elseif move_h < 0 then
+			client.sendInput("left")
+		end
+
+		if move_v < 0 then
+			client.sendInput("forward")
+		elseif move_v > 0 then
+			client.sendInput("back")
+		end
+		client.predict_player(client.id)
+    end
+end
+
+function client.frame(dt)
+	if client.connected then
+		client.snapshot_lerp(dt)
 	end
 end
 
---- Bullet movement updater
----@param id number
----@param bullet table Bullet object
----@param dt number Delta time
-function client.move_bullet(id, bullet, dt)
-	-- Receive the actual position from server
-	local x = bullet.x
-	local y = bullet.y
+client.share_lerp = {
+	players = {},
+	--entities = {},
+}
+client.lerp_speed = 20
+local share_lerp = client.share_lerp
+function client.snapshot_lerp(dt)
+	local lerp_flags = {
+		x = true,
+		y = true,
+		targetX = true,
+		targetY = true,
+	}
 
-	-- Remove old data if applicable
-	if client.cache.bullets[id] and not share.bullets[id] then
-		client.cache.bullets[id] = nil
+	local lerp_fields = {
+		players = true
+	}
+
+	for player_id, player in pairs(share.players) do
+		share_lerp.players[player_id] = share_lerp.players[player_id] or {}
+
+		for property, value in pairs(player) do
+			if lerp_flags[property] then
+				local lerp_value = share_lerp.players[player_id][property] or value
+				-- Apply lerp
+				share_lerp.players[player_id][property] = b.lerp(lerp_value, value, client.lerp_speed * dt)
+			else
+				share_lerp.players[player_id][property] = value
+			end
+		end
 	end
+end
 
-	-- Get the last position received from cache
-	client.cache.bullets[id] = client.cache.bullets[id] or {x=bullet.x, y=bullet.y}
-	local cache = client.cache.bullets[id]
-	local cx = cache.x
-	local cy = cache.y
+--- Move player in smooth intervals
+---@param peer_id number
+function client.predict_player(peer_id) -- `home` is used to apply controls if given
+	if client.id == peer_id and client.connected then
+		local player_local = share_local.players[peer_id]
+		local player = share.players[peer_id]
 
-	if math.abs(cache.x - bullet.x) > 16 or math.abs(cache.y - bullet.y) > 16 then
-		cache.x = x
-		cache.y = y
+		player.x = player_local.x
+		player.y = player_local.y
+		for index, inputState in client.inputCache:walk() do
+			client.apply_input_to_player(inputState.input, player)
+		end
 	end
+end
 
-	-- Interpolate the movement
-	cache.x = b.lerp(cx, x, 100 * dt)
-	cache.y = b.lerp(cy, y, 100 * dt)
+function client.apply_input_to_player(input, player)
+	local move_h, move_v = 0, 0
+	local map = client.map
+	if input=="forward" then
+		move_v = -1
+	end
+	if input=="back" then
+		move_v = 1
+	end
+	if input=="left" then
+		move_h = -1
+	end
+	if input=="right" then
+		move_h = 1
+	end
+	local dx = player.s * move_h
+	local dy = player.s * move_v
+
+	if map then
+		local future_x, future_y = map:moveWithSliding(24, player.x, player.y, dx, dy)
+		player.x = future_x
+		player.y = future_y
+	end
 end
 
 --- Camera movement vector function
@@ -384,12 +399,15 @@ function client.camera_move(dt)
 	client.camera.ty = client.camera.ty + vy
 
 	if client.connected then
+		local players = share.players
+		local x = players[client.id].x or 0
+		local y = players[client.id].y or 0
 		--local diff_x = (client.width/2 - home.targetX)/8
 		--local diff_y = (client.height/2 - home.targetY)/8
 		local diff_x = 0
 		local diff_y = 0
-		client.camera.tx = share.players[client.id].x - diff_x
-		client.camera.ty = share.players[client.id].y - diff_y
+		client.camera.tx = x - diff_x
+		client.camera.ty = y - diff_y
 	end
 end
 
@@ -424,13 +442,10 @@ function client.render()
 	end
 
     if client.connected then
-		-- Bullet render
-		client.map:draw_bullets(share, home, client)
 		-- Draw items on the ground
-		client.map:draw_items(share, client) 
+		client.map:draw_items(share, client)
 		-- Player render
-		--client.map:draw_players(share, home, client)
-		client.map:draw_playersc(client)
+		client.map:draw_players(share_lerp, client)
     end
 
 	if (client.mode == "game" or client.mode == "editor") and client.map then

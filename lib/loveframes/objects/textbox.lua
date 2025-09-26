@@ -560,6 +560,22 @@ function newobject:GetText()
 	return self.field:getText()
 end
 
+function newobject:GetFieldObject()
+	return self.field
+end
+
+function newobject:MoveCursorTo(pos)
+	if type(pos) == "number" then
+		self.field:setCursor(pos)
+	elseif type(pos) == "string" then
+		if pos == "end" then
+			self.field:setCursor(self.field:getTextLength())
+		elseif pos == "start" then
+			self.field:setCursor(0)
+		end
+	end
+end
+
 function newobject:SetMaxHistory(size)
 	self.field:setMaxHistory(size)
 	return self

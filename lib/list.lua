@@ -1,4 +1,3 @@
-
 local List = {
 	-- create instance
 	new = function()
@@ -6,7 +5,6 @@ local List = {
 	end
 }
 List.__index = List
-
 
 function List.new()
 	local ins = {
@@ -166,13 +164,13 @@ function List:range(from, to)
         if idx >= from and idx <= to then
             range[#range + 1] = value
         end
-        idx = idx + step        
+        idx = idx + step
         if step > 0 then
             value = self._next[value]
             if idx > to then
                 break
             end
-        else            
+        else
             value = self._prev[value]
             if idx < from then
                 break
@@ -204,7 +202,7 @@ function List:walk(seq)
             idx = idx + step
             if seq then
                 value = self._next[value]
-            else                
+            else           
                 value = self._prev[value]
             end
             return i, v

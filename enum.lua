@@ -499,7 +499,7 @@ enum.itemlist = {
 		held_image = "mp5.bmp",
 		kill_image = "mp5_k.bmp",
 		display_image = "mp5_m.bmp", 
-		player_stance = "rilfe",
+		player_stance = "rifle",
 		acessory = {};
 	};
 	[21] = {
@@ -520,7 +520,7 @@ enum.itemlist = {
 		held_image = "tmp.bmp",
 		kill_image = "tmp_k.bmp",
 		display_image = "tmp_m.bmp", 
-		player_stance = "rilfe",
+		player_stance = "rifle",
 		acessory = {};
 	};
 	[22] = {
@@ -541,7 +541,7 @@ enum.itemlist = {
 		held_image = "p90.bmp",
 		kill_image = "p90_k.bmp",
 		display_image = "p90_m.bmp", 
-		player_stance = "rilfe",
+		player_stance = "rifle",
 		acessory = {};
 	};
 	[23] = {
@@ -562,7 +562,7 @@ enum.itemlist = {
 		held_image = "mac10.bmp",
 		kill_image = "mac10_k.bmp",
 		display_image = "mac10_m.bmp", 
-		player_stance = "rilfe",
+		player_stance = "rifle",
 		acessory = {};
 	};
 	[24] = {
@@ -583,7 +583,7 @@ enum.itemlist = {
 		held_image = "ump45.bmp",
 		kill_image = "ump45_k.bmp",
 		display_image = "ump45_m.bmp",
-		player_stance = "rilfe",
+		player_stance = "rifle",
 		acessory = {};
 	};
 	[30] = {
@@ -603,7 +603,7 @@ enum.itemlist = {
 		dropped_image = "ak47_d.bmp",
 		held_image = "ak47.bmp",
 		kill_image = "ak47_k.bmp",
-		display_image = "ak47_m.bmp", 
+		display_image = "ak47_m.bmp",
 		player_stance = "rifle",
 		acessory = {};
 	};
@@ -1560,10 +1560,10 @@ enum.itemlist = {
 		accuracy = 0, 
 		common_path = "gfx/weapons/",
 		dropped_image = "claw_d.bmp",
-		held_image = "claw.bmp",
+		held_image = "",
 		kill_image = "claw_k.bmp",
-		display_image = "claw_m.bmp", 
-		player_stance = "melee",
+		display_image = "",
+		player_stance = "zombie",
 		acessory = {};
 	};
 	[79] = {
@@ -1709,7 +1709,7 @@ enum.itemlist = {
 		dropped_image = "chainsaw_d.bmp",
 		held_image = "chainsaw.bmp",
 		kill_image = "chainsaw_k.bmp",
-		display_image = "chainsaw_m.bmp", 
+		display_image = "chainsaw_m.bmp",
 		player_stance = "melee",
 		acessory = {};
 	};
@@ -1773,7 +1773,7 @@ enum.itemlist = {
 		held_image = "portalgun.bmp",
 		kill_image = "portalgun_k.bmp",
 		display_image = "portalgun_m.bmp", 
-		player_stance = "primary",
+		player_stance = "rifle",
 		acessory = {};
 	};
 	[89] = {
@@ -1857,7 +1857,7 @@ enum.itemdata_default = {
 	common_path = "gfx/weapons/",
 	dropped_image = "",
 	held_image = "",
-	display_image = "", 
+	display_image = "",
 	kill_image = "",
 	player_stance = "object",
 	acessory = {};
@@ -1887,6 +1887,7 @@ enum.player = {
 			melee = {32, 0, 32, 32};
 			object = {32, 0, 32, 32};
 			zombie = {0, 32, 32, 32};
+			nothing = {0, 0, 32, 32};
 		};
 	};
 	ct2 = {
@@ -1897,6 +1898,7 @@ enum.player = {
 			melee = {32, 0, 32, 32};
 			object = {32, 0, 32, 32};
 			zombie = {0, 32, 32, 32};
+			nothing = {0, 0, 32, 32};
 		};
 	};
 	ct3 = {
@@ -1907,6 +1909,7 @@ enum.player = {
 			melee = {32, 0, 32, 32};
 			object = {32, 0, 32, 32};
 			zombie = {0, 32, 32, 32};
+			nothing = {0, 0, 32, 32};
 		};
 	};
 	ct4 = {
@@ -1917,6 +1920,7 @@ enum.player = {
 			melee = {32, 0, 32, 32};
 			object = {32, 0, 32, 32};
 			zombie = {0, 32, 32, 32};
+			nothing = {0, 0, 32, 32};
 		};
 	};
 	t1 = {
@@ -1927,6 +1931,7 @@ enum.player = {
 			melee = {32, 0, 32, 32};
 			object = {32, 0, 32, 32};
 			zombie = {0, 32, 32, 32};
+			nothing = {0, 0, 32, 32};
 		};
 	};
 	t2 = {
@@ -1937,6 +1942,7 @@ enum.player = {
 			melee = {32, 0, 32, 32};
 			object = {32, 0, 32, 32};
 			zombie = {0, 32, 32, 32};
+			nothing = {0, 0, 32, 32};
 		};
 	};
 	t3 = {
@@ -1947,6 +1953,7 @@ enum.player = {
 			melee = {32, 0, 32, 32};
 			object = {32, 0, 32, 32};
 			zombie = {0, 32, 32, 32};
+			nothing = {0, 0, 32, 32};
 		};
 	};
 	t4 = {
@@ -1957,6 +1964,7 @@ enum.player = {
 			melee = {32, 0, 32, 32};
 			object = {32, 0, 32, 32};
 			zombie = {0, 32, 32, 32};
+			nothing = {0, 0, 32, 32};
 		};
 	};
 	vip = {
@@ -1967,6 +1975,7 @@ enum.player = {
 			melee = {32, 0, 32, 32};
 			object = {32, 0, 32, 32};
 			zombie = {0, 32, 32, 32};
+			nothing = {0, 0, 32, 32};
 		};
 	};
 	zombie = {
@@ -1977,6 +1986,7 @@ enum.player = {
 			melee = {32, 0, 32, 32};
 			object = {32, 0, 32, 32};
 			zombie = {0, 32, 32, 32};
+			nothing = {0, 0, 32, 32};
 		};
 	};
 }

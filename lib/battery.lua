@@ -67,4 +67,11 @@ function battery.get_vector(neg_x, pos_x, neg_y, pos_y, deadzone)
     return x * scale, y * scale
 end
 
+
+function battery.clamp(x, minVal, maxVal)
+    if x < minVal then return minVal end
+    if x > maxVal then return maxVal end
+    return x
+end
+
 return battery
