@@ -4,7 +4,7 @@ local client 	= require "client"
 local ui 		= {}
 
 ui.font_fallbacks = {
-	"gfx/fonts/NotoSansCJK-Regular.ttc",
+	--"gfx/fonts/NotoSansCJK-Regular.ttc",
 	"gfx/fonts/NotoSansArabic-Regular.ttf",
 	"gfx/fonts/NotoSansThai-Regular.ttf",
 	"gfx/fonts/NotoSansHebrew-Regular.ttf",

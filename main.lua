@@ -29,6 +29,7 @@ if launch_type == "debug" then
 end
 
 function love.load()
+	client.load()
 end
 
 function love.update( dt )
@@ -77,8 +78,6 @@ end
 function love.quit()
 end
 
---[[
 function love.resize(w, h)
-	return
+	client.resize(w, h)
 end
---]]

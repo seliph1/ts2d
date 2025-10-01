@@ -1136,7 +1136,7 @@ function MapObject:draw_players(share, client) -- get info from server!
 			end
 		end
 
-		if client.debug_level >= 2 or peer_id == client.id then
+		if client.debug_level >= 2 and peer_id == client.id then
 			local __player = client.share_local.players[client.id]
 			love.graphics.push()
 			love.graphics.translate(__player.x, __player.y)
@@ -1146,6 +1146,13 @@ function MapObject:draw_players(share, client) -- get info from server!
 		end
 		-- Translate to player
 		love.graphics.translate(player.x, player.y)
+
+		if client.debug_level >= 2 then
+			-- Set to blue color
+			love.graphics.setColor(0, 0, 1, 1)
+			-- Draw the hitbox
+			love.graphics.rectangle("line", -player.size/2, -player.size/2, player.size, player.size)
+		end
 		-- Set to (1,1,1,1) color
 		love.graphics.setColor(1, 1, 1, 1)
 		-- Draw the player

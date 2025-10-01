@@ -1,5 +1,5 @@
+local enet      = require 'enet'
 local state     = require 'lib.state'
-local enet      = require 'enet' -- Network
 local bitser    = require 'lib.bitser'
 local serpent   = require 'lib.serpent'
 local List      = require 'lib.list'
@@ -7,7 +7,6 @@ local Buffer    = require 'lib.buffer'
 
 local encode = bitser.dumps
 local decode = bitser.loads
-
 
 ---------- module start ----------
 local client = {}
@@ -28,12 +27,12 @@ client.inputSequence = 0
 client.remoteInputSequence = 0
 client.requestPrediction = false
 client.inputCache = List.new()
-client.lastState = nil
 client.stateBuffer = List.new()
+client.lastState = nil
 client.snapshot = Buffer.new(10)
-
-client.state = state
 client.stateDumpOpts = { comment = false }
+client.inputEnabled = true
+client.binds = {}
 
 local share = {}
 local share_local = {}
@@ -75,15 +74,37 @@ function client.send(...)
     client.sendExt(nil, nil, ...)
 end
 
-function client.sendInput(input)
-    if not peer then return end
-    client.inputSequence = client.inputSequence + 1
-    local inputFrame = {
-        input = input,
-        seq = client.inputSequence
-    }
-    peer:send(encode(inputFrame), 1, "reliable")
-    client.inputCache:push(inputFrame)
+function client.sendInput(key, act)
+    local bind = client.binds[key]
+
+    if not (bind and peer and client.inputEnabled) then return end
+
+    if not act then
+        act = state.DIFF_NIL
+    end
+
+    if bind.type == "stream" then
+        return
+    end
+
+    if bind.type == "toggle" then
+        home[bind.input] = act
+    end
+
+    if bind.type == "pulse" then
+        client.inputSequence = client.inputSequence + 1
+        local inputStream = {[bind.input] = act}
+        local inputFrame = {
+            inputStream = inputStream,
+            seq = client.inputSequence
+        }
+        peer:send(encode(inputFrame), 1, "reliable")
+        client.inputCache:push(inputFrame)
+
+        if client.input_response then
+            client.input_response(client.id, inputStream, client.inputSequence)
+        end
+    end
 end
 
 function client.kick()
@@ -151,11 +172,31 @@ function client.postupdate(dt)
         end
         client.stateBuffer:clear()
     end
+    local inputStream
+    for key, pressed in pairs(client.key) do
+        local bind = client.binds[key]
+        if bind and bind.type == "stream" then
+            inputStream = inputStream or {}
+            inputStream[bind.input] = pressed
+        end
+    end
+    if peer and client.inputEnabled and inputStream then
+        client.inputSequence = client.inputSequence + 1
+        local inputState = {
+            inputStream = inputStream,
+            seq = client.inputSequence
+        }
+        --print(serpent.line(inputStream, client.stateDumpOpts))
+        peer:send(encode(inputState), 1, "reliable")
+        client.inputCache:push(inputState)
+
+        if client.input_response then
+            client.input_response(client.id, inputStream, client.inputSequence)
+        end
+    end
     if client.tick then
         client.tick(timeSinceLastUpdate)
     end
-
-
     if peer then
         -- Send home updates to server
         local diff = home:__diff()
@@ -265,6 +306,7 @@ function client.request_handler(event)
     if request and request.inputAck then
         -- Acknowledged home/input
         client.remoteInputSequence = request.inputAck
+        client.requestPrediction = true
     end
 
     -- SERVER/CLIENT COMMS

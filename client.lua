@@ -2,8 +2,8 @@
 local b				= require "lib.battery"
 local Map 			= require "mapengine"
 local client 		= require "lib.cs"
-local List 			= require "lib.list"
 local serpent 		= require "lib.serpent"
+local bump			= require "lib.bump"
 
 client.enabled 			= true
 client.version 			= "v1.0.0"
@@ -12,13 +12,13 @@ client.height 			= 600
 client.scale 			= false
 client.mode 			= "lobby"
 client.map 				= Map.new(50, 50)
+client.world			= bump.newWorld()
 client.debug_level		= 0
-client.input_enabled 	= false
-client.input_pending 	= 0
-client.input_applied	= 0
+client.shootTimer 		= 0
 
 client.content = require "enum"
 client.actions = require "actions" (client)
+client.binds   = require "binds" (client)
 client.canvas = love.graphics.newCanvas()
 client.camera = {
 	x = 0,
@@ -60,7 +60,21 @@ local home = client.home
 
 --------------------------------------------------------------------------------------------------
 --love callbacks----------------------------------------------------------------------------------
--------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------
+function client.resize(w, h)
+	home.screenw = w
+	home.screenh = h
+end
+
+--- Client loading routine at the start of program
+function client.load()
+	-- Set up initial values for client
+	home.screenh = love.graphics.getWidth()
+	home.screenw = love.graphics.getHeight()
+	home.attack = false
+	home.attack2 = false
+	home.attack3 = false
+end
 
 --- Callback for mouse movement on screen
 ---@param x number
@@ -83,8 +97,13 @@ end
 ---@param y number
 ---@param button number
 function client.mousepressed(x, y, button, istouch, presses)
+	if not client.key[button] then
+		client.sendInput(button, true)
+	end
+	client.key[button] = true
 	local mx, my = client.map:mouseToMap(love.mouse.getPosition())
     if button == 1 then
+		--if client.shootTimer = 
     end
 	if button == 2 then
 	end
@@ -95,6 +114,11 @@ end
 ---@param y number
 ---@param button number
 function client.mousereleased(x, y, button, istouch, presses)
+	if client.key[button] then
+		client.sendInput(button, nil)
+	end
+	client.key[button] = nil
+
     if button == 1 then
     end
 
@@ -104,24 +128,35 @@ function client.mousereleased(x, y, button, istouch, presses)
 end
 
 --- Callback for key press event
----@param k string Key pressed
-function client.keypressed(k)
+---@param key string Key pressed
+function client.keypressed(key)
+	if not client.key[key] then
+		client.sendInput(key, true)
+	end
+	client.key[key] = true
+
 	if client.connected then
-		if k == "return" then
+		if key == "return" then -- Enter pressed
 			local ui = require "core.interface.ui"
 			local LF = require "lib.loveframes"
 
-			if ( LF.inputobject or LF.hoverobject) then return end
+			if ( LF.inputobject or LF.hoverobject ) then return end
 
 			local bool = ui.chat_input_frame:GetVisible()
 			ui.chat_input_frame:SetVisible(not bool)
+
+			client.inputEnabled = bool
 		end
 	end
 end
 
 --- Callback for key release event
----@param k string Key released
-function client.keyreleased(k)
+---@param key string Key released
+function client.keyreleased(key)
+	if client.key[key] then
+		client.sendInput(key, nil)
+	end
+	client.key[key] = nil
 	if client.connected then
 	end
 end
@@ -237,6 +272,10 @@ end
 function client.changed(payload)
 end
 
+-- Callback for inputs being pressed
+function client.input_response(peer_id, inputStream, seq)
+end
+
 function client.warning(message)
 	client.parse("warning "..message)
 end
@@ -247,11 +286,6 @@ function client.receive(message)
 	-- Send the message to the action parser
     client.parse(message)
 	print(string.format("©236118000Parse: %s", message))
-end
-
---- Client loading routine at the start of program
-function client.load()
-	-- Set up initial values for client
 end
 
 --- Client command parser
@@ -274,29 +308,9 @@ function client.parse(str)
 	end
 end
 
-function client.get_vector_direction()
-    local nx = love.keyboard.isDown "a" and 1 or 0
-    local px = love.keyboard.isDown "d" and 1 or 0
-    local ny = love.keyboard.isDown "w" and 1 or 0
-    local py = love.keyboard.isDown "s" and 1 or 0
-	return px-nx, py-ny
-end
-
 function client.tick(dt)
+	--print(serpent.line(client.key, client.stateDumpOpts))
 	if client.connected then
-		local move_h, move_v = client.get_vector_direction()
-		-- Send corresponding input to server
-		if move_h > 0 then
-			client.sendInput("right")
-		elseif move_h < 0 then
-			client.sendInput("left")
-		end
-
-		if move_v < 0 then
-			client.sendInput("forward")
-		elseif move_v > 0 then
-			client.sendInput("back")
-		end
 		client.predict_player(client.id)
     end
 end
@@ -311,7 +325,7 @@ client.share_lerp = {
 	players = {},
 	--entities = {},
 }
-client.lerp_speed = 20
+client.lerp_speed = 30
 local share_lerp = client.share_lerp
 function client.snapshot_lerp(dt)
 	local lerp_flags = {
@@ -350,31 +364,48 @@ function client.predict_player(peer_id) -- `home` is used to apply controls if g
 		player.x = player_local.x
 		player.y = player_local.y
 		for index, inputState in client.inputCache:walk() do
-			client.apply_input_to_player(inputState.input, player)
+			client.apply_input_to_player(inputState.inputStream, player)
 		end
+
+
+
+		-- Shoot timer fake
+		if client.shootTimer <= 0 then
+			client.shootTimer = 3
+		else
+			client.shoottimer
+		end
+
 	end
 end
 
 function client.apply_input_to_player(input, player)
-	local move_h, move_v = 0, 0
+	local h, v = 0, 0
 	local map = client.map
-	if input=="forward" then
-		move_v = -1
+	if input["forward"] then v = -1 end
+	if input["back"] then v = 1 end
+	if input["left"] then h = -1 end
+	if input["right"] then h = 1 end
+	-- Magnitude
+    local mag = math.sqrt(v*v + h*h)
+	local scale
+	if mag == 0 then
+		v, h = 0, 0
+	else
+		scale = 1/mag
+		v, h = v * scale, h * scale
 	end
-	if input=="back" then
-		move_v = 1
+	-- Multiply vector by velocity and walk factor
+	local w = 1
+	if input["walk"] then
+		w = 0.5
 	end
-	if input=="left" then
-		move_h = -1
-	end
-	if input=="right" then
-		move_h = 1
-	end
-	local dx = player.s * move_h
-	local dy = player.s * move_v
+	local dx = player.s * h * w
+	local dy = player.s * v * w
 
+	-- Slide square object into the map
 	if map then
-		local future_x, future_y = map:moveWithSliding(24, player.x, player.y, dx, dy)
+		local future_x, future_y = map:moveWithSliding(player.size, player.x, player.y, dx, dy)
 		player.x = future_x
 		player.y = future_y
 	end
@@ -402,10 +433,10 @@ function client.camera_move(dt)
 		local players = share.players
 		local x = players[client.id].x or 0
 		local y = players[client.id].y or 0
-		--local diff_x = (client.width/2 - home.targetX)/8
-		--local diff_y = (client.height/2 - home.targetY)/8
-		local diff_x = 0
-		local diff_y = 0
+		local diff_x = (client.width/2 - home.targetX)/2
+		local diff_y = (client.height/2 - home.targetY)/2
+		--local diff_x = 0
+		--local diff_y = 0
 		client.camera.tx = x - diff_x
 		client.camera.ty = y - diff_y
 	end
