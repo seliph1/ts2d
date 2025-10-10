@@ -1,12 +1,19 @@
 local enet      = require 'enet'
 local state     = require 'lib.state'
-local bitser    = require 'lib.bitser'
+--local bitser    = require 'lib.bitser'
+--local binser    = require 'lib.binser'
+local cbor      = require 'lib.cbor'
 local serpent   = require 'lib.serpent'
 local List      = require 'lib.list'
 local Buffer    = require 'lib.buffer'
 
-local encode = bitser.dumps
-local decode = bitser.loads
+--local encode = bitser.dumps
+--local decode = bitser.loads
+--local encode = binser.serialize
+--local decode = binser.deserializeN
+
+local encode = cbor.encode
+local decode = cbor.decode
 
 ---------- module start ----------
 local client = {}
@@ -19,6 +26,7 @@ client.sendRate = 35
 client.numChannels = 3
 
 client.connected = false
+client.joined = false
 client.id = nil
 client.backgrounded = false
 client.name = "Player"
@@ -75,8 +83,9 @@ function client.send(...)
 end
 
 function client.sendInput(key, act)
-    local bind = client.binds[key]
+    if not client.joined then return end
 
+    local bind = client.binds[key]
     if not (bind and peer and client.inputEnabled) then return end
 
     if not act then
@@ -84,14 +93,21 @@ function client.sendInput(key, act)
     end
 
     if bind.type == "stream" then
+        -- Do nothing.
+        -- This is handled in client.postupdate
         return
     end
 
     if bind.type == "toggle" then
+        -- This is handled in client.postupdate
+        -- As a "home" state change
         home[bind.input] = act
     end
 
     if bind.type == "pulse" then
+        -- Send keypresses as a one-time pulse action.
+        -- Doesn't overlap with stream-like actions.
+        -- Also sends keyrelease pulses
         client.inputSequence = client.inputSequence + 1
         local inputStream = {[bind.input] = act}
         local inputFrame = {
@@ -102,6 +118,11 @@ function client.sendInput(key, act)
         client.inputCache:push(inputFrame)
 
         if client.input_response then
+            for k,v in pairs(inputStream) do
+                if v == state.DIFF_NIL then
+                    inputStream[k] = nil
+                end
+            end
             client.input_response(client.id, inputStream, client.inputSequence)
         end
     end
@@ -137,13 +158,13 @@ function client.preupdate(dt)
         local event = host:service(0)
         if not event then break end
 
-        -- Server connected?
+        -- Connected with server?
         if event.type == 'connect' then
             -- Ignore this, wait till we receive id (see below)
             client.connect_handler(event)
         end
 
-        -- Server disconnected?
+        -- Disconnected from server?
         if event.type == 'disconnect' then
             client.disconnect_handler(event)
         end
@@ -158,12 +179,23 @@ end
 
 local timeSinceLastUpdate = 0
 function client.postupdate(dt)
+    -- Calculates delta time so we can tick the client on a consistent time
     timeSinceLastUpdate = timeSinceLastUpdate + dt
     if timeSinceLastUpdate < 1 / client.sendRate then
         return
     end
+
+    -- Dont send any input updates if not joined.
+    -- Likewise, server wont accept these inputs.
+    if not client.joined then return end
+
+
+    -- Apply all of the changed states at once from the buffer in a single tick.
     if client.stateBuffer:count() > 0 then
         for index, lastState in client.stateBuffer:walk() do
+            if client.changing then
+                client.changing(lastState)
+            end
             state.apply(share_local, lastState)
             state.apply(share, lastState)
             if client.changed then
@@ -172,14 +204,20 @@ function client.postupdate(dt)
         end
         client.stateBuffer:clear()
     end
+
+    -- Adds from client keypresses to the input stream table
     local inputStream
     for key, pressed in pairs(client.key) do
         local bind = client.binds[key]
+        -- There are tree types of inputs
+        -- "Stream" type input refers to a line of keys pressed at a time, continually
         if bind and bind.type == "stream" then
             inputStream = inputStream or {}
             inputStream[bind.input] = pressed
         end
     end
+
+    -- Runs through the table and sends the input stream to server
     if peer and client.inputEnabled and inputStream then
         client.inputSequence = client.inputSequence + 1
         local inputState = {
@@ -188,17 +226,22 @@ function client.postupdate(dt)
         }
         --print(serpent.line(inputStream, client.stateDumpOpts))
         peer:send(encode(inputState), 1, "reliable")
-        client.inputCache:push(inputState)
 
+        -- Stores the inputState so we can later do some client prediction
+        client.inputCache:push(inputState)
         if client.input_response then
+            -- Runs the response client-side, should we ever need that
             client.input_response(client.id, inputStream, client.inputSequence)
         end
     end
+
+    -- Run the tick callback
     if client.tick then
         client.tick(timeSinceLastUpdate)
     end
+
+    -- Send home updates to server
     if peer then
-        -- Send home updates to server
         local diff = home:__diff()
         if diff ~= nil then
             local homeState = {
@@ -218,24 +261,24 @@ end
 
 function client.request_handler(event)
     local request = decode(event.data)
+
+    --print(serpent.line(event.data, client.stateDumpOpts))
+    if not request then return end
    	-- SERVER/CLIENT PACKAGE MANAGER
 	----------------------------------------------------------------------------
     -- Diff / exact? (do this first so we have it in `.connect` below)
-    if request and request.diff then
+    if request.diff then
         client.stateBuffer:push(request.diff)
-        local callback
-        if client.changing then
-            callback = client.changing(request.diff)
-        end
         -- Remove all inputs already acknowledged from the buffer
         for index, inputState in client.inputCache:walk() do
             if inputState.seq <= client.remoteInputSequence then
                 client.inputCache:remove(inputState)
             end
         end
+        -- The "changed" callback is done at the end of tick, for consistency
     end
 
-    if request and request.exact then -- `state.apply` may return a new value
+    if request.exact then -- `state.apply` may return a new value
         if client.changing then
             client.changing(request.exact)
         end
@@ -268,7 +311,7 @@ function client.request_handler(event)
 
 	-- SERVER/CLIENT AUTHENTICATION
 	----------------------------------------------------------------------------
-    if request and request.id then
+    if request.id then
         -- Assign a peer class object to our client
         peer = event.peer
         -- Turn on the connected flags and assing us a ID from server
@@ -277,7 +320,7 @@ function client.request_handler(event)
 
         -- Run the callback function
         if client.connect then
-            client.connect()
+            client.connect(client.id)
         end
         print(string.format("CS: assigned player id %s from server", client.id))
 
@@ -288,38 +331,80 @@ function client.request_handler(event)
             name = client.name,
             version = client.version,
         }))
-        -- Send the initial input data
+
+    end
+
+    if request.versionAck then
+        -- Server acknowledged our client version.
+        -- We now send the world request
+        peer:send(encode({
+            dataRequest = true,
+        }))
+    end
+
+    if request.joinAck then
+        -- Everything is ready, so we trigger the final flag and the join callback
+        if client.join then
+            client.join(client.id)
+        end
+        client.joined = true
+
+        -- And we also send input data to server
         peer:send(encode({
             exact = home:__diff(0, true)
         }), 1, "reliable")
     end
 
-    -- Server is Full?
-    if request and request.full then
+    if request.full then
+        -- Server is Full, as said by the server
+        -- So, trigger some callbacks to our client.
         if client.full then
             client.full()
         end
     end
 
-        -- INPUT PACKETS
+    -- INPUT PACKETS
 	----------------------------------------------------------------------------
-    if request and request.inputAck then
+    if request.inputAck then
         -- Acknowledged home/input
+        -- Trigger some flags on the prediction system inherited from this lib.
         client.remoteInputSequence = request.inputAck
         client.requestPrediction = true
     end
 
     -- SERVER/CLIENT COMMS
 	----------------------------------------------------------------------------
-    if request and request.message then
+    if request.message then
+        -- We received a message from server
+        -- Let's translate this message and send it to whatever callback might be relevant.
         if client.receive then
             client.receive(unpack(request.message, 1, request.message.nArgs))
         end
     end
 
-    if request and request.warning then
+    if request.warning then
+        -- Sever sent us a warning.
+        -- Better display it to this client.
         if client.warning then
             client.warning(request.warning)
+        end
+    end
+
+    if request.peer_connected then
+        if client.peer_connected then
+            client.peer_connected(request.peer_connected)
+        end
+    end
+
+    if request.peer_disconnected then
+        if client.peer_disconnected then
+            client.peer_disconnected(request.peer_disconnected)
+        end
+    end
+
+    if request.peer_joined then
+        if client.peer_joined then
+            client.peer_joined(request.peer_joined)
         end
     end
 end
@@ -330,6 +415,7 @@ end
 
 function client.disconnect_handler(event)
     client.connected = false
+    client.joined = false
     client.id = nil
     for k in pairs(share) do
         share[k] = nil
@@ -348,6 +434,7 @@ function client.disconnect_handler(event)
     end
 end
 
+client.DIFF_NIL = state.DIFF_NIL
 
 return client
 

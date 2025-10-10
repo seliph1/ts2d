@@ -1,7 +1,7 @@
-uniform vec4 iMouse = vec4(0.0);
-uniform float iTime = 0.0;
+extern vec4 iMouse = vec4(0.0);
+extern float iTime = 0.0;
 vec2 iResolution = love_ScreenSize.xy;
-uniform Image iChannel0;
+extern Image iChannel0;
 
 float height( vec2 uv )
 {

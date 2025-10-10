@@ -759,7 +759,6 @@ ui.chat_frame_message = function(player, message)
 	end
 
 	if hasRTL(message) then
-		print("reverse!!")
 		message = reverse_utf8(message)
 	end
 
@@ -767,6 +766,11 @@ ui.chat_frame_message = function(player, message)
 	ui.chat_log:AddElement(full_message)
 
 	return full_message
+end
+
+ui.chat_frame_server_message = function(message)
+	ui.chat_log:AddElement(message)
+	return message
 end
 
 ui.chat_frame.Draw = function(object)

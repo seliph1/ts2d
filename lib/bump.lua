@@ -809,6 +809,7 @@ bump.newWorld = function(cellSize)
 
   return world
 end
+bump.new = bump.newWorld
 
 bump.rect = {
   getNearestCorner              = rect_getNearestCorner,

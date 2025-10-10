@@ -16,9 +16,9 @@
 // Combine distance field functions //
 //////////////////////////////////////
 
-//uniform float iTime = 0.0;
-uniform vec4 iMouse = vec4(0.0);
-uniform float iTime = 0.0;
+//extern float iTime = 0.0;
+extern vec4 iMouse = vec4(0.0);
+extern float iTime = 0.0;
 
 float occluder[400];
 vec2 iResolution = love_ScreenSize.xy;

@@ -7,8 +7,8 @@
 //#define GIVE_ME_A_LOGO_INSTEAD
 //#define GIVE_ME_A_FRACTAL_INSTEAD
 
-uniform vec4 iMouse = vec4(0.0);
-uniform float iTime = 0.0;
+extern vec4 iMouse = vec4(0.0);
+extern float iTime = 0.0;
 vec2 iResolution = love_ScreenSize.xy;
 
 #define RESOLUTION  iResolution

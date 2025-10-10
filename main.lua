@@ -35,6 +35,10 @@ end
 function love.update( dt )
 	client.update(dt)
 	loveframes.update(dt)
+
+	if launch_type == "debug" then
+		love.window.setTitle( tostring( love.timer.getFPS() ) )
+	end
 end
 
 function love.draw()

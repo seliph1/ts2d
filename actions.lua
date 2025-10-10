@@ -30,7 +30,7 @@ local actions = {
             local message = table.concat({...}," ")
 
             local ui = require "core.interface.ui"
-            ui.chat_frame_message(message)
+            ui.chat_frame_server_message(message)
 		end,
 	};
 
@@ -39,7 +39,7 @@ local actions = {
             local message = table.concat({...}," ")
 
             local ui = require "core.interface.ui"
-            ui.server_log_push(message)
+            ui.server_log_push("©255220000"..message)
 		end,
     };
 
@@ -55,6 +55,7 @@ local actions = {
             client.mode = "game"
         end,
     };
+
     filecheck = {
         ---Checks if a file exists on client side, and send a confirmation to server
         ---@param ... string
@@ -144,6 +145,9 @@ local actions = {
         end
     }
 }
+
+actions.msg = actions.message
+
 return actions
 
 ---------- module end ------------

@@ -1,9 +1,9 @@
 #define MAP_LEN 1000
 
-//uniform vec4 iMouse = vec4(0.0);
-uniform vec2 camera = vec2(0.0);
-uniform float iTime = 0.0;
-uniform Image iChannel0;
+//extern vec4 iMouse = vec4(0.0);
+extern vec2 camera = vec2(0.0);
+extern float iTime = 0.0;
+extern Image iChannel0;
 
 vec2 iResolution = love_ScreenSize.xy;
 

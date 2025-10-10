@@ -6,13 +6,13 @@ local serpent 		= require "lib.serpent"
 local bump			= require "lib.bump"
 
 client.enabled 			= true
-client.version 			= "v1.0.0"
+client.version 			= "v1.0.1"
 client.width 			= 800
 client.height 			= 600
 client.scale 			= false
 client.mode 			= "lobby"
 client.map 				= Map.new(50, 50)
-client.world			= bump.newWorld()
+client.world			= bump.new()
 client.debug_level		= 0
 client.shootTimer 		= 0
 
@@ -25,7 +25,7 @@ client.camera = {
 	y = 0,
 	tx = 0,
 	ty = 0,
-	snap_pointer = 0,
+	snap_pointer = nil,
 	snap_enabled = false,
 	speed = 500, -- pixel/frame
 	tween_speed = 15, -- pixel/frame
@@ -51,6 +51,17 @@ local share = client.share
 ---@class Share
 local share_local = client.share_local
 
+---@class Share
+local share_lerp = client.share_lerp
+share_lerp = {
+	players = {},
+	entities = {},
+	bullets = {},
+	items = {},
+	scores = {}
+}
+client.lerp_speed = 30
+
 ---@class userdata
 --- @field targetX integer position of our client
 --- @field targetY integer position of our client
@@ -58,6 +69,7 @@ local share_local = client.share_local
 --- @field move table direction vector
 local home = client.home
 
+local DIFF_NIL = client.DIFF_NIL
 --------------------------------------------------------------------------------------------------
 --love callbacks----------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------
@@ -103,7 +115,6 @@ function client.mousepressed(x, y, button, istouch, presses)
 	client.key[button] = true
 	local mx, my = client.map:mouseToMap(love.mouse.getPosition())
     if button == 1 then
-		--if client.shootTimer = 
     end
 	if button == 2 then
 	end
@@ -135,7 +146,7 @@ function client.keypressed(key)
 	end
 	client.key[key] = true
 
-	if client.connected then
+	if client.joined then
 		if key == "return" then -- Enter pressed
 			local ui = require "core.interface.ui"
 			local LF = require "lib.loveframes"
@@ -157,7 +168,7 @@ function client.keyreleased(key)
 		client.sendInput(key, nil)
 	end
 	client.key[key] = nil
-	if client.connected then
+	if client.joined then
 	end
 end
 
@@ -238,15 +249,11 @@ function client.draw()
 	end
 end
 
-
 --------------------------------------------------------------------------------------------------
 --client callbacks--------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------
 --- Callback for when client sucessfully connects to server
-function client.connect()
-	local LF = require "lib.loveframes"
-	LF.SetState("game")
-	client.mode = "game"
+function client.connect(peer_id)
 end
 
 --- Callback for when client disconnects from server
@@ -261,19 +268,88 @@ function client.disconnect(reason)
 	end
 end
 
+-- Callback for when client joins the server
+function client.join(peer_id)
+	-- Only start the engine on join
+	local LF = require "lib.loveframes"
+	LF.SetState("game")
+	client.mode = "game"
+
+	local player = share.players[peer_id]
+	if player then
+		client.camera.snap_pointer = player
+	end
+end
+
 --- Callback for information in sync with server
 ---@param payload table
 function client.changing(payload)
-	
 end
 
 --- Callback for information synced with server
 ---@param payload table
 function client.changed(payload)
+	if payload.players then
+		-- Update players position
+		for peer_id in pairs(payload.players) do
+			local player
+			if share.players and share.players[peer_id] then
+				player = share.players[peer_id]
+			end
+				-- This is the data that will be fed to share anyways, so we use it here
+			if player and not client.world:hasItem(player) then
+				client.world:add(player, 0, 0, player.size, player.size)
+			end
+			
+			-- Update collision frames
+			if player then
+				local half = math.floor(player.size/2)
+				client.world:update(player, player.x - half, player.y - half, player.size, player.size)
+			end
+		end
+	end
+end
+
+function client.peer_connected(peer_id)
+end
+
+function client.peer_disconnected(peer_id)
+	-- Store it temporarily
+	local player = share.players[peer_id]
+	local player_s = share_lerp.players[peer_id]
+
+	-- Remove it from the interpolation table
+	share_lerp.players[peer_id] = nil
+	share.players[peer_id] = nil
+
+	-- Remove it from the collision world if possible
+	if player and client.world:hasItem(player) then
+		client.world:remove(player)
+	end
+
+	player = nil
+	player_s = nil
+end
+
+function client.peer_joined(peer_id)
+	--print(peer_id.. " joined")
 end
 
 -- Callback for inputs being pressed
-function client.input_response(peer_id, inputStream, seq)
+function client.input_response(peer_id, input, seq)
+
+	if input["use"] then
+		local player = share.players[peer_id]
+		if not player then return
+		
+		local x1, y1 = player.x, player.y
+		local angle = 0
+		local dist = 128
+
+		local x2 = player.x + math.sin(angle) * dist
+		local y2 = player.y + math.cos(angle) * dist
+		client.raycast(x1, y1, x2, y2)
+	end
 end
 
 function client.warning(message)
@@ -310,23 +386,17 @@ end
 
 function client.tick(dt)
 	--print(serpent.line(client.key, client.stateDumpOpts))
-	if client.connected then
+	if client.joined then
 		client.predict_player(client.id)
     end
 end
 
 function client.frame(dt)
-	if client.connected then
+	if client.joined then
 		client.snapshot_lerp(dt)
 	end
 end
 
-client.share_lerp = {
-	players = {},
-	--entities = {},
-}
-client.lerp_speed = 30
-local share_lerp = client.share_lerp
 function client.snapshot_lerp(dt)
 	local lerp_flags = {
 		x = true,
@@ -357,25 +427,17 @@ end
 --- Move player in smooth intervals
 ---@param peer_id number
 function client.predict_player(peer_id) -- `home` is used to apply controls if given
-	if client.id == peer_id and client.connected then
+	if client.id == peer_id and client.joined then
 		local player_local = share_local.players[peer_id]
 		local player = share.players[peer_id]
 
-		player.x = player_local.x
-		player.y = player_local.y
-		for index, inputState in client.inputCache:walk() do
-			client.apply_input_to_player(inputState.inputStream, player)
+		if player and player_local then
+			player.x = player_local.x
+			player.y = player_local.y
+			for index, inputState in client.inputCache:walk() do
+				client.apply_input_to_player(inputState.inputStream, player)
+			end
 		end
-
-
-
-		-- Shoot timer fake
-		if client.shootTimer <= 0 then
-			client.shootTimer = 3
-		else
-			client.shoottimer
-		end
-
 	end
 end
 
@@ -403,13 +465,67 @@ function client.apply_input_to_player(input, player)
 	local dx = player.s * h * w
 	local dy = player.s * v * w
 
+	if not map then return end
+
 	-- Slide square object into the map
-	if map then
-		local future_x, future_y = map:moveWithSliding(player.size, player.x, player.y, dx, dy)
-		player.x = future_x
-		player.y = future_y
+	local future_x, future_y = map:moveWithSliding(player.size, player.x, player.y, dx, dy)
+
+	-- Get the player half size
+	local half = math.floor(player.size/2)
+
+	-- Calculate player colliding with other objects
+	client.world:update(player, player.x - half, player.y - half, player.size, player.size)
+
+	--
+	local filter = client.player_collision_filter
+	local current_x, current_y, collisions, length = client.world:move(player, future_x - half, future_y - half, filter)
+	player.x = current_x + half
+	player.y = current_y + half
+
+	-- Collision handler
+	for i = 1, length do
+		local collision = collisions[i]
+		local _type 	= collision.type
+		local object 	= collision.other
+		local itemRect 	= collision.itemRect
+		local otherRect = collision.otherRect
+		local move 		= collision.move
+		local normal 	= collision.normal
+		local ti 		= collision.ti
+		local overlaps 	= collision.overlaps
+
+
 	end
 end
+
+function client.player_collision_filter(item, other)
+	if item.ct == 1 then
+		if other.ct == 2 then
+			return "cross" -- Ignore physics and register the collision
+		elseif other.ct == 1 then
+			return "slide" -- Apply physics to other players
+		end
+	end
+end
+
+--- Cast a ray that collides with map, players, items and entities. ---
+--- Returns the first object that collided with this segment
+function client.raycast(x1, y1, x2, y2)
+	if not client.map then return end
+	local item_info, len = client.map:querySegmentWithCoords(x1, y1, x2, y2)
+	for i=1, len do
+		local item = item_info[i]
+
+		print(serpent(item, client.stateDumpOpts))
+	end
+end
+
+--- Cast a ray that dont collide with anything, but register intersection
+--- with map, players, items and entities.
+--- Returns a list of tiles and objects that intersected with this segment
+function client.raycast_t(x1, y1, x2, y2)
+end
+
 
 --- Camera movement vector function
 ---@param dt number Delta time
@@ -429,14 +545,13 @@ function client.camera_move(dt)
 	client.camera.tx = client.camera.tx + vx
 	client.camera.ty = client.camera.ty + vy
 
-	if client.connected then
-		local players = share.players
-		local x = players[client.id].x or 0
-		local y = players[client.id].y or 0
-		local diff_x = (client.width/2 - home.targetX)/2
-		local diff_y = (client.height/2 - home.targetY)/2
-		--local diff_x = 0
-		--local diff_y = 0
+
+	local snap_pointer = client.camera.snap_pointer
+	if snap_pointer and snap_pointer.x and snap_pointer.y then
+		local x = snap_pointer.x
+		local y = snap_pointer.y
+		local diff_x = (client.width/2 - home.targetX)/2 -- 0
+		local diff_y = (client.height/2 - home.targetY)/2 -- 0
 		client.camera.tx = x - diff_x
 		client.camera.ty = y - diff_y
 	end
@@ -472,7 +587,7 @@ function client.render()
 		client.map:draw_entities()
 	end
 
-    if client.connected then
+    if client.joined then
 		-- Draw items on the ground
 		client.map:draw_items(share, client)
 		-- Player render

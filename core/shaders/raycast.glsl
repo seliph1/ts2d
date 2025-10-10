@@ -2,8 +2,8 @@
 #define EPSILON 0.001
 #define MAP_LEN 16
 
-uniform vec4 iMouse = vec4(0.0);
-uniform float iTime = 0.0;
+extern vec4 iMouse = vec4(0.0);
+extern float iTime = 0.0;
 vec2 iResolution = love_ScreenSize.xy;
 
 

@@ -10,7 +10,6 @@ end
 ]]
 
 -- Loading some libs
-local ffi = require "ffi"
 --local List = require "lib.list"
 local bump = require "lib.bump"
 local shader = require "core.shaders.cs2dshaders"
@@ -430,49 +429,49 @@ function MapObject:read(path, noindexing)
 	end
 	--local filedata = fs:loadFile(path)
 	local filedata = love.filesystem.newFileData(path)
-	-- Get a C pointer to read files as binary mode.
 	local size = filedata:getSize()
-	local pointer = filedata:getFFIPointer()
-	-- Set byte and integer tables to read.
-	local bytearray = ffi.cast('uint8_t*',pointer)
-	local integerarray = ffi.cast('int32_t*',pointer)
-	local shortarray = ffi.cast('uint16_t*',pointer)
+
 	-- Set the cursor at the start of file
-	local cursor = 0
+	local cursor = 1
 	-- Read single byte
 	local function read_byte()
-		local value = bytearray[cursor]
-		cursor = cursor+1
+		--local value = bytearray[cursor]
+		local value = love.data.unpack("B", filedata, cursor)
+		cursor = cursor + 1
 		return value
 	end
 	-- Reading functions
 	local function read_integer()
-		local b1, b2, b3, b4 = bytearray[cursor],bytearray[cursor+1],bytearray[cursor+2],bytearray[cursor+3]
-		-- Read integer as signed non endian
-		local value =  b4 * 0x1000000 + b3 * 0x10000 + b2 * 0x100 + b1
+		local value = love.data.unpack("<i4", filedata, cursor)
 		cursor = cursor + 4
-		return value > 0x7fffffff and value - 0x100000000 or value
+		return value
 	end
 	-- Read string until \n
 	local function read_string()
 		local str = ""
 		local i = 0
-		for index = 0,size-cursor do
-			local chr = string.char(bytearray[cursor+index])
-			if bytearray[cursor+index]==10 then
-				cursor = cursor + index+1
+		for index = 0, size - cursor do
+			local byte = love.data.unpack("B", filedata, cursor + index)
+			local chr = tonumber( byte )
+			if byte == 10 then
+				cursor = cursor + index + 1
 				return str
 			end
-			if bytearray[cursor+index]~=13 then
-				str = str .. chr
+			if byte ~= 13 and chr then
+				str = str .. string.char( chr )
 			end
 		end
 	end
 	-- Read short integer as unsigned endian.
 	local function read_short()
+		local value = love.data.unpack("<i2", filedata, cursor)
+		cursor = cursor + 2
+		return value
+		--[[
 		local value = shortarray[math.floor(cursor/2)]
 		cursor = cursor+2
 		return value
+		]]
 	end
 	-- Jumps the cursor
 	local function seek_forward(bytes)
@@ -1096,6 +1095,7 @@ function MapObject:draw_players(share, client) -- get info from server!
 	-- Inputs
 	local home = client.home
 
+
 	-- Change camera perspective
 	love.graphics.push()
 	love.graphics.translate(-camera.x + sw/2, -camera.y + sh/2)
@@ -1113,29 +1113,42 @@ function MapObject:draw_players(share, client) -- get info from server!
 		local angle = math.atan2(targetY - client.height/2, targetX - client.width/2) + math.pi/2
 		-- Get the player's held weapon
 		local holding = player.ih
-		-- Check if that weapon ID exists in available list
-		local itemdata = client.content.itemlist[holding]
-		-- Check what stance should player hold that weapon
-		local stance = itemdata.player_stance
-		-- Get the player texture for that stance
-		local texture = client.gfx.player[player.p].texture
-		local quad = client.gfx.player[player.p][stance]
-		-- Get the weapon texture from weapon ID
-		local weapon_gfx_path
-		local weapon_texture
-		if itemdata.held_image ~= "" then
-			weapon_gfx_path = itemdata.common_path .. itemdata.held_image
+		-- Get the player's worn armor
+		local armor = player.a
+		-- Get the player's equipment
+		local equipment = player.e
+
+		-- Gets the weapon texture
+		local texture, quad
+		local weapon_texture, weapon_offset
+		if holding == 0 then
+			texture = client.gfx.player[player.p].texture
+			quad = client.gfx.player[player.p]["nothing"]
+		else
+			-- Check if that weapon ID exists in available list
+			local itemdata = client.content.itemlist[holding]
+			-- Check what stance should player hold that weapon
+			local stance = itemdata.player_stance
+			-- Get the player texture for that stance
+			texture = client.gfx.player[player.p].texture
+			quad = client.gfx.player[player.p][stance]
+			-- Get the weapon texture from weapon ID
+			local weapon_gfx_path = itemdata.common_path .. itemdata.held_image
 			weapon_texture = client.gfx.itemlist[weapon_gfx_path]
-			if not weapon_texture then
-				weapon_texture = love.graphics.newImage(weapon_gfx_path)
-				client.gfx.itemlist[weapon_gfx_path] = weapon_texture
-			end
-			if not weapon_texture then
-				-- Defaults to a placeholder
-				weapon_texture = self._placeholder
-			end
+			weapon_offset = itemdata.offset
 		end
 
+		local armor_texture
+		local armor_opacity
+		if armor ~= 0 then
+			-- Check if that weapon ID exists in available list
+			local itemdata = client.content.itemlist[armor]
+			local armor_gfx_path = itemdata.common_path .. itemdata.held_image
+			armor_texture = client.gfx.itemlist[armor_gfx_path]
+			armor_opacity = itemdata.opacity
+		end
+
+		-- Draw the debug square
 		if client.debug_level >= 2 and peer_id == client.id then
 			local __player = client.share_local.players[client.id]
 			love.graphics.push()
@@ -1153,16 +1166,44 @@ function MapObject:draw_players(share, client) -- get info from server!
 			-- Draw the hitbox
 			love.graphics.rectangle("line", -player.size/2, -player.size/2, player.size, player.size)
 		end
-		-- Set to (1,1,1,1) color
-		love.graphics.setColor(1, 1, 1, 1)
-		-- Draw the player
-		love.graphics.draw(texture, quad, 0, 0, angle, 1, 1, 16, 16)
-		-- Draw weapon held
+		local alpha = armor_opacity or 1
+		love.graphics.setColor(1, 1, 1, alpha)
+		if texture then
+			-- Draw the player
+			love.graphics.draw(texture, quad, 0, 0, angle, 1, 1, 16, 16)
+		end
+
+		if armor_texture then
+			local width = armor_texture:getWidth()
+			local height = armor_texture:getHeight()
+			-- Draw armor if possible
+			love.graphics.draw(armor_texture, 0, 0, angle, 1, 1, width/2, height/2)
+		end
+		
+		for item_type in pairs(equipment) do
+			local itemdata = client.content.itemlist[item_type]
+			if itemdata then
+				local equipment_gfx_path = 	itemdata.common_path .. itemdata.held_image
+				local equipment_texture = client.gfx.itemlist[equipment_gfx_path]
+
+				if equipment_texture then
+					local width = equipment_texture:getWidth()
+					local height = equipment_texture:getHeight()
+					local flip = itemdata.flip and math.pi or 0
+					local scale = itemdata.scale or 0
+					love.graphics.draw(equipment_texture, 0, 0, angle + flip, scale, scale, width/2, height/2)
+				end
+			end
+		end
+
 		if weapon_texture then
+			-- Draw weapon held
 			local width = weapon_texture:getWidth()
 			local height = weapon_texture:getHeight()
-			love.graphics.draw(weapon_texture, 0, 0, angle, 1, 1, width/2, height)
+			local offset = weapon_offset or 0
+			love.graphics.draw(weapon_texture, 0, 0, angle, 1, 1, width/2, height + offset)
 		end
+
 		-- Pop for the next player
 		love.graphics.pop()
 	end
@@ -1197,7 +1238,7 @@ function MapObject:draw_entity(e)
 	local scale_y = size_y/height
 	local sx = (e.x * 32) + shift_x + size_x/2
 	local sy = (e.y * 32) + shift_y + size_y/2
-	love.graphics.setShader(shader.entity)
+	--love.graphics.setShader(shader.entity)
 	if blend == 0 then -- No filter/solid
 		love.graphics.setBlendMode("alpha")
 	elseif blend == 3 then -- Light
@@ -1207,8 +1248,8 @@ function MapObject:draw_entity(e)
 	else
 		love.graphics.setBlendMode("alpha")
 	end
-	shader.entity:send("mask", mask)
-	shader.entity:send("blend", blend)
+	--shader.entity:send("mask", mask)
+	--shader.entity:send("blend", blend)
 
 	love.graphics.setColor(love.math.colorFromBytes(red, green, blue, alpha))
 	love.graphics.draw(sprite, sx, sy, angle, scale_x, scale_y, width/2, height/2)
@@ -1306,6 +1347,31 @@ function MapObject:draw_items(share, client)
 
 	love.graphics.push()
 	love.graphics.translate(-camera.x + sw/2, -camera.y + sh/2)
+
+	for index, item in pairs(share.items) do
+		local itemdata = itemlist[item.it]
+		local path = itemdata.common_path .. itemdata.dropped_image
+		local imagedata = gfx.itemlist[path]
+
+		if itemdata and imagedata then
+			-- Transpose and rotate the image relative to the center
+			love.graphics.setColor(1, 1, 1, 1)
+			love.graphics.draw(imagedata, item.x*tile_size + tile_size/2, item.y*tile_size + tile_size/2, item.r + love.timer.getTime()%360, 1, 1, imagedata:getWidth()/2, imagedata:getHeight()/2)
+		end
+
+		if client.debug_level >= 1 then
+			-- Set yellow color
+			love.graphics.setColor(1, 1, 0, 1)
+			-- Draw the hitbox
+			love.graphics.rectangle("line", item.x*tile_size, item.y*tile_size, tile_size, tile_size)
+		end
+
+		if client.debug_level >= 2 then
+			-- Draw item type label
+			love.graphics.setFont(self._smallfont)
+			love.graphics.print(item.it, item.x*tile_size, item.y*tile_size)
+		end
+	end
 
 	--[[
 	for chunk in pairs(self:getItemsFromCamera()) do
