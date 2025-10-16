@@ -130,6 +130,13 @@ local commands = {
 
 	files = {
 		action = function()
+			--[[
+			print("BRO, PLEASE SHOW ME THE IMAGE")
+			local imageData = love.image.newImageData("gfx/c4/map/objects/weapons.png")
+			local pixelFormat = imageData:getFormat()
+			print(imageData)
+			print(pixelFormat)
+			]]
 		end;
 	};
 

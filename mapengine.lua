@@ -40,7 +40,7 @@ local ENTITY_TYPE = enum.ENTITY_TYPE
 
 effect.register(LF.load "core/particle/sparkle.lua" (), "sparkle")
 effect.register(LF.load "core/particle/hitscan.lua" (), "hitscan")
-effect.register(LF.load "core/particle/bullettrail.lua" (), "bullettrail")
+effect.register(LF.load "core/particle/bullettrail.lua" (), "trail")
 
 --effect.register(dofile "core/particle/fire.lua", "fire")
 --effect.register(dofile "core/particle/snow.lua", "snow")
@@ -420,6 +420,7 @@ function MapObject:clear()
 	print("Map: cleared")
 end
 
+
 --- @method Reads from a CS2D Map file
 --- @param path string file relative to maps/ path in CS2D
 function MapObject:read(path, noindexing)
@@ -726,7 +727,12 @@ function MapObject:read(path, noindexing)
 			return r, g, b, a
 		end
 	end)
-	local tileset_spritesheet = love.graphics.newImage(tileset_atlas)-- Remove magenta pixels
+
+	local status, tileset_spritesheet = pcall(love.graphics.newImage,tileset_atlas)
+	if not status then
+		print(tileset_spritesheet)
+		tileset_spritesheet = love.graphics.newImage("gfx/tiles/cs2dnorm.bmp")
+	end
 	tileset_spritesheet:setFilter("nearest", "linear")
 	mapdata.gfx.ground = love.graphics.newSpriteBatch(tileset_spritesheet, mapdata.width * mapdata.height)
 	mapdata.gfx.wall = love.graphics.newSpriteBatch(tileset_spritesheet, mapdata.width * mapdata.height)
@@ -746,13 +752,26 @@ function MapObject:read(path, noindexing)
 			local sprite_path = (e.string_settings[1] or "gfx/cs2d.bmp")
 			if not mapdata.gfx.entity[sprite_path] then -- Try to load a new image
 				--if fs:isFile(sprite_path) then -- Check if file exists
-				if love.filesystem.getInfo(sprite_path) then -- Check if file exists
-					local sprite = love.graphics.newImage(sprite_path)
-					mapdata.gfx.entity[sprite_path] = sprite
-					print(string.format("Map: Sprite loaded: %s", sprite_path))
+				-- Check if file exists
+				if love.filesystem.getInfo(sprite_path) then
+					local pixelFormat = love.image.newImageData(sprite_path):getFormat()
+					print(pixelFormat)
+					if pixelFormat ~= "rgba16" then
+						local status, sprite = pcall(love.graphics.newImage, sprite_path)
+						if not status then
+							print(string.format("Map: Failed to load %s, %s", sprite_path, sprite))
+							sprite = love.graphics.newImage(self._placeholder)
+						else
+							print(string.format("Map: Sprite loaded: %s", sprite_path))
+						end
+						mapdata.gfx.entity[sprite_path] = sprite
+					else
+						mapdata.gfx.entity[sprite_path] = love.graphics.newImage(self._placeholder)
+						print(string.format("Map: Failed to load %s, %s format", sprite_path, pixelFormat))
+					end
 				else
 					mapdata.gfx.entity[sprite_path] = love.graphics.newImage(self._placeholder)
-					print(string.format("Map: Failed to load %s", sprite_path))
+					print(string.format("Map: Failed to load %s. File doesn't exist", sprite_path))
 				end
 			end
 		end
@@ -760,11 +779,18 @@ function MapObject:read(path, noindexing)
 	-- Background load.
 	local background_path = string.format("gfx/backgrounds/%s", mapdata.background_file)
 	if (mapdata.background_file ~= "") and love.filesystem.getInfo(path) then --fs:isFile(background_path) then
-		print(string.format("Map: Sprite loaded: %s", background_path))
 		--mapdata.gfx.background = fs:loadImage(background_path)
-		mapdata.gfx.background = love.graphics.newImage(background_path)
+		local status, background = pcall(love.graphics.newImage, background_path)
+		if status then
+			mapdata.gfx.background = background
+			print(string.format("Map: Sprite loaded: %s", background_path))
+		else
+			print(string.format("Map: Sprite failed to load: %s, %s", background_path, background))
+			mapdata.gfx.background = love.graphics.newImage(self._placeholder)
+		end
 		mapdata.gfx.background:setWrap("repeat", "repeat")
 	else
+		print(string.format("Map: Sprite failed to load: %s", background_path))
 		mapdata.gfx.background = love.graphics.newImage(self._placeholder)
 	end
 	self._mapdata = mapdata
@@ -1578,5 +1604,38 @@ function MapObject:moveWithSliding(size, x1, y1, dx, dy)
     return finalX, finalY, hit
 end
 
+
+function MapObject:hitscan(x1, y1, x2, y2)
+    local dx = x2 - x1
+    local dy = y2 - y1
+
+    local steps = math.abs(dx)
+    if math.abs(dy) > steps then
+        steps = math.abs(dy)
+    end
+
+    if steps == 0 then
+        -- linha degenerada (ponto único)
+        if self:isColliding(x1, y1) then
+            return x1, y1, true
+        else
+            return x1, y1, false
+        end
+    end
+
+    local sx = dx / steps
+    local sy = dy / steps
+    local x, y = x1, y1
+
+    for i = 1, steps do
+        if self:isColliding(x, y) then
+            return x, y, true -- impacto
+        end
+        x = x + sx
+        y = y + sy
+    end
+
+    return x2, y2, false -- sem colisão
+end
 
 return MapObject

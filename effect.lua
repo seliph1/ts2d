@@ -1,9 +1,14 @@
 local effect = {}
 local LG = love.graphics
+local serpent = require "lib.serpent"
 
 effect.queue = {}
 effect.list = {}
 effect.imagequeue = {}
+
+local function lerp(a, b, t)
+	return a + (b - a) * t
+end
 
 function effect.register(particle, name, options)
 	effect.list[name] = particle
@@ -94,6 +99,18 @@ function effect.new_image(name, x, y, args)
 		end
 		table.insert(new_instance, new_image)
 
+
+		-- Add new args if possible
+		for k,v in pairs(args) do
+			if new_image[k] then
+				if type(v) == "table" then
+ 					new_image[k] = { unpack(v) }
+				else
+					new_image[k] = v
+				end
+			end
+		end
+
 		-- Emits the image x, y 
 		if instance.global then
 			x, y = 0, 0
@@ -180,11 +197,16 @@ function effect.draw()
 	for image_id, image_instance in pairs(effect.imagequeue) do
 		for _, image in ipairs(image_instance) do
 			local i = image
-			love.graphics.setColor(1,1,1,1)
-			--love.graphics.draw(i.texture, i.x, i.y, i.angle, i.scaleX, i.scaleY)
+			local blendMode = i.blendMode or "alpha"
+			local deltaTime = i.displayTime / i.vectorTime
+			love.graphics.setColor(
+				lerp(i.colorTarget[1], i.color[1], deltaTime),
+				lerp(i.colorTarget[2], i.color[2], deltaTime),
+				lerp(i.colorTarget[3], i.color[3], deltaTime),
+				lerp(i.colorTarget[4], i.color[4], deltaTime)
+			)
+			love.graphics.setBlendMode(i.blendMode)
 			love.graphics.draw(i.texture, i.x, i.y, i.angle, i.scaleX, i.scaleY, i.offsetX, i.offsetY)
-			--LG.d
-			
 		end
 	end
 end

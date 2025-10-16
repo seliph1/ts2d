@@ -26,6 +26,9 @@ connect 50.21.187.191
      remove threshold for removing black pixels from sprites
 
 
+    entity: Func_Slick
+    entity: pressure plate
+    entity: valves
 
     client routine:
     check files

@@ -60,7 +60,7 @@ ui.setCursor = function(cursorType, cursorImageData, scale)
 end
 
 local _, pointers =  LF.CreateSpriteSheet("gfx/pointer.bmp", 46, 46)
-ui.setCursor("arrow", pointers[0], 0.6)
+--ui.setCursor("arrow", pointers[0], 0.6)
 
 
 --------------------------------------------------------------------------------------------------
@@ -714,8 +714,8 @@ ui.options_crosshair_slider:SetValue(1)
 ui.options_button_help = LF.Create("button", ui.options_frame):SetText("Help"):SetPos(0+10, 430):SetWidth(50)
 ui.options_button_okay = LF.Create("button", ui.options_frame):SetText("Okay"):SetPos(195+10, 430):SetWidth(100)
 ui.options_button_okay.OnClick = function(object)
-	local slider = ui.options_crosshair_slider:GetValue()
-	ui.setCursor("arrow", pointers[0], slider)
+	--local slider = ui.options_crosshair_slider:GetValue()
+	--ui.setCursor("arrow", pointers[0], slider)
 end
 ui.options_button_cancel = LF.Create("button", ui.options_frame):SetText("Cancel"):SetPos(300+10, 430):SetWidth(100)
 

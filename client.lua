@@ -340,15 +340,49 @@ function client.input_response(peer_id, input, seq)
 
 	if input["use"] then
 		local player = share.players[peer_id]
-		if not player then return
-		
-		local x1, y1 = player.x, player.y
-		local angle = 0
-		local dist = 128
+		if not player then return end
 
-		local x2 = player.x + math.sin(angle) * dist
-		local y2 = player.y + math.cos(angle) * dist
-		client.raycast(x1, y1, x2, y2)
+		local player_x, player_y = player.x, player.y
+		local mouse_x, mouse_y = love.mouse.getPosition()
+		local map_x, map_y = client.map:mouseToMap(mouse_x, mouse_y)
+
+		local angle = math.atan2(map_y - player_y, map_x - player_x)
+		local distance = 32 * 10
+		local offset = 20
+
+		local offset_x = player_x + math.cos(angle) * offset
+		local offset_y = player_y + math.sin(angle) * offset
+
+		local target_x = offset_x + math.cos(angle) * distance
+		local target_y = offset_y + math.sin(angle) * distance
+
+		local hit_x, hit_y, hit = client.raycast(offset_x, offset_y, target_x, target_y)
+
+		local hit_distance = distance
+		if hit then
+			client.map:spawn_effect("sparkle", hit_x, hit_y, {
+				setDirection = angle + math.pi
+			})
+			
+			local dx = hit_x - offset_x
+			local dy = hit_y - offset_y
+			hit_distance = math.sqrt( dx*dx + dy*dy )
+
+		end
+		local half = hit_distance/2
+		local half_x = offset_x + math.cos(angle)*half
+	    local half_y = offset_y + math.sin(angle)*half
+
+		client.map:spawn_effect("hitscan", half_x, half_y, {
+			setDirection = angle,
+			setEmissionArea = {"uniform", half, 1, angle, false}
+		})
+
+		client.map:spawn_effect("trail", offset_x, offset_y, {
+			angle = angle,
+			scaleX = (hit_distance)/32,
+			--offsetX = -10,
+		})
 	end
 end
 
@@ -511,13 +545,24 @@ end
 --- Cast a ray that collides with map, players, items and entities. ---
 --- Returns the first object that collided with this segment
 function client.raycast(x1, y1, x2, y2)
-	if not client.map then return end
-	local item_info, len = client.map:querySegmentWithCoords(x1, y1, x2, y2)
-	for i=1, len do
-		local item = item_info[i]
+	if not client.map then return false end
 
-		print(serpent(item, client.stateDumpOpts))
+	local start_x, start_y = x1, y1
+	local impact_x, impact_y, hit = client.map:hitscan(x1, y1, x2, y2)
+
+	local item_info, len = client.world:querySegmentWithCoords(start_x, start_y, impact_x, impact_y)
+	for i=1, len do
+		local info = item_info[i]
+
+		-- Update the values for the first object impacted
+		impact_x = info.x1
+		impact_y = info.y1
+		hit = true
+		-- Breaks on the first impact
+		break
 	end
+
+	return impact_x, impact_y, hit
 end
 
 --- Cast a ray that dont collide with anything, but register intersection
