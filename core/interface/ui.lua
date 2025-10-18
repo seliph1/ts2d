@@ -736,8 +736,13 @@ ui.options_button_cancel = LF.Create("button", ui.options_frame):SetText("Cancel
 ui.chat_width = 400
 ui.chat_height = 200
 
-ui.chat_frame = LF.Create("frame"):SetSize(ui.chat_width, ui.chat_height):SetState("game")
-ui.chat_frame:SetScreenLocked(true):ShowCloseButton(false):SetPos(0, love.graphics.getHeight()-ui.chat_height-40)
+ui.chat_frame = LF.Create("frame")
+:SetSize(ui.chat_width, ui.chat_height)
+:SetState("game")
+:SetScreenLocked(true)
+:ShowCloseButton(false)
+:SetPos(0, love.graphics.getHeight()-ui.chat_height-40)
+
 ui.chat_frame_message = function(player, message)
 	local game = {mode = 1}
 	if not player then return end
@@ -844,27 +849,29 @@ end
 --------------------------------------------------------------------------------------------------
 --chat input--------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------
-
 ui.chat_input_frame = LF.Create("container")
+:SetAlwaysUpdate(true)
+:SetVisible(false)
+:SetCollidable(false)
 :SetSize(800, 60)
 :SetY(LG.getHeight()-60)
-:CenterX()
 :SetState("game")
-:SetVisible(false)
+:CenterX()
 
 ui.chat_input_header = LF.Create("messagebox", ui.chat_input_frame)
 :SetFont(ui.font_chat)
 :SetText("©255220000Say:")
 :CenterY()
 
-local chat_offset = ui.chat_input_header:GetWidth()
 ui.chat_input = LF.Create("input", ui.chat_input_frame)
+:SetAlwaysUpdate(true)
 :SetSize(800, 30):SetCharacterLimit(80):SetFont(ui.font_chat)
-:SetX(chat_offset)
+:SetX(  ui.chat_input_header:GetWidth()  )
 :SetColor(1.00, 0.86, 0.00, 1.00)
 :SetCursorColor(1.00, 0.86, 0.00, 1.00)
 :SetHighlightColor(1.00, 0.86, 0.00, 0.20)
 :CenterY()
+
 
 ui.chat_input.Draw = function(object)
 	local x = object.x
@@ -877,13 +884,26 @@ ui.chat_input.Draw = function(object)
 	love.graphics.rectangle("fill", x, y, textwidth + hpadding*2, textheight + vpadding*2, 5)
 end
 
-ui.chat_input.OnEnter = function (object, text)
-	ui.chat_input:Clear()
-	if ui.chat_input_frame:GetVisible() and text ~= "" then
-		if text:sub(1, 1) == "/" then
-			ui.console_input.parse( text:sub(2) )
-		else
-			client.send(string.format("say %s", text))
+local chat_key = "return"
+ui.chat_input.OnControlKeyPressed = function (object, key)
+	if key ~= chat_key then return end
+	if ui.chat_input_frame:GetVisible() then
+		-- Submit what is written	
+		ui.chat_input_frame:SetVisible(false)
+		ui.chat_input:EnableInput(false)
+		local text = object:GetText()
+		if text ~= ""  then
+			if text:sub(1, 1) == "/" then
+			else
+				client.send(string.format("say %s", text))
+			end
+		end
+	else
+		if not LF.inputobject then
+			-- Open the input to write stuff
+			ui.chat_input:Clear()
+			ui.chat_input_frame:SetVisible(true)
+			ui.chat_input:EnableInput(true)
 		end
 	end
 end

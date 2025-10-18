@@ -1,13 +1,8 @@
 local client = require "client"
+local serpent = require "lib.serpent"
 
 -- Client only commands
 local commands = {
-	prediction = {
-		action = function(bool)
-			client.scale = (bool == "true")
-		end
-	};
-
     warning = {
         action = function(...)
 			local message = table.concat({...}," ")
@@ -50,7 +45,7 @@ local commands = {
 			if client.map then
 				client.map:clearEffects()
 			end
-		end	
+		end
 	};
 
 	scroll = {
@@ -89,6 +84,7 @@ local commands = {
 
 	ping = {
 		action = function()
+			print()
 		end
 	};
 
@@ -128,18 +124,6 @@ local commands = {
 		end;
 	};
 
-	files = {
-		action = function()
-			--[[
-			print("BRO, PLEASE SHOW ME THE IMAGE")
-			local imageData = love.image.newImageData("gfx/c4/map/objects/weapons.png")
-			local pixelFormat = imageData:getFormat()
-			print(imageData)
-			print(pixelFormat)
-			]]
-		end;
-	};
-
 	say = {
 		action = function(...)
 			local message = table.concat({...}, " ")
@@ -167,12 +151,44 @@ local commands = {
 		end
 	};
 
+	--[[
 	setweapon = {
 		action =  function(client_id, weapon_id)
 			client_id = tonumber(client_id)
 			weapon_id = tonumber(weapon_id)
 			print(client_id, weapon_id)
 			client.send(string.format("setweapon %s %s", client_id, weapon_id))
+		end
+	};]]
+
+	weapon = {
+		action =  function(weapon_id)
+			weapon_id = tonumber(weapon_id)
+			client.send(string.format("weapon %s", weapon_id))
+		end
+	};
+
+	weaponlist = {
+		action = function()
+			local players = client.share_local.players
+			local player
+			if players then
+				player = players[client.id]
+			end
+			if player then
+				--local LF = require "lib.loveframes"
+				local ui = require "core.interface.ui"
+				--[[
+				local width, height = 300, 150
+            	local frame = LF.Create("frame"):SetSize(width, height):SetState("*"):Center()
+				local panel = LF.Create("panel", frame):SetSize(width-20, height-50):SetPos(10, 30)
+            	local messagebox = LF.Create("messagebox", panel)
+            	messagebox:SetMaxWidth(width-20):SetText("©255000000"..message):Center()
+				]]
+				for k,v in pairs(player.i) do
+					ui.chat_frame_server_message(k.." "..serpent.line(v) )
+				end
+			end
 		end
 	};
 

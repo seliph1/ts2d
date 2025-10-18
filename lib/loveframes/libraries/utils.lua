@@ -389,7 +389,7 @@ end
 			the mouse
 --]]---------------------------------------------------------
 function loveframes.GetCollisionCount()
-	return loveframes.collisioncount
+	return loveframes.collisioncount or 0
 end
 
 --[[---------------------------------------------------------

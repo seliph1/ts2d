@@ -228,11 +228,14 @@ function loveframes.keypressed(key, isrepeat)
 	local base = loveframes.base
 	base:keypressed(key, isrepeat)
 
-	local keyhandler = loveframes.keyhandlers[loveframes.getModKeys()][key]
-	if keyhandler then
-		return keyhandler(key, isrepeat)
-	else
-		return false, false
+	-- Run keys if we aren't stuck in an input
+	if not loveframes.inputobject then
+		local keyhandler = loveframes.keyhandlers[loveframes.getModKeys()][key]
+		if keyhandler then
+			return keyhandler(key, isrepeat)
+		else
+			return false, false
+		end
 	end
 end
 

@@ -268,21 +268,19 @@ end
 function newobject:keypressed(key, isrepeat)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
-	if loveframes.inputobject ~= self then return end
 
-	self.field:keypressed(key, isrepeat)
-
+	
+	if self.OnControlKeyPressed then
+		self.OnControlKeyPressed(self, key)
+	end
 	if key == "return" then
 		if self.OnEnter then
 			self.OnEnter(self, self.field:getText())
 		end
-		--[[
-		local scrollbar = self:GetVerticalScrollBody()
-		if self.autoscroll and scrollbar then
-			scrollbar:ScrollBottom()
-		end]]
 	end
 
+	if loveframes.inputobject ~= self then return end
+	self.field:keypressed(key, isrepeat)
 	local focus = self.focus
 	local oncopy = self.OnCopy
 	local onpaste = self.OnPaste
@@ -304,9 +302,6 @@ function newobject:keypressed(key, isrepeat)
 		end
 	end
 
-	if self.OnControlKeyPressed then
-		self.OnControlKeyPressed(self, key)
-	end
 end
 
 function newobject:keyreleased(key, isrepeat)

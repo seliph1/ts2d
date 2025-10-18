@@ -1,4 +1,3 @@
-
 -- Module start
 return function(client)
 ---------- module start ----------
@@ -143,12 +142,17 @@ local actions = {
                 })
             end
         end
-    }
-}
+    };
 
+    fire = {
+        action = function(tx, ty, hit)
+            
+        end
+    };
+}
 actions.msg = actions.message
 
-return actions
 
+return actions
 ---------- module end ------------
 end

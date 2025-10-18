@@ -62,6 +62,7 @@ end
 function newobject:update(dt)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
+
 	-- check to see if the object is being hovered over
 	self:CheckHover()
 	-- move to parent if there is a parent
@@ -69,6 +70,7 @@ function newobject:update(dt)
 		self.x = self.parent.x + self.staticx
 		self.y = self.parent.y + self.staticy
 	end
+
     self.field:update(dt)
 	-- Update the callback update function
     local update = self.Update
@@ -167,6 +169,8 @@ end
 function newobject:wheelmoved(x, y)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
+	if loveframes.inputobject ~= self then return end
+
     self.field:wheelmoved(x, y)
 end
 --[[---------------------------------------------------------
@@ -176,6 +180,8 @@ end
 function newobject:mousemoved(x, y)
     if not self:OnState() then return end
 	if not self:isUpdating() then return end
+	if loveframes.inputobject ~= self then return end
+
 	self.field:mousemoved(x - self.x, y - self.y)
 end
 
@@ -186,12 +192,16 @@ end
 function newobject:mousepressed(x, y, button, istouch, presses)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
+	if loveframes.inputobject ~= self then return end
+
     self.field:mousepressed(x - self.x, y - self.y, button, presses)
 end
 
 function newobject:mousereleased(x, y, button)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
+	if loveframes.inputobject ~= self then return end
+
 	self.field:mousereleased(x - self.x, y - self.y, button)
 end
 
@@ -203,14 +213,16 @@ function newobject:keypressed(key, isrepeat)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
 
-	if key == "return" then
-		if self.OnEnter then
-			self.OnEnter(self, self.field:getText())
-            return
-		end
+	if self.OnControlKeyPressed then
+		self.OnControlKeyPressed(self, key)
 	end
-	self.field:keypressed(key, isrepeat)
+	if key == "return" and self.OnEnter then
+		self.OnEnter(self, self.field:getText())
+		return
+	end
 
+	if loveframes.inputobject ~= self then return end
+	self.field:keypressed(key, isrepeat)
 	local oncopy = self.OnCopy
 	local onpaste = self.OnPaste
 	local oncut = self.OnCut
@@ -231,14 +243,13 @@ function newobject:keypressed(key, isrepeat)
 		end
 	end
 
-	if self.OnControlKeyPressed then
-		self.OnControlKeyPressed(self, key)
-	end
+
 end
 
 function newobject:keyreleased(key, isrepeat)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
+	if loveframes.inputobject ~= self then return end
 end
 
 --[[---------------------------------------------------------
@@ -248,6 +259,8 @@ end
 function newobject:textinput(text)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
+
+	if loveframes.inputobject ~= self then return end
 
 	local ontextchanged = self.OnTextChanged
 	local event, textedited = self.field:textinput(text)
@@ -441,6 +454,17 @@ function newobject:GetPlaceholderText()
 	return self.field:GetPlaceholderText()
 end
 
+--[[---------------------------------------------------------
+	- func: EnableInput, GetInputStatus
+	- desc: sets/gets the object's input status
+--]]---------------------------------------------------------
+function newobject:EnableInput(bool)
+	if bool then
+		loveframes.inputobject = self
+	else
+		loveframes.inputobject = nil
+	end
+end
 --[[---------------------------------------------------------
 	- func: GetText()
 	- desc: gets the object's text

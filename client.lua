@@ -25,7 +25,7 @@ client.camera = {
 	y = 0,
 	tx = 0,
 	ty = 0,
-	snap_pointer = nil,
+	snap_pointer = {category = nil, id = nil},
 	snap_enabled = false,
 	speed = 500, -- pixel/frame
 	tween_speed = 15, -- pixel/frame
@@ -104,6 +104,64 @@ function client.mousemoved(x, y)
 	home.targetY = abs_y
 end
 
+local function fire(peer_id)
+	local player = share.players[peer_id]
+	if not player then return end
+
+	local player_x, player_y = player.x, player.y
+	local mouse_x, mouse_y = love.mouse.getPosition()
+	local map_x, map_y = client.map:mouseToMap(mouse_x, mouse_y)
+
+	local angle = math.atan2(map_y - player_y, map_x - player_x)
+	local distance = 32 * 10
+	local offset = 20
+
+	local offset_x = player_x + math.cos(angle) * offset
+	local offset_y = player_y + math.sin(angle) * offset
+
+	local target_x = offset_x + math.cos(angle) * distance
+	local target_y = offset_y + math.sin(angle) * distance
+
+	local hit_x, hit_y, hit = client.raycast(offset_x, offset_y, target_x, target_y)
+
+	local hit_distance = distance
+	if hit then
+		local rand = math.random()
+		if rand < 0.80 then
+			client.map:spawn_effect("whitesmoke", hit_x, hit_y, {
+				setDirection = angle + math.pi
+			})
+		elseif rand >= 0.80 and rand < 0.90 then
+			client.map:spawn_effect("blacksmoke", hit_x, hit_y)
+		elseif rand >= 0.90 then
+			client.map:spawn_effect("sparkle", hit_x, hit_y, {
+				setDirection = angle + math.pi
+			})
+		end
+
+		local dx = hit_x - offset_x
+		local dy = hit_y - offset_y
+		hit_distance = math.sqrt( dx*dx + dy*dy )
+
+	end
+	local half = hit_distance/2
+	local half_x = offset_x + math.cos(angle)*half
+	local half_y = offset_y + math.sin(angle)*half
+
+	-- Create less particle as vector goes shorter
+	client.map:spawn_effect("hitscan", half_x, half_y, {
+		setDirection = angle,
+		setEmissionArea = {"uniform", half, 1, angle, false},
+		emitAtStart = math.ceil( hit_distance/distance * 30),
+	})
+
+	client.map:spawn_effect("trail", offset_x, offset_y, {
+		angle = angle,
+		scaleX = (hit_distance)/32,
+		--offsetX = -10,
+	})
+end
+
 --- Callback for mouse clicking on screen
 ---@param x number
 ---@param y number
@@ -113,10 +171,11 @@ function client.mousepressed(x, y, button, istouch, presses)
 		client.sendInput(button, true)
 	end
 	client.key[button] = true
+	----------------------------------------------------------------
 	local mx, my = client.map:mouseToMap(love.mouse.getPosition())
-    if button == 1 then
-    end
-	if button == 2 then
+
+	if client.joined then
+		fire(client.id)
 	end
 end
 
@@ -129,13 +188,21 @@ function client.mousereleased(x, y, button, istouch, presses)
 		client.sendInput(button, nil)
 	end
 	client.key[button] = nil
-
-    if button == 1 then
-    end
+	----------------------------------------------------------------
 
 	if button == 2 then
 		local tx, ty = client.map:mouseToMap(x, y)
 	end
+end
+
+function client.wheelmoved(x, y)
+	local button
+	if y == 1 then
+		button = "mwheelup"
+	elseif y == - 1 then
+		button = "mwheeldown"
+	end
+	client.sendInput(button, true)
 end
 
 --- Callback for key press event
@@ -145,20 +212,6 @@ function client.keypressed(key)
 		client.sendInput(key, true)
 	end
 	client.key[key] = true
-
-	if client.joined then
-		if key == "return" then -- Enter pressed
-			local ui = require "core.interface.ui"
-			local LF = require "lib.loveframes"
-
-			if ( LF.inputobject or LF.hoverobject ) then return end
-
-			local bool = ui.chat_input_frame:GetVisible()
-			ui.chat_input_frame:SetVisible(not bool)
-
-			client.inputEnabled = bool
-		end
-	end
 end
 
 --- Callback for key release event
@@ -168,8 +221,6 @@ function client.keyreleased(key)
 		client.sendInput(key, nil)
 	end
 	client.key[key] = nil
-	if client.joined then
-	end
 end
 
 ---Main game loop
@@ -277,7 +328,7 @@ function client.join(peer_id)
 
 	local player = share.players[peer_id]
 	if player then
-		client.camera.snap_pointer = player
+		client.camera_lock("players", peer_id)
 	end
 end
 
@@ -337,52 +388,7 @@ end
 
 -- Callback for inputs being pressed
 function client.input_response(peer_id, input, seq)
-
 	if input["use"] then
-		local player = share.players[peer_id]
-		if not player then return end
-
-		local player_x, player_y = player.x, player.y
-		local mouse_x, mouse_y = love.mouse.getPosition()
-		local map_x, map_y = client.map:mouseToMap(mouse_x, mouse_y)
-
-		local angle = math.atan2(map_y - player_y, map_x - player_x)
-		local distance = 32 * 10
-		local offset = 20
-
-		local offset_x = player_x + math.cos(angle) * offset
-		local offset_y = player_y + math.sin(angle) * offset
-
-		local target_x = offset_x + math.cos(angle) * distance
-		local target_y = offset_y + math.sin(angle) * distance
-
-		local hit_x, hit_y, hit = client.raycast(offset_x, offset_y, target_x, target_y)
-
-		local hit_distance = distance
-		if hit then
-			client.map:spawn_effect("sparkle", hit_x, hit_y, {
-				setDirection = angle + math.pi
-			})
-			
-			local dx = hit_x - offset_x
-			local dy = hit_y - offset_y
-			hit_distance = math.sqrt( dx*dx + dy*dy )
-
-		end
-		local half = hit_distance/2
-		local half_x = offset_x + math.cos(angle)*half
-	    local half_y = offset_y + math.sin(angle)*half
-
-		client.map:spawn_effect("hitscan", half_x, half_y, {
-			setDirection = angle,
-			setEmissionArea = {"uniform", half, 1, angle, false}
-		})
-
-		client.map:spawn_effect("trail", offset_x, offset_y, {
-			angle = angle,
-			scaleX = (hit_distance)/32,
-			--offsetX = -10,
-		})
 	end
 end
 
@@ -590,16 +596,35 @@ function client.camera_move(dt)
 	client.camera.tx = client.camera.tx + vx
 	client.camera.ty = client.camera.ty + vy
 
+	local snap_pointer = client.camera_pointer()
 
-	local snap_pointer = client.camera.snap_pointer
 	if snap_pointer and snap_pointer.x and snap_pointer.y then
 		local x = snap_pointer.x
 		local y = snap_pointer.y
-		local diff_x = (client.width/2 - home.targetX)/2 -- 0
-		local diff_y = (client.height/2 - home.targetY)/2 -- 0
+		--local diff_x = (client.width/2 - home.targetX)/2 -- 0
+		--local diff_y = (client.height/2 - home.targetY)/2 -- 0
+		local diff_x = 0
+		local diff_y = 0
 		client.camera.tx = x - diff_x
 		client.camera.ty = y - diff_y
 	end
+end
+
+function client.camera_lock(category, id)
+	local snap_pointer = client.camera.snap_pointer
+	snap_pointer.category = category
+	snap_pointer.id = id
+end
+
+function client.camera_pointer()
+	local snap_pointer = client.camera.snap_pointer
+	local category = snap_pointer.category
+	local id = snap_pointer.id
+
+	if client.share[category] and client.share[category][id] then
+		return client.share[category][id]
+	end
+	return nil
 end
 
 ---Camera interpolated movement function

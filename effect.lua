@@ -58,6 +58,12 @@ function effect.new_particle(name, x, y, args)
 				else
 					new_particle.system[k](object, v)
 				end
+			elseif new_particle[k] then
+				if type(v) == "table" then
+ 					new_particle[k] = {unpack(v)}
+				else
+					new_particle[k] = v
+				end
 			end
 		end
 

@@ -41,6 +41,9 @@ local ENTITY_TYPE = enum.ENTITY_TYPE
 effect.register(LF.load "core/particle/sparkle.lua" (), "sparkle")
 effect.register(LF.load "core/particle/hitscan.lua" (), "hitscan")
 effect.register(LF.load "core/particle/bullettrail.lua" (), "trail")
+--effect.register(LF.load "core/particle/fire.lua" (), "fire")
+effect.register(LF.load "core/particle/smoke_inst.lua" (), "blacksmoke")
+effect.register(LF.load "core/particle/smoke_white.lua" (), "whitesmoke")
 
 --effect.register(dofile "core/particle/fire.lua", "fire")
 --effect.register(dofile "core/particle/snow.lua", "snow")
@@ -755,7 +758,6 @@ function MapObject:read(path, noindexing)
 				-- Check if file exists
 				if love.filesystem.getInfo(sprite_path) then
 					local pixelFormat = love.image.newImageData(sprite_path):getFormat()
-					print(pixelFormat)
 					if pixelFormat ~= "rgba16" then
 						local status, sprite = pcall(love.graphics.newImage, sprite_path)
 						if not status then

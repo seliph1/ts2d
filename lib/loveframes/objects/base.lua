@@ -54,9 +54,7 @@ end
 --]]---------------------------------------------------------
 function newobject:draw()
 	if not self:OnState() then return end
-	if not self.visible then
-		return
-	end
+	if not self:IsVisible() then return end
 	self:SetDrawOrder()
 	local drawfunc = self.Draw or self.drawfunc
 	if drawfunc then
@@ -86,9 +84,7 @@ end
 --]]---------------------------------------------------------
 function newobject:mousemoved(x, y, dx, dy, istouch)
 	if not self:OnState() then return end
-	if not self.visible then
-		return
-	end
+	if not self:isUpdating() then return end
 	local children = self.children
 	if children then
 		for k, v in ipairs(children) do
@@ -109,9 +105,7 @@ end
 --]]---------------------------------------------------------
 function newobject:mousepressed(x, y, button)
 	if not self:OnState() then return end
-	if not self.visible then
-		return
-	end
+	if not self:isUpdating() then return end
 	local children = self.children
 	if children then
 		for k, v in ipairs(children) do
@@ -132,9 +126,7 @@ end
 --]]---------------------------------------------------------
 function newobject:mousereleased(x, y, button)
 	if not self:OnState() then return end
-	if not self.visible then
-		return
-	end
+	if not self:isUpdating() then return end
 	local children = self.children
 	if children then
 		for k, v in ipairs(children) do
@@ -155,9 +147,7 @@ end
 --]]---------------------------------------------------------
 function newobject:wheelmoved(x, y)
 	if not self:OnState() then return end
-	if not self.visible then
-		return
-	end
+	if not self:isUpdating() then return end
 	local children = self.children
 	if children then
 		for k, v in ipairs(children) do
@@ -178,9 +168,7 @@ end
 --]]---------------------------------------------------------
 function newobject:keypressed(key, isrepeat)
 	if not self:OnState() then return end
-	if not self.visible then
-		return
-	end
+	if not self:isUpdating() then return end
 	local children = self.children
 	if children then
 		for k, v in ipairs(children) do
@@ -201,9 +189,7 @@ end
 --]]---------------------------------------------------------
 function newobject:keyreleased(key)
 	if not self:OnState() then return end
-	if not self.visible then
-		return
-	end
+	if not self:isUpdating() then return end
 	local children = self.children
 	if children then
 		for k, v in ipairs(children) do
@@ -223,9 +209,7 @@ end
 --]]---------------------------------------------------------
 function newobject:textinput(text)
 	if not self:OnState() then return end
-	if not self.visible then
-		return
-	end
+	if not self:isUpdating() then return end
 	local children = self.children
 	if children then
 		for k, v in ipairs(children) do
@@ -1159,6 +1143,19 @@ end
 	- desc: gets the object's state
 --]]---------------------------------------------------------
 function newobject:GetState()
+	return self.state
+end
+
+--[[---------------------------------------------------------
+	- func: SetCollidable/GetCollidable()
+	- desc: gets/sets the object's collidable status
+--]]---------------------------------------------------------
+function newobject:SetCollidable(bool)
+	self.collide = bool
+	return self
+end
+
+function newobject:GetCollidable(bool)
 	return self.state
 end
 
