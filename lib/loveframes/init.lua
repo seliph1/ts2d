@@ -175,10 +175,10 @@ function loveframes.mousepressed(x, y, button, istouch, presses)
 		loveframes.draggingobject = hoverobject
 	end
 
+	--[[
 	-- close open menus
 	local bchildren = base.children
-	local hoverobject = loveframes.GetHoverObject()
-	for k, v in ipairs(bchildren) do
+		for k, v in ipairs(bchildren) do
 		local otype = v.type
 		local visible = v.visible
 		if hoverobject then
@@ -191,7 +191,7 @@ function loveframes.mousepressed(x, y, button, istouch, presses)
 				v:SetVisible(false)
 			end
 		end
-	end
+	end]]
 end
 
 --[[---------------------------------------------------------

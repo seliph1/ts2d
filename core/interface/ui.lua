@@ -62,7 +62,6 @@ end
 local _, pointers =  LF.CreateSpriteSheet("gfx/pointer.bmp", 46, 46)
 --ui.setCursor("arrow", pointers[0], 0.6)
 
-
 --------------------------------------------------------------------------------------------------
 --Local function helpers--------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------
@@ -894,8 +893,11 @@ ui.chat_input.OnControlKeyPressed = function (object, key)
 		local text = object:GetText()
 		if text ~= ""  then
 			if text:sub(1, 1) == "/" then
+				ui.console_input.parse(text:sub(2))
 			else
-				client.send(string.format("say %s", text))
+				if client.joined then
+					client.send(string.format("say %s", text))
+				end
 			end
 		end
 	else
@@ -907,6 +909,37 @@ ui.chat_input.OnControlKeyPressed = function (object, key)
 		end
 	end
 end
+--------------------------------------------------------------------------------------------------
+--weapon select window----------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------
+
+ui.weaponselect_window = LF.Create("frame"):SetSize(200, 400)
+ui.weaponselect_window:SetName("Weapon Select"):Center()
+
+ui.weaponselect_scroll = LF.Create("scrollpane", ui.weaponselect_window)
+ui.weaponselect_scroll:SetSize(200-20, 300):SetPos(5, 30):CenterX()
+
+ui.weaponselect_list = LF.Create("droplist", ui.weaponselect_scroll)
+ui.weaponselect_list:SetSize(200-20, 300)
+
+ui.weaponselect_button = LF.Create("button", ui.weaponselect_window):SetPos(100, 400-20)
+ui.weaponselect_button.OnClick = function(object)
+end
+
+function ui.weaponselect_list.OnHover(object, element, element_id)
+	--print(element, element_id)
+end
+
+function ui.weaponselect_list.OnClick(object, element, element_id)
+	print(object.parent, element, element_id)
+end
+
+local abc = {}
+for i=1,2000 do
+	abc[i] = random_string(30)
+end
+ui.weaponselect_list:AddElement(abc)
+
 --------------------------------------------------------------------------------------------------
 --exit window-------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------

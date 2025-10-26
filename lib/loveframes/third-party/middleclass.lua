@@ -67,7 +67,7 @@ local function _declareInstanceMethod(aClass, name, f)
   _propagateInstanceMethod(aClass, name, f)
 end
 
-local function _tostring(self) return "class " .. self.name end
+local function _tostring(self) return self.name end
 local function _call(self, ...) return self:new(...) end
 
 local function _createClass(name, super)
@@ -77,7 +77,6 @@ local function _createClass(name, super)
   local aClass = { name = name, super = super, static = {},
                    __instanceDict = dict, __declaredMethods = {},
                    subclasses = setmetatable({}, {__mode='k'})  }
-
   if super then
     setmetatable(aClass.static, {
       __index = function(_,k)
@@ -114,7 +113,7 @@ local function _includeMixin(aClass, mixin)
 end
 
 local DefaultMixin = {
-  __tostring   = function(self) return "instance of " .. tostring(self.class) end,
+  __tostring   = function(self) return string.format("%s: %s", tostring(self.class), self.__address) end,
 
   initialize   = function(self, ...) end,
 
@@ -130,7 +129,10 @@ local DefaultMixin = {
   static = {
     allocate = function(self)
       assert(type(self) == 'table', "Make sure that you are using 'Class:allocate' instead of 'Class.allocate'")
-      return setmetatable({ class = self }, self.__instanceDict)
+      local instance = { class = self }
+      local address = tostring(instance):match("0x%x+")
+      instance.__address = address
+      return setmetatable(instance, self.__instanceDict)
     end,
 
     new = function(self, ...)

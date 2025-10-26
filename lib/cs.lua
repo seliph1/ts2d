@@ -84,13 +84,9 @@ end
 
 function client.sendInput(key, act)
     if not client.joined then return end
-
     local bind = client.binds[key]
     if not (bind and peer and client.inputEnabled) then return end
-
-    if not act then
-        act = state.DIFF_NIL
-    end
+    act = act or state.DIFF_NIL
 
     if bind.type == "stream" then
         -- Do nothing.
@@ -102,6 +98,7 @@ function client.sendInput(key, act)
         -- This is handled in client.postupdate
         -- As a "home" state change
         home[bind.input] = act
+        return
     end
 
     if bind.type == "pulse" then
@@ -114,17 +111,21 @@ function client.sendInput(key, act)
             inputStream = inputStream,
             seq = client.inputSequence
         }
-        peer:send(encode(inputFrame), 1, "reliable")
-        client.inputCache:push(inputFrame)
-
+        -- Runs the response client-side, should we ever need that
+        -- Also don't send anything if the input is confirmed to be false
         if client.input_response then
-            for k,v in pairs(inputStream) do
-                if v == state.DIFF_NIL then
-                    inputStream[k] = nil
-                end
+            -- 19/10/2025: we needed that.
+            if act == state.DIFF_NIL then
+                client.input_response(client.id, {}, client.inputSequence)
+            else
+                client.input_response(client.id, inputStream, client.inputSequence)
             end
-            client.input_response(client.id, inputStream, client.inputSequence)
         end
+        -- Sends input to server
+        peer:send(encode(inputFrame), 1, "reliable")
+
+        -- Stores the inputState so we can later do some client prediction
+        client.inputCache:push(inputFrame)
     end
 end
 
@@ -224,15 +225,17 @@ function client.postupdate(dt)
             inputStream = inputStream,
             seq = client.inputSequence
         }
-        --print(serpent.line(inputStream, client.stateDumpOpts))
-        peer:send(encode(inputState), 1, "reliable")
+
+        -- Runs the response client-side, should we ever need that
+        if client.input_response then
+            client.input_response(client.id, inputStream, client.inputSequence)
+        end
+
+        -- Sends input to server
+        peer:send(encode(inputState), 1, "reliable") --print(serpent.line(inputStream))
 
         -- Stores the inputState so we can later do some client prediction
         client.inputCache:push(inputState)
-        if client.input_response then
-            -- Runs the response client-side, should we ever need that
-            client.input_response(client.id, inputStream, client.inputSequence)
-        end
     end
 
     -- Run the tick callback

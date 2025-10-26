@@ -36,13 +36,13 @@ function newobject:update(dt)
 	end
 	local children = self.children
 	if children then
-		for k, v in ipairs(children) do
+		for k, v in pairs(children) do
 			v:update(dt)
 		end
 	end
 	local internals = self.internals
 	if internals then
-		for k, v in ipairs(internals) do
+		for k, v in pairs(internals) do
 			v:update(dt)
 		end
 	end
@@ -55,6 +55,7 @@ end
 function newobject:draw()
 	if not self:OnState() then return end
 	if not self:IsVisible() then return end
+
 	self:SetDrawOrder()
 	local drawfunc = self.Draw or self.drawfunc
 	if drawfunc then
@@ -62,13 +63,13 @@ function newobject:draw()
 	end
 	local children = self.children
 	if children then
-		for k, v in ipairs(children) do
+		for k, v in pairs(children) do
 			v:draw()
 		end
 	end
 	local internals = self.internals
 	if internals then
-		for k, v in ipairs(internals) do
+		for k, v in pairs(internals) do
 			v:draw()
 		end
 	end
@@ -85,15 +86,16 @@ end
 function newobject:mousemoved(x, y, dx, dy, istouch)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
+
 	local children = self.children
 	if children then
-		for k, v in ipairs(children) do
+		for k, v in pairs(children) do
 			v:mousemoved(x, y, dx, dy, istouch)
 		end
 	end
 	local internals = self.internals
 	if internals then
-		for k, v in ipairs(internals) do
+		for k, v in pairs(internals) do
 			v:mousemoved(x, y, dx, dy, istouch)
 		end
 	end
@@ -106,15 +108,18 @@ end
 function newobject:mousepressed(x, y, button)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
+
+	--print(self, self.name or "nil")
 	local children = self.children
 	if children then
-		for k, v in ipairs(children) do
+		for k, v in pairs(children) do
 			v:mousepressed(x, y, button)
 		end
 	end
+
 	local internals = self.internals
 	if internals then
-		for k, v in ipairs(internals) do
+		for k, v in pairs(internals) do
 			v:mousepressed(x, y, button)
 		end
 	end
@@ -127,15 +132,16 @@ end
 function newobject:mousereleased(x, y, button)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
+
 	local children = self.children
 	if children then
-		for k, v in ipairs(children) do
+		for k, v in pairs(children) do
 			v:mousereleased(x, y, button)
 		end
 	end
 	local internals = self.internals
 	if internals then
-		for k, v in ipairs(internals) do
+		for k, v in pairs(internals) do
 			v:mousereleased(x, y, button)
 		end
 	end
@@ -148,15 +154,16 @@ end
 function newobject:wheelmoved(x, y)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
+
 	local children = self.children
 	if children then
-		for k, v in ipairs(children) do
+		for k, v in pairs(children) do
 			v:wheelmoved(x, y)
 		end
 	end
 	local internals = self.internals
 	if internals then
-		for k, v in ipairs(internals) do
+		for k, v in pairs(internals) do
 			v:wheelmoved(x, y)
 		end
 	end
@@ -169,15 +176,16 @@ end
 function newobject:keypressed(key, isrepeat)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
+
 	local children = self.children
 	if children then
-		for k, v in ipairs(children) do
+		for k, v in pairs(children) do
 			v:keypressed(key, isrepeat)
 		end
 	end
 	local internals = self.internals
 	if internals then
-		for k, v in ipairs(internals) do
+		for k, v in pairs(internals) do
 			v:keypressed(key, isrepeat)
 		end
 	end
@@ -190,15 +198,16 @@ end
 function newobject:keyreleased(key)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
+
 	local children = self.children
 	if children then
-		for k, v in ipairs(children) do
+		for k, v in pairs(children) do
 			v:keyreleased(key)
 		end
 	end
 	local internals = self.internals
 	if internals then
-		for k, v in ipairs(internals) do
+		for k, v in pairs(internals) do
 			v:keyreleased(key)
 		end
 	end
@@ -210,15 +219,16 @@ end
 function newobject:textinput(text)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
+
 	local children = self.children
 	if children then
-		for k, v in ipairs(children) do
+		for k, v in pairs(children) do
 			v:textinput(text)
 		end
 	end
 	local internals = self.internals
 	if internals then
-		for k, v in ipairs(internals) do
+		for k, v in pairs(internals) do
 			v:textinput(text)
 		end
 	end
@@ -490,24 +500,36 @@ end
 	- func: GetSize()
 	- desc: gets the object's size
 --]]---------------------------------------------------------
-function newobject:GetSize()
-	return self.width, self.height
+function newobject:GetSize(padding)
+	if padding then
+		return self.width - padding, self.height - padding
+	else
+		return self.width, self.height
+	end
 end
 
 --[[---------------------------------------------------------
 	- func: GetWidth()
 	- desc: gets the object's width
 --]]---------------------------------------------------------
-function newobject:GetWidth()
-	return self.width
+function newobject:GetWidth(padding)
+	if padding then
+		return self.width - padding
+	else
+		return self.width
+	end
 end
 
 --[[---------------------------------------------------------
 	- func: GetHeight()
 	- desc: gets the object's height
 --]]---------------------------------------------------------
-function newobject:GetHeight()
-	return self.height
+function newobject:GetHeight(padding)
+	if padding then
+		return self.height - padding
+	else
+		return self.height
+	end
 end
 
 --[[---------------------------------------------------------
@@ -533,12 +555,12 @@ function newobject:SetVisible(bool)
 	end
 
 	if children then
-		for k, v in ipairs(children) do
+		for k, v in pairs(children) do
 			v:SetVisible(bool)
 		end
 	end
 	if internals then
-		for k, v in ipairs(internals) do
+		for k, v in pairs(internals) do
 			v:SetVisible(bool)
 		end
 	end
@@ -562,6 +584,9 @@ function newobject:SetParent(parent)
 	local container = parent.container
 	if self.type == "frame"  then
 		-- Dont add frames inside objects
+		self.parent = loveframes.base
+		self:SetState( loveframes.base.state )
+		table.insert( loveframes.base.children, self )
 		return
 	end
 
@@ -596,14 +621,14 @@ function newobject:Remove()
 	local pinternals = self.parent.internals
 	local pchildren = self.parent.children
 	if pinternals then
-		for k, v in ipairs(pinternals) do
+		for k, v in pairs(pinternals) do
 			if v == self then
 				table.remove(pinternals, k)
 			end
 		end
 	end
 	if pchildren then
-		for k, v in ipairs(pchildren) do
+		for k, v in pairs(pchildren) do
 			if v == self then
 				table.remove(pchildren, k)
 			end
@@ -627,12 +652,12 @@ function newobject:SetClickBounds(x, y, width, height)
 	self.clickbounds.height = height
 
 	if internals then
-		for k, v in ipairs(internals) do
+		for k, v in pairs(internals) do
 			v:SetClickBounds(x, y, width, height)
 		end
 	end
 	if children then
-		for k, v in ipairs(children) do
+		for k, v in pairs(children) do
 			v:SetClickBounds(x, y, width, height)
 		end
 	end
@@ -658,12 +683,12 @@ function newobject:RemoveClickBounds()
 	local children = self.children
 	self.clickbounds = nil
 	if internals then
-		for k, v in ipairs(internals) do
+		for k, v in pairs(internals) do
 			v:RemoveClickBounds()
 		end
 	end
 	if children then
-		for k, v in ipairs(children) do
+		for k, v in pairs(children) do
 			v:RemoveClickBounds()
 		end
 	end
@@ -708,15 +733,16 @@ end
 			hover state
 --]]---------------------------------------------------------
 function newobject:CheckHover()
-	local x = self.x
-	local y = self.y
-	local width = self.width
-	local height = self.height
-	local mx, my = love.mouse.getPosition()
-	local selfcol = loveframes.BoundingBox(mx, x, my, y, 1, width, 1, height)
-	local collisioncount = loveframes.collisioncount
-	local type = self.type
-	local hoverobject = loveframes.GetHoverObject()
+	local x 		= self.x
+	local y 		= self.y
+	local width 	= self.width
+	local height 	= self.height
+	local type 		= self.type
+	local mx, my 	= love.mouse.getPosition()
+
+	local selfcol 			= loveframes.BoundingBox(mx, x, my, y, 1, width, 1, height)
+	local collisioncount 	= loveframes.collisioncount
+	local hoverobject 		= loveframes.GetHoverObject()
 
 	-- check if the mouse is colliding with the object
 	if self:OnState() and self:IsVisible() then
@@ -739,12 +765,18 @@ function newobject:CheckHover()
 			end
 		end
 	end
+	
 	-- check if the object is being hovered
 	if hoverobject == self and type ~= "base" then
 		self.hover = true
+		if self.parent and self.parent.container then
+			self.parent.hover = true
+		end
 	else
 		self.hover = false
 	end
+
+
 	local hover = self.hover
 	local calledmousefunc = self.calledmousefunc
 	-- check for mouse enter and exit events
@@ -818,14 +850,14 @@ function newobject:IsTopList()
 	local found = false
 	local function IsChild(object)
 		local parents = object:GetParents()
-		for k, v in ipairs(parents) do
+		for k, v in pairs(parents) do
 			if v == self then
 				return true
 			end
 		end
 		return false
 	end
-	for k, v in ipairs(cols) do
+	for k, v in pairs(cols) do
 		if v == self then
 			found = true
 		else
@@ -868,7 +900,7 @@ function newobject:MoveToTop()
 	local pinternals = self.parent.internals
 	local internal = false
 	if pinternals then
-		for k, v in ipairs(pinternals) do
+		for k, v in pairs(pinternals) do
 			if v == self then
 				internal = true
 			end
@@ -910,12 +942,12 @@ function newobject:SetSkin(name)
 	self.drawfunc = selfskin[funcname]
 	self.drawoverfunc = selfskin[funcname.."_over"]
 	if children then
-		for k, v in ipairs(children) do
+		for k, v in pairs(children) do
 			v:SetSkin(name)
 		end
 	end
 	if internals then
-		for k, v in ipairs(internals) do
+		for k, v in pairs(internals) do
 			v:SetSkin(name)
 		end
 	end
@@ -988,7 +1020,7 @@ function newobject:IsActive()
 	local parent = self.parent
 	local pchildren = parent.children
 	local valid = false
-	for k, v in ipairs(pchildren) do
+	for k, v in pairs(pchildren) do
 		if v == self then
 			valid = true
 		end
@@ -1108,7 +1140,7 @@ end
 --]]---------------------------------------------------------
 function newobject:IsInList()
 	local parents = self:GetParents()
-	for k, v in ipairs(parents) do
+	for k, v in pairs(parents) do
 		if v.type == "list" then
 			return true, v
 		end
@@ -1126,12 +1158,12 @@ function newobject:SetState(name)
 	local internals = self.internals
 	self.state = name
 	if children then
-		for k, v in ipairs(children) do
+		for k, v in pairs(children) do
 			v:SetState(name)
 		end
 	end
 	if internals then
-		for k, v in ipairs(internals) do
+		for k, v in pairs(internals) do
 			v:SetState(name)
 		end
 	end
@@ -1145,7 +1177,6 @@ end
 function newobject:GetState()
 	return self.state
 end
-
 --[[---------------------------------------------------------
 	- func: SetCollidable/GetCollidable()
 	- desc: gets/sets the object's collidable status
@@ -1156,7 +1187,7 @@ function newobject:SetCollidable(bool)
 end
 
 function newobject:GetCollidable(bool)
-	return self.state
+	return self.collide
 end
 
 --[[---------------------------------------------------------
@@ -1179,6 +1210,10 @@ end
 --]]---------------------------------------------------------
 function newobject:isUpdating()
 	return self.visible or self.alwaysupdate
+end
+
+function newobject:isRoot()
+	return self == loveframes.base
 end
 
 ---------- module end ----------

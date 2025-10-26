@@ -20,6 +20,8 @@ function newobject:initialize()
 	self.height = 50
 	self.internal = false
 	self.children = {}
+	self.internals = {}
+	--self.collide = false
 	self:SetDrawFunc()
 end
 
@@ -31,11 +33,12 @@ function newobject:update(dt)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
 	local children = self.children
+	local internals = self.internals
 	local parent = self.parent
 	local base = loveframes.base
 	local update = self.Update
 	-- move to parent if there is a parent
-	if parent ~= base and parent.type ~= "list" then
+	if parent ~= base then
 		self.x = self.parent.x + self.staticx
 		self.y = self.parent.y + self.staticy
 	end
@@ -43,43 +46,12 @@ function newobject:update(dt)
 	for k, v in ipairs(children) do
 		v:update(dt)
 	end
-	if update then
+	for k,v in ipairs(internals) do
+		v:update(dt)
+	end
+ 	if update then
 		update(self, dt)
 	end
 end
-
---[[---------------------------------------------------------
-	- func: mousepressed(x, y, button)
-	- desc: called when the player presses a mouse button
---]]---------------------------------------------------------
-function newobject:mousepressed(x, y, button)
-	if not self:OnState() then return end
-	if not self:isUpdating() then return end
-	local children = self.children
-	local hover = self.hover
-	if hover and button == 1 then
-		local baseparent = self:GetBaseParent()
-		if baseparent and baseparent.type == "frame" then
-			baseparent:MakeTop()
-		end
-	end
-	for k, v in ipairs(children) do
-		v:mousepressed(x, y, button)
-	end
-end
-
---[[---------------------------------------------------------
-	- func: mousereleased(x, y, button)
-	- desc: called when the player releases a mouse button
---]]---------------------------------------------------------
-function newobject:mousereleased(x, y, button)
-	if not self:OnState() then return end
-	if not self:isUpdating() then return end
-	local children = self.children
-	for k, v in ipairs(children) do
-		v:mousereleased(x, y, button)
-	end
-end
-
 ---------- module end ----------
 end

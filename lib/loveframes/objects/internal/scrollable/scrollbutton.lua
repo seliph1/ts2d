@@ -63,15 +63,9 @@ end
 	- desc: called when the player presses a mouse button
 --]]---------------------------------------------------------
 function newobject:mousepressed(x, y, button)
-
-	local visible = self.visible
-	
-	if not visible then
-		return
-	end
-	
+	if not self:OnState() then return end
+	if not self:isUpdating() then return end
 	local hover = self.hover
-	
 	if hover and button == 1 then
 		local baseparent = self:GetBaseParent()
 		if baseparent.type == "frame" then
@@ -80,7 +74,6 @@ function newobject:mousepressed(x, y, button)
 		self.down = true
 		loveframes.downobject = self
 	end
-	
 end
 
 --[[---------------------------------------------------------
@@ -88,25 +81,17 @@ end
 	- desc: called when the player releases a mouse button
 --]]---------------------------------------------------------
 function newobject:mousereleased(x, y, button)
-	
-	local visible = self.visible
-	
-	if not visible then
-		return
-	end
-	
+	if not self:OnState() then return end
+	if not self:isUpdating() then return end
 	local hover = self.hover
 	local down = self.down
 	local onclick = self.OnClick
-	
 	if hover and down then
 		if button == 1 then
 			onclick(x, y, self)
 		end
 	end
-	
 	self.down = false
-
 end
 
 --[[---------------------------------------------------------
@@ -114,9 +99,7 @@ end
 	- desc: gets the object's scroll type
 --]]---------------------------------------------------------
 function newobject:GetScrollType()
-
 	return self.scrolltype
-	
 end
 
 ---------- module end ----------

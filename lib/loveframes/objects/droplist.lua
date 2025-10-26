@@ -55,7 +55,7 @@ function newobject:update(dt)
 	local base = loveframes.base
 	local update = self.Update
 	-- move to parent if there is a parent
-	if parent ~= base and parent.type ~= "list" then
+	if parent ~= base then
 		self.x = self.parent.x + self.staticx
 		self.y = self.parent.y + self.staticy
 	end
@@ -89,9 +89,16 @@ function newobject:mousemoved(x, y, dx, dy, istouch)
 	local rel_x = x - self.x
 	local rel_y = y - self.y
 
-	-- Chech which cell is selected
+	-- Check which cell is selected
 	-- Ceil is used so it always return element id >= 1
 	local element_id = math.min( math.ceil( rel_y /  cell_y ), #self.elements )
+
+	if self.hovered ~= element_id then
+		local onhover = self.OnHover
+		if onhover then
+			onhover(self, self.elements[element_id], element_id)
+		end
+	end
 
 	self.hovered = element_id
 end
@@ -103,6 +110,7 @@ function newobject:mousepressed(x, y, button)
 		-- Dont select, but dont deselect also
 		return
 	end
+
 	-- Retrieve the cell size
 	local cell_x = self.width
 	local cell_y = self.font:getHeight() + self.padding
@@ -117,6 +125,13 @@ function newobject:mousepressed(x, y, button)
 	if element_id < 0 or element_id > #self.elements then
 		element_id = 0
 	end
+
+	if element_id ~= 0 and button == 1 then
+		local onclick = self.OnClick
+		if onclick then
+			onclick(self, self.elements[element_id], element_id)
+		end
+	end
 	self.selected = element_id
 end
 
@@ -127,6 +142,19 @@ end
 function newobject:mousereleased(x, y, button)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
+end
+
+--[[---------------------------------------------------------
+	- func: wheelmoved(x, y)
+	- desc: called when the player moves a mouse wheel
+--]]---------------------------------------------------------
+function newobject:wheelmoved(x, y)
+	if not self:OnState() then return end
+	if not self:isUpdating() then return end
+	if not self.hover then return end
+	for _, v in ipairs(self.internals) do
+		v:wheelmoved(x, y)
+	end
 end
 
 --[[---------------------------------------------------------
@@ -141,10 +169,12 @@ function newobject:AddElement(item, append)
 		else
 			self:ParseElements()
 		end
+	elseif type(item) == "table" then
+		self:AddElementsFromTable(item)
 	end
 end
-
 newobject.AddItem = newobject.AddElement
+
 function newobject:AddElementsFromTable(tbl)
 	local validElements = 0
 	for _, item in ipairs(tbl) do
@@ -158,6 +188,30 @@ function newobject:AddElementsFromTable(tbl)
 	end
 end
 newobject.AddItemsFromTable = newobject.AddElementsFromTable
+
+function newobject:RemoveElement(item)
+	if item == nil then
+		self.elements[#self.elements] = nil
+		self:ParseElements()
+	end
+
+	if type(item) == "number" then
+		if self.elements[item] then
+			table.remove(self.elements, item)
+			self:ParseElements()
+		end
+	end
+end
+newobject.RemoveItem = newobject.RemoveElement
+function newobject:GetElements()
+	return self.elements
+end
+
+function newobject:Count()
+	return #self.elements
+end
+newobject.ElementAmount = newobject.Count
+newobject.NumberOfElements = newobject.Count
 
 --[[---------------------------------------------------------
 	- func: ParseElements

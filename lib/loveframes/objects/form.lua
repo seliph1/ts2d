@@ -36,28 +36,22 @@ end
 function newobject:update(dt)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
-	
 	local children = self.children
 	local parent = self.parent
 	local base = loveframes.base
 	local update = self.Update
-	
 	-- move to parent if there is a parent
-	if parent ~= base and parent.type ~= "list" then
+	if parent ~= base then
 		self.x = self.parent.x + self.staticx
 		self.y = self.parent.y + self.staticy
 	end
-	
 	self:CheckHover()
-
 	for k, v in ipairs(children) do
 		v:update(dt)
 	end
-	
 	if update then
 		update(self, dt)
 	end
-
 end
 
 --[[---------------------------------------------------------

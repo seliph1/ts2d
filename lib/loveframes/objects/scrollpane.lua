@@ -29,8 +29,8 @@ function newobject:initialize()
 	self.last_offsety = -1
 	self.extrawidth = 0
 	self.extraheight = 0
-	self.buttonscrollamount = 0.10
-	self.mousewheelscrollamount = 10
+	self.buttonscrollamount = 1
+	self.mousewheelscrollamount = 1
 	self.internal = false
 	self.hbar = false
 	self.vbar = false
@@ -64,7 +64,7 @@ function newobject:update(dt)
 	local base = loveframes.base
 	local update = self.Update
 	-- move to parent if there is a parent
-	if parent ~= base and parent.type ~= "list" then
+	if parent ~= base then
 		self.x = self.parent.x + self.staticx
 		self.y = self.parent.y + self.staticy
 	end
@@ -84,8 +84,8 @@ function newobject:update(dt)
 		local child = self.itemcache[i]
 		child:update(dt)
 		child:SetClickBounds(x, y, width, height)
-		child.x = child.x - offsetx
-		child.y = child.y - offsety
+		child.x = math.floor( child.x - offsetx )
+		child.y = math.floor( child.y - offsety )
 	end
 
 	for _, internal in pairs(internals) do
@@ -127,7 +127,7 @@ function newobject:draw()
 		drawoverfunc(self)
 	end
 	if internals then
-		for k, v in ipairs(internals) do
+		for k, v in pairs(internals) do
 			v:draw()
 		end
 	end
@@ -143,17 +143,20 @@ function newobject:mousepressed(x, y, button)
 	local hover = self.hover
 	local children = self.children
 	local internals = self.internals
+
+	for k, v in pairs(internals) do
+		v:mousepressed(x, y, button)
+	end
+
+	for k, v in pairs(children) do
+		v:mousepressed(x, y, button)
+	end
+
 	if hover and button == 1 then
 		local baseparent = self:GetBaseParent()
 		if baseparent and baseparent.type == "frame" then
 			baseparent:MakeTop()
 		end
-	end
-	for k, v in pairs(internals) do
-		v:mousepressed(x, y, button)
-	end
-	for k, v in pairs(children) do
-		v:mousepressed(x, y, button)
 	end
 end
 
@@ -164,15 +167,17 @@ end
 function newobject:wheelmoved(x, y)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
+	if not self.hover then return end
+
 	local children = self.children
 	if children then
-		for k, v in ipairs(children) do
+		for k, v in pairs(children) do
 			v:wheelmoved(x, y)
 		end
 	end
 	local internals = self.internals
 	if internals then
-		for k, v in ipairs(internals) do
+		for k, v in pairs(internals) do
 			v:wheelmoved(x, y)
 		end
 	end
@@ -328,13 +333,16 @@ function newobject:RedoLayout()
 			self.offsetx = 0
 		end
 	end
-	--[[
-	if hbar then
-		self.extraheight = self.extraheight + 16
+
+	if self.hbar and self.vbar then
+		-- If both are on together, they can cut visible area
+
+		local horizontalbar = self:GetHorizontalScrollBody()
+		local verticalbar = self:GetVerticalScrollBody()
+
+		self.extrawidth = self.extrawidth + verticalbar.width
+		self.extraheight = self.extraheight + horizontalbar.height
 	end
-	if vbar then
-		self.extrawidth = self.extrawidth + 16
-	end]]
 end
 
 --[[---------------------------------------------------------
@@ -344,7 +352,7 @@ end
 function newobject:Clear()
 	local children = self.children
 	self.children = {}
-	for _, child in ipairs(children) do
+	for _, child in pairs(children) do
 		child:Remove()
 		-- Remove item into hash table
 		if self.itemhash:hasItem(child) then
@@ -409,7 +417,7 @@ function newobject:GetHorizontalScrollBody()
 			return v
 		end
 	end
-	return false
+	--return false
 end
 
 function newobject:GetVerticalScrollBody()
@@ -418,7 +426,7 @@ function newobject:GetVerticalScrollBody()
 			return v
 		end
 	end
-	return false
+	--return false
 end
 --[[---------------------------------------------------------
 	- func: GetScrollBar()
@@ -500,43 +508,6 @@ end
 --]]---------------------------------------------------------
 function newobject:GetMouseWheelScrollAmount()
 	return self.mousewheelscrollamount
-end
-
---[[---------------------------------------------------------
-	- func: EnableHorizontalStacking(bool)
-	- desc: enables or disables horizontal stacking
---]]---------------------------------------------------------
-function newobject:EnableHorizontalStacking(bool)
-	self.horizontalstacking = bool
-	return self
-end
-
---[[---------------------------------------------------------
-	- func: GetHorizontalStacking()
-	- desc: gets whether or not the object allows horizontal
-			stacking
---]]---------------------------------------------------------
-function newobject:GetHorizontalStacking()
-	return self.horizontalstacking
-end
-
---[[---------------------------------------------------------
-	- func: SetDTScrolling(bool)
-	- desc: sets whether or not the object should use delta
-			time when scrolling
---]]---------------------------------------------------------
-function newobject:SetDTScrolling(bool)
-	self.dtscrolling = bool
-	return self
-end
-
---[[---------------------------------------------------------
-	- func: GetDTScrolling()
-	- desc: gets whether or not the object should use delta
-			time when scrolling
---]]---------------------------------------------------------
-function newobject:GetDTScrolling()
-	return self.dtscrolling
 end
 
 ---------- module end ----------

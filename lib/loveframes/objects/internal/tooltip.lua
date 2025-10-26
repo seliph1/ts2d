@@ -14,7 +14,6 @@ local newobject = loveframes.NewObject("tooltip", "loveframes_object_tooltip", t
 	- desc: initializes the object
 --]]---------------------------------------------------------
 function newobject:initialize(object, text)
-	
 	self.type = "tooltip"
 	self.parent = object or nil
 	self.object = object or nil
@@ -23,24 +22,27 @@ function newobject:initialize(object, text)
 	self.padding = 2
 	self.xoffset = 10
 	self.yoffset = -10
+	self.collide = false
 	self.internal = true
 	self.followcursor = true
 	self.followobject = false
 	self.alwaysupdate = true
 	self.internals = {}
-	
+
 	-- create the object's text
 	local textobject = loveframes.Create("label")
 	textobject:Remove()
 	textobject.parent = self
 	textobject:SetText(text or "")
 	textobject:SetPos(0, 0)
+	-- Disable collision so we dont hover over the invisible tooltip
+	textobject:SetCollidable(false) 
 	table.insert(self.internals, textobject)
-	
+
 	-- apply template properties to the object
 	loveframes.ApplyTemplatesToObject(self)
 	table.insert(loveframes.base.internals, self)
-	
+
 	self:SetDrawFunc()
 end
 

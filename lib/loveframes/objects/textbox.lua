@@ -32,6 +32,7 @@ function newobject:initialize()
 	self.extrawidth = 0
 	self.extraheight = 0
 	self.buttonscrollamount = 1
+	self.mousewheelscrollamount = 1
 	self.autoscroll = true
 
 	self.OnEnter = nil
@@ -87,6 +88,7 @@ function newobject:update(dt)
 	if not self:isUpdating() then return end
 	-- check to see if the object is being hovered over
 	self:CheckHover()
+
 	local parent = self.parent
 	local update = self.Update
 	local internals = self.internals

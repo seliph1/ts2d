@@ -25,8 +25,8 @@ function newobject:initialize()
 	self.padding = 1
 	self.tabheight = 25
 	self.previoustabheight = 25
-	self.buttonscrollamount = 200
-	self.mousewheelscrollamount = 1500
+	self.buttonscrollamount = 1
+	self.mousewheelscrollamount = 1
 	self.buttonareax = 0
 	self.buttonareawidth = self.width
 	self.autosize = true
@@ -35,7 +35,7 @@ function newobject:initialize()
 	self.internal = false
 	self.internals = {}
 	self.children = {}
-	
+
 	self:AddScrollButtons()
 	self:SetDrawFunc()
 end
@@ -52,7 +52,6 @@ function newobject:update(dt)
 	local padding = self.padding
 	local autosize = self.autosize
 	local autobuttonareawidth = self.autobuttonareawidth
-	local padding = self.padding
 	local children = self.children
 	local numchildren = #children
 	local internals = self.internals
@@ -60,7 +59,7 @@ function newobject:update(dt)
 	local parent = self.parent
 	local base = loveframes.base
 	local update = self.Update
-	
+
 	-- move to parent if there is a parent
 	if parent ~= base then
 		self.x = self.parent.x + self.staticx
@@ -136,29 +135,24 @@ end
 function newobject:mousepressed(x, y, button)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
-	
 	local children = self.children
 	local internals = self.internals
 	local numchildren = #children
 	local numinternals = #internals
 	local tab = self.tab
 	local hover = self.hover
-	
 	if hover and button == 1 then
 		local baseparent = self:GetBaseParent()
 		if baseparent and baseparent.type == "frame" then
 			baseparent:MakeTop()
 		end
 	end
-	
 	for k, v in ipairs(internals) do
 		v:mousepressed(x, y, button)
 	end
-	
 	if numchildren > 0 then
 		children[tab]:mousepressed(x, y, button)
 	end
-	
 end
 
 --[[---------------------------------------------------------
@@ -185,10 +179,9 @@ end
 	- desc: called when the player moves a mouse wheel
 --]]---------------------------------------------------------
 function newobject:wheelmoved(x, y)
-
 	local internals = self.internals
+	local children = self.children
 	local numinternals = #internals
-
 	if y < 0 then
 		local buttonheight = self:GetHeightOfButtons()
 		local col = loveframes.BoundingBox(self.x, x, self.y, y, self.width, 1, buttonheight, 1)
@@ -226,6 +219,11 @@ function newobject:wheelmoved(x, y)
 		end
 	end
 
+	if children then
+		for k, v in ipairs(children) do
+			v:wheelmoved(x, y)
+		end
+	end
 end
 
 --[[---------------------------------------------------------
@@ -332,13 +330,12 @@ function newobject:AddScrollButtons()
 			end
 		end
 	end
-	
+
 	leftbutton.state = state
 	rightbutton.state = state
-	
+
 	table.insert(internals, leftbutton)
 	table.insert(internals, rightbutton)
-
 end
 
 --[[---------------------------------------------------------
@@ -369,18 +366,13 @@ end
 	- desc: makes the specified tab the active tab
 --]]---------------------------------------------------------
 function newobject:SwitchToTab(tabnumber)
-	
 	local children = self.children
-	
 	for k, v in ipairs(children) do
 		v.visible = false
 	end
-	
 	self.tab = tabnumber
 	self.children[tabnumber].visible = true
-	
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -388,17 +380,13 @@ end
 	- desc: sets the size of the scroll buttons
 --]]---------------------------------------------------------
 function newobject:SetScrollButtonSize(width, height)
-
 	local internals = self.internals
-	
 	for k, v in ipairs(internals) do
 		if v.type == "scrollbutton" then
 			v:SetSize(width, height)
 		end
 	end
-	
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -406,10 +394,8 @@ end
 	- desc: sets the padding for the tab panel
 --]]---------------------------------------------------------
 function newobject:SetPadding(padding)
-
 	self.padding = padding
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -417,9 +403,7 @@ end
 	- desc: gets the padding of the tab panel
 --]]---------------------------------------------------------
 function newobject:GetPadding()
-
 	return self.padding
-	
 end
 
 --[[---------------------------------------------------------
@@ -427,17 +411,13 @@ end
 	- desc: sets the height of the tab buttons
 --]]---------------------------------------------------------
 function newobject:SetTabHeight(height)
-
 	local autosize = self.autosize
 	local padding = self.padding
 	local previoustabheight = self.previoustabheight
 	local children = self.children
 	local internals = self.internals
-	
 	self.tabheight = height
-	
 	local tabheight = self.tabheight
-	
 	if tabheight ~= previoustabheight then
 		for k, v in ipairs(children) do
 			local retainsize = v.retainsize
@@ -447,15 +427,12 @@ function newobject:SetTabHeight(height)
 		end
 		self.previoustabheight = tabheight
 	end
-	
 	for k, v in ipairs(internals) do
 		if v.type == "tabbutton" then
 			v:SetHeight(self.tabheight)
 		end
 	end
-	
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -463,9 +440,7 @@ end
 	- desc: gets the object's tab number
 --]]---------------------------------------------------------
 function newobject:GetTabNumber()
-
 	return self.tab
-	
 end
 
 --[[---------------------------------------------------------
@@ -473,15 +448,12 @@ end
 	- desc: removes a tab from the object
 --]]---------------------------------------------------------
 function newobject:RemoveTab(id)
-
 	local children = self.children
 	local internals = self.internals
 	local tab = children[id]
-	
 	if tab then
 		tab:Remove()
 	end
-	
 	for k, v in ipairs(internals) do
 		if v.type == "tabbutton" then
 			if v.tabnumber == id then
@@ -489,19 +461,15 @@ function newobject:RemoveTab(id)
 			end
 		end
 	end
-	
 	local tabnumber = 1
-	
 	for k, v in ipairs(internals) do
 		if v.type == "tabbutton" then
 			v.tabnumber = tabnumber
 			tabnumber = tabnumber + 1
 		end
 	end
-	
 	self.tabnumber = tabnumber
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -510,10 +478,8 @@ end
 			buttons
 --]]---------------------------------------------------------
 function newobject:SetButtonScrollAmount(amount)
-
 	self.buttonscrollamount = amount
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -530,10 +496,8 @@ end
 	- desc: sets the scroll amount of the mouse wheel
 --]]---------------------------------------------------------
 function newobject:SetMouseWheelScrollAmount(amount)
-
 	self.mousewheelscrollamount = amount
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -550,10 +514,8 @@ end
 			time when scrolling
 --]]---------------------------------------------------------
 function newobject:SetDTScrolling(bool)
-
 	self.dtscrolling = bool
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -562,9 +524,7 @@ end
 			time when scrolling
 --]]---------------------------------------------------------
 function newobject:GetDTScrolling()
-
 	return self.dtscrolling
-	
 end
 
 --[[---------------------------------------------------------
@@ -572,12 +532,11 @@ end
 	- desc: sets the object of a tab
 --]]---------------------------------------------------------
 function newobject:SetTabObject(id, object)
-
 	local children = self.children
 	local internals = self.internals
 	local tab = children[id]
 	local state = self.state
-	
+
 	if tab then
 		tab:Remove()
 		object:Remove()
@@ -587,9 +546,7 @@ function newobject:SetTabObject(id, object)
 		object.staticy = 0
 		children[id] = object
 	end
-	
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -606,9 +563,7 @@ end
 	- desc: gets the x position of the object's button area
 --]]---------------------------------------------------------
 function newobject:GetButtonAreaX()
-
 	return self.buttonareax
-	
 end
 
 --[[---------------------------------------------------------
@@ -616,10 +571,8 @@ end
 	- desc: sets the width of the object's button area
 --]]---------------------------------------------------------
 function newobject:SetButtonAreaWidth(width)
-
 	self.buttonareawidth = width
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -627,9 +580,7 @@ end
 	- desc: gets the width of the object's button area
 --]]---------------------------------------------------------
 function newobject:GetButtonAreaWidth()
-
 	return self.buttonareawidth
-	
 end
 
 --[[---------------------------------------------------------
@@ -638,10 +589,8 @@ end
 			button area should be adjusted automatically
 --]]---------------------------------------------------------
 function newobject:SetAutoButtonAreaWidth(bool)
-
 	self.autobuttonareawidth = bool
 	return self
-	
 end
 
 --[[---------------------------------------------------------
@@ -650,9 +599,7 @@ end
 			button area should be adjusted automatically
 --]]---------------------------------------------------------
 function newobject:GetAutoButtonAreaWidth()
-
 	return self.autobuttonareawidth
-	
 end
 
 ---------- module end ----------

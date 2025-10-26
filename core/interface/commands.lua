@@ -205,8 +205,14 @@ local commands = {
 		---Evaluates a lua expression
 		---@param ... string
 		action = function(...)
-			local expression, error_message = loadstring(table.concat({...}," "))
+			local env = {
+				client = client,
+				print = print
+			}
+			local block = table.concat({...}, " ")
+			local expression, error_message = loadstring( block )
 			if expression then
+				setfenv(expression, env)
 				local status, error_message = pcall(expression)
 				if not status then
 					print("©255000000LUA ERROR: "..error_message)

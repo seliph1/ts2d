@@ -50,6 +50,7 @@ function newobject:initialize()
 	self.offsetx = 0
 	self.offsety = 0
 	self.buttonscrollamount = 1
+	self.mousewheelscrollamount = 1
 
 	self:SetDrawFunc()
 end
@@ -156,6 +157,7 @@ end
 function newobject:wheelmoved(x, y)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
+	if not self.hover then return end
 	for _, v in ipairs(self.internals) do
 		v:wheelmoved(x, y)
 	end

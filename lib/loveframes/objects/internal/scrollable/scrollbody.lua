@@ -22,6 +22,8 @@ function newobject:initialize(parent, bartype)
 	self.internal = true
 	self.internals = {}
 	self.position = "right"
+
+	-- Initialize the button objects
 	if self.bartype == "vertical" then
 		self.width = 16
 		self.height = self.parent.height
@@ -33,9 +35,13 @@ function newobject:initialize(parent, bartype)
 		self.staticx = 0
 		self.staticy = self.parent.height - self.height
 	end
+
+	-- Initialize the scroll area object and insert in internals
 	table.insert(self.internals, loveframes.objects["scrollarea"]:new(self, bartype))
+
+	-- Initialize the bar object
 	local bar = self.internals[1].internals[1]
-	if self.bartype == "vertical" then 
+	if self.bartype == "vertical" then
 		local upbutton = loveframes.objects["scrollbutton"]:new("up")
 		upbutton.staticx = 0 + self.width - upbutton.width
 		upbutton.staticy = 0
@@ -44,13 +50,9 @@ function newobject:initialize(parent, bartype)
 			upbutton.staticx = 0 + self.width - upbutton.width
 			upbutton.staticy = 0
 			if object.down and object.hover then
-				local dtscrolling = self.parent.dtscrolling
-				if dtscrolling then
-					local dt = love.timer.getDelta()
-					bar:Scroll(-self.parent.buttonscrollamount * dt)
-				else
-					bar:Scroll(-self.parent.buttonscrollamount)
-				end
+				local proportion = self.parent.height / self.parent.itemheight
+				local scroll = self.parent.buttonscrollamount * self.parent.height * proportion * dt
+				bar:Scroll(-scroll)
 			end
 		end
 		local downbutton = loveframes.objects["scrollbutton"]:new("down")
@@ -63,18 +65,17 @@ function newobject:initialize(parent, bartype)
 			downbutton.x = downbutton.parent.x + downbutton.staticx
 			downbutton.y = downbutton.parent.y + downbutton.staticy
 			if object.down and object.hover then
-				local dtscrolling = self.parent.dtscrolling
-				if dtscrolling then
-					local dt = love.timer.getDelta()
-					bar:Scroll(self.parent.buttonscrollamount * dt)
-				else
-					bar:Scroll(self.parent.buttonscrollamount)
-				end
+				local proportion = self.parent.height / self.parent.itemheight
+				local scroll = self.parent.buttonscrollamount * self.parent.height * proportion * dt
+				bar:Scroll(scroll)
 			end
 		end
 		table.insert(self.internals, upbutton)
 		table.insert(self.internals, downbutton)
-	elseif self.bartype == "horizontal" then
+	end
+
+
+	if self.bartype == "horizontal" then
 		local leftbutton = loveframes.objects["scrollbutton"]:new("left")
 		leftbutton.parent = self
 		leftbutton.staticx = 0
@@ -83,13 +84,9 @@ function newobject:initialize(parent, bartype)
 			leftbutton.staticx = 0
 			leftbutton.staticy = 0
 			if object.down and object.hover then
-				local dtscrolling = self.parent.dtscrolling
-				if dtscrolling then
-					local dt = love.timer.getDelta()
-					bar:Scroll(-self.parent.buttonscrollamount * dt)
-				else
-					bar:Scroll(-self.parent.buttonscrollamount)
-				end
+				local proportion = self.parent.width / self.parent.itemwidth
+				local scroll = self.parent.buttonscrollamount * self.parent.width * proportion * dt
+				bar:Scroll(-scroll)
 			end
 		end
 		local rightbutton = loveframes.objects["scrollbutton"]:new("right")
@@ -102,22 +99,21 @@ function newobject:initialize(parent, bartype)
 			rightbutton.x = rightbutton.parent.x + rightbutton.staticx
 			rightbutton.y = rightbutton.parent.y + rightbutton.staticy
 			if object.down and object.hover then
-				local dtscrolling = self.parent.dtscrolling
-				if dtscrolling then
-					local dt = love.timer.getDelta()
-					bar:Scroll(self.parent.buttonscrollamount * dt)
-				else
-					bar:Scroll(self.parent.buttonscrollamount)
-				end
+				local proportion = self.parent.width / self.parent.itemwidth
+				local scroll = self.parent.buttonscrollamount * self.parent.width * proportion * dt
+				bar:Scroll(scroll)
 			end
 		end
+
+		-- Add both buttons to the internals of this body object
 		table.insert(self.internals, leftbutton)
 		table.insert(self.internals, rightbutton)
 	end
-	
+
+	-- Set these object states as the parent state
 	local parentstate = parent.state
 	self:SetState(parentstate)
-	
+
 	-- apply template properties to the object
 	loveframes.ApplyTemplatesToObject(self)
 	self:SetDrawFunc()
@@ -172,12 +168,13 @@ end
 function newobject:wheelmoved(x, y)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
-	local bar = self.internals[1].internals[1]
+
+	local scroll = self.parent.buttonscrollamount * 5
 	if self.parent.hover then
 		if self.bartype == "vertical" then
-			bar:Scroll(-y * self.parent.buttonscrollamount * 5)
+			self:Scroll(-y * scroll)
 		elseif self.bartype == "horizontal"	then
-			bar:Scroll(-x * self.parent.buttonscrollamount * 5)
+			self:Scroll(-x * scroll)
 		end
 	end
 end

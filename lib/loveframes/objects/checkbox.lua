@@ -68,7 +68,7 @@ function newobject:update(dt)
 	end
 	
 	-- move to parent if there is a parent
-	if parent ~= base and parent.type ~= "list" then
+	if parent ~= base  then
 		self.x = self.parent.x + self.staticx
 		self.y = self.parent.y + self.staticy
 	end

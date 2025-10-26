@@ -22,8 +22,8 @@ function newobject:initialize()
 	self.height = 20
 	self.listpadding = 0
 	self.listspacing = 0
-	self.buttonscrollamount = 200
-	self.mousewheelscrollamount = 1500
+	self.buttonscrollamount = 1
+	self.mousewheelscrollamount = 1
 	self.sortfunc = function(a, b) return a < b end
 	self.haslist = false
 	self.dtscrolling = true

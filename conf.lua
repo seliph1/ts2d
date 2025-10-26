@@ -1,16 +1,5 @@
 
 function love.conf(t)
-    --[[
-    t.title = "Tactical Strike 2D"		-- The title of the window the game is in (string)
-    t.author = "mozilla"		-- The author of the game (string)
-    t.window.width = 1080			-- The window width (number)
-    t.window.height = 720			-- The window height (number)	
-    t.window.fullscreen = false		-- Enable fullscreen (boolean)
-    t.window.vsync = false			-- Enable vertical sync (boolean)
-	t.physics = false
-    t.console = false
-    ]]
-
     t.identity = "TS2D"                 -- The name of the save directory (string)
     t.appendidentity = false            -- Search files in source directory before save directory (boolean)
     t.version = "11.5"                  -- The LÖVE version this game was made for (string)
@@ -24,8 +13,10 @@ function love.conf(t)
 
     t.window.title = "Tactical Strike 2D" -- The window title (string)
     t.window.icon = "cs2d.png"          -- Filepath to an image to use as the window's icon (string)
-    t.window.width = 800               -- The window width (number)
-    t.window.height = 600               -- The window height (number)
+    --t.window.width = 800                -- The window width (number)
+    --t.window.height = 600               -- The window height (number)
+    t.window.width = 1280               -- The window width (number)
+    t.window.height = 720               -- The window height (number)
     t.window.borderless = false         -- Remove all border visuals from the window (boolean)
     t.window.resizable = false          -- Let the window be user-resizable (boolean)
     t.window.minwidth = 1               -- Minimum window width if the window is resizable (number)

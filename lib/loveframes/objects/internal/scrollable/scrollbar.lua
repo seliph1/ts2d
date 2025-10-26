@@ -205,6 +205,7 @@ function newobject:Scroll(amount)
 	local bartype = self.bartype
 	local scrollable = self.parent.parent.parent
 	local onscroll = scrollable.OnScroll
+
 	if bartype == "vertical" then
 		local newy = (self.y + amount)
 		if newy > self.maxy then
@@ -326,6 +327,7 @@ function newobject:CalculateBarSize()
 	elseif bartype == "horizontal" then
 		size = parent.width * (scrollable.width / math.max(scrollable.itemwidth, scrollable.width) )
 	end
+	size = math.floor( size )
 	if size < 20 then
 		size = 20
 	end

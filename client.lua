@@ -104,64 +104,6 @@ function client.mousemoved(x, y)
 	home.targetY = abs_y
 end
 
-local function fire(peer_id)
-	local player = share.players[peer_id]
-	if not player then return end
-
-	local player_x, player_y = player.x, player.y
-	local mouse_x, mouse_y = love.mouse.getPosition()
-	local map_x, map_y = client.map:mouseToMap(mouse_x, mouse_y)
-
-	local angle = math.atan2(map_y - player_y, map_x - player_x)
-	local distance = 32 * 10
-	local offset = 20
-
-	local offset_x = player_x + math.cos(angle) * offset
-	local offset_y = player_y + math.sin(angle) * offset
-
-	local target_x = offset_x + math.cos(angle) * distance
-	local target_y = offset_y + math.sin(angle) * distance
-
-	local hit_x, hit_y, hit = client.raycast(offset_x, offset_y, target_x, target_y)
-
-	local hit_distance = distance
-	if hit then
-		local rand = math.random()
-		if rand < 0.80 then
-			client.map:spawn_effect("whitesmoke", hit_x, hit_y, {
-				setDirection = angle + math.pi
-			})
-		elseif rand >= 0.80 and rand < 0.90 then
-			client.map:spawn_effect("blacksmoke", hit_x, hit_y)
-		elseif rand >= 0.90 then
-			client.map:spawn_effect("sparkle", hit_x, hit_y, {
-				setDirection = angle + math.pi
-			})
-		end
-
-		local dx = hit_x - offset_x
-		local dy = hit_y - offset_y
-		hit_distance = math.sqrt( dx*dx + dy*dy )
-
-	end
-	local half = hit_distance/2
-	local half_x = offset_x + math.cos(angle)*half
-	local half_y = offset_y + math.sin(angle)*half
-
-	-- Create less particle as vector goes shorter
-	client.map:spawn_effect("hitscan", half_x, half_y, {
-		setDirection = angle,
-		setEmissionArea = {"uniform", half, 1, angle, false},
-		emitAtStart = math.ceil( hit_distance/distance * 30),
-	})
-
-	client.map:spawn_effect("trail", offset_x, offset_y, {
-		angle = angle,
-		scaleX = (hit_distance)/32,
-		--offsetX = -10,
-	})
-end
-
 --- Callback for mouse clicking on screen
 ---@param x number
 ---@param y number
@@ -173,10 +115,6 @@ function client.mousepressed(x, y, button, istouch, presses)
 	client.key[button] = true
 	----------------------------------------------------------------
 	local mx, my = client.map:mouseToMap(love.mouse.getPosition())
-
-	if client.joined then
-		fire(client.id)
-	end
 end
 
 --- Callback for mouse button releasing on screen
@@ -387,9 +325,13 @@ function client.peer_joined(peer_id)
 end
 
 -- Callback for inputs being pressed
-function client.input_response(peer_id, input, seq)
+function client.input_response(peer_id, input)
 	if input["use"] then
+		-- Run it locally
+		--client.actions.fire.action(peer_id, home)
 	end
+
+
 end
 
 function client.warning(message)
@@ -401,7 +343,7 @@ end
 function client.receive(message)
 	-- Send the message to the action parser
     client.parse(message)
-	print(string.format("©236118000Parse: %s", message))
+	--print(string.format("©236118000Parse: %s", message))
 end
 
 --- Client command parser
@@ -427,7 +369,7 @@ end
 function client.tick(dt)
 	--print(serpent.line(client.key, client.stateDumpOpts))
 	if client.joined then
-		client.predict_player(client.id)
+		client.predict_player(client.id, dt)
     end
 end
 
@@ -466,46 +408,113 @@ end
 
 --- Move player in smooth intervals
 ---@param peer_id number
-function client.predict_player(peer_id) -- `home` is used to apply controls if given
-	if client.id == peer_id and client.joined then
-		local player_local = share_local.players[peer_id]
-		local player = share.players[peer_id]
+function client.predict_player(peer_id, dt) -- `home` is used to apply controls if given
+	-- Check if its own player id, and is connected
+	if not( client.id == peer_id and client.joined ) then return end
 
-		if player and player_local then
-			player.x = player_local.x
-			player.y = player_local.y
-			for index, inputState in client.inputCache:walk() do
-				client.apply_input_to_player(inputState.inputStream, player)
-			end
+	-- Store player object
+	local player_local = share_local.players[peer_id]
+	local player = share.players[peer_id]
+
+	-- Check if the player object exists
+	if not (player and player_local) then return end
+
+	-- Apply input results to player
+	player.x = player_local.x
+	player.y = player_local.y
+	for index, inputState in client.inputCache:walk() do
+		client.apply_input_to_player(inputState.inputStream, client.id)
+	end
+
+	-- Check if the player is able to attack
+	player.attack_cooldown = player.attack_cooldown or 0
+	local want_to_attack = false
+	if player.attack_cooldown > 0 then
+		player.attack_cooldown = player.attack_cooldown - dt
+	else
+		if home.attack == true then
+			want_to_attack = true
+		end
+	end
+
+	if want_to_attack == true then
+		local cooldown = client.attack(client.id, dt)
+		if cooldown > 0 then
+			player.attack_cooldown = cooldown
 		end
 	end
 end
 
-function client.apply_input_to_player(input, player)
-	local h, v = 0, 0
+function client.attack(peer_id, dt)
+	local itemheld = client.get_item_held(peer_id)
+	local itemdata = client.get_item_data(itemheld)
+	if not itemdata then return 0 end
+
+	if itemdata.category == "primary" or itemdata.category == "secondary" then
+		-- Frame delay of this weapon
+		local rate_of_fire = itemdata.rate_of_fire or 9
+
+		-- True delay of this weapon
+		local seconds = rate_of_fire * dt
+
+		-- Simulate locally that we fired a weapon
+		client.actions.fire.action(client.id, home)
+
+		return seconds
+	end
+	return 0
+end
+
+function client.get_item_held(peer_id)
+	local player = share.players[peer_id]
+	if not player then return 0 end
+	local itemheld = player.ih or 0
+	return itemheld
+end
+
+function client.get_item_data(item_type)
+	local itemdata = client.content.itemlist[item_type]
+	if itemdata then
+		return itemdata
+	end
+end
+
+function client.apply_input_to_player(input, peer_id)
+	local player = share.players[peer_id]
 	local map = client.map
-	if input["forward"] then v = -1 end
-	if input["back"] then v = 1 end
-	if input["left"] then h = -1 end
-	if input["right"] then h = 1 end
-	-- Magnitude
-    local mag = math.sqrt(v*v + h*h)
-	local scale
-	if mag == 0 then
-		v, h = 0, 0
-	else
-		scale = 1/mag
-		v, h = v * scale, h * scale
+	if not (player and map) then return end
+
+	-- Initialize forces
+	local h, v, w = 0, 0, 1
+	if input["forward"] then v = -1 	end
+	if input["back"] 	then v =  1 	end
+	if input["left"] 	then h = -1 	end
+	if input["right"] 	then h =  1 	end
+	if input["walk"] 	then w =  0.5 	end
+
+	if v ~= 0 or h ~= 0 then
+		-- Calculate magnitude
+		local mag = math.sqrt(v*v + h*h)
+		local scale
+		if mag == 0 then
+			v, h = 0, 0
+		else
+			scale = 1/mag
+			v, h = v * scale, h * scale
+		end
+		client.apply_forces_to_player(peer_id, v, h, w)
 	end
+end
+
+function client.apply_forces_to_player(peer_id, v, h, w)
+	local player = share.players[peer_id]
+	local map = client.map
+	if not (player and map) then return end
+
 	-- Multiply vector by velocity and walk factor
-	local w = 1
-	if input["walk"] then
-		w = 0.5
-	end
+	-- and store the forces
 	local dx = player.s * h * w
 	local dy = player.s * v * w
-
-	if not map then return end
 
 	-- Slide square object into the map
 	local future_x, future_y = map:moveWithSliding(player.size, player.x, player.y, dx, dy)
@@ -516,7 +525,7 @@ function client.apply_input_to_player(input, player)
 	-- Calculate player colliding with other objects
 	client.world:update(player, player.x - half, player.y - half, player.size, player.size)
 
-	--
+	-- Apply the collision result
 	local filter = client.player_collision_filter
 	local current_x, current_y, collisions, length = client.world:move(player, future_x - half, future_y - half, filter)
 	player.x = current_x + half
@@ -533,8 +542,6 @@ function client.apply_input_to_player(input, player)
 		local normal 	= collision.normal
 		local ti 		= collision.ti
 		local overlaps 	= collision.overlaps
-
-
 	end
 end
 

@@ -62,11 +62,9 @@ function newobject:initialize()
 			end
 		end
 	end
-	--[[
-	input.Update = function(object)
-		object:SetSize(object.parent.width - 19, object.parent.height)
-	end
-	]]
+
+
+	-- Up arrow increase
 	local increasebutton = loveframes.objects["button"]:new()
 	increasebutton.parent = self
 	increasebutton:SetText("")
@@ -88,8 +86,7 @@ function newobject:initialize()
 		local down = object.down
 		local canmodify = self.canmodify
 		local lastbuttonclicked = self.lastbuttonclicked
-		--object:SetPos(object.parent.width - 20, 0)
-		--object:SetHeight(object.parent.height/2)
+
 		if down and not canmodify then
 			self:ModifyValue("add")
 			self.canmodify = true
@@ -103,11 +100,13 @@ function newobject:initialize()
 			self.delay = time + 0.80
 		end
 	end
+
+	-- Down arrow decrease
 	local decreasesbutton = loveframes.objects["button"]:new()
 	decreasesbutton.parent = self
+	decreasesbutton:SetText("")
 	decreasesbutton:SetSize(20, self.height/2)
 	decreasesbutton:SetPos(self.width - 20, self.height/2)
-	decreasesbutton:SetText("")
 	decreasesbutton:SetImage(downarrow)
 	decreasesbutton.OnClick = function()
 		local canmodify = self.canmodify
@@ -124,8 +123,7 @@ function newobject:initialize()
 		local down = object.down
 		local canmodify = self.canmodify
 		local lastbuttonclicked = self.lastbuttonclicked
-		--object:SetPos(object.parent.width - 20, object.parent.height/2)
-		--object:SetHeight(object.parent.height/2)
+
 		if down and not canmodify then
 			self:ModifyValue("subtract")
 			self.canmodify = true
@@ -158,7 +156,7 @@ function newobject:update(dt)
 	local update = self.Update
 
 	-- move to parent if there is a parent
-	if parent ~= base and parent.type ~= "list" then
+	if parent ~= base then
 		self.x = self.parent.x + self.staticx
 		self.y = self.parent.y + self.staticy
 	end

@@ -12,32 +12,30 @@
 --		⣴⣿⣾⣿⣿⣿⡿⡽⡑⢌⠪⡢⡣⣣⡟⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀ ⠀⠀⠀
 --		⡟⡾⣿⢿⢿⢵⣽⣾⣼⣘⢸⢸⣞⡟⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀ ⠀⠀⠀⠀
 --		⠁⠇⠡⠩⡫⢿⣝⡻⡮⣒⢽⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀
-
-
 ---@diagnostic disable: duplicate-set-field
-local loveframes 	= require "lib.loveframes"
-local client 		= require "client"
-local ui 			= require "core.interface.ui"
-
 
 local showfps = false
 local debuglaunch = false
+local lldebugger
 for k,v in pairs(arg) do
-	if v == "showfps" then
-		showfps = true
-	end
-
+	if v == "showfps" then showfps = true end
 	if v == "debug" then
 		debuglaunch = true
+		-- VS Code debugger
+		lldebugger = require "lldebugger"
+		lldebugger.start()
+		end
+	if v == "ui" then
+		love.filesystem.load("uidebug/uidebug.lua") ()
+
+		-- Skip all the code below.
+		do return end
 	end
 end
-
--- VS Code debugger
-local lldebugger
-if debuglaunch then
-	lldebugger = require "lldebugger"
-	lldebugger.start()
-end
+---------------------------------------------------------------------------------------
+local loveframes 	= require "lib.loveframes"
+local client 		= require "client"
+local ui 			= require "core.interface.ui"
 
 function love.load()
 	client.load()

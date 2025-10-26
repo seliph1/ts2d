@@ -31,16 +31,18 @@ function loveframes.Create(data, parent)
 			return newobject
 		end
 		-- remove the object if it is an internal
+		--[[
 		if newobject.internal then
 			newobject:Remove()
 			return
-		end
+		end]]
 		-- parent the new object by default to the base gui object
 		newobject.parent = loveframes.base
-		table.insert(loveframes.base.children, newobject)
 		-- if the parent argument is not nil, make that argument the object's new parent
 		if parent then
 			newobject:SetParent(parent)
+		else
+			newobject:SetParent(loveframes.base)
 		end
 		-- return the object for further manipulation
 		return newobject

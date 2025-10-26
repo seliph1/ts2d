@@ -35,7 +35,7 @@ function newobject:update(dt)
 	local base = loveframes.base
 	local update = self.Update
 	-- move to parent if there is a parent
-	if parent ~= base and parent.type ~= "list" then
+	if parent ~= base then
 		self.x = self.parent.x + self.staticx
 		self.y = self.parent.y + self.staticy
 	end

@@ -57,6 +57,7 @@ function newobject:initialize()
 	self.internals = {}
 	self.children = {}
 	self.icon = nil
+	self.toprequest = false
 	self.OnClose = nil
 	self.OnDock = nil
 	self.OnResize = nil
@@ -145,7 +146,7 @@ function newobject:update(dt)
 			-- check for frames to dock with
 			if dockable then
 				local ondock = self.OnDock
-				for k, v in ipairs(basechildren) do
+				for k, v in pairs(basechildren) do
 					if v.type == "frame" then
 						local topcol = loveframes.RectangleCollisionCheck(self.dockzones.bottom, v.dockzones.top)
 						local botcol = loveframes.RectangleCollisionCheck(self.dockzones.top, v.dockzones.bottom)
@@ -357,7 +358,7 @@ function newobject:update(dt)
 	if modal then
 		local tip = false
 		local key = 0
-		for k, v in ipairs(basechildren) do
+		for k, v in pairs(basechildren) do
 			if v.type == "tooltip" and v.show then
 				tip = v
 				key = k
@@ -383,14 +384,27 @@ function newobject:update(dt)
 		self.x = self.parent.x + self.staticx
 		self.y = self.parent.y + self.staticy
 	end
-	for k, v in ipairs(internals) do
+	for k, v in pairs(internals) do
 		v:update(dt)
 	end
-	for k, v in ipairs(children) do
+	for k, v in pairs(children) do
 		v:update(dt)
 	end
 	if update then
 		update(self, dt)
+	end
+
+	if self.toprequest then
+		self.toprequest = false
+
+		-- make this the top object
+		for k, v in pairs(basechildren) do
+			if v == self then
+				table.remove(basechildren, k)
+				table.insert(basechildren, self)
+				break
+			end
+		end
 	end
 end
 --[[---------------------------------------------------------
@@ -400,6 +414,7 @@ end
 function newobject:mousepressed(x, y, button)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
+
 	local width = self.width
 	local height = self.height
 	local internals = self.internals
@@ -560,10 +575,10 @@ function newobject:mousepressed(x, y, button)
 		end
 	end
 
-	for k, v in ipairs(internals) do
+	for k, v in pairs(children) do
 		v:mousepressed(x, y, button)
 	end
-	for k, v in ipairs(children) do
+	for k, v in pairs(internals) do
 		v:mousepressed(x, y, button)
 	end
 end
@@ -590,10 +605,10 @@ function newobject:mousereleased(x, y, button)
 		loveframes.resizeobject = false
 	end
 	self.cursor = nil
-	for k, v in ipairs(internals) do
+	for k, v in pairs(internals) do
 		v:mousereleased(x, y, button)
 	end
-	for k, v in ipairs(children) do
+	for k, v in pairs(children) do
 		v:mousereleased(x, y, button)
 	end
 end
@@ -693,7 +708,6 @@ end
 			order
 --]]---------------------------------------------------------
 function newobject:MakeTop()
-	local key = 0
 	local base = loveframes.base
 	local basechildren = base.children
 	local numbasechildren = #basechildren
@@ -713,17 +727,12 @@ function newobject:MakeTop()
 	if basechildren[numbasechildren] == self then
 		return self
 	end
-	-- make this the top object
-	for k, v in ipairs(basechildren) do
-		if v == self then
-			table.remove(basechildren, k)
-			table.insert(basechildren, self)
-			key = k
-			break
-		end
-	end
+
+	self.toprequest = true
 	return self
 end
+
+
 
 --[[---------------------------------------------------------
 	- func: SetModal(bool)
@@ -779,7 +788,7 @@ function newobject:SetVisible(bool)
 	local internals = self.internals
 	local closebutton = internals[1]
 	self.visible = bool
-	for k, v in ipairs(children) do
+	for k, v in pairs(children) do
 		v:SetVisible(bool)
 	end
 	if self.showclose then
