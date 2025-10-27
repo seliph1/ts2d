@@ -330,8 +330,6 @@ function client.input_response(peer_id, input)
 		-- Run it locally
 		--client.actions.fire.action(peer_id, home)
 	end
-
-
 end
 
 function client.warning(message)

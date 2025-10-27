@@ -345,13 +345,41 @@ function loveframes.RemoveAll()
 	loveframes.base.children = {}
 	loveframes.base.internals = {}
 	
-	loveframes.hoverobject = nil
-	loveframes.downobject = nil
-	loveframes.modalobject = nil
-	loveframes.inputobject = nil
-	loveframes.hover = nil
+	loveframes.hoverobject = false
+	loveframes.downobject = false
+	loveframes.modalobject = false
+	loveframes.inputobject = false
+	loveframes.draggingobject = false
 end
 
+--[[---------------------------------------------------------
+	- func: AnchorReset()
+	- desc: removes all gui elements
+--]]---------------------------------------------------------
+function loveframes.AnchorReset()
+	loveframes.hoverobject = false
+	loveframes.downobject = false
+	loveframes.modalobject = false
+	loveframes.inputobject = false
+	loveframes.draggingobject = false
+
+	loveframes.anchor_x = 0
+	loveframes.anchor_y = 0
+	loveframes.drag_width = 0
+	loveframes.drag_height = 0
+	loveframes.drag_x = 0
+	loveframes.drag_y = 0
+end
+
+function loveframes.GetAnchors()
+	return
+		loveframes.anchor_x,
+		loveframes.anchor_y,
+		loveframes.drag_x,
+		loveframes.drag_y,
+		loveframes.drag_width,
+		loveframes.drag_height
+end
 --[[---------------------------------------------------------
 	- func: TableHasValue(table, value)
 	- desc: checks to see if a table has a specific value
@@ -394,12 +422,12 @@ end
 
 --[[---------------------------------------------------------
 	- func: GetHover()
-	- desc: returns loveframes.hover, can be used to check
+	- desc: returns the collision count, can be used to check
 			if the mouse is colliding with a visible
 			Love Frames object
 --]]---------------------------------------------------------
 function loveframes.GetHover()
-	return loveframes.hover
+	return loveframes.collisioncount > 1
 end
 
 --[[---------------------------------------------------------

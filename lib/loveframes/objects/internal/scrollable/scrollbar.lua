@@ -77,14 +77,15 @@ function newobject:update(dt)
 		self.maxy = parent.y + (parent.height - self.height)
 		self.x = parent.x + parent.width - self.width
 		self.y = parent.y + self.staticy
-		if dragging and scrollable.itemheight > scrollable.height then
+		-- If dragging.
+		if self:IsDragging() and scrollable.itemheight > scrollable.height then
+			self:DragY()
 			if self.staticy ~= self.lasty then
 				if scrollable.OnScroll then
 					scrollable.OnScroll(scrollable)
 				end
 				self.lasty = self.staticy
 			end
-			self.staticy = self.starty + (y - self.clicky)
 		end
 		local space = (self.maxy - parent.y)
 		local remaining = (0 + self.staticy)
@@ -108,14 +109,14 @@ function newobject:update(dt)
 		self.maxx = parent.x + (parent.width) - self.width
 		self.x = parent.x + self.staticx
 		self.y = parent.y + self.staticy
-		if dragging and scrollable.itemwidth > scrollable.width then
+		if self:IsDragging() and scrollable.itemwidth > scrollable.width then
+			self:DragY()
 			if self.staticx ~= self.lastx then
 				if scrollable.OnScroll then
 					scrollable.OnScroll(scrollable)
 				end
 				self.lastx = self.staticx
 			end
-			self.staticx = self.startx + (x - self.clickx)
 		end
 		local space      = (self.maxx - parent.x)
 		local remaining  = (0 + self.staticx)
@@ -155,17 +156,7 @@ function newobject:mousepressed(x, y, button)
 	if baseparent.type == "frame" then
 		baseparent:MakeTop()
 	end
-	local dragging = self.dragging
-	if not dragging then
-		if button == 1 then
-			self.starty = self.staticy
-			self.startx = self.staticx
-			self.clickx = x
-			self.clicky = y
-			self.dragging = true
-			loveframes.downobject = self
-		end
-	end
+
 end
 
 --[[---------------------------------------------------------
@@ -173,13 +164,7 @@ end
 	- desc: called when the player releases a mouse button
 --]]---------------------------------------------------------
 function newobject:mousereleased(x, y, button)
-	local visible = self.visible
-	if not visible then
-		return
-	end
-	if self.dragging then
-		self.dragging = false
-	end
+	if not self.visible then return end
 end
 --[[---------------------------------------------------------
 	- func: SetMaxX(x)
@@ -296,13 +281,6 @@ function newobject:ScrollBottom()
 	if onscroll then
 		onscroll(scrollable)
 	end
-end
---[[---------------------------------------------------------
-	- func: IsDragging()
-	- desc: gets whether the object is being dragged or not
---]]---------------------------------------------------------
-function newobject:IsDragging()
-	return self.dragging
 end
 
 --[[---------------------------------------------------------

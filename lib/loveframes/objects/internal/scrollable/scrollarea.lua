@@ -20,7 +20,7 @@ function newobject:initialize(parent, bartype)
 	self.x = 0
 	self.y = 0
 	self.scrolldelay = 0
-	self.delayamount = 0.05
+	self.delayamount = 0.0005
 	self.down = false
 	self.internal = true
 	self.internals = {}
@@ -35,12 +35,8 @@ end
 	- desc: updates the object
 --]]---------------------------------------------------------
 function newobject:update(dt)
-	local visible = self.visible
-	local alwaysupdate = self.alwaysupdate
-	if not visible then
-		if not alwaysupdate then
-			return
-		end
+	if not (self.visible or self.alwaysupdate) then
+		return
 	end
 	self:CheckHover()
 	local base = loveframes.base
@@ -58,6 +54,7 @@ function newobject:update(dt)
 	local bar = internals[1]
 	local hover = self.hover
 	local update = self.Update
+	
 	if button then
 		if bartype == "vertical" then
 			self.staticx = 0
@@ -76,7 +73,9 @@ function newobject:update(dt)
 		self.x = parent.x + self.staticx
 		self.y = parent.y + self.staticy
 	end
-	if down then
+
+	--[[
+	if loveframes.downobject == self then
 		if scrolldelay < time then
 			self.scrolldelay = time + delayamount
 			if self.bartype == "vertical" then
@@ -94,9 +93,10 @@ function newobject:update(dt)
 			end
 		end
 		if not hover then
-			self.down = false
+			self.downobject = false
 		end
 	end
+	]]
 	for k, v in ipairs(internals) do
 		v:update(dt)
 	end
@@ -109,11 +109,22 @@ end
 	- func: mousepressed(x, y, button)
 	- desc: called when the player presses a mouse button
 --]]---------------------------------------------------------
-function newobject:mousepressed(x, y, button)
-	local visible = self.visible
-	if not visible then
-		return
+function newobject:mousepressed(x, y, button, istouch, presses)
+	if not self.visible then return end
+	local internals = self.internals
+
+	if self.hover and button == 1 then
+		local relative_x = x - self.x
+		local relative_y = y - self.y
+
+		local proportion_width = relative_x / self.width
+		local proportion_height = relative_y / self.height
+		--print(proportion_width, proportion_height)
+
+		local bar = internals[1]
 	end
+
+	--[[
 	local listo = self.parent.parent
 	local time = love.timer.getTime()
 	local internals = self.internals
@@ -121,7 +132,7 @@ function newobject:mousepressed(x, y, button)
 	local hover = self.hover
 	local delayamount = self.delayamount
 	if hover and button == 1 then
-		self.down = true
+		loveframes.downobject = self
 		self.scrolldelay = time + delayamount + 0.5
 		local baseparent = self:GetBaseParent()
 		if baseparent and baseparent.type == "frame" then
@@ -140,8 +151,8 @@ function newobject:mousepressed(x, y, button)
 				bar:Scroll(-bar.width)
 			end
 		end
-		loveframes.downobject = self
 	end
+	]]
 	for k, v in ipairs(internals) do
 		v:mousepressed(x, y, button)
 	end
@@ -152,23 +163,17 @@ end
 	- desc: called when the player releases a mouse button
 --]]---------------------------------------------------------
 function newobject:mousereleased(x, y, button)
-	
 	local visible = self.visible
-	
 	if not visible then
 		return
 	end
-	
 	local internals = self.internals
-	
 	if button == 1 then
-		self.down = false
+		loveframes.downobject = false
 	end
-	
 	for k, v in ipairs(internals) do
 		v:mousereleased(x, y, button)
 	end
-
 end
 
 --[[---------------------------------------------------------
@@ -176,9 +181,7 @@ end
 	- desc: gets the object's bar type
 --]]---------------------------------------------------------
 function newobject:GetBarType()
-	
 	return self.bartype
-	
 end
 
 ---------- module end ----------

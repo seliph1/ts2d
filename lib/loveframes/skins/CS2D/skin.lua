@@ -1858,7 +1858,7 @@ function skin.columnlistheader(object)
 	local nohovercolor = skin.controls.columnlistheader_body_nohover_color
 	local textnohovercolor = skin.controls.columnlistheader_text_nohover_color
 	
-	local twidth = font:getWidth(name)
+	local twidth = font:getWidth()
 	local name = ParseHeaderText(object:GetName(), x, width, x + width/2, twidth)
 
 	if down then

@@ -550,6 +550,9 @@ function newobject:SetVisible(bool)
 	if loveframes.draggingobject == self then
 		loveframes.draggingobject = nil
 	end
+	if loveframes.hoverobject == self then
+		loveframes.hoverobject = nil
+	end
 	if loveframes.downobject == self then
 		loveframes.downobject = nil
 	end
@@ -576,6 +579,126 @@ function newobject:GetVisible()
 end
 
 newobject.IsVisible = newobject.GetVisible
+--[[---------------------------------------------------------
+	- func: IsDragging()
+	- desc: gets the object's dragging status
+--]]---------------------------------------------------------
+function newobject:IsDragging(x, y, w, h)
+	local drag = ( loveframes.draggingobject == self )
+	if drag and (x and y and w and h) then
+		local dx, dy = loveframes.anchor_x, loveframes.anchor_y
+		return dx >= x and dy >= y and dx <= w and dy <= h
+	end
+	return drag
+end
+newobject.GetDragZone = newobject.IsDragging
+
+function newobject:Drag(mx, my)
+	local parent = self.parent
+	local base = loveframes.base
+	mx = mx or love.mouse.getX()
+	my = my or love.mouse.getY()
+	if parent == base then
+		self.x = mx - loveframes.anchor_x
+		self.y = my - loveframes.anchor_y
+	else
+		self.staticx = mx - parent.x - loveframes.anchor_x
+		self.staticy = my - parent.y - loveframes.anchor_y
+	end
+end
+
+function newobject:DragX()
+		local parent = self.parent
+	local base = loveframes.base
+
+	local x, y = love.mouse.getX()
+	if parent == base then
+		self.x = x - loveframes.anchor_x
+	else
+		self.staticx = x - parent.x - loveframes.anchor_x
+	end
+end
+
+function newobject:DragY()
+	local parent = self.parent
+	local base = loveframes.base
+
+	local x, y = love.mouse.getPosition()
+	if parent == base then
+		self.y = y - loveframes.anchor_y
+	else
+		self.staticy = y - parent.y - loveframes.anchor_y
+	end
+end
+
+---@param mx number
+---@param my number
+---@return "top"|"bottom"|"left"|"right"|"top_left"|"top_right"|"bottom_left"|"bottom_right"|nil
+function newobject:GetResizeZone(mx, my)
+	mx = mx or love.mouse.getX()
+	my = my or love.mouse.getY()
+	local margin = self.resizemargin or 6
+	local x, y, w, h = self.x, self.y, self.width, self.height
+    local left   = mx >= x and mx <= x + margin
+    local right  = mx >= (x + w) - margin and mx <= (x + w)-1
+    local top    = my >= y and my <= y + margin
+    local bottom = my >= (y + h) - margin and my <= (y + h)-1
+
+	if top and left then
+		return "top_left"
+	elseif top and right then
+		return "top_right"
+	elseif bottom and left then
+		return "bottom_left"
+	elseif bottom and right then
+		return "bottom_right"
+	elseif top then
+		return "top"
+	elseif bottom then
+		return "bottom"
+	elseif left then
+		return "left"
+	elseif right then
+		return "right"
+	end
+    return nil
+end
+newobject.IsResizing = newobject.GetResizeZone
+
+function newobject:Resize(mx, my)
+	mx = mx or love.mouse.getX()
+	my = my or love.mouse.getY()
+
+	local ax, ay, x, y, width, height = loveframes.GetAnchors()
+	local margin = self.resizemargin or 6
+    local left   = ax >= 0 and ax <= margin
+    local right  = ax >= width - margin and ax <= width
+    local top    = ay >= 0 and ay <= margin
+    local bottom = ay >= height - margin and ay <= height
+    local min_width = self.minwidth or 100
+	local max_width = self.maxwidth or 400
+	local min_height = self.minheight or 100
+	local max_height = self.maxheight or 400
+	local new_width, new_height = width, height
+	if bottom then new_height = height - y + (my-ay) end
+	if right then new_width = width - x + (mx-ax) end
+	if left then new_width = width + x - (mx-ax) end
+	if top then new_height = height + y - (my-ay) end
+	
+	if new_width >= min_width and new_width <= max_width then
+		if left then
+			self.x = x - (new_width - width)
+		end
+		self.width = new_width
+	end
+	if new_height >= min_height and new_height <= max_height then
+		if top then
+			self.y = y - (new_height - height)
+		end
+		self.height = new_height
+	end
+end
+
 --[[---------------------------------------------------------
 	- func: SetParent(parent)
 	- desc: sets the object's parent
@@ -781,7 +904,6 @@ function newobject:CheckHover()
 	local calledmousefunc = self.calledmousefunc
 	-- check for mouse enter and exit events
 	if hover then
-		loveframes.hover = true
 		if not calledmousefunc then
 			self.hovertime = love.timer.getTime()
 			local on_mouse_enter = self.OnMouseEnter

@@ -6,6 +6,7 @@
 /other/
 /assets/
 /.vscode/
+/uidebug/
 
 *.bak
 *.bat

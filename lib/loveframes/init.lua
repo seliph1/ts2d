@@ -47,19 +47,24 @@ loveframes.state = "none"
 loveframes.drawcount = 0
 loveframes.collisioncount = 0
 loveframes.objectcount = 0
-loveframes.hoverobject = nil
-loveframes.draggingobject = nil
-loveframes.modalobject = nil
-loveframes.inputobject = nil
-loveframes.downobject = nil
-loveframes.hover = nil
-loveframes.resizeobject = false
-loveframes.dragobject = false
-
+loveframes.collisions = nil
+-- Anchors
+loveframes.modalobject = false
+loveframes.inputobject = false
+loveframes.downobject = false
+loveframes.hoverobject = false
+loveframes.draggingobject = false
+loveframes.anchor_x = 0
+loveframes.anchor_y = 0
+loveframes.drag_width = 0
+loveframes.drag_height = 0
+loveframes.drag_x = 0
+loveframes.drag_y = 0
+-- Fonts
 loveframes.opacity = 1
 loveframes.basicfont = love.graphics.newFont(12)
 loveframes.basicfontsmall = love.graphics.newFont(10)
-loveframes.collisions = nil
+-- Cursors
 loveframes.cursors = {
 	ibeam = love.mouse.getSystemCursor("ibeam"),
 	arrow = love.mouse.getSystemCursor("arrow"),
@@ -94,8 +99,7 @@ function loveframes.update(dt)
 
 	loveframes.collisioncount = 0
 	loveframes.objectcount = 0
-	loveframes.hover = nil
-	loveframes.hoverobject = nil
+	loveframes.hoverobject = false
 
 	local downobject = loveframes.downobject
 	if loveframes.collisions then
@@ -115,13 +119,13 @@ function loveframes.update(dt)
 		local current = love.mouse.getCursor()
 		local cursors = loveframes.cursors
 
-		if hoverobject and hoverobject.cursor then
-			if current ~= hoverobject.cursor then
-				love.mouse.setCursor(hoverobject.cursor)
-			end
-		elseif draggingobject and draggingobject.cursor then
+		if draggingobject then
 			if current ~= draggingobject.cursor then
 				love.mouse.setCursor(draggingobject.cursor)
+			end
+		elseif hoverobject then
+			if current ~= hoverobject.cursor then
+				love.mouse.setCursor(hoverobject.cursor)
 			end
 		else
 			if current ~= cursors.arrow then
@@ -167,31 +171,23 @@ end
 	- desc: called when the player presses a mouse button
 --]]---------------------------------------------------------
 function loveframes.mousepressed(x, y, button, istouch, presses)
-	local base = loveframes.base
-	base:mousepressed(x, y, button, istouch, presses)
-
 	local hoverobject = loveframes.GetHoverObject()
-	if hoverobject then
+	if hoverobject and button == 1 then
 		loveframes.draggingobject = hoverobject
+		loveframes.anchor_x = x - hoverobject.x
+		loveframes.anchor_y = y - hoverobject.y
+		loveframes.drag_x = hoverobject.x
+		loveframes.drag_y = hoverobject.y
+		loveframes.drag_width = hoverobject.width
+		loveframes.drag_height = hoverobject.height
 	end
 
-	--[[
-	-- close open menus
-	local bchildren = base.children
-		for k, v in ipairs(bchildren) do
-		local otype = v.type
-		local visible = v.visible
-		if hoverobject then
-			local htype = hoverobject.type
-			if otype == "menu" and visible and htype ~= "menu" and htype ~= "menuoption" then
-				v:SetVisible(false)
-			end
-		else
-			if otype == "menu" and visible then
-				v:SetVisible(false)
-			end
-		end
-	end]]
+	if button ~= 1 then
+		loveframes.AnchorReset()
+	end
+
+	local base = loveframes.base
+	base:mousepressed(x, y, button, istouch, presses)
 end
 
 --[[---------------------------------------------------------
@@ -199,16 +195,13 @@ end
 	- desc: called when the player releases a mouse button
 --]]---------------------------------------------------------
 function loveframes.mousereleased(x, y, button, istouch, presses)
-	local base = loveframes.base
-	base:mousereleased(x, y, button, istouch, presses)
-
-	loveframes.draggingobject = nil
-
 	-- reset the hover object
 	if button == 1 then
-		loveframes.downobject = false
-		loveframes.selectedobject = false
+		loveframes.AnchorReset()
 	end
+
+	local base = loveframes.base
+	base:mousereleased(x, y, button, istouch, presses)
 end
 
 --[[---------------------------------------------------------

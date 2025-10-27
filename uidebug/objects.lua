@@ -25,7 +25,7 @@ end
 --Objects-----------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------
 
-ui.frame = LF.Create("frame"):SetName("Debug"):CenterX()
+ui.frame = LF.Create("frame"):SetName("Debug"):SetSize(400, 300):CenterX()
 ui.hoverlabel = LF.Create("label", ui.frame):SetPos(5, 30):SetText("Hover: ")
 ui.hoverdisplay = LF.Create("label", ui.frame):SetPos(ui.hoverlabel:GetWidth(-5), 30)
 
@@ -44,6 +44,9 @@ ui.memorydisplay = LF.Create("label", ui.frame):SetPos(ui.memorylabel:GetWidth(-
 ui.fpslabel = LF.Create("label", ui.frame):SetPos(5, 130):SetText("FPS: ")
 ui.fpsdisplay = LF.Create("label", ui.frame):SetPos(ui.fpslabel:GetWidth(-5), 130)
 
+ui.resizelabel = LF.Create("label", ui.frame):SetPos(5, 150):SetText("Resize: ")
+ui.resizedisplay = LF.Create("label", ui.frame):SetPos(ui.resizelabel:GetWidth(-5), 150)
+
 function ui.frame.Update(object)
     local hover = tostring(LF.hoverobject) or "nil"
     ui.hoverdisplay:SetText(hover)
@@ -59,17 +62,19 @@ function ui.frame.Update(object)
 
     local fps = love.timer.getFPS()
     ui.fpsdisplay:SetText( tostring(fps) )
+
+    local ax, ay, x, y, w, h = LF.anchor_x, LF.anchor_y, LF.drag_x, LF.drag_y, LF.drag_width, LF.drag_height
+    ui.resizedisplay:SetText( string.format(" anchor[%s, %s, %s, %s, %s, %s]", ax, ay, x, y, w, h ) )
 end
 
 local filltable = {}
-for i=1,10 do table.insert(filltable, random_string(10)) end
+for i=1,50 do table.insert(filltable, random_string(10)) end
 
 ui.droplistframe = LF.Create("frame"):SetName("Droplist"):SetSize(400, 400)
 ui.droplistscroll = LF.Create("scrollpane", ui.droplistframe)
 :SetY(30):SetSize( ui.droplistframe:GetWidth(10), ui.droplistframe:GetHeight(40) - 100 ):CenterX()
 ui.droplist = LF.Create("droplist", ui.droplistscroll):SetSize(ui.droplistscroll:GetSize())
 ui.droplist:AddItemsFromTable(filltable)
---[[
 ui.droplist_amount = LF.Create("label", ui.droplistframe)
 ui.droplist_amount:SetText(string.format("Amount: %s", ui.droplist:Count())):SetPos( 5, ui.droplistframe:GetWidth(110) )
 
@@ -89,8 +94,11 @@ function ui.droplist_add.OnClick(object)
 
     ui.droplist_amount:SetText( string.format("Amount: %s", ui.droplist:Count() ) )
 end
-]]
 
 function ui.droplist.OnClick(object, element, element_id)
     print(object, element, element_id)
 end
+----------------------
+
+ui.resizableframe = LF.Create("frame")
+:SetResizable(true):Center():SetName("Resizable Frame")

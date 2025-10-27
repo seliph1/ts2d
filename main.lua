@@ -57,7 +57,7 @@ end
 
 function love.mousepressed(x, y, button, istouch, presses)
 	loveframes.mousepressed(x, y, button, istouch, presses)
-	if loveframes.GetInputObject() == nil and loveframes.GetCollisionCount() < 1 then
+	if loveframes.GetInputObject() == false and loveframes.GetCollisionCount() < 1 then
 		client.mousepressed(x, y, button, istouch, presses)
 	end
 end
