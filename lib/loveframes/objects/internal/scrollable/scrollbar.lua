@@ -32,8 +32,8 @@ function newobject:initialize(parent, bartype)
 	self.lasty = 0
 	self.internal = true
 	self.hover = false
-	self.dragging = false
 	self.autoscroll = false
+	self.dragging = false
 	self.internal = true
 	if self.bartype == "vertical" then
 		self.width = self.parent.width
@@ -62,7 +62,6 @@ function newobject:update(dt)
 	self:CheckHover()
 	local x, y     = love.mouse.getPosition()
 	local bartype  = self.bartype
-	local dragging = self.dragging
 	local parent = self.parent
 	local scrollable = parent.parent.parent
 
@@ -71,6 +70,7 @@ function newobject:update(dt)
 	elseif bartype == "horizontal" then
 		self.height = parent.height
 	end
+	self.dragging = self:IsDragging()
 
 	if bartype == "vertical" then
 		self.height = self:CalculateBarSize()
@@ -110,7 +110,7 @@ function newobject:update(dt)
 		self.x = parent.x + self.staticx
 		self.y = parent.y + self.staticy
 		if self:IsDragging() and scrollable.itemwidth > scrollable.width then
-			self:DragY()
+			self:DragX()
 			if self.staticx ~= self.lastx then
 				if scrollable.OnScroll then
 					scrollable.OnScroll(scrollable)

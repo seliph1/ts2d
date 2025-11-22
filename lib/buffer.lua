@@ -5,19 +5,19 @@ History = {}
 function History.new(max_size)
    local hist = { __index = History }
    setmetatable(hist, hist)
-   hist.max_size = max_size or 10
-   hist.size = 0
-   hist.cursor = 1
+   hist._max_size = max_size or 10
+   hist._size = 0
+   hist._cursor = 1
    return hist
 end
 
 function History:push(value)
-  if self.size < self.max_size then
+  if self._size < self._max_size then
     table.insert(self, value)
-    self.size = self.size + 1
+    self._size = self._size + 1
   else
-    self[self.cursor] = value
-    self.cursor = self.cursor % self.max_size + 1
+    self[self._cursor] = value
+    self._cursor = self._cursor % self._max_size + 1
   end
 end
 
@@ -25,10 +25,18 @@ function History:iterator()
   local i = 0
   return function()
     i = i + 1
-    if i <= self.size then
-      return self[(self.cursor - i - 1) % self.size + 1]
+    if i <= self._size then
+      return self[(self._cursor - i - 1) % self._size + 1]
     end
   end
+end
+
+function History:clear()
+  for k = 1, self._max_size do
+    self[k] = nil
+  end
+  self._cursor = 1
+  self._size = 0
 end
 
 return History

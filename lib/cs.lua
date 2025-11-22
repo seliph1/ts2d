@@ -1,16 +1,9 @@
 local enet      = require 'enet'
 local state     = require 'lib.state'
---local bitser    = require 'lib.bitser'
---local binser    = require 'lib.binser'
 local cbor      = require 'lib.cbor'
 local serpent   = require 'lib.serpent'
 local List      = require 'lib.list'
 local Buffer    = require 'lib.buffer'
-
---local encode = bitser.dumps
---local decode = bitser.loads
---local encode = binser.serialize
---local decode = binser.deserializeN
 
 local encode = cbor.encode
 local decode = cbor.decode
@@ -28,6 +21,7 @@ client.numChannels = 3
 client.connected = false
 client.joined = false
 client.id = nil
+client.dt = 0
 client.backgrounded = false
 client.name = "Player"
 client.version = "*"
@@ -61,6 +55,8 @@ function client.disableCompression()
 end
 
 function client.start(address)
+    client.reset()
+
     address = address or '127.0.0.1:36963'
     host = enet.host_create()
     if useCompression then
@@ -69,6 +65,31 @@ function client.start(address)
     print("CS: client peer started ("..tostring(host)..")")
     print("CS: attempting connection to: "..address)
     host:connect(address, client.numChannels)
+end
+
+function client.reset()
+    client.connected = false
+    client.joined = false
+    client.id = nil
+    for k in pairs(share) do
+        share[k] = nil
+    end
+    for k in pairs(home) do
+        home[k] = nil
+    end
+    host = nil
+    peer = nil
+
+    client.inputSequence = 0
+    client.remoteInputSequence = 0
+
+    client.stateBuffer:clear()
+    client.inputCache:clear()
+    client.snapshot:clear()
+    client.inputSequence = 0
+    client.lastState = nil
+
+    collectgarbage("collect")
 end
 
 function client.sendExt(channel, flag, ...)
@@ -237,11 +258,13 @@ function client.postupdate(dt)
         -- Stores the inputState so we can later do some client prediction
         client.inputCache:push(inputState)
     end
-
+    
     -- Run the tick callback
+    client.dt = timeSinceLastUpdate
     if client.tick then
         client.tick(timeSinceLastUpdate)
     end
+    
 
     -- Send home updates to server
     if peer then
@@ -413,6 +436,10 @@ function client.request_handler(event)
 end
 
 function client.connect_handler(event)
+    if client.connect_attempt then
+        client.connect_attempt()
+    end
+
     print("CS: connection attempt")
 end
 
@@ -428,16 +455,29 @@ function client.disconnect_handler(event)
     end
     host = nil
     peer = nil
-    print("CS: disconnected from server")
-
     client.inputCache:clear()
     client.inputSequence = 0
     if client.disconnect then
         client.disconnect()
     end
+    print("CS: disconnected from server")
 end
 
-client.DIFF_NIL = state.DIFF_NIL
+function client.void(object)
+    return (object == state.DIFF_NIL)
+end
 
+function client.attribute(attribute)
+    local value = home[attribute]
+    if value == state.DIFF_NIL then
+        return nil
+    else
+        return value
+    end
+end
+client.attr = client.attribute
+
+
+client.DIFF_NIL = state.DIFF_NIL
 return client
 

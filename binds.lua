@@ -33,7 +33,7 @@ binds["f3"]         = {input="serveraction2", type="pulse"}
 binds["f4"]         = {input="serveraction3", type="pulse"}
 binds["e"]          = {input="use", type="pulse"}
 
-return binds
+client.binds = binds
 ------------------------
 -- Module end
 ------------------------

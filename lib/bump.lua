@@ -789,6 +789,19 @@ function World:projectMove(item, x, y, w, h, goalX, goalY, filter)
   return goalX, goalY, cols, len
 end
 
+function World:clear()
+  for k in pairs(self.rects) do
+    self.rects[k] = nil
+  end
+  for k in pairs(self.rows) do
+    self.rows[k] = nil
+  end
+  for k in pairs(self.nonEmptyCells) do
+    self.nonEmptyCells[k] = nil
+  end
+  collectgarbage("collect")
+end
+
 -- Public library functions
 
 bump.newWorld = function(cellSize)

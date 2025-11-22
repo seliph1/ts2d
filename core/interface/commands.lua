@@ -141,54 +141,16 @@ local commands = {
 		action = function()
 			local home = client.home
 			local share = client.share
-			local diff_x = (client.width/2 - home.targetX)
-			local diff_y = (client.height/2 - home.targetY)
+			local targetX = client.attribute "targetX"
+			local targetY = client.attribute "targetY"
+
+			local diff_x = (client.width/2 - targetX)
+			local diff_y = (client.height/2 - targetY)
 
 			local pos_x = client.camera.x - diff_x
 			local pos_y = client.camera.y - diff_y
 
 			client.send(string.format("setpos %s %s %s", client.id, pos_x, pos_y))
-		end
-	};
-
-	--[[
-	setweapon = {
-		action =  function(client_id, weapon_id)
-			client_id = tonumber(client_id)
-			weapon_id = tonumber(weapon_id)
-			print(client_id, weapon_id)
-			client.send(string.format("setweapon %s %s", client_id, weapon_id))
-		end
-	};]]
-
-	weapon = {
-		action =  function(weapon_id)
-			weapon_id = tonumber(weapon_id)
-			client.send(string.format("weapon %s", weapon_id))
-		end
-	};
-
-	weaponlist = {
-		action = function()
-			local players = client.share_local.players
-			local player
-			if players then
-				player = players[client.id]
-			end
-			if player then
-				--local LF = require "lib.loveframes"
-				local ui = require "core.interface.ui"
-				--[[
-				local width, height = 300, 150
-            	local frame = LF.Create("frame"):SetSize(width, height):SetState("*"):Center()
-				local panel = LF.Create("panel", frame):SetSize(width-20, height-50):SetPos(10, 30)
-            	local messagebox = LF.Create("messagebox", panel)
-            	messagebox:SetMaxWidth(width-20):SetText("©255000000"..message):Center()
-				]]
-				for k,v in pairs(player.i) do
-					ui.chat_frame_server_message(k.." "..serpent.line(v) )
-				end
-			end
 		end
 	};
 
@@ -237,6 +199,7 @@ local commands = {
 			client.debug_level = tonumber(level) or 0
 		end;
 	};
+
 	utf8 = {
 		action = function()
 			local frases = {
@@ -261,6 +224,68 @@ local commands = {
 			end
 		end;
 	};
+
+	follow = {
+		action = function(category, id)
+			if not client.joined then return "Client isn't connected. Cannot follow anything." end
+			id = tonumber(id) or 0
+			if id == 0 then
+				client.camera_unbind()
+				return
+			end
+
+			local share = client.share
+			if not share[category] then return "There is no category with that name" end
+			if not share[category][id] then return "There is no entity with this ID" end
+			local entity = share[category][id]
+			if entity and entity.x and entity.y then
+				client.camera_follow(entity)
+			end
+
+		end;
+	};
+
+	get = {
+		action = function(url, options)
+			local thread = love.thread.newThread("http_thread.lua")
+			if thread then
+				thread:start(url, options)
+			end
+		end
+	};
+
+
+	text = {
+		action = function(size)
+			size = tonumber(size) or 10
+			local chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+			local function hugeString(len)
+				local t = {}
+				for i = 1, len do
+					local idx = math.random(#chars)
+					t[i] = chars:sub(idx, idx)
+				end
+				return table.concat(t)
+			end
+			local LF = require "lib.loveframes"
+			local frame = LF.Create("frame"):SetSize(500, 500)
+			local w, h = frame:GetSize()
+			local panel = LF.Create("panel", frame)
+				:SetSize(w, h-30)
+				:SetY(30)
+			local scroll = LF.Create("scrollpane", frame)
+				:SetSize(w, h-30)
+				:SetY(30)
+			local label = LF.Create("label", scroll)
+				:SetMaxWidth(w)
+				:SetColor(1,1,1,1)
+
+			local body = hugeString(size)
+			if body then
+				label:SetText(body)
+			end
+		end
+	}
 }
 
 return commands

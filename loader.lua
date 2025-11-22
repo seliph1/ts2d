@@ -1,13 +1,11 @@
 return function(client)
-	--[[
-	require "lib.lovefs.lovefs"
-	local fs = lovefs()
-	if love.filesystem.isFused() then
-		fs:cd(love.filesystem.getSourceBaseDirectory() )
-	else
-		fs:cd(love.filesystem.getSource() )
-	end]]
-
+	client.gfx = {
+		itemlist = {};
+		hud = {};
+		objects = {};
+		player = {};
+		ui = {};
+	}
 
 	local function imageload(path)
 		local imageData = love.image.newImageData(path)
@@ -33,20 +31,6 @@ return function(client)
 		local full_path_k = path .. item.kill_image
 		local full_path = path .. item.display_image
 
-		--[[
-		if item.dropped_image ~= "" and fs:isFile(full_path) then
-			client.gfx.itemlist[full_path] = fs:loadImage(full_path)
-		end
-		if item.held_image ~= "" and fs:isFile(full_path_d) then
-			client.gfx.itemlist[full_path_d] = fs:loadImage(full_path_d)
-		end
-		if item.display_image ~= "" and fs:isFile(full_path_h) then
-			client.gfx.itemlist[full_path_h] = fs:loadImage(full_path_h)
-		end
-		if item.kill_image ~= "" and fs:isFile(full_path_k) then
-			client.gfx.itemlist[full_path_k] = fs:loadImage(full_path_k)
-		end
-		]]
 		if item.dropped_image ~= "" and LF.getInfo(full_path, "file") then
 			client.gfx.itemlist[full_path] = imageload(full_path)
 		end
@@ -72,5 +56,8 @@ return function(client)
 
 	for _, item in pairs(client.content.ui) do
 		client.gfx.ui[item] = imageload(item)
+	end
+
+	function client.register_gfx(path)
 	end
 end

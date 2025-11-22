@@ -15,6 +15,11 @@ function effect.register(particle, name, options)
 end
 
 function effect.new(name, x, y, args)
+	if not effect.list[name] then
+		print(string.format("effect %s not found.", name))
+		return
+	end
+
 	if effect.list[name].type == "particle" then
 		local effect_id, new_effect =  effect.new_particle(name, x, y, args)
 		return effect_id, new_effect

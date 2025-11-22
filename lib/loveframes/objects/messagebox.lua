@@ -12,13 +12,13 @@ return function(loveframes)
 ---------- module start ----------
 
 -- label object
-local newobject = loveframes.NewObject("messagebox", "loveframes_object_messagebox", true)
+local MessageBox = loveframes.NewObject("messagebox", "loveframes_object_messagebox", true)
 
 --[[---------------------------------------------------------
 	- func: initialize()
 	- desc: initializes the object
 --]]---------------------------------------------------------
-function newobject:initialize()
+function MessageBox:initialize()
 	-- Font properties
 	local skin = loveframes.GetActiveSkin()
 	local default_font = skin.directives.text_default_font
@@ -47,7 +47,7 @@ end
 	- func: update(deltatime)
 	- desc: updates the object
 --]]---------------------------------------------------------
-function newobject:update(dt)
+function MessageBox:update(dt)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
 	local parent = self.parent
@@ -69,7 +69,7 @@ end
 	- func: mousepressed(x, y, button)
 	- desc: called when the player presses a mouse button
 --]]---------------------------------------------------------
-function newobject:mousepressed(x, y, button)
+function MessageBox:mousepressed(x, y, button)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
 	local hover = self.hover
@@ -90,7 +90,7 @@ end
 	- func: SetText(text)
 	- desc: sets the object's text
 --]]---------------------------------------------------------
-function newobject:fixUTF8(s, replacement)
+function MessageBox:fixUTF8(s, replacement)
   local p, len, invalid = 1, #s, {}
   while p <= len do
     if     p == s:find("[%z\1-\127]", p) then p = p + 1
@@ -110,7 +110,7 @@ function newobject:fixUTF8(s, replacement)
   return s, invalid
 end
 
-function newobject:SetText(text)
+function MessageBox:SetText(text)
 	self.textmesh:clear()
 	-- Fix the text
 	text = self:fixUTF8(text," ")
@@ -136,10 +136,11 @@ function newobject:SetText(text)
 
 	local width, height = self.textmesh:getDimensions()
 	self:SetSize(width, height)
+
 	return self
 end
 
-function newobject:SetHoverText(text)
+function MessageBox:SetHoverText(text)
 	if text == "" then
 		self.hoverenabled = false
 	end
@@ -175,7 +176,7 @@ end
 	- func: ParseText(text)
 	- desc: parses the text of this object
 --]]---------------------------------------------------------
-function newobject:ParseText(str)
+function MessageBox:ParseText(str)
 	local formattedchunks = {}
 	local formattedstring = {}
 	local defaultColor = self.defaultcolor
@@ -232,14 +233,14 @@ end
 	- func: GetText()
 	- desc: gets the object's text
 --]]---------------------------------------------------------
-function newobject:GetText()
+function MessageBox:GetText()
 	return self.text
 end
 --[[---------------------------------------------------------
 	- func: GetFormattedText()
 	- desc: gets the object's formatted text
 --]]---------------------------------------------------------
-function newobject:GetFormattedText()
+function MessageBox:GetFormattedText()
 	return self.formattedtext
 end
 
@@ -247,7 +248,7 @@ end
 	- func: SetMaxWidth(width)
 	- desc: sets the object's maximum width
 --]]---------------------------------------------------------
-function newobject:SetMaxWidth(width)
+function MessageBox:SetMaxWidth(width)
 	self.maxwidth = width
 	return self
 end
@@ -256,7 +257,7 @@ end
 	- func: GetMaxWidth()
 	- desc: gets the object's maximum width
 --]]---------------------------------------------------------
-function newobject:GetMaxWidth()
+function MessageBox:GetMaxWidth()
 	return self.maxwidth
 end
 
@@ -265,7 +266,7 @@ end
 	- desc: sets the object's font
 	- note: font argument must be a font object
 --]]---------------------------------------------------------
-function newobject:SetFont(font)
+function MessageBox:SetFont(font)
 	self.font = font
 	self.textmesh:setFont(font)
 	self.hovertextmesh:setFont(font)
@@ -281,7 +282,7 @@ end
 	- func: GetFont()
 	- desc: gets the object's font
 --]]---------------------------------------------------------
-function newobject:GetFont()
+function MessageBox:GetFont()
 	return self.font
 end
 
@@ -289,11 +290,11 @@ end
 	- func: SetShadow(bool) GetShadow(bool)
 	- desc: sets the object's shadow
 --]]---------------------------------------------------------
-function newobject:SetShadow(bool)
+function MessageBox:SetShadow(bool)
     self.shadow = bool
 	return self
 end
-function newobject:GetShadow(bool)
+function MessageBox:GetShadow(bool)
     return self.shadow
 end
 

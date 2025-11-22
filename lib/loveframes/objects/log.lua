@@ -95,11 +95,13 @@ function newobject:draw()
 	local drawfunc = self.Draw or self.drawfunc
 	local drawoverfunc = self.DrawOver or self.drawoverfunc
 	local internals = self.internals
-	love.graphics.setScissor(x, y, width, height)
+	
+	local ox, oy, ow, oh = love.graphics.getScissor()
+	love.graphics.intersectScissor(x, y, width, height)
 	if drawfunc then
 		drawfunc(self)
 	end
-	love.graphics.setScissor()
+	love.graphics.setScissor(ox, oy, ow, oh)
 	if drawoverfunc then
 		drawoverfunc(self)
 	end
@@ -185,7 +187,8 @@ function newobject:AddElement(item, append)
 	if type(item) == "string" then
 		table.insert(self.elements, item)
 		if append then
-			self:AppendElement(item)
+			--self:AppendElement(item)
+			self:ParseElements()
 		else
 			self:ParseElements()
 		end

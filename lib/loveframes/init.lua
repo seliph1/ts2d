@@ -40,7 +40,7 @@ loveframes.config["DEFAULTSKIN"] = "CS2D"
 loveframes.config["ACTIVESKIN"] = "CS2D"
 loveframes.config["INDEXSKINIMAGES"] = true
 loveframes.config["DEBUG"] = false
-loveframes.config["ENABLE_SYSTEM_CURSORS"] = true
+loveframes.config["ENABLE_SYSTEM_CURSORS"] = false
 
 -- misc library vars
 loveframes.state = "none"
@@ -62,6 +62,7 @@ loveframes.drag_x = 0
 loveframes.drag_y = 0
 -- Fonts
 loveframes.opacity = 1
+loveframes.drawtoggle = true
 loveframes.basicfont = love.graphics.newFont(12)
 loveframes.basicfontsmall = love.graphics.newFont(10)
 -- Cursors
@@ -133,6 +134,7 @@ function loveframes.update(dt)
 			end
 		end
 	end
+
 	loveframes.collisions = nil
 	base:update(dt)
 end
@@ -145,17 +147,22 @@ function loveframes.draw()
 	local base = loveframes.base
 	local r, g, b, a = love.graphics.getColor()
 	local font = love.graphics.getFont()
-	base:draw()
+
 	loveframes.drawcount = 0
+	--------------------------------------
+	base:draw()
+	--------------------------------------
 	if loveframes.config["DEBUG"] then
 		loveframes.DebugDraw()
 	end
 	love.graphics.setColor(r, g, b, a)
+	love.graphics.setScissor()
 	love.graphics.reset()
 	if font then
 		love.graphics.setFont(font)
 	end
 end
+
 
 --[[---------------------------------------------------------
 	- func: mousemoved(x, y, button)
@@ -182,12 +189,18 @@ function loveframes.mousepressed(x, y, button, istouch, presses)
 		loveframes.drag_height = hoverobject.height
 	end
 
+	local base = loveframes.base
+	base:mousepressed(x, y, button, istouch, presses)
+
+	if loveframes.inputobject then
+		if loveframes.inputobject ~= loveframes.hoverobject then
+			loveframes.inputobject = false
+		end
+	end
+
 	if button ~= 1 then
 		loveframes.AnchorReset()
 	end
-
-	local base = loveframes.base
-	base:mousepressed(x, y, button, istouch, presses)
 end
 
 --[[---------------------------------------------------------

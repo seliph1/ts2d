@@ -1,6 +1,5 @@
 local ui = {}
 local LF = require "lib.loveframes"
-
 --------------------------------------------------------------------------------------------------
 --Local function helpers--------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------
@@ -24,7 +23,20 @@ end
 --------------------------------------------------------------------------------------------------
 --Objects-----------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------
+ui.container = LF.Create ("container"):Center()
 
+ui.input = LF.Create ("textbox", ui.container)
+
+function ui.container.OnControlKeyPressed(key)
+end
+
+function ui.container.Draw(object)
+    --love.graphics.setColor(1,1,1,1)
+    --love.graphics.rectangle("fill", object.x, object.y, object.width, object.height)
+end
+
+
+do return end
 ui.frame = LF.Create("frame"):SetName("Debug"):SetSize(400, 300):CenterX()
 ui.hoverlabel = LF.Create("label", ui.frame):SetPos(5, 30):SetText("Hover: ")
 ui.hoverdisplay = LF.Create("label", ui.frame):SetPos(ui.hoverlabel:GetWidth(-5), 30)
@@ -67,8 +79,9 @@ function ui.frame.Update(object)
     ui.resizedisplay:SetText( string.format(" anchor[%s, %s, %s, %s, %s, %s]", ax, ay, x, y, w, h ) )
 end
 
+
 local filltable = {}
-for i=1,50 do table.insert(filltable, random_string(10)) end
+for i=1,5000 do table.insert(filltable, random_string(30)) end
 
 ui.droplistframe = LF.Create("frame"):SetName("Droplist"):SetSize(400, 400)
 ui.droplistscroll = LF.Create("scrollpane", ui.droplistframe)
@@ -102,3 +115,33 @@ end
 
 ui.resizableframe = LF.Create("frame")
 :SetResizable(true):Center():SetName("Resizable Frame")
+
+
+----------------------
+ui.inputs = LF.Create("frame"):SetName("Input"):SetSize(300, 730)
+ui.input_scroll = LF.Create("scrollpane", ui.inputs):SetY(30):SetSize(300, 700)
+for i=1, 1000 do
+    local input = LF.Create("textbox", ui.input_scroll)
+    input:SetPos(5, (i-1)*30)
+    --local label = LF.Create("label", ui.input_scroll)
+    --label:SetPos(5, (i-1)*30):SetText (random_string(20))
+    local button = LF.Create("button", ui.input_scroll)
+    button:SetPos(input:GetWidth() + 10, (i-1)*30):SetHeight(input:GetHeight())
+end
+
+
+ui.textboxframe = LF.Create ("frame"):SetName("TextBox"):SetSize(300, 330)
+ui.textbox = LF.Create("textbox", ui.textboxframe):SetSize(280, 280):CenterX():SetY(30):SetMultiline(true)
+
+--ui.textbox:SetText(table.concat(filltable, "\n"))
+
+ui.seaoftextframe = LF.Create ( "frame" ):SetName("Sea of Text"):SetSize(300, 330)
+ui.seaoftextscroll = LF.Create("scrollpane",ui.seaoftextframe):SetSize(280, 280):CenterX():SetY(30)
+ui.seaoftext = LF.Create("messagebox", ui.seaoftextscroll):SetMaxWidth(260)
+
+--print(table.concat(filltable, "\n"))
+ui.seaoftext:SetText(table.concat(filltable, "\n"))
+
+
+
+

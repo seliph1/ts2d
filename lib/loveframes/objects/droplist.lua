@@ -38,8 +38,8 @@ function newobject:initialize()
 	self.texthash = love.graphics.newText(font)
 	self.defaultcolor = color or {1,1,1,1}
 	self:SetDrawFunc()
-	self.odd_list = love.graphics.newMesh(1)
-	self.even_list = love.graphics.newMesh(1)
+	self.odd_list = love.graphics.newMesh(1, "fan")
+	self.even_list = love.graphics.newMesh(1, "fan")
 	self.cursor = loveframes.cursors.hand
 end
 
@@ -247,7 +247,6 @@ function newobject:ParseText(str)
 	end
 
 	for leading, capture in string.gmatch(str, "(.-)©([^©]+)") do
-		--print(color, text)
 		if leading then
 			table.insert(formattedchunks, defaultColor)
 			table.insert(formattedchunks, leading)

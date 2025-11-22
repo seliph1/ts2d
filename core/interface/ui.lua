@@ -9,7 +9,6 @@ ui.font_fallbacks = {
 	"gfx/fonts/NotoSansThai-Regular.ttf",
 	"gfx/fonts/NotoSansHebrew-Regular.ttf",
 	"gfx/fonts/NotoSansHindi-Regular.ttf",
-	"gfx/fonts/NotoSansCuneiform-Regular.ttf",
 }
 
 ui.setFontFallbacks = function(font, size)
@@ -32,6 +31,9 @@ ui.setFontFallbacks(ui.font, 15)
 
 ui.font_small = LG.newFont("gfx/fonts/liberationsans.ttf", 11)
 ui.setFontFallbacks(ui.font_small, 11)
+
+ui.font_medium = LG.newFont("gfx/fonts/liberationsans.ttf", 13)
+ui.setFontFallbacks(ui.font_small, 13)
 
 ui.font_chat = LG.newFont("gfx/fonts/liberationsans.ttf", 18)
 ui.setFontFallbacks(ui.font_chat, 18)
@@ -143,6 +145,9 @@ end
 ui.findservers_button = LF.Create("messagebox", ui.main_menu)
 :SetText("©192192192Find Servers"):SetHoverText("©255255255Find Servers")
 :SetPos(0, 80):SetCursor(LF.cursors.hand)
+ui.findservers_button.OnClick = function(self)
+	ui.parse("connect 127.0.0.1 36963")
+end
 --Main menu group 2---------------------------------------------------------------------------
 ui.options_button = LF.Create("messagebox", ui.main_menu)
 :SetText("©192192192Options"):SetHoverText("©255255255Options")
@@ -194,83 +199,7 @@ ui.quit_button.OnClick = function() love.event.quit() end
 --------------------------------------------------------------------------------------------------
 --Console Window Frame---------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------
-ui.console_frame = LF.Create("frame"):SetSize(640, 480):SetResizable(false):SetScreenLocked(true)
-:SetName("Console"):SetCloseAction("hide"):SetState("*")
-
-ui.console_window_panel = LF.Create("panel", ui.console_frame)
-:SetSize(630, 400):SetPos(5, 30)
-ui.console_window = LF.Create("log", ui.console_window_panel)
-:SetSize(630, 400):SetPadding(0):SetFont(ui.font_mono_small)
-
-ui.console_input = LF.Create("textbox", ui.console_frame)
-ui.console_input:SetPos(5, 435):SetWidth(630):SetMaxHistory(1):SetFont(ui.font_mono)
-ui.console_input.rollback = 1
-ui.console_input.history = {""}
-ui.console_input.OnEnter = function(self, text)
-	if text == "" then return end
-    if not(self.focus) then
-        return
-    end
-	self:SetText("")
-	self.parse(text)
-	table.insert(self.history, text)
-	self.rollback = #self.history + 1
-end
-
-ui.console_input.OnControlKeyPressed = function(self, key)
-    if not(self.focus) then
-        return
-    end
-
-	if key=="up" then
-		local h = ui.console_input.history
-		local r = math.max(self.rollback - 1, 1)
-
-		self:SetText(h[r])
-		self:MoveCursorTo("end")
-		self.rollback = r
-	elseif key=="down" then
-		local h = self.history
-		local r = math.min(self.rollback + 1, #h)
-
-		self:SetText(h[r])
-		self:MoveCursorTo("end")
-		self.rollback = r
-	end
-end
-
-ui.console_input.commands = love.filesystem.load("core/interface/commands.lua")()
-ui.console_input.parse = function(str)
-	local args = {}
-	for word in string.gmatch(str, "%S+") do
-		table.insert(args, word)
-	end
-
-	local command_id = args[1]
-	local commands = ui.console_input.commands
-	if commands[ command_id ] then
-		local command_object = commands[ command_id ]
-		if command_object.action then
-			local status = command_object.action( unpack(args,2) )
-		end
-	else
-		print(string.format("Unknown command: %s", str))
-	end
-end
-ui.parse = ui.console_input.parse
---- print override
-_Print = print
-function print(...)
-	local args = {...}
-	local str = {}
-	for k,v in pairs(args) do
-		table.insert(str, tostring(v))
-	end
-	if ui.console_window then
-		ui.console_window:AddElement(table.concat(str,"	"), true)
-	end
-	_Print(...)
-end
+require "core.interface.console" (ui)
 
 --------------------------------------------------------------------------------------------------
 --New Game Frame----------------------------------------------------------------------------------
@@ -718,11 +647,6 @@ ui.options_button_okay.OnClick = function(object)
 end
 ui.options_button_cancel = LF.Create("button", ui.options_frame):SetText("Cancel"):SetPos(300+10, 430):SetWidth(100)
 
-
-
-
-
-
 --controls tab------------------------------------------------------------------------------------
 --game tab----------------------------------------------------------------------------------------
 --graphics tab------------------------------------------------------------------------------------
@@ -848,29 +772,15 @@ end
 --------------------------------------------------------------------------------------------------
 --chat input--------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------
-ui.chat_input_frame = LF.Create("container")
-:SetAlwaysUpdate(true)
-:SetVisible(false)
-:SetCollidable(false)
-:SetSize(800, 60)
-:SetY(LG.getHeight()-60)
-:SetState("game")
-:CenterX()
 
-ui.chat_input_header = LF.Create("messagebox", ui.chat_input_frame)
-:SetFont(ui.font_chat)
-:SetText("©255220000Say:")
-:CenterY()
-
-ui.chat_input = LF.Create("input", ui.chat_input_frame)
-:SetAlwaysUpdate(true)
+ui.chat_input = LF.Create("input")
 :SetSize(800, 30):SetCharacterLimit(80):SetFont(ui.font_chat)
-:SetX(  ui.chat_input_header:GetWidth()  )
 :SetColor(1.00, 0.86, 0.00, 1.00)
 :SetCursorColor(1.00, 0.86, 0.00, 1.00)
 :SetHighlightColor(1.00, 0.86, 0.00, 0.20)
-:CenterY()
-
+:SetState("game")
+:SetVisible(false)
+:SetY(LG.getHeight()-60):CenterX()
 
 ui.chat_input.Draw = function(object)
 	local x = object.x
@@ -885,26 +795,26 @@ end
 
 local chat_key = "return"
 ui.chat_input.OnControlKeyPressed = function (object, key)
-	if key ~= chat_key then return end
-	if ui.chat_input_frame:GetVisible() then
-		-- Submit what is written	
-		ui.chat_input_frame:SetVisible(false)
-		ui.chat_input:EnableInput(false)
-		local text = object:GetText()
-		if text ~= ""  then
-			if text:sub(1, 1) == "/" then
-				ui.console_input.parse(text:sub(2))
-			else
-				if client.joined then
-					client.send(string.format("say %s", text))
+	if LF.inputobject and LF.inputobject ~= object then return end
+	if key == chat_key then
+		local visible = ui.chat_input:GetVisible()
+		if visible then
+			-- Submit
+			local text = object:GetText()
+			if text ~= ""  then
+				if text:sub(1, 1) == "/" then
+					ui.console_input.parse(text:sub(2))
+				else
+					if client.joined then
+						client.send(string.format("say %s", text))
+					end
 				end
 			end
-		end
-	else
-		if not LF.inputobject then
-			-- Open the input to write stuff
-			ui.chat_input:Clear()
-			ui.chat_input_frame:SetVisible(true)
+			ui.chat_input:SetVisible(false)
+			ui.chat_input:Clear(true)
+		else
+			-- Show
+			ui.chat_input:SetVisible(true)
 			ui.chat_input:EnableInput(true)
 		end
 	end
@@ -913,32 +823,292 @@ end
 --weapon select window----------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------
 
-ui.weaponselect_window = LF.Create("frame"):SetSize(200, 400)
-ui.weaponselect_window:SetName("Weapon Select"):Center()
+ui.weaponselect = LF.Create("container"):SetState("game")
+ui.weaponselect:SetPos( love.graphics.getWidth()/2 - ui.weaponselect:GetWidth(), (love.graphics.getHeight() - client.height)/2 )
+ui.weaponselect:SetProperty("cursor", 0)
+ui.weaponselect:SetProperty("itemheld", 0)
+ui.weaponselect:SetProperty("slots", {})
+ui.weaponselect:SetProperty("slot_active", 0)
+ui.weaponselect:SetProperty("active", false)
 
-ui.weaponselect_scroll = LF.Create("scrollpane", ui.weaponselect_window)
-ui.weaponselect_scroll:SetSize(200-20, 300):SetPos(5, 30):CenterX()
+ui.weaponselect.hud_slotheads = LF.CreateSpriteSheet("gfx/hud_slotheads.bmp", 10, 10)
+ui.weaponselect.hud_slot = LF.CreateSprite("gfx/hud_slot.bmp")
 
-ui.weaponselect_list = LF.Create("droplist", ui.weaponselect_scroll)
-ui.weaponselect_list:SetSize(200-20, 300)
+function ui.weaponselect:queryItems(inventory)
+	for i = 1, 9 do
+		self.slots[i] = {}
+	end
+	-- 9 Slots
+	for item_type, itemobject in pairs(inventory) do
+		local itemdata = client.get_item_data(item_type)
 
-ui.weaponselect_button = LF.Create("button", ui.weaponselect_window):SetPos(100, 400-20)
-ui.weaponselect_button.OnClick = function(object)
+		local slot = itemdata.slot or 1
+		table.insert(self.slots[slot], item_type)
+	end
+
+	for i = 1, 9 do
+		table.sort(self.slots[i])
+	end
 end
 
-function ui.weaponselect_list.OnHover(object, element, element_id)
-	--print(element, element_id)
+function ui.weaponselect:queryItemheld(itemheld)
+	if itemheld == nil or itemheld == 0 then
+		self.cursor = 0
+		self.slot_active = 0
+		self.active = false
+		return
+	end
+
+	self.itemheld = itemheld
+
+	local itemdata = client.get_item_data(itemheld)
+	local slot = itemdata.slot or 1
+	self.slot_active = slot
+
+	for index, item_type in ipairs(self.slots[self.slot_active]) do
+		if item_type == itemheld then
+			self.cursor = index
+		end
+	end
 end
 
-function ui.weaponselect_list.OnClick(object, element, element_id)
-	print(object.parent, element, element_id)
+function ui.weaponselect:Display(slot, x, y)
+	x = x + self.x
+	y = y + self.y
+
+	local padding = 3
+	local font = ui.font
+	local hud_slot = self.hud_slot
+	local width, height = hud_slot:getDimensions()
+	local font_height = font:getHeight()
+	local player = client.share.players[client.id]
+	local text_offset_x = 50
+	local text_offset_y = 2
+
+	local item_offset = 20
+	height = height + padding
+
+	love.graphics.setBlendMode("add")
+	for index in ipairs(slot) do
+		if self.slots[self.slot_active] == slot and self.cursor == index then
+			love.graphics.setColor(1, 1, 0, 0.6)
+		else
+			love.graphics.setColor(1, 0.6, 0, 0.3)
+		end
+		love.graphics.draw(hud_slot, x, y + (index-1)*height)
+	end
+	love.graphics.setBlendMode("alpha")
+
+	love.graphics.setFont(font)
+	for index, item_type in ipairs(slot) do
+		local itemdata = client.get_item_data(item_type)
+		local name = itemdata.name
+		local itemobject = player.i[item_type]
+		local ammocap = itemobject.ac
+		local ammoin = itemobject.am
+		local label = name
+		local ammo = ""
+		if ammocap > 0 and ammoin > 0 then
+			ammo = string.format("%s  |  %s", ammoin, ammocap)
+		elseif ammocap == 0 and ammoin > 0 then
+			label = string.format("%s (%s)", name, ammoin)
+		end
+
+		local length = font:getWidth(label)
+		local scale = math.min(1, 90/length)
+
+		local x_pos = math.floor( x + text_offset_x )
+		local y_pos = math.floor( y + text_offset_y +(index-1)*height)
+
+		-- Shadow
+		love.graphics.setColor(0, 0, 0, 1)
+		love.graphics.print(label, x_pos+1, y_pos+1, 0, scale, 1)
+		love.graphics.print(ammo, x_pos+1, y_pos+font_height+1)
+		-- Label
+		love.graphics.setColor(1, 0.85, 0, 1)
+		love.graphics.print(label, x_pos, y_pos, 0, scale, 1)
+		love.graphics.print(ammo, x_pos, y_pos+font_height)
+	end
+
+	love.graphics.setColor(1, 1, 1, 1)
+	for index, item_type in ipairs(slot) do
+		-- Item
+		local itemdata = client.get_item_data(item_type)
+		local itemlist_gfx = client.gfx.itemlist
+		local item_path = itemdata.common_path .. itemdata.dropped_image
+		local item_gfx = itemlist_gfx[item_path]
+		if not item_gfx then
+			local item_gfx_d = love.image.newImageData(16, 16) -- Generate a new placeholder so the client dont crash
+			item_gfx_d:mapPixel(function ()
+				return 1,0,1,1 -- Turn all into magenta.
+			end)
+			item_gfx = love.graphics.newImage(item_gfx_d)
+			itemlist_gfx[item_path] = item_gfx
+		end
+		local item_width, item_height = item_gfx:getDimensions()
+
+		local x_pos = x + item_offset
+		local y_pos = y + (index-1)*height + height/2
+		local timer = love.timer.getTime()%360
+
+		-- shadow
+		love.graphics.setColor(0, 0, 0, 0.2)
+		love.graphics.draw(item_gfx, x_pos+3, y_pos+3, timer, 1, 1, item_width/2, item_height/2)
+
+		-- item
+		love.graphics.setColor(1, 1, 1, 1)
+		love.graphics.draw(item_gfx,  x_pos, y_pos, timer, 1, 1, item_width/2, item_height/2)
+	end
 end
 
-local abc = {}
-for i=1,2000 do
-	abc[i] = random_string(30)
+function ui.weaponselect:selectNext()
+	if not client.share.players then return end
+	if not client.share.players[client.id] then return end
+	local player = client.share.players[client.id]
+
+	local c = 0
+	for k,v in pairs(player.i) do
+		c = c + 1
+	end
+	if c == 0 then return end -- There is nothing to do with empty inventory
+
+	if self.cursor == 0 or self.slot_active == 0 then
+		for i = 1, 9 do
+			for order, item_type in ipairs(self.slots[i]) do
+				if item_type then
+					self.cursor = order
+					self.slot_active = i
+				end
+			end
+		end
+	end -- self.cursor
+
+	if self.slots[self.slot_active] then
+		if self.slots[self.slot_active][self.cursor+1] then
+			self.cursor = self.cursor + 1
+		else -- Check if the next slot has items
+			for i = self.slot_active + 1, self.slot_active + 8 do
+				local next_slot =  (i - 1) % 9 + 1
+				if #self.slots[next_slot] > 0 then
+					self.cursor = 1
+					self.slot_active = next_slot
+					break
+				end
+			end
+		end
+	end
 end
-ui.weaponselect_list:AddElement(abc)
+
+function ui.weaponselect:selectPrevious()
+	if not client.share.players then return end
+	if not client.share.players[client.id] then return end
+	local player = client.share.players[client.id]
+
+	local c = 0
+	for k,v in pairs(player.i) do
+		c = c + 1
+	end
+	if c == 0 then return end -- There is nothing to do with empty inventory
+
+
+	if self.cursor == 0 or self.slot_active == 0 then
+		for i = 1, 9 do
+			for order, item_type in ipairs(self.slots[i]) do
+				if item_type then
+					self.cursor = order
+					self.slot_active = i
+				end
+			end
+		end
+	end -- self.cursor
+
+	if self.slots[self.slot_active] then
+		if self.slots[self.slot_active][self.cursor-1] then
+			self.cursor = self.cursor - 1
+		else -- Check if the next slot has items
+			for i = self.slot_active + 8, self.slot_active + 1, - 1 do
+				local previous_slot =  (i - 1) % 9 + 1
+				if #self.slots[previous_slot] > 0 then
+					self.cursor = #self.slots[previous_slot]
+					self.slot_active = previous_slot
+					break
+				end
+			end
+		end
+	end
+end
+
+function ui.weaponselect:Scroll(x, y)
+	if not self.active then
+		self.active = true
+	end
+
+	if y < 0 then
+		self:selectNext()
+	elseif y > 0 then
+		self:selectPrevious()
+	end
+
+	if self.cursor == 0 and self.slot_active == 0 then
+		self.active = false
+	end
+end
+
+function ui.weaponselect:OnMousePressed(x, y, button)
+	if not self.active then
+		return
+	end
+
+	if button == 1 then
+		if self.slots[self.slot_active]	and self.slots[self.slot_active][self.cursor] then
+			local item_type = self.slots[self.slot_active][self.cursor]
+			client.send("weapon "..item_type)
+
+			self.active = false
+		else
+			return
+		end
+	end
+end
+
+function ui.weaponselect:Draw()
+	if not self.active then
+		return
+	end
+
+	if not client.share.players then return end
+	if not client.share.players[client.id] then return end
+
+	local margin = 15
+	local spacing = 0
+
+	-- Draw list
+	if self.slot_active > 0 then
+		self:Display(self.slots[self.slot_active], (self.slot_active-1)*margin, 12)
+	end
+
+	-- Draw squares
+	LG.setBlendMode("add")
+	LG.setColor(1, 0.6, 0, 0.3)
+	for i = 0, #self.hud_slotheads do
+		local slot = self.hud_slotheads[i]
+		if (i+1) == self.slot_active then
+			LG.setColor(1, 1, 0, 0.6)
+		elseif i ==  self.slot_active then
+			spacing = self.hud_slot:getWidth()
+			LG.setColor(1, 0.6, 0, 0.3)
+		else
+			LG.setColor(1, 0.6, 0, 0.3)
+		end
+
+		if #self.slots[i+1] == 0 then
+			LG.setColor(0.7, 0, 0, 0.3)
+		end
+		LG.draw(slot, self.x + i*margin + spacing, self.y)
+	end
+	LG.setBlendMode("alpha")
+end
+
 
 --------------------------------------------------------------------------------------------------
 --exit window-------------------------------------------------------------------------------------
@@ -977,7 +1147,6 @@ ui.editor = require "core.interface.editor"
 --bindings----------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------
 ui.binds = require "core.interface.binds" (ui)
-
 --------------------------------------------------------------------------------------------------
 --final wrapping of windows-----------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------
@@ -988,7 +1157,7 @@ ui.options_frame:SetVisible(false)
 --------------------------------------------------------------------------------------------------
 --temporary windows!------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------
-
+--[[
 ui.temp_connect_frame = LF.Create("frame"):SetSize(400, 100):SetName("Connect")
 ui.temp_connect_local = LF.Create("button", ui.temp_connect_frame)
 :SetY(30):SetWidth(300):SetText("Connect to localhost (127.0.0.1:36963)"):CenterX()
@@ -999,7 +1168,7 @@ ui.temp_connect_remote = LF.Create("button", ui.temp_connect_frame)
 :SetY(60):SetWidth(300):SetText("Connect to remote server (50.21.187.191)"):CenterX()
 ui.temp_connect_remote.OnClick = function(object)
 	ui.parse("connect 50.21.187.191 36963")
-end
+end]]
 --------------------------------------------------------------------------------------------------
 --end of module-----------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------

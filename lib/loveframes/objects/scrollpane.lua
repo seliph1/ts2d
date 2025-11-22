@@ -7,13 +7,12 @@ return function(loveframes)
 ---------- module start ----------
 
 -- list object
-local newobject = loveframes.NewObject("scrollpane", "loveframes_object_scrollpane", true)
-
+local ScrollPane = loveframes.NewObject("scrollpane", "loveframes_object_scrollpane", true)
 --[[---------------------------------------------------------
 	- func: initialize()
 	- desc: initializes the object
 --]]---------------------------------------------------------
-function newobject:initialize()
+function ScrollPane:initialize()
 	self.type = "scrollpane"
 	self.display = "vertical"
 	self.container = true
@@ -50,9 +49,10 @@ end
 	- func: update(deltatime)
 	- desc: updates the object
 --]]---------------------------------------------------------
-function newobject:update(dt)
+function ScrollPane:update(dt)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
+
 	local x = self.x
 	local y = self.y
 	local width = self.width
@@ -80,6 +80,7 @@ function newobject:update(dt)
 	if scrolled then
 		self.itemcache, self.itemlength = self.itemhash:queryRect(offsetx, offsety, self.width, self.height)
 	end
+
 	for i = 1, self.itemlength do
 		local child = self.itemcache[i]
 		child:update(dt)
@@ -101,7 +102,7 @@ end
 	- func: draw()
 	- desc: draws the object
 --]]---------------------------------------------------------
-function newobject:draw()
+function ScrollPane:draw()
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
 	local x = self.x
@@ -117,12 +118,13 @@ function newobject:draw()
 	end
 	local cut_x = self.vbar and -16 or 0
 	local cut_y = self.hbar and -16 or 0
-	love.graphics.setScissor(x, y, width + cut_x, height + cut_y)
+	local ox, oy, ow, oh = love.graphics.getScissor()
+	love.graphics.intersectScissor(x, y, width + cut_x, height + cut_y)
 	for i = 1, self.itemlength do
 		local child = self.itemcache[i]
 		child:draw()
 	end
-	love.graphics.setScissor()
+	love.graphics.setScissor(ox, oy, ow, oh)
 	if drawoverfunc then
 		drawoverfunc(self)
 	end
@@ -137,22 +139,10 @@ end
 	- func: mousepressed(x, y, button)
 	- desc: called when the player presses a mouse button
 --]]---------------------------------------------------------
-function newobject:mousepressed(x, y, button)
-	if not self:OnState() then return end
-	if not self:isUpdating() then return end
-	local hover = self.hover
-	local children = self.children
-	local internals = self.internals
+function ScrollPane:mousepressed(x, y, button)
+	ScrollPane.super.mousepressed(self, x, y, button)
 
-	for k, v in pairs(internals) do
-		v:mousepressed(x, y, button)
-	end
-
-	for k, v in pairs(children) do
-		v:mousepressed(x, y, button)
-	end
-
-	if hover and button == 1 then
+	if self.hover and button == 1 then
 		local baseparent = self:GetBaseParent()
 		if baseparent and baseparent.type == "frame" then
 			baseparent:MakeTop()
@@ -164,30 +154,16 @@ end
 	- func: wheelmoved(x, y)
 	- desc: called when the player moves a mouse wheel
 --]]---------------------------------------------------------
-function newobject:wheelmoved(x, y)
-	if not self:OnState() then return end
-	if not self:isUpdating() then return end
-	if not self.hover then return end
-
-	local children = self.children
-	if children then
-		for k, v in pairs(children) do
-			v:wheelmoved(x, y)
-		end
-	end
-	local internals = self.internals
-	if internals then
-		for k, v in pairs(internals) do
-			v:wheelmoved(x, y)
-		end
-	end
-end
+--function ScrollPane:wheelmoved(x, y)
+	--if not self.hover then return end
+	--ScrollPane.super.wheelmoved(self, x, y)
+--end
 
 --[[---------------------------------------------------------
 	- func: AddItem(object)
 	- desc: adds an item to the object
 --]]---------------------------------------------------------
-function newobject:AddItem(object)
+function ScrollPane:AddItem(object)
 	if object.type == "frame" then -- Dont 
 		return
 	end
@@ -211,9 +187,9 @@ function newobject:AddItem(object)
 
 	return self
 end
-newobject.AddItemIntoContainer = newobject.AddItem
+ScrollPane.AddItemIntoContainer = ScrollPane.AddItem
 
-function newobject:AddItemsFromTable(objects)
+function ScrollPane:AddItemsFromTable(objects)
 	for index, object in pairs(objects) do
 		if object.type == "frame" then -- Dont 
 			return
@@ -242,7 +218,7 @@ end
 	- func: RemoveItem(object or number)
 	- desc: removes an item from the object
 --]]---------------------------------------------------------
-function newobject:RemoveItem(data)
+function ScrollPane:RemoveItem(data)
 	local dtype = type(data)
 	if dtype == "number" then
 		local children = self.children
@@ -266,7 +242,7 @@ end
 	- func: RedoLayout()
 	- desc: redo the layout of the scrollpane
 --]]---------------------------------------------------------
-function newobject:RedoLayout()
+function ScrollPane:RedoLayout()
 	local height = self.height
 	local width = self.width
 	local vbar = self.vbar
@@ -349,7 +325,7 @@ end
 	- func: Clear()
 	- desc: removes all of the object's children
 --]]---------------------------------------------------------
-function newobject:Clear()
+function ScrollPane:Clear()
 	local children = self.children
 	self.children = {}
 	for _, child in pairs(children) do
@@ -367,7 +343,7 @@ end
 	- func: SetWidth(width, relative)
 	- desc: sets the object's width
 --]]---------------------------------------------------------
-function newobject:SetWidth(width, relative)
+function ScrollPane:SetWidth(width, relative)
 	if relative then
 		self.width = self.parent.width * width
 	else
@@ -380,7 +356,7 @@ end
 	- func: SetHeight(height, relative)
 	- desc: sets the object's height
 --]]---------------------------------------------------------
-function newobject:SetHeight(height, relative)
+function ScrollPane:SetHeight(height, relative)
 	if relative then
 		self.height = self.parent.height * height
 	else
@@ -393,7 +369,7 @@ end
 	- func: SetSize(width, height, r1, r2)
 	- desc: sets the object's size
 --]]---------------------------------------------------------
-function newobject:SetSize(width, height, r1, r2)
+function ScrollPane:SetSize(width, height, r1, r2)
 	if r1 then
 		self.width = self.parent.width * width
 	else
@@ -411,7 +387,7 @@ end
 	- func: GetHorizontalScrollBody() GetVerticalScrollBody()
 	- desc: gets the object's scroll body
 --]]---------------------------------------------------------
-function newobject:GetHorizontalScrollBody()
+function ScrollPane:GetHorizontalScrollBody()
 	for k, v in pairs(self.internals) do
 		if v.bartype == "horizontal" then
 			return v
@@ -420,7 +396,7 @@ function newobject:GetHorizontalScrollBody()
 	--return false
 end
 
-function newobject:GetVerticalScrollBody()
+function ScrollPane:GetVerticalScrollBody()
 	for k, v in pairs(self.internals) do
 		if v.bartype == "vertical" then
 			return v
@@ -433,7 +409,7 @@ end
 	- desc: gets the object's scroll bar
 --]]---------------------------------------------------------
 --[[
-function newobject:GetScrollBar()
+function ScrollPane:GetScrollBar()
 	local vbar = self.vbar
 	local hbar = self.hbar
 	local internals  = self.internals
@@ -454,7 +430,7 @@ end
 			added to the list
 --]]---------------------------------------------------------
 --[[
-function newobject:SetAutoScroll(bool)
+function ScrollPane:SetAutoScroll(bool)
 	local scrollbar = self:GetScrollBar()
 	self.autoscroll = bool
 	if scrollbar then
@@ -470,7 +446,7 @@ end
 			added to the list
 --]]---------------------------------------------------------
 --[[
-function newobject:GetAutoScroll()
+function ScrollPane:GetAutoScroll()
 	return self.autoscroll
 end
 ]]
@@ -479,7 +455,7 @@ end
 	- desc: sets the scroll amount of the object's scrollbar
 			buttons
 --]]---------------------------------------------------------
---[[function newobject:SetButtonScrollAmount(amount)
+--[[function ScrollPane:SetButtonScrollAmount(amount)
 	self.buttonscrollamount = amount
 	return self
 end
@@ -489,7 +465,7 @@ end
 	- desc: gets the scroll amount of the object's scrollbar
 			buttons
 --]]---------------------------------------------------------
---[[function newobject:GetButtonScrollAmount()
+--[[function ScrollPane:GetButtonScrollAmount()
 	return self.buttonscrollamount
 end
 ]]
@@ -497,7 +473,7 @@ end
 	- func: SetMouseWheelScrollAmount(amount)
 	- desc: sets the scroll amount of the mouse wheel
 --]]---------------------------------------------------------
-function newobject:SetMouseWheelScrollAmount(amount)
+function ScrollPane:SetMouseWheelScrollAmount(amount)
 	self.mousewheelscrollamount = amount
 	return self
 end
@@ -506,7 +482,7 @@ end
 	- func: GetMouseWheelScrollAmount()
 	- desc: gets the scroll amount of the mouse wheel
 --]]---------------------------------------------------------
-function newobject:GetMouseWheelScrollAmount()
+function ScrollPane:GetMouseWheelScrollAmount()
 	return self.mousewheelscrollamount
 end
 

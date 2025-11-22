@@ -15,29 +15,40 @@
 ---@diagnostic disable: duplicate-set-field
 
 local showfps = false
-local debuglaunch = false
+local fused = true
 local lldebugger
 for k,v in pairs(arg) do
 	if v == "showfps" then showfps = true end
 	if v == "debug" then
-		debuglaunch = true
 		-- VS Code debugger
 		lldebugger = require "lldebugger"
 		lldebugger.start()
-		end
+	end
+
 	if v == "ui" then
 		love.filesystem.load("uidebug/uidebug.lua") ()
-
 		-- Skip all the code below.
 		do return end
 	end
+
+	if v == "fused" then
+		fused = true
+	end
 end
+
 ---------------------------------------------------------------------------------------
+if fused or love.filesystem.isFused() then
+	local base_dir = love.filesystem.getSourceBaseDirectory()
+	assert(love.filesystem.mountFullPath(base_dir, "", "readwrite"), "failed to mount")
+end
+
 local loveframes 	= require "lib.loveframes"
 local client 		= require "client"
 local ui 			= require "core.interface.ui"
 
 function love.load()
+	love.keyboard.setTextInput(true)
+
 	client.load()
 end
 

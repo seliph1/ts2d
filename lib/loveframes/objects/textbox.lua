@@ -7,13 +7,13 @@ return function(loveframes)
 ---------- module start ----------
 
 -- textinput object
-local newobject = loveframes.NewObject("textbox", "loveframes_object_textbox", true)
+local TextBox = loveframes.NewObject("textbox", "loveframes_object_textbox", true)
 
 --[[---------------------------------------------------------
 	- func: initialize()
 	- desc: initializes the object
 --]]---------------------------------------------------------
-function newobject:initialize()
+function TextBox:initialize()
 	self.type = "textbox"
 	self.width = 200
 	self.height = 25
@@ -64,7 +64,7 @@ end
 	- func: GetVerticalScrollBody()
 	- desc: gets the object's vertical scroll body
 --]]---------------------------------------------------------
-function newobject:GetVerticalScrollBody()
+function TextBox:GetVerticalScrollBody()
 	local vbar = self.vbar
 	local internals = self.internals
 	local item = false
@@ -83,7 +83,7 @@ end
 	- func: update(deltatime)
 	- desc: updates the object
 --]]---------------------------------------------------------
-function newobject:update(dt)
+function TextBox:update(dt)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
 	-- check to see if the object is being hovered over
@@ -92,7 +92,6 @@ function newobject:update(dt)
 	local parent = self.parent
 	local update = self.Update
 	local internals = self.internals
-	local fieldtype = self.field:getType()
 	local base = loveframes.base
 	local inputobject = loveframes.inputobject
 	-- move to parent if there is a parent
@@ -101,16 +100,20 @@ function newobject:update(dt)
 		self.x = self.parent.x + self.staticx
 		self.y = self.parent.y + self.staticy
 	end
+
 	-- Deselect text if the object isn't active
 	if inputobject ~= self then
 		self.focus = false
+		return
 	end
+
 	self.itemwidth = self.field:getTextWidth() + self.horizontalpadding
 	self.itemheight = self.field:getTextHeight() + self.verticalpadding
 
 	self.extrawidth = math.max(0, self.itemwidth - self.width)
 	self.extraheight = math.max(0, self.itemheight - self.height)
 
+	local fieldtype = self.field:getType()
 	if self.itemheight > self.height and fieldtype ~= "normal" and fieldtype ~= "password"  then
 		if not self.vbar then
 			local scrollbody = loveframes.objects["scrollbody"]:new(self, "vertical")
@@ -130,11 +133,11 @@ function newobject:update(dt)
 
 	local scrollbody = self:GetVerticalScrollBody()
 	if scrollbody then
-		--local scrollbar = scrollbody:GetScrollBar()
 		if scrollbody:IsDragging() then
 			self.field:setScroll(self.offsetx, self.offsety)
 		end
 	end
+
 	-- Update children
 	for k, v in ipairs(internals) do
 		v:update(dt)
@@ -149,7 +152,7 @@ end
 	- func: draw()
 	- desc: draws the object
 --]]---------------------------------------------------------
-function newobject:draw()
+function TextBox:draw()
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
 	local x = self.x
@@ -158,12 +161,14 @@ function newobject:draw()
 	local height = self.height
 	-- set the object's draw order
 	self:SetDrawOrder()
-	love.graphics.setScissor(x, y, width, height)
+	local ox, oy, ow, oh = love.graphics.getScissor()
 	local drawfunc = self.Draw or self.drawfunc
+
+	love.graphics.intersectScissor(x, y, width, height)
 	if drawfunc then
 		drawfunc(self)
 	end
-	love.graphics.setScissor()
+	love.graphics.setScissor(ox, oy, ow, oh)
 
 	local internals = self.internals
 	if internals then
@@ -182,32 +187,39 @@ end
 	- func: wheelmoved(x, y)
 	- desc: called when the player moves a mouse wheel
 --]]---------------------------------------------------------
-function newobject:wheelmoved(x, y)
+function TextBox:wheelmoved(x, y)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
+	--self.field:wheelmoved(x, y)
 
-	self.field:wheelmoved(x, y)
+	--[[
 	local scrollbody = self:GetVerticalScrollBody()
 	if scrollbody then
 		local dx, dy = self.field:getScroll()
 		scrollbody:ScrollTo(dy/self.itemheight)
-	end
+	end]]
 end
 --[[---------------------------------------------------------
 	- func: mousemoved(x, y, button)
 	- desc: called when the player moves mouse
 --]]---------------------------------------------------------
-function newobject:mousemoved(x, y)
-	self.field:mousemoved(x - self.x, y - self.y)
+function TextBox:mousemoved(x, y)
+	if not self:OnState() then return end
+	if not self:isUpdating() then return end
+
+	if self.hover then
+		self.field:mousemoved(x - self.x, y - self.y)
+	end
 end
 
 --[[---------------------------------------------------------
 	- func: mousepressed(x, y, button) mousereleased(x, y, button)
 	- desc: called when the player presses a mouse button
 --]]---------------------------------------------------------
-function newobject:mousepressed(x, y, button, istouch, presses)
+function TextBox:mousepressed(x, y, button, istouch, presses)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
+
 	local hover = self.hover
 	local inputobject = loveframes.inputobject
 	local onfocusgained = self.OnFocusGained
@@ -225,11 +237,8 @@ function newobject:mousepressed(x, y, button, istouch, presses)
 		self.focus = true
 		-- Change input target to the object focused
 		if button == 1 then
-			if inputobject ~= self then
-				loveframes.inputobject = self
-			end
+			loveframes.inputobject = self
 		end
-
 		self.field:mousepressed(x - self.x, y - self.y, button, presses)
 	else
 		-- Defocus on any button press outside the widget area
@@ -242,36 +251,29 @@ function newobject:mousepressed(x, y, button, istouch, presses)
 			-- Change focus status to false
 			self.focus = false
 		end
-		--[[
-		-- Deselect all text
-		self.field:releaseMouse()
-		self.field:selectNone()
-		]]
 	end
+
 	for k, v in ipairs(internals) do
 		v:mousepressed(x, y, button)
 	end
 end
 
-function newobject:mousereleased(x, y, button)
+
+function TextBox:mousereleased(x, y, button)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
+
 	self.field:mousereleased(x - self.x, y - self.y, button)
-	local internals = self.internals
-	for k, v in ipairs(internals) do
-		v:mousereleased(x, y, button)
-	end
 end
 
 --[[---------------------------------------------------------
 	- func: keypressed(key, isrepeat) keyreleased(key, isrepeat)
 	- desc: called when the player presses a key
 --]]---------------------------------------------------------
-function newobject:keypressed(key, isrepeat)
+function TextBox:keypressed(key, isrepeat)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
 
-	
 	if self.OnControlKeyPressed then
 		self.OnControlKeyPressed(self, key)
 	end
@@ -306,7 +308,7 @@ function newobject:keypressed(key, isrepeat)
 
 end
 
-function newobject:keyreleased(key, isrepeat)
+function TextBox:keyreleased(key, isrepeat)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
 	if loveframes.inputobject ~= self then return end
@@ -316,7 +318,7 @@ end
 	- func: textinput(text)
 	- desc: called when the user inputs text
 --]]---------------------------------------------------------
-function newobject:textinput(text)
+function TextBox:textinput(text)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
 	if loveframes.inputobject ~= self then return end
@@ -341,13 +343,13 @@ end
 	- func: SetFont(font)GetFont()
 	- desc: sets/gets the object's font
 --]]---------------------------------------------------------
-function newobject:SetFont(font)
+function TextBox:SetFont(font)
 	self.font = font
 	self.field:setFont(font)
 	return self
 end
 
-function newobject:GetFont()
+function TextBox:GetFont()
 	return self.font
 end
 
@@ -355,7 +357,7 @@ end
 	- func: RedoLayout
 	- desc: refresh the object layout
 --]]---------------------------------------------------------
-function newobject:RedoLayout()
+function TextBox:RedoLayout()
 	local x = self.width
 	local y = self.height
 	local hpadding = self.horizontalpadding
@@ -367,7 +369,7 @@ end
 	- func: SetPadding() SetHorizontalPadding() SetVerticalPadding()
 	- desc: sets the object's padding
 --]]---------------------------------------------------------
-function newobject:SetPadding(padding)
+function TextBox:SetPadding(padding)
 	self.verticalpadding = padding
 	self.horizontalpadding = padding
 
@@ -375,13 +377,13 @@ function newobject:SetPadding(padding)
 	return self
 end
 
-function newobject:SetVerticalPadding(padding)
+function TextBox:SetVerticalPadding(padding)
 	self.verticalpadding = padding
 	self.field:setHeight(self.height - math.max(padding*2, 0))
 	return self
 end
 
-function newobject:SetHorizontalPadding(padding)
+function TextBox:SetHorizontalPadding(padding)
 	self.horizontalpadding = padding
 	self.field:setWidth(self.width - math.max(padding*2, 0))
 	return self
@@ -390,22 +392,22 @@ end
 	- func: GetPadding() GetVerticalPadding() GetHorizontalPadding()
 	- desc: gets the object's padding
 --]]---------------------------------------------------------
-function newobject:GetPadding()
+function TextBox:GetPadding()
 	return self.verticalpadding, self.horizontalpadding
 end
 
-function newobject:GetVerticalPadding()
+function TextBox:GetVerticalPadding()
 	return self.verticalpadding
 end
 
-function newobject:GetHorizontalPadding()
+function TextBox:GetHorizontalPadding()
 	return self.horizontalpadding
 end
 --[[---------------------------------------------------------
 	- func: SetFocus(focus) GetFocus()
 	- desc: sets/gets the object's focus
 --]]---------------------------------------------------------
-function newobject:SetFocus(focus)
+function TextBox:SetFocus(focus)
 	local inputobject = loveframes.inputobject
 	local onfocusgained = self.OnFocusGained
 	local onfocuslost = self.OnFocusLost
@@ -426,7 +428,7 @@ function newobject:SetFocus(focus)
 	return self
 end
 
-function newobject:GetFocus()
+function TextBox:GetFocus()
 	return self.focus
 end
 
@@ -434,7 +436,7 @@ end
 	- func: Clear()
 	- desc: clears the object's text
 --]]---------------------------------------------------------
-function newobject:Clear()
+function TextBox:Clear()
 	self.field:reset()
 end
 
@@ -442,7 +444,7 @@ end
 	- func: SetText(text)
 	- desc: sets the object's text
 --]]---------------------------------------------------------
-function newobject:SetText(text)
+function TextBox:SetText(text)
 	self.field:setText(text)
 	return self
 end
@@ -451,7 +453,7 @@ end
 	- func: SetMultiline(text)
 	- desc: sets the object's multiline functionality
 --]]---------------------------------------------------------
-function newobject:SetMultiline(bool)
+function TextBox:SetMultiline(bool)
 	--self.field:setText(bool)
 	self.multiline = bool
 	if self.multiline then
@@ -466,7 +468,7 @@ end
 	- desc: sets the object's input type property
 --]]---------------------------------------------------------
 ---@param mode "multiwrap"|"multinowrap"|"password"|"normal"
-function newobject:SetType(mode)
+function TextBox:SetType(mode)
 	if mode == "multiwrap" or mode == "multinowrap" then
 		self.multiline = true
 		self.field:setType(mode)
@@ -481,7 +483,7 @@ end
 	- func: SetPasswordCharacter(text)
 	- desc: sets the object's password character to display
 --]]---------------------------------------------------------
-function newobject:SetPasswordCharacter(character)
+function TextBox:SetPasswordCharacter(character)
 	self.field:setPasswordCharacter(character)
 	return self
 end
@@ -490,12 +492,10 @@ end
 	- func: SetUsable(table)
 	- desc: sets the object's allowed characters
 --]]---------------------------------------------------------
-function newobject:SetUsable(tbl)
+function TextBox:SetUsable(tbl)
 	local filterFunction = function(input)
-		--print(input, type(input))
 		local filter = tbl
 		for k,v in pairs(filter) do
-			print(k, v, input)
 			if v == input then
 				return false
 			end
@@ -510,12 +510,10 @@ end
 	- func: SetUnusable(table)
 	- desc: sets the object's forbidden characters
 --]]---------------------------------------------------------
-function newobject:SetUnusable(tbl)
+function TextBox:SetUnusable(tbl)
 	local filterFunction = function(input)
-		--print(input, type(input))
 		local filter = tbl
 		for k,v in pairs(filter) do
-			print(k, v, input)
 			if v == input then
 				return true
 			end
@@ -531,7 +529,7 @@ end
 	- func: SetCharacterLimit(table)
 	- desc: sets the object's forbidden characters
 --]]---------------------------------------------------------
-function newobject:SetCharacterLimit(limit)
+function TextBox:SetCharacterLimit(limit)
 	self.field:setCharacterLimit(limit)
 	return self
 end
@@ -540,12 +538,12 @@ end
 	- func: SetPlaceholderText(text) GetPLaceholderText()
 	- desc: sets the object's default text to display
 --]]---------------------------------------------------------
-function newobject:SetPlaceholderText(text)
+function TextBox:SetPlaceholderText(text)
 	self.field:setPlaceholderText(text)
 	return self
 end
 
-function newobject:GetPlaceholderText()
+function TextBox:GetPlaceholderText()
 	return self.field:GetPlaceholderText()
 end
 
@@ -553,15 +551,15 @@ end
 	- func: GetText()
 	- desc: gets the object's text
 --]]---------------------------------------------------------
-function newobject:GetText()
+function TextBox:GetText()
 	return self.field:getText()
 end
 
-function newobject:GetFieldObject()
+function TextBox:GetFieldObject()
 	return self.field
 end
 
-function newobject:MoveCursorTo(pos)
+function TextBox:MoveCursorTo(pos)
 	if type(pos) == "number" then
 		self.field:setCursor(pos)
 	elseif type(pos) == "string" then
@@ -573,7 +571,7 @@ function newobject:MoveCursorTo(pos)
 	end
 end
 
-function newobject:SetMaxHistory(size)
+function TextBox:SetMaxHistory(size)
 	self.field:setMaxHistory(size)
 	return self
 end

@@ -74,29 +74,6 @@ function newobject:update(dt)
 		self.y = parent.y + self.staticy
 	end
 
-	--[[
-	if loveframes.downobject == self then
-		if scrolldelay < time then
-			self.scrolldelay = time + delayamount
-			if self.bartype == "vertical" then
-				if y > bar.y then
-					bar:Scroll(bar.height)
-				else
-					bar:Scroll(-bar.height)
-				end
-			elseif self.bartype == "horizontal" then
-				if x > bar.x then
-					bar:Scroll(bar.width)
-				else
-					bar:Scroll(-bar.width)
-				end
-			end
-		end
-		if not hover then
-			self.downobject = false
-		end
-	end
-	]]
 	for k, v in ipairs(internals) do
 		v:update(dt)
 	end
@@ -110,21 +87,9 @@ end
 	- desc: called when the player presses a mouse button
 --]]---------------------------------------------------------
 function newobject:mousepressed(x, y, button, istouch, presses)
-	if not self.visible then return end
+	if not self.visible and self.hover then return end
 	local internals = self.internals
 
-	if self.hover and button == 1 then
-		local relative_x = x - self.x
-		local relative_y = y - self.y
-
-		local proportion_width = relative_x / self.width
-		local proportion_height = relative_y / self.height
-		--print(proportion_width, proportion_height)
-
-		local bar = internals[1]
-	end
-
-	--[[
 	local listo = self.parent.parent
 	local time = love.timer.getTime()
 	local internals = self.internals
@@ -152,7 +117,7 @@ function newobject:mousepressed(x, y, button, istouch, presses)
 			end
 		end
 	end
-	]]
+
 	for k, v in ipairs(internals) do
 		v:mousepressed(x, y, button)
 	end

@@ -32,6 +32,7 @@ function newobject:initialize()
 
 	self.width = self.font:getWidth(" ")
 	self.height = self.width
+	self.max_width = 200
 	self.internal = false
 
 	self:SetDrawFunc()
@@ -112,12 +113,11 @@ function newobject:SetText(text)
 	-- Validate UTF8 string
     local fixedstring =  self:fixUTF8(text, "?")
 	-- Parse the string received
-	-- Set the text cache
 	self.textmesh:set(fixedstring)
+	-- Set the text cache
 	self.text = fixedstring
 	-- Resize the message width/height
-	self.width = self.textmesh:getWidth()
-	self.height = self.textmesh:getHeight()
+	self:SetSize( self.textmesh:getWidth(), self.textmesh:getHeight() )
 	return self
 end
 
@@ -134,7 +134,7 @@ end
 	- desc: sets the object's maximum width
 --]]---------------------------------------------------------
 function newobject:SetMaxWidth(width)
-	self.maxw = width
+	self.max_width = width
 	return self
 end
 
@@ -143,38 +143,8 @@ end
 	- desc: gets the object's maximum width
 --]]---------------------------------------------------------
 function newobject:GetMaxWidth()
-	return self.maxw
+	return self.max_width
 end
-
---[[---------------------------------------------------------
-	- func: SetWidth(width, relative)
-	- desc: sets the object's width
---]]---------------------------------------------------------
---[[
-function newobject:SetWidth(width, relative)
-	if relative then
-		self:SetMaxWidth(self.parent.width * width)
-	else
-		self:SetMaxWidth(width)
-	end
-	return self
-end
-]]
---[[---------------------------------------------------------
-	- func: SetSize(width, height, relative)
-	- desc: sets the object's size
---]]---------------------------------------------------------
---[[
-function newobject:SetSize(width, height, relative)
-	if relative then
-		self:SetMaxWidth(self.parent.width * width)
-	else
-		self:SetMaxWidth(width)
-	end
-	self.SetHeight(height)
-	return self
-end
---]]
 --[[---------------------------------------------------------
 	- func: SetFont(font)
 	- desc: sets the object's font
@@ -183,7 +153,14 @@ end
 function newobject:SetFont(font)
 	self.font = font
 	self.textmesh:setFont(font)
-	self.hovertextmesh:setFont(font)
+	return self
+end
+
+function newobject:SetColor(r,g,b,a)
+	self.defaultcolor[1] = r or self.defaultcolor[1]
+	self.defaultcolor[2] = g or self.defaultcolor[2]
+	self.defaultcolor[3] = b or self.defaultcolor[3]
+	self.defaultcolor[4] = a or self.defaultcolor[4]
 	return self
 end
 

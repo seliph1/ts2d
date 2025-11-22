@@ -1,10 +1,13 @@
 ---@diagnostic disable: duplicate-set-field
+
 local loveframes = require "lib.loveframes"
 local LF = loveframes
 
 function love.load()
     love.filesystem.load("uidebug/console.lua") ()
     love.filesystem.load("uidebug/objects.lua") ()
+
+    love.keyboard.setTextInput(true)
 end
 
 function love.update(dt)
@@ -43,3 +46,5 @@ function love.textinput(text)
     loveframes.textinput(text)
 end
 
+function love.quit()
+end

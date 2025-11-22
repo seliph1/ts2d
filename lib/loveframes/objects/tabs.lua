@@ -102,7 +102,8 @@ function newobject:draw()
 	local width = self.width
 	local height = self.height
 	local tabheight = self:GetHeightOfButtons()
-	love.graphics.setScissor(x + self.buttonareax, y, self.buttonareawidth, height)
+	local ox, oy, ow, oh = love.graphics.getScissor()
+	love.graphics.intersectScissor(x + self.buttonareax, y, self.buttonareawidth, height)
 	self:SetDrawOrder()
 	local drawfunc = self.Draw or self.drawfunc
 	if drawfunc then
@@ -117,7 +118,7 @@ function newobject:draw()
 			end
 		end
 	end
-	love.graphics.setScissor()
+	love.graphics.setScissor(ox, oy, ow, oh)
 	local children = self.children
 	if #children > 0 then
 		children[self.tab]:draw()

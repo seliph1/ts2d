@@ -60,16 +60,20 @@ end
 	- desc: updates the object
 --]]---------------------------------------------------------
 function newobject:update(dt)
+	if loveframes.inputobject == self and not self.visible then
+		loveframes.inputobject = false
+	end
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
-
 	-- check to see if the object is being hovered over
 	self:CheckHover()
+
 	-- move to parent if there is a parent
 	if self.parent ~= loveframes.base then
 		self.x = self.parent.x + self.staticx
 		self.y = self.parent.y + self.staticy
 	end
+	if loveframes.inputobject ~= self then return end
 
     self.field:update(dt)
 	-- Update the callback update function
@@ -103,7 +107,8 @@ function newobject:draw()
 
 	-- set the object's draw order
 	self:SetDrawOrder()
-    love.graphics.setScissor(x, y, width, height)
+	local ox, oy, ow, oh = love.graphics.getScissor()
+    love.graphics.intersectScissor(x, y, width, height)
 
 	local drawfunc = self.Draw or self.drawfunc
 	if drawfunc then
@@ -153,8 +158,7 @@ function newobject:draw()
 		love.graphics.setColor(color)
 		love.graphics.rectangle("fill", x+hHandlePos, y+height-2, hHandleLength, 2)
 	end
-
-    love.graphics.setScissor()
+    love.graphics.setScissor(ox, oy, ow, oh)
 
 	local drawoverfunc = self.DrawOver or self.drawoverfunc
 	if drawoverfunc then
@@ -192,8 +196,10 @@ end
 function newobject:mousepressed(x, y, button, istouch, presses)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
+	if loveframes.hoverobject == self then
+		loveframes.inputobject = self
+	end
 	if loveframes.inputobject ~= self then return end
-
     self.field:mousepressed(x - self.x, y - self.y, button, presses)
 end
 
@@ -211,11 +217,10 @@ end
 --]]---------------------------------------------------------
 function newobject:keypressed(key, isrepeat)
 	if not self:OnState() then return end
-	if not self:isUpdating() then return end
-
 	if self.OnControlKeyPressed then
 		self.OnControlKeyPressed(self, key)
 	end
+	if not self:isUpdating() then return end
 	if key == "return" and self.OnEnter then
 		self.OnEnter(self, self.field:getText())
 		return
@@ -259,7 +264,6 @@ end
 function newobject:textinput(text)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
-
 	if loveframes.inputobject ~= self then return end
 
 	local ontextchanged = self.OnTextChanged

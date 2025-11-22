@@ -5,6 +5,9 @@ local LF = require "lib.loveframes"
 --------------------------------------------------------------------------------------------------
 ui.console_frame = LF.Create("frame"):SetSize(640, 480):SetResizable(false):SetScreenLocked(true)
 :SetName("Console"):SetCloseAction("hide"):SetState("*")
+ui.console_frame.Update = function(object, dt)
+	object.name = string.format("Console [%s]",love.timer.getFPS())
+end
 
 ui.console_window_panel = LF.Create("panel", ui.console_frame)
 :SetSize(630, 400):SetPos(5, 30)
@@ -69,6 +72,57 @@ ui.console_input.commands = {
 			end
 		end;
 	};
+
+	profile = {
+		action = function(bool)
+			local profile = require "jit.profile"
+			if bool == "start" then
+				print("profile started")
+				profile.start("fl", function(thread, samples, vmstates)
+					local dump = profile.dumpstack("lZ;", -100)
+				end)
+			elseif bool == "stop" then
+				profile.stop()
+				print("profile stopped")
+			elseif bool == "dump" then
+				local dump = profile.dumpstack("lZ;", -100)
+			end
+		end
+	};
+
+	draw = {
+		action = function(bool)
+			if bool == "true" then
+				LF.drawtoggle = true
+			else
+				LF.drawtoggle = false
+			end
+		end
+	};
+
+	calculate = {
+		action = function(...)
+			local expression = table.concat({...}, " ")
+			local left, operator, right = string.match(expression, "(%d+)%s?([-+*/])%s?(%d+)")
+			assert(left and operator and right, "Missing operators/numbers")
+			
+			local operand_left = tonumber(left)
+			local operand_right = tonumber(right)
+
+			assert(operand_left and operand_right, "Could not type cast operand variables.")
+
+			if operator == "*" then
+				print(operand_left * operand_right)
+			elseif operator == "-" then
+				print(operand_left - operand_right)
+			elseif operator == "+" then
+				print(operand_left + operand_right)
+			elseif operator == "/" then
+				assert(operand_right ~= 0, "Cannot divide by zero")
+				print(operand_left / operand_right)
+			end
+		end
+	};
 }
 
 
@@ -114,4 +168,8 @@ end)
 LF.bind("all", "", "f1", function()
     local state = LF.config["DEBUG"]
     LF.config["DEBUG"] = not state
+end)
+
+LF.bind("all", "", "f12", function()
+	love.event.quit("restart")
 end)

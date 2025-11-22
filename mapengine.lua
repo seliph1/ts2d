@@ -423,7 +423,6 @@ function MapObject:clear()
 	print("Map: cleared")
 end
 
-
 --- @method Reads from a CS2D Map file
 --- @param path string file relative to maps/ path in CS2D
 function MapObject:read(path, noindexing)

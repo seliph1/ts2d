@@ -91,6 +91,20 @@ function loveframes.CreateSpriteSheet(file, xsize, ysize)
 	return spritesheet_table, spritesheet_table_raw
 end
 
+function loveframes.CreateSprite(path)
+	local imageData = love.image.newImageData(path)
+	imageData:mapPixel(function(x, y, r, g, b, a)
+		-- Verifica se é magenta (255,0,255)
+		-- Normalmente os valores de cor vêm como floats 0..1
+		if r == 1 and g == 0 and b == 1 then
+			return 1, 0, 1, 0 -- deixa transparente (alpha=0)
+		else
+			return r, g, b, a
+		end
+	end)
+	local image = love.graphics.newImage(imageData)-- Remove magenta pixels
+	return image
+end
 
 --[[---------------------------------------------------------
 	- func: BoundingBox(x1, x2, y1, y2, w1, w2, h1, h2)
@@ -359,8 +373,6 @@ end
 function loveframes.AnchorReset()
 	loveframes.hoverobject = false
 	loveframes.downobject = false
-	loveframes.modalobject = false
-	loveframes.inputobject = false
 	loveframes.draggingobject = false
 
 	loveframes.anchor_x = 0
@@ -510,15 +522,18 @@ loveframes.debugwindow = {type = "None", children = nil, parent = nil, x = 0, y 
 loveframes.love_version = table.concat({love.getVersion()}, ".")
 
 function loveframes.DebugDraw()
+	--local basedir = loveframes.config["DIRECTORY"]
+
 	local infox = 5
 	local infoy = 40
 	local topcol = loveframes.debugwindow
 	local hoverobject = loveframes.GetHoverObject()
+	local inputobject = loveframes.inputobject
 	local objects = loveframes.GetObjectCount()
 	local collisions = loveframes.collisioncount
+	local drawcount = loveframes.drawcount
 	local version = loveframes.version
 	local stage = loveframes.stage
-	local basedir = loveframes.config["DIRECTORY"]
 	local loveversion = loveframes.love_version
 	local fps = love.timer.getFPS()
 	local deltatime = love.timer.getDelta()
@@ -527,26 +542,24 @@ function loveframes.DebugDraw()
 	if hoverobject then
 		topcol = hoverobject
 	end
-	-- show frame docking zones
-	if topcol.type == "frame" then
-		for k, v in pairs(topcol.dockzones) do
-			love.graphics.setLineWidth(1)
-			love.graphics.setColor(1, 0, 0, 0.2)
-			love.graphics.rectangle("fill", v.x, v.y, v.width, v.height)
-			love.graphics.setColor(1, 0, 0, 1)
-			love.graphics.rectangle("line", v.x, v.y, v.width, v.height)
-		end
+
+	if inputobject then
+		love.graphics.setColor(0.8, 0.8, 1, 1)
+		love.graphics.setLineWidth(2)
+		love.graphics.rectangle("line", inputobject.x - 1, inputobject.y - 1, inputobject.width + 2, inputobject.height + 2)
 	end
-	
+
 	-- outline the object that the mouse is hovering over
-	love.graphics.setColor(1, 0.8, 0.2, 1)
-	love.graphics.setLineWidth(2)
-	love.graphics.rectangle("line", topcol.x - 1, topcol.y - 1, topcol.width + 2, topcol.height + 2)
-	
+	if hoverobject and hoverobject ~= inputobject then
+		love.graphics.setColor(1, 0.8, 0.2, 1)
+		love.graphics.setLineWidth(2)
+		love.graphics.rectangle("line", hoverobject.x - 1, hoverobject.y - 1, hoverobject.width + 2, hoverobject.height + 2)
+	end
+
 	-- draw main debug box
 	love.graphics.setFont(font)
 	love.graphics.setColor(0,0,0,0.8)
-	love.graphics.rectangle("fill", infox, infoy, 200, 80)
+	love.graphics.rectangle("fill", infox, infoy, 200, 90)
 	love.graphics.setColor(1,0,0,1)
 	love.graphics.print("Love Frames - Debug (" ..version.. " - " ..stage.. ")", infox + 5, infoy + 5)
 	love.graphics.setColor(1,1,1,1)
@@ -555,54 +568,25 @@ function loveframes.DebugDraw()
 	love.graphics.print("Delta Time: " ..deltatime, infox + 10, infoy + 40)
 	love.graphics.print("Total Objects: " ..objects, infox + 10, infoy + 50)
 	love.graphics.print("Total Collisions: " ..collisions, infox + 10, infoy + 60)
-	
-	--[[
-	-- draw object information if needed
-	if topcol.type ~= "base" then
-		love.graphics.setColor(0,0,0,0.8)
-		love.graphics.rectangle("fill", infox, infoy + 85, 200, 150)
-		love.graphics.setColor(1,0,0,1)
-		love.graphics.print("Object Information", infox + 5, infoy + 90)
-		love.graphics.setColor(1,1,1,1)
-		love.graphics.print("Type: " ..topcol.type, infox + 10, infoy + 105)
-
-		if topcol.parent then
-			local parent = topcol.parent
-			if parent and parent.type then
-				love.graphics.print("Parent: " ..parent.type, infox + 10, infoy + 115)
-			end
-		else
-			love.graphics.print("Parent: None", infox + 10, infoy + 115)
-		end
-		
-		if topcol.children then
-			love.graphics.print("# of children: " .. #topcol.children, infox + 10, infoy + 125)
-		else
-			love.graphics.print("# of children: 0", infox + 10, infoy + 125)
-		end
-		if topcol.internals then
-			love.graphics.print("# of internals: " .. #topcol.internals, infox + 10, infoy + 135)
-		else
-			love.graphics.print("# of internals: 0", infox + 10, infoy + 135)
-		end
-		love.graphics.print("X: " ..topcol.x, infox + 10, infoy + 145)
-		love.graphics.print("Y: " ..topcol.y, infox + 10, infoy + 155)
-		love.graphics.print("Static X: " ..(topcol.staticx or "0"), infox + 10, infoy + 165)
-		love.graphics.print("Static Y: " ..(topcol.staticy or "0"), infox + 10, infoy + 175)
-		love.graphics.print("Width: " ..topcol.width, infox + 10, infoy + 185)
-		love.graphics.print("Height: " ..topcol.height, infox + 10, infoy + 195)
-	end]]
+	love.graphics.print("Draw Operations: " ..drawcount, infox + 10, infoy + 70)
 
 	local ex_info_x = love.mouse.getX()+30
 	local ex_info_y = love.mouse.getY()+30
 	local height = 0
+	local reverse = false
 	for k,v in pairs(topcol) do	height = height + 10 end
+	if ex_info_y + height > love.graphics.getHeight() then
+		ex_info_y = ex_info_y - height
+	end
 	love.graphics.setColor(0,0,0,0.8)
 	love.graphics.rectangle("fill", ex_info_x - 10, ex_info_y - 10, 320, height+20)
 	love.graphics.setColor(1,1,1,1)
 	height = 0
 	for k, v in pairs(topcol) do
-		love.graphics.print(tostring(k)..": "..tostring(v), ex_info_x, ex_info_y + height)
+		local str = tostring(v)
+		if string.len(str) > 20 then str = "..."..string.sub(str, -10) end
+
+		love.graphics.print(tostring(k)..": ".. str, ex_info_x, ex_info_y + height)
 		height = height + 10
 	end
 

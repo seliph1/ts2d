@@ -1,9 +1,28 @@
 -- Module start
 return function(client)
 ---------- module start ----------
-
 -- These functions are restricted to be used by server only
 -- Only works when server sends them to this client
+
+--- Client command parser
+--- @param str string
+function client.parse(str)
+    local args = {}
+	for word in string.gmatch(str, "%S+") do
+		table.insert(args, word)
+	end
+
+	local action_id = args[1]
+	local actions = client.actions
+	if actions[ action_id ] then
+		local action_object = actions[ action_id ]
+		if action_object.action then
+			local status = action_object.action( unpack(args,2) )
+		end
+	else
+		print(string.format("Unknown command: %s", str))
+	end
+end
 
 local actions = {
     warning = {
@@ -144,10 +163,37 @@ local actions = {
         end
     };
 
-    fire = {
-        action = function(peer_id, home)
+    attack = {
+        action = function(peer_id)
+            -- NO home argument, this will be running for remote peers
+            client.attack(peer_id)
+        end
+    };
 
+    attack2 = {
+    };
+
+    reload = {
+    };
+
+    fire = {
+        action = function(x, y, distance, angle, peer_id)
+            -- Source of fire
+            peer_id = tonumber(peer_id) or 0
+            x = tonumber(x) or 0
+            y = tonumber(y) or 0
+            distance = tonumber(distance) or (32 * 4)
+            angle = tonumber(angle) or 0
+
+            client.fire(x, y, distance, angle, peer_id)
+        end
+    }
+    --[[
+    fire = {
+        action = function(peer_id, home, angle)
             peer_id = tonumber(peer_id)
+            angle = angle or 0
+
             local player = client.share.players[peer_id]
             if not player then return end
             local player_x, player_y = player.x, player.y
@@ -212,11 +258,12 @@ local actions = {
                 --offsetX = -10,
             })
         end
-    };
+        
+    };]]
 }
 actions.msg = actions.message
 
 
-return actions
+client.actions = actions
 ---------- module end ------------
 end

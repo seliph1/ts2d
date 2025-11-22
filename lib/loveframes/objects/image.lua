@@ -16,8 +16,8 @@ local newobject = loveframes.NewObject("image", "loveframes_object_image", true)
 function newobject:initialize()
 
 	self.type = "image"
-	self.width = 0
-	self.height = 0
+	self.width = 50
+	self.height = 50
 	self.orientation = 0
 	self.scalex = 1
 	self.scaley = 1
@@ -67,9 +67,7 @@ function newobject:SetImage(image)
 	else
 		self.image = image
 	end
-	
-	self.width = self.image:getWidth()
-	self.height = self.image:getHeight()
+	self:SetSize( self.image:getWidth(), self.image:getHeight())
 	return self
 end
 

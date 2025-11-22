@@ -24,9 +24,9 @@ skin.directives = {}
 skin.directives.text_global = "gfx/fonts/liberationsans.ttf"
 skin.directives.text_fallbacks = {
 	--"gfx/fonts/NotoSansCJK-Regular.ttc",
-	"gfx/fonts/NotoSansArabic-Regular.ttf",
-	"gfx/fonts/NotoSansThai-Regular.ttf",
-	"gfx/fonts/NotoSansHebrew-Regular.ttf",
+	--"gfx/fonts/NotoSansArabic-Regular.ttf",
+	--"gfx/fonts/NotoSansThai-Regular.ttf",
+	--"gfx/fonts/NotoSansHebrew-Regular.ttf",
 }
 
 skin.directives.text_font_height 			= 1
