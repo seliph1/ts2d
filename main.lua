@@ -39,20 +39,55 @@ end
 ---------------------------------------------------------------------------------------
 if fused or love.filesystem.isFused() then
 	local base_dir = love.filesystem.getSourceBaseDirectory()
-	assert(love.filesystem.mountFullPath(base_dir, "", "readwrite"), "failed to mount")
+	if love.getVersion() == 12 then
+		assert(love.filesystem.mountFullPath(base_dir, "", "readwrite"), "failed to mount")
+	else
+		--assert(love.filesystem.mount(base_dir, ""), "failed to mount")
+	end
 end
 
 local loveframes 	= require "lib.loveframes"
 local client 		= require "client"
 local ui 			= require "core.interface.ui"
+local discordRPC	= require "lib.discordRPC"
+local applicationId	= require "lib.applicationId"
+
+function discordRPC.ready(userId, username, discriminator, avatar)
+    print(string.format("Discord: ready (%s, %s, %s, %s)", userId, username, discriminator, avatar))
+end
+
+function discordRPC.disconnected(errorCode, message)
+    print(string.format("Discord: disconnected (%d: %s)", errorCode, message))
+end
+
+function discordRPC.errored(errorCode, message)
+    print(string.format("Discord: error (%d: %s)", errorCode, message))
+end
+
+function discordRPC.joinGame(joinSecret)
+    print(string.format("Discord: join (%s)", joinSecret))
+end
+
+function discordRPC.spectateGame(spectateSecret)
+    print(string.format("Discord: spectate (%s)", spectateSecret))
+end
+
+function discordRPC.joinRequest(userId, username, discriminator, avatar)
+    print(string.format("Discord: join request (%s, %s, %s, %s)", userId, username, discriminator, avatar))
+    discordRPC.respond(userId, "yes")
+end
+
 
 function love.load()
-	love.keyboard.setTextInput(true)
+    discordRPC.initialize(applicationId, true)
 
+	love.keyboard.setTextInput(true)
 	client.load()
 end
 
 function love.update( dt )
+	discordRPC.update( dt )
+
 	loveframes.update(dt)
 	client.update(dt)
 
@@ -105,6 +140,7 @@ function love.textinput(text)
 end
 
 function love.quit()
+	discordRPC.shutdown()
 end
 
 function love.resize(w, h)

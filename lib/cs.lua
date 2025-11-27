@@ -38,9 +38,11 @@ client.binds = {}
 
 local share = {}
 local share_local = {}
+local share_lerp = {}
 
 client.share = share
 client.share_local = share_local
+client.share_lerp = share_lerp
 
 local home = state.new()
 home:__autoSync(true)
@@ -258,7 +260,7 @@ function client.postupdate(dt)
         -- Stores the inputState so we can later do some client prediction
         client.inputCache:push(inputState)
     end
-    
+
     -- Run the tick callback
     client.dt = timeSinceLastUpdate
     if client.tick then

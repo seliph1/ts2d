@@ -20,6 +20,7 @@ client.camera = {
 ---@param dt number Delta time
 function client.camera_move(dt)
 	local camera = client.camera
+	local home = client.home
 	-- Speed
 	local s = camera.speed * dt
 	if client.key.space then
@@ -39,10 +40,10 @@ function client.camera_move(dt)
 	if p and p.x and p.y then
 		local x = p.x
 		local y = p.y
-		--local delta_x = (client.width/2 - home.targetX)/2 -- 0
-		--local delta_y = (client.height/2 - home.targetY)/2 -- 0
-		local delta_x = 0
-		local delta_y = 0
+		local delta_x = (client.width/2 - home.targetX)/2
+		local delta_y = (client.height/2 - home.targetY)/2
+		--local delta_x = 0
+		--local delta_y = 0
 		camera.tx = x - delta_x
 		camera.ty = y - delta_y
 	end

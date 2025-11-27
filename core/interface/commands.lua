@@ -107,12 +107,6 @@ local commands = {
 				client.kick()
 			end
 		end,
-		syntax = "connect <ip:port>",
-	};
-
-	players = {
-		action = function()
-		end;
 	};
 
 	setname = {
@@ -131,16 +125,14 @@ local commands = {
 		end;
 	};
 
-	scale = {
-		action = function(bool)
-			client.scale = (bool == "true")
-		end;
+	equip = {
+		action = function(target_id, item_type)
+			client.send( string.format("equip %s %s", target_id, item_type) )
+		end
 	};
 
 	tp = {
 		action = function()
-			local home = client.home
-			local share = client.share
 			local targetX = client.attribute "targetX"
 			local targetY = client.attribute "targetY"
 
@@ -162,6 +154,13 @@ local commands = {
 			ui.menu_constructor(table.concat({...}," "))
 		end;
 	};
+
+	scale = {
+		action = function(bool)
+			client.scale = (bool == "true")
+		end;
+	};
+
 
 	lua = {
 		---Evaluates a lua expression
@@ -254,7 +253,6 @@ local commands = {
 		end
 	};
 
-
 	text = {
 		action = function(size)
 			size = tonumber(size) or 10
@@ -283,6 +281,26 @@ local commands = {
 			local body = hugeString(size)
 			if body then
 				label:SetText(body)
+			end
+		end
+	};
+
+	vsync = {
+		---@param mode "on"|"off"|"true"|"false"
+		action = function(mode)
+			local width, height = love.graphics.getDimensions()
+			if mode == "true" or mode == "on" then
+				love.window.updateMode(width, height, {
+					vsync = true;
+				})
+				print("vsync on")
+			elseif mode == "false" or mode == "off" then
+				love.window.updateMode(width, height, {
+					vsync = false;
+				})
+				print("vsync off")
+			else
+				return "unknown value "..mode
 			end
 		end
 	}

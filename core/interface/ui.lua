@@ -825,6 +825,8 @@ end
 
 ui.weaponselect = LF.Create("container"):SetState("game")
 ui.weaponselect:SetPos( love.graphics.getWidth()/2 - ui.weaponselect:GetWidth(), (love.graphics.getHeight() - client.height)/2 )
+--ui.weaponselect:SetSize()
+--ui.weaponselect:SetPos(0, 0)
 ui.weaponselect:SetProperty("cursor", 0)
 ui.weaponselect:SetProperty("itemheld", 0)
 ui.weaponselect:SetProperty("slots", {})
@@ -961,11 +963,61 @@ function ui.weaponselect:Display(slot, x, y)
 	end
 end
 
+function ui.weaponselect:selectSlot(slot)
+	if not client.share.players then return end
+	if not client.share.players[client.id] then return end
+	local player = client.share.players[client.id]
+	local c = 0
+	for index in pairs(player.i) do
+		c = c + 1
+	end
+	if c == 0 then return end -- There is nothing to do with empty inventory
+
+	if slot < 0 or slot > 9 then
+		return -- Out of bounds
+	end
+
+	local cursor_offset = 1
+	if not self.active then
+		self:activate()
+		cursor_offset = 0
+	end
+
+	if #self.slots[slot] == 1 then
+		-- Single item on slot
+		self.slot_active = slot
+		self.cursor = 1
+
+		local item_type = self.slots[self.slot_active][self.cursor]
+		client.send("weapon "..item_type)
+
+		-- Deactivate
+		self.active = false
+		-- Skip the list
+		return
+	end
+
+	-- Check if its a valid slot and it has items
+	if self.slots[slot] and #self.slots[slot] > 0 then
+
+		-- If we're on a different slot than selected, then 
+		if self.slot_active ~= slot then
+			self.cursor = 1
+			self.slot_active = slot
+		else
+			if self.slots[self.slot_active][self.cursor + cursor_offset] then
+				self.cursor = self.cursor + cursor_offset
+			else
+				self.cursor = 1
+			end
+		end
+	end
+end
+
 function ui.weaponselect:selectNext()
 	if not client.share.players then return end
 	if not client.share.players[client.id] then return end
 	local player = client.share.players[client.id]
-
 	local c = 0
 	for k,v in pairs(player.i) do
 		c = c + 1
@@ -1039,8 +1091,11 @@ function ui.weaponselect:selectPrevious()
 end
 
 function ui.weaponselect:Scroll(x, y)
+	if LF.hoverobject and LF.hoverobject ~= self then
+		return
+	end
 	if not self.active then
-		self.active = true
+		self:activate()
 	end
 
 	if y < 0 then
@@ -1051,6 +1106,13 @@ function ui.weaponselect:Scroll(x, y)
 
 	if self.cursor == 0 and self.slot_active == 0 then
 		self.active = false
+	end
+end
+
+function ui.weaponselect:OnControlKeyPressed(button, pressed)
+	local slot = tonumber(button)
+	if (not LF.inputobject) and (pressed and slot) then
+		self:selectSlot(slot)
 	end
 end
 
@@ -1071,10 +1133,17 @@ function ui.weaponselect:OnMousePressed(x, y, button)
 	end
 end
 
+function ui.weaponselect:activate()
+	if not LF.inputobject then
+		self.active = true
+	end
+end
+
 function ui.weaponselect:Draw()
 	if not self.active then
 		return
 	end
+	LF.collisioncount = LF.collisioncount + 1
 
 	if not client.share.players then return end
 	if not client.share.players[client.id] then return end

@@ -208,6 +208,7 @@ editor.tool_option = {
 				if status then
 					print(status)
 				end
+				print(client.map)
 			end
 			client.mode = "game"
     		editor.tile_panel:Clear()

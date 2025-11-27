@@ -5,6 +5,31 @@ local Bump			= require "lib.bump"
 local client 		= require "lib.cs"
 local serpent 		= require "lib.serpent"
 
+---@class userdata
+---Home class that holds player local client data
+local home = client.home
+---@class Share
+--- @field bullets table
+--- @field players table
+--- @field items table
+--- @field scores table
+--- Table that gets info from server
+local share = client.share
+
+---@class Share
+---Table that holds similar data from server, gets updated after server tick
+local share_local = client.share_local
+
+---@class Share
+---Table that holds interpolated data
+local share_lerp = client.share_lerp
+share_lerp.players 	= {}
+share_lerp.entities = {}
+share_lerp.bullets 	= {}
+share_lerp.items 	= {}
+share_lerp.scores 	= {}
+
+
 client.version 			= "v1.0.1"
 client.enabled 			= true
 client.width 			= 800
@@ -29,30 +54,6 @@ local modules = {
 for index, module in pairs(modules) do
 	require(module)(client)
 end
-
---- Table that gets info from server
----@class Share
---- @field bullets table
---- @field players table
---- @field items table
---- @field scores table
-local share = client.share
-
----@class Share
-local share_local = client.share_local
-
----@class Share
-local share_lerp = client.share_lerp
-share_lerp = {
-	players = {},
-	entities = {},
-	bullets = {},
-	items = {},
-	scores = {}
-}
----@class userdata
-local home = client.home
-
 
 function client.snapshot_lerp(dt)
 	local lerp_flags = {
@@ -120,7 +121,13 @@ function client.predict_player(peer_id, dt) -- `home` is used to apply controls 
 	end
 end
 
+local bulletsound = love.audio.newSource("sfx/weapons/ak47.wav", "static")
+local m3 = love.audio.newSource("sfx/weapons/m3.wav", "static")
+local xm = love.audio.newSource("sfx/weapons/xm1014.wav", "static")
+
+
 function client.attack(peer_id, local_data)
+	--local player = client.share_lerp.players[peer_id]
 	local player = client.share.players[peer_id]
 	if not player then return 1 end -- Return 1 second cooldown
 
@@ -159,19 +166,45 @@ function client.attack(peer_id, local_data)
 		local spawn = tonumber( args[1] ) or 1
 		local spread = tonumber( args[2] ) or 1
 		local angle = math.atan2(mouse_y - client.height/2, mouse_x - client.width/2)
-		local distance = itemdata.range
-		local rate_of_fire = itemdata.rate_of_fire or 9
-		local seconds = rate_of_fire * dt
+		-- In CS2D the range value is multiplied by 3
+		local distance = itemdata.range * 3
+		-- True CS2D frame delay
+		local rate_of_fire = itemdata.rate_of_fire or (9 * 1/50)
+		local seconds = rate_of_fire * (1/50)
 		local offset = 20
 		local offset_x = player_x + math.cos(angle) * offset
 		local offset_y = player_y + math.sin(angle) * offset
 
-		--local target_x = offset_x + math.cos(angle) * distance
-		--local target_y = offset_y + math.sin(angle) * distance
+
+		--print(rate_of_fire, seconds, dt)
+
+		if itemheld == 10 then
+			m3:setVolume(0.1)
+			m3:stop()
+			m3:play()
+		elseif itemheld == 11 then
+			xm:setVolume(0.1)
+			xm:stop()
+			xm:play()
+		else
+			bulletsound:setVolume(0.1)
+			bulletsound:stop()
+			bulletsound:play()
+		end
 
 		-- Simulate locally that we fired a weapon
-		client.fire(offset_x, offset_y, angle, distance, client.id)
+		if spawn == 1 then
+			-- Skip with single shot
+			client.fire(offset_x, offset_y, angle, distance, client.id)
+			return seconds
+		end
 
+		-- Multishot (from shotguns, etc.)
+		local half = math.floor(spawn/2)
+		for i = 1, spawn do
+			local subangle = angle + math.rad(i * spread - half * spread)
+			client.fire(offset_x, offset_y, subangle, distance, client.id)
+		end
 		return seconds
 	end
 
@@ -221,7 +254,7 @@ function client.fire(start_x, start_y, angle, distance, peer_id)
 	client.map:spawn_effect("hitscan", half_x, half_y, {
 		setDirection = angle,
 		setEmissionArea = {"uniform", half, 1, angle, false},
-		emitAtStart = math.ceil( hit_distance/distance * 30),
+		emitAtStart = math.ceil( hit_distance/distance * 10),
 	})
 
 	client.map:spawn_effect("trail", start_x, start_y, {
