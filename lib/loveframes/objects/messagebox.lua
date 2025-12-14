@@ -33,8 +33,8 @@ function MessageBox:initialize()
 	self.hoverenabled = false
 	self.shadow = true
 	self.font = default_font or loveframes.basicfont
-	self.textmesh = love.graphics.newText(self.font, "")
-	self.hovertextmesh = love.graphics.newText(self.font, "")
+	self.textmesh = love.graphics.newTextBatch(self.font, "")
+	self.hovertextmesh = love.graphics.newTextBatch(self.font, "")
 
 	self.maxwidth = 100
 	self.width = 100

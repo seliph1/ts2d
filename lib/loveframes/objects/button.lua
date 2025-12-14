@@ -39,9 +39,9 @@ function newobject:initialize()
 	self.captionalign = "right"
 	self.font = default_font or loveframes.basicfont
 	self.defaultcolor = default_color or {1,1,1,1}
-	self.textmesh = love.graphics.newText(self.font, "")
+	self.textmesh = love.graphics.newTextBatch(self.font, "")
 	self.textmesh:setf(self.text, self.width, self.align)
-	self.captionmesh = love.graphics.newText(self.font, "")
+	self.captionmesh = love.graphics.newTextBatch(self.font, "")
 	self:SetDrawFunc()
 end
 

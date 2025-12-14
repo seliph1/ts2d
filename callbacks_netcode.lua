@@ -20,6 +20,9 @@ function client.connect_attempt()
 	home.attack3 = false
 	home.targetX = 0
 	home.targetY = 0
+	home._attack1Timer = 0
+	home._attack2Timer = 0
+	home._reloadTimer = 0
 end
 
 --- Callback for when client sucessfully connects to server
@@ -55,17 +58,6 @@ end
 --- Callback for information in sync with server
 ---@param payload table
 function client.changing(payload)
-	--[[
-	if payload.players then
-		for index, player in pairs(payload.players) do
-			for k,v in pairs(player) do
-				if k:sub(1, 1)== "_" then
-					print(k,v)
-				end
-			end
-		end
-	end	
-	]]
 end
 
 --- Callback for information synced with server

@@ -28,7 +28,7 @@ function newobject:initialize()
 	self.text = ""
 	self.defaultcolor = default_color or {1,1,1,1}
 	self.font = default_font or loveframes.basicfont
-	self.textmesh = love.graphics.newText(self.font, "")
+	self.textmesh = love.graphics.newTextBatch(self.font, "")
 
 	self.width = self.font:getWidth(" ")
 	self.height = self.width

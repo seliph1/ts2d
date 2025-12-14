@@ -29,13 +29,13 @@ share_lerp.bullets 	= {}
 share_lerp.items 	= {}
 share_lerp.scores 	= {}
 
-
 client.version 			= "v1.0.1"
 client.enabled 			= true
 client.width 			= 800
 client.height 			= 600
 client.lerp_speed 		= 30
 client.debug_level		= 0
+client.sendRate 		= 35
 client.scale 			= false
 client.mode 			= "lobby"
 client.canvas 			= love.graphics.newCanvas()
@@ -101,30 +101,39 @@ function client.predict_player(peer_id, dt) -- `home` is used to apply controls 
 	for index, inputState in client.inputCache:walk() do
 		client.apply_input_to_player(inputState.inputStream, client.id)
 	end
+end
 
-	-- Check if the player is able to attack
-	player.attack_cooldown = player.attack_cooldown or 0
-	local want_to_attack = false
-	if player.attack_cooldown > 0 then
-		player.attack_cooldown = player.attack_cooldown - dt
-	else
-		if client.attribute("attack") == true then
-			want_to_attack = true
+function client.predict_action(peer_id, dt)
+	-- Check if its own player id, and is connected
+	if not( client.id == peer_id and client.joined ) then return end
+
+	-- Store player object
+	local player_local = share_local.players[peer_id]
+	local player = share.players[peer_id]
+
+	-- Check if the player object exists
+	if not (player and player_local) then return end
+
+	--home._attack1Timer = math.max(0, home._attack1Timer - dt)
+	if home._attack1Timer > 0 then
+		home._attack1Timer = home._attack1Timer - dt
+	end
+	if client.attribute("attack") == true then
+		-- Increment timer if player is pressing attack
+		-- Dont go below 0
+		while home._attack1Timer <= 0 do
+			local cooldown = client.attack(client.id, true)
+			if cooldown > 0 then
+				home._attack1Timer = home._attack1Timer + cooldown
+			end
 		end
 	end
 
-	if want_to_attack == true then
-		local cooldown = client.attack(client.id, true)
-		if cooldown > 0 then
-			player.attack_cooldown = cooldown
-		end
-	end
 end
 
 local bulletsound = love.audio.newSource("sfx/weapons/ak47.wav", "static")
 local m3 = love.audio.newSource("sfx/weapons/m3.wav", "static")
 local xm = love.audio.newSource("sfx/weapons/xm1014.wav", "static")
-
 
 function client.attack(peer_id, local_data)
 	--local player = client.share_lerp.players[peer_id]
@@ -162,21 +171,19 @@ function client.attack(peer_id, local_data)
 	end
 
 	if action == "bullet" then
-		local dt = client.dt
 		local spawn = tonumber( args[1] ) or 1
 		local spread = tonumber( args[2] ) or 1
 		local angle = math.atan2(mouse_y - client.height/2, mouse_x - client.width/2)
 		-- In CS2D the range value is multiplied by 3
 		local distance = itemdata.range * 3
-		-- True CS2D frame delay
-		local rate_of_fire = itemdata.rate_of_fire or (9 * 1/50)
-		local seconds = rate_of_fire * (1/50)
+		--local rpm = itemdata.rpm or 200 -- 0.3
+		local frame_delay = itemdata.frame_delay or 22
+		-- Actions per second
+		local seconds = frame_delay / 60
+
 		local offset = 20
 		local offset_x = player_x + math.cos(angle) * offset
 		local offset_y = player_y + math.sin(angle) * offset
-
-
-		--print(rate_of_fire, seconds, dt)
 
 		if itemheld == 10 then
 			m3:setVolume(0.1)
@@ -302,7 +309,8 @@ function client.get_item_held(peer_id)
 	local player = share.players[peer_id]
 	if not player then return 0 end
 	local itemheld = player.ih or 0
-	return itemheld
+	local itemdata = client.content.itemlist[itemheld]
+	return itemheld, itemdata
 end
 
 function client.get_item_data(item_type)
@@ -439,7 +447,7 @@ function client.render()
 
 	if (client.mode == "game" or client.mode == "editor") and client.map then
 		client.map:draw_floor()
-		client.map:draw_entities()
+		--client.map:draw_entities()
 	end
 
     if client.joined then

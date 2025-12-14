@@ -35,7 +35,7 @@ function newobject:initialize()
 	self.highlight = 0
 	self.background = nil
 	self.font = font
-	self.texthash = love.graphics.newText(font)
+	self.texthash = love.graphics.newTextBatch(font)
 	self.defaultcolor = color or {1,1,1,1}
 	self:SetDrawFunc()
 	self.odd_list = love.graphics.newMesh(1, "fan")

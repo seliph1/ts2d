@@ -559,7 +559,7 @@ function loveframes.DebugDraw()
 	-- draw main debug box
 	love.graphics.setFont(font)
 	love.graphics.setColor(0,0,0,0.8)
-	love.graphics.rectangle("fill", infox, infoy, 200, 90)
+	love.graphics.rectangle("fill", infox, infoy, 200, 130)
 	love.graphics.setColor(1,0,0,1)
 	love.graphics.print("Love Frames - Debug (" ..version.. " - " ..stage.. ")", infox + 5, infoy + 5)
 	love.graphics.setColor(1,1,1,1)
@@ -569,6 +569,10 @@ function loveframes.DebugDraw()
 	love.graphics.print("Total Objects: " ..objects, infox + 10, infoy + 50)
 	love.graphics.print("Total Collisions: " ..collisions, infox + 10, infoy + 60)
 	love.graphics.print("Draw Operations: " ..drawcount, infox + 10, infoy + 70)
+	love.graphics.print("Hover Object: " .. tostring(loveframes.hoverobject), infox + 10, infoy+ 80 )
+	love.graphics.print("Dragging Object: " .. tostring(loveframes.draggingobject), infox + 10, infoy+ 90 )
+	love.graphics.print("Down Object: " .. tostring(loveframes.downobject), infox + 10, infoy+ 100 )
+	love.graphics.print("Input Object: " .. tostring(loveframes.inputobject), infox + 10, infoy+ 110 )
 
 	local ex_info_x = love.mouse.getX()+30
 	local ex_info_y = love.mouse.getY()+30

@@ -952,6 +952,7 @@ function ui.weaponselect:Display(slot, x, y)
 		local x_pos = x + item_offset
 		local y_pos = y + (index-1)*height + height/2
 		local timer = love.timer.getTime()%360
+		--local timer = 0
 
 		-- shadow
 		love.graphics.setColor(0, 0, 0, 0.2)
@@ -1177,7 +1178,53 @@ function ui.weaponselect:Draw()
 	end
 	LG.setBlendMode("alpha")
 end
+--------------------------------------------------------------------------------------------------
+--health ui---------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------
+local hud_nums = love.graphics.newImageFont("gfx/hud_nums.png", "0123456789:|", 10)
+local hud_symbols = LF.CreateSpriteSheet("gfx/hud_symbols.bmp", 64, 64)
 
+ui.hud = LF.Create("container")
+ui.hud:SetSize(love.graphics.getWidth(), 96):AlignBottom()
+ui.hud:SetState("game")
+--ui.hud:SetCollidable(false)
+
+function ui.hud:Draw()
+	if not client.share.players then return end
+	if not client.share.players[client.id] then return end
+	local player = client.share.players[client.id]
+
+	--local health = player.h or 0
+	local health = tostring( math.floor( love.timer.getTime() * 10 ) )
+
+	local time = os.date("%H:%M:%S", os.time())
+
+	love.graphics.push()
+	love.graphics.translate(self.x, self.y)
+
+	local scale = 0.6
+	local icon_width = hud_symbols[0]:getWidth() * scale
+	local icon_height = hud_symbols[0]:getHeight() * scale
+	local width, height = self.width, self.height
+
+
+	local prev_font = love.graphics.getFont()
+	love.graphics.setFont(hud_nums)
+	love.graphics.setBlendMode("add")
+	love.graphics.setColor(1.0, 1.0, 0.0, 0.2)
+
+	
+	love.graphics.draw(hud_symbols[0], 0, height*0.5, 0, scale, scale)
+	love.graphics.print(health, icon_width+5, height*0.5, 0, scale, scale)
+
+	love.graphics.draw(hud_symbols[2], width*0.5, height*0.5, 0, scale, scale)
+
+	love.graphics.print(time, width*0.5 + icon_width+5, height*0.5, 0, scale, scale)
+
+	love.graphics.setFont(prev_font)
+	love.graphics.setBlendMode("alpha")
+	love.graphics.pop()
+end
 
 --------------------------------------------------------------------------------------------------
 --exit window-------------------------------------------------------------------------------------

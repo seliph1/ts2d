@@ -252,9 +252,26 @@ getmetatable(discordRPC.gcDummy).__gc = function()
     joinRequest_proxy:free()
 end
 
+discordRPC.model = {
+    state = "string";
+    details = "string";
+    startTimestamp = "integer";
+    endTimestamp = "integer";
+    partyId = "string";
+    partyMax = "integer";
+    matchSecret  = "string";
+    joinSecret = "string";
+    spectateSecret = "string";
+    largeImageKey = "string";
+    largeImageText = "string";
+    smallImageKey = "string";
+    smallImageText = "string";
+    instance = "string";
+}
+
 discordRPC.presence = {
-    state = "Looking to Play",
-    details = "1v1 (Ranked)",
+    state = "Developing TS2D",
+    details = "Debug session",
     startTimestamp = os.time(),
     endTimestamp = os.time() + 60,
     partyId = "party id",
@@ -265,15 +282,42 @@ discordRPC.presence = {
     largeImageKey = "cs2d1024px",
     largeImageText = "Tactical Strike 2D",
 }
-
 discordRPC.nextPresenceUpdate = 0
+discordRPC.updateFrequency = 2
+
+function discordRPC.setProperty(property, value)
+    if discordRPC.model[property] then
+        if type(value) == discordRPC.model[property] then
+            discordRPC.presence[property] = value
+            return string.format('Discord: "%s" property value changed to "%s".', property, value)
+        else
+            return string.format([[Discord: Wrong type of data for property "%s": 
+            expected %s, got %s]], property, discordRPC.model[property], type(value))
+        end
+    else
+        return "Discord: Missing property "..property
+    end
+end
+
+function discordRPC.setPresence(presence)
+    if type(presence) == "table" then
+        for k,v in pairs(presence) do
+            if not discordRPC.model[k] or type(v) ~= discordRPC.model[k] then
+                presence[k] = nil
+            end
+        end
+
+        discordRPC.presence = presence
+    end
+end
 
 -- Give some CPU time to Discord Rich Presence
 function discordRPC.update( dt )
-    if discordRPC.nextPresenceUpdate > 2 then
+    if discordRPC.nextPresenceUpdate > discordRPC.updateFrequency then
         discordRPC.updatePresence(discordRPC.presence)
-        discordRPC.nextPresenceUpdate = discordRPC.nextPresenceUpdate + dt
+        discordRPC.nextPresenceUpdate = 0
     end
+    discordRPC.nextPresenceUpdate = discordRPC.nextPresenceUpdate + dt
     discordRPC.runCallbacks()
 end
 

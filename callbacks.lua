@@ -95,6 +95,8 @@ end
 
 function client.frame(dt)
 	if client.joined then
+		client.predict_action(client.id, dt)
+
 		client.snapshot_lerp(dt)
 	end
 end
@@ -113,10 +115,12 @@ function client.update(dt)
 	client.frame(dt)
 	client.postupdate(dt)
 
+	--[[
 	-- Update visual effects on client after data transfer take effect
 	if (client.mode == "game" or client.mode == "editor") and client.map then
 		client.render()
 	end
+	]]
 end
 
 ---Main game render loop
@@ -127,6 +131,8 @@ function client.draw()
 	end
 
 	if client.mode == "game" or client.mode == "editor" then
+		client.render()
+
 		-- Center and scale display
 		local ox = 0.5 * (love.graphics.getWidth() - client.width)
 		local oy = 0.5 * (love.graphics.getHeight() - client.height)

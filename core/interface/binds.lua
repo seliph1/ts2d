@@ -10,6 +10,10 @@ local action_quit = function(key, isrepeat)
 	ui.exit_window:SetVisible(not bool):MoveToTop():Center()
 end
 
+local action_restart = function(key, isrepeat)
+	love.event.quit("restart")
+end
+
 local action_debug = function(key, isrepeat)
 	local state = LF.config["DEBUG"]
 	LF.config["DEBUG"] = not state
@@ -20,6 +24,7 @@ end
 
 LF.bind("all", "", "escape", action_quit)
 LF.bind("all", "", "f1", action_debug)
+LF.bind("all", "", "f12", action_restart)
 LF.bind("all", "", "'", ui.console_button.OnClick)
 
 ---------- module end ------------

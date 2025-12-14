@@ -423,6 +423,73 @@ function Base:CenterWithinArea(x, y, width, height)
 	end
 	return self
 end
+
+--[[---------------------------------------------------------
+	- func: CenterWithinArea()
+	- desc: centers the object within the given area
+--]]---------------------------------------------------------
+function Base:AlignLeft()
+	local base = loveframes.base
+	local parent = self.parent
+	if parent == base then
+		self.x = 0
+	else
+		self.x = parent.x
+	end
+
+	if parent.container and parent.RedoLayout then
+		parent:RedoLayout()
+	end
+	return self
+end
+
+function Base:AlignRight()
+	local base = loveframes.base
+	local parent = self.parent
+	if parent == base then
+		self.x = love.graphics.getWidth() - self.width
+	else
+		self.x = self.width - parent.width + parent.x
+	end
+
+	if parent.container and parent.RedoLayout then
+		parent:RedoLayout()
+	end
+	return self
+end
+
+function Base:AlignTop()
+	local base = loveframes.base
+	local parent = self.parent
+
+	if parent then
+		self.y = 0
+	else
+		self.y = parent.y
+	end
+
+	if parent.container and parent.RedoLayout then
+		parent:RedoLayout()
+	end
+	return self
+end
+
+function Base:AlignBottom()
+	local base = loveframes.base
+	local parent = self.parent
+	if parent then
+		self.y = love.graphics.getHeight() - self.height
+	else
+		self.y = self.height - parent.height + parent.y
+	end
+
+	if parent.container and parent.RedoLayout then
+		parent:RedoLayout()
+	end
+	return self
+end
+
+
 --[[---------------------------------------------------------
 	- func: SetSize(width, height, r1, r2)
 	- desc: sets the object's size

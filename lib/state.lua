@@ -279,6 +279,9 @@ function Methods:__diff(client, exact, alreadyExact, caches)
                         ret[k] = v
                     end
                 end
+
+                -- Added: Now it will filter any variable with (_) prefix
+                if type(k) == "string" and k:match("^_[^_]") then ret[k] = nil end
             end
             if not exact then
                 if lastRelevancy then -- `nil`-out things that became irrelevant since the last time
@@ -286,6 +289,9 @@ function Methods:__diff(client, exact, alreadyExact, caches)
                         if not relevancy[k] then
                             ret[k] = DIFF_NIL
                         end
+                        
+                        -- Added: Now it will filter any variable with (_) prefix
+                        if type(k) == "string" and k:match("^_[^_]") then ret[k] = nil end
                     end
                 end
             end
@@ -299,10 +305,11 @@ function Methods:__diff(client, exact, alreadyExact, caches)
                 elseif serializable(v) then
                     ret[k] = v
                 end
+                -- Added: Now it will filter any variable with (_) prefix
+                if type(k) == "string" and k:match("^_[^_]") then ret[k] = nil end
             end
         end
     end
-
     return (exact or nonempty(ret)) and ret or nil -- `{}` in non-exact means nothing changed
 end
 

@@ -303,7 +303,35 @@ local commands = {
 				return "unknown value "..mode
 			end
 		end
-	}
+	};
+
+	sendrate = {
+		---@param rate number
+		action = function(rate)
+			local old_rate = client.sendRate
+			local new_rate = tonumber(rate) or 35
+
+			client.sendRate = new_rate
+			return string.format(
+				"Global sendRate changed from %.2f to %.2f.",
+				old_rate,
+				new_rate
+			)
+		end
+	};
+
+	discordrpc = {
+		action = function(property, ...)
+			local value = table.concat({...}," ")
+			local discordRPC = require "lib.discordRPC"
+			if discordRPC then
+				local status = discordRPC.setProperty(property, value)
+				if status then
+					return status
+				end
+			end
+		end
+	};
 }
 
 return commands

@@ -24,6 +24,7 @@ connect 50.21.187.191
      Hide number option for menu api (for example menu(uid,"title@b@n,abcdefg,hijk"))
      stop cs2d2 working when grabbing window
      remove threshold for removing black pixels from sprites
+     apply shaders to objects, items, images, buildings (from map editor and script)
 
 
     entity: Func_Slick

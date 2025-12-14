@@ -6,8 +6,8 @@ if love.getVersion() ~= 12 then
 end
 local https     = require "https"
 local url       = require "socket.url"
-love.image      = require "love.image"
-love.filesystem = require "love.filesystem"
+local lf      	= require "love.image"
+local fs 		= require "love.filesystem"
 
 -- If module not found, just skip
 if not https then return console_out:push("©255000000http: not available!") end
@@ -34,9 +34,9 @@ local function urlencode(list)
 end
 
 local function encode_image(body)
-	local filedata = love.filesystem.newFileData(body, "image")
+	local filedata = fs.newFileData(body, "image")
 	
-	local data = { pcall(love.image.newImageData, filedata) }
+	local data = { pcall(lf.newImageData, filedata) }
 	local status = data[1]
 	if not status then
 		local error_message = data[2]

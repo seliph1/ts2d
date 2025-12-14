@@ -164,7 +164,9 @@ local actions = {
     };
 
     attack = {
+        ---@param peer_id number
         action = function(peer_id)
+            peer_id = tonumber(peer_id) or 0
             -- NO home argument, this will be running for remote peers
             client.attack(peer_id)
         end
@@ -187,79 +189,25 @@ local actions = {
 
             client.fire(x, y, distance, angle, peer_id)
         end
-    }
-    --[[
-    fire = {
-        action = function(peer_id, home, angle)
-            peer_id = tonumber(peer_id)
-            angle = angle or 0
+    };
 
-            local player = client.share.players[peer_id]
-            if not player then return end
-            local player_x, player_y = player.x, player.y
-            local mouse_x, mouse_y = player.targetX, player.targetY
-            if home then
-                mouse_x, mouse_y = home.targetX, home.targetY
-            else
-                -- If received own fire animation request as a client,
-                -- and didnt apply home controls, dont run this
-                if peer_id == client.id then
-                    --client.map:spawn_effect("blacksmoke", player_x, player_y)
-                    return
-                end
-            end
-            local angle = math.atan2(mouse_y - client.height/2, mouse_x - client.width/2)
-
-            local distance = 32 * 10
-            local offset = 20
-
-            local offset_x = player_x + math.cos(angle) * offset
-            local offset_y = player_y + math.sin(angle) * offset
-
-            local target_x = offset_x + math.cos(angle) * distance
-            local target_y = offset_y + math.sin(angle) * distance
-
-            local hit_x, hit_y, hit = client.raycast(offset_x, offset_y, target_x, target_y)
-
-            local hit_distance = distance
-            if hit then
-                local rand = math.random()
-                if rand < 0.80 then
-                    client.map:spawn_effect("whitesmoke", hit_x, hit_y, {
-                        setDirection = angle + math.pi
-                    })
-                elseif rand >= 0.80 and rand < 0.90 then
-                    client.map:spawn_effect("blacksmoke", hit_x, hit_y)
-                elseif rand >= 0.90 then
-                    client.map:spawn_effect("sparkle", hit_x, hit_y, {
-                        setDirection = angle + math.pi
-                    })
-                end
-
-                local dx = hit_x - offset_x
-                local dy = hit_y - offset_y
-                hit_distance = math.sqrt( dx*dx + dy*dy )
-
-            end
-            local half = hit_distance/2
-            local half_x = offset_x + math.cos(angle)*half
-            local half_y = offset_y + math.sin(angle)*half
-
-            -- Create less particle as vector goes shorter
-            client.map:spawn_effect("hitscan", half_x, half_y, {
-                setDirection = angle,
-                setEmissionArea = {"uniform", half, 1, angle, false},
-                emitAtStart = math.ceil( hit_distance/distance * 30),
-            })
-
-            client.map:spawn_effect("trail", offset_x, offset_y, {
-                angle = angle,
-                scaleX = (hit_distance)/32,
-                --offsetX = -10,
-            })
+    hit = {
+        action = function(...)
+            print("hit: ", ...)
         end
-        
-    };]]
+    };
+
+    kill = {
+        action = function(...)
+            print("kill: ", ...)
+        end
+    };
+
+    --
+    new = {
+        action = function()
+        end
+    };
 }
 actions.msg = actions.message
 

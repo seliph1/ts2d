@@ -171,6 +171,17 @@ end
 function loveframes.mousemoved(x, y, dx, dy, istouch)
 	local base = loveframes.base
 	base:mousemoved(x, y, dx, dy, istouch)
+
+	local ctrl
+	if loveframes.config["DEBUG"] then
+		if love.keyboard.isDown("lctrl") or love.keyboard.isDown("rctrl") then
+			ctrl = true
+		end
+	end
+	local draggingobject = loveframes.draggingobject
+	if draggingobject and ctrl then
+		draggingobject:Drag()
+	end
 end
 
 --[[---------------------------------------------------------

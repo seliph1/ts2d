@@ -15,7 +15,10 @@ client.key = {}
 client.mouse = {}
 client.enabled = false
 client.sessionToken = os.time()
-client.sendRate = 35
+client.sendRate = 30
+client.tickRate = 60
+client.packet_mean = 0
+client.packet_last = 0
 client.numChannels = 3
 
 client.connected = false
@@ -201,14 +204,17 @@ function client.preupdate(dt)
 
 end
 
-local timeSinceLastUpdate = 0
+local accumulator = 0
 function client.postupdate(dt)
-    -- Calculates delta time so we can tick the client on a consistent time
-    timeSinceLastUpdate = timeSinceLastUpdate + dt
-    if timeSinceLastUpdate < 1 / client.sendRate then
-        return
+    accumulator = accumulator + dt
+    local tickStep = 1 / client.sendRate
+    while accumulator >= tickStep do
+        client.sendState(tickStep)
+        accumulator = accumulator - tickStep
     end
+end
 
+function client.sendState(dt)
     -- Dont send any input updates if not joined.
     -- Likewise, server wont accept these inputs.
     if not client.joined then return end
@@ -262,11 +268,9 @@ function client.postupdate(dt)
     end
 
     -- Run the tick callback
-    client.dt = timeSinceLastUpdate
     if client.tick then
-        client.tick(timeSinceLastUpdate)
+        client.tick(dt)
     end
-    
 
     -- Send home updates to server
     if peer then
@@ -282,16 +286,14 @@ function client.postupdate(dt)
     if host then
         host:flush() -- Tell ENet to send outgoing messages
     end
-
-    -- Resets the tick's deltatime
-    timeSinceLastUpdate = 0
 end
 
 function client.request_handler(event)
     local request = decode(event.data)
-
-    --print(serpent.line(event.data, client.stateDumpOpts))
     if not request then return end
+
+    --print(string.format("%sb: %s", #event.data, event.data))
+
    	-- SERVER/CLIENT PACKAGE MANAGER
 	----------------------------------------------------------------------------
     -- Diff / exact? (do this first so we have it in `.connect` below)

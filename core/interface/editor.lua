@@ -96,6 +96,7 @@ editor.tool_option = {
 		editor.tabs = loveframes.Create("tabs", editor.frame)
 		editor.tabs:SetPos(5, 150)
 		editor.tabs:SetSize(editor.default_width, editor.default_size-150)
+			--[[
 			editor.tile_panel = loveframes.Create("list")
 			editor.tile_panel:EnableHorizontalStacking(true)
 			editor.tile_panel.Select = function(object)
@@ -127,6 +128,7 @@ editor.tool_option = {
 				end
 			end
 			editor.tile_panel:Fill()
+			--]]
 			editor.entity_scrollable = loveframes.Create("scrollpane"):SetSize(190, 423)
 			editor.entity_panel = loveframes.Create("droplist", editor.entity_scrollable):SetWidth(190)
 			editor.entity_panel:AddItemsFromTable(ENTITY_TYPE)
@@ -141,8 +143,9 @@ editor.tool_option = {
 				editor.entity_panel:AddRow(k,v)
 			end
 			]]
+			
 			editor.tools = loveframes.Create("panel")
-		editor.tabs:AddTab("Tileset", editor.tile_panel, "Tileset containing all individual tiles\nto paint into the map")
+		--editor.tabs:AddTab("Tileset", editor.tile_panel, "Tileset containing all individual tiles\nto paint into the map")
 		editor.tabs:AddTab("Entity", editor.entity_scrollable, "Entity list containing all objects, buildings and NPCs\nthat can be added in the map")
 		editor.tabs:AddTab("Tools", editor.tools, "Map editor tools for measuring and changing terrain")
         
@@ -211,8 +214,8 @@ editor.tool_option = {
 				print(client.map)
 			end
 			client.mode = "game"
-    		editor.tile_panel:Clear()
-			editor.tile_panel:Fill()
+    		--editor.tile_panel:Clear()
+			--editor.tile_panel:Fill()
 		end
 		editor.settings_panel = loveframes.Create("frame")
 		editor.settings_panel:SetVisible(false)

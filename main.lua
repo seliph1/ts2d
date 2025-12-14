@@ -77,7 +77,6 @@ function discordRPC.joinRequest(userId, username, discriminator, avatar)
     discordRPC.respond(userId, "yes")
 end
 
-
 function love.load()
     discordRPC.initialize(applicationId, true)
 

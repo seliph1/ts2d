@@ -34,7 +34,7 @@ function newobject:initialize()
 	self.spacing = 0
 	self.background = nil
 	self.font = font
-	self.texthash = love.graphics.newText(font)
+	self.texthash = love.graphics.newTextBatch(font)
 	self.defaultcolor = color or {1,1,1,1}
 	self.cursor = loveframes.cursors.ibeam
 	self.lastheight = 0
@@ -187,8 +187,7 @@ function newobject:AddElement(item, append)
 	if type(item) == "string" then
 		table.insert(self.elements, item)
 		if append then
-			--self:AppendElement(item)
-			self:ParseElements()
+			self:AppendElement(item)
 		else
 			self:ParseElements()
 		end
