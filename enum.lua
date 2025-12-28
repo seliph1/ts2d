@@ -36,7 +36,7 @@ enum.DEFAULT_MOD = {
 	blending = 0,
 }
 
-
+enum.DEFAULT_PROPERTY = 0
 
 enum.ENTITY_TYPE = {
 	["null"] = {
@@ -147,7 +147,7 @@ enum.TILE_MODE_HEIGHT = {
 	[1]=1.0,	-- 1  wall
 	[2]=0.5,	-- 2  obstacle
 	[3]=1.0,	-- 3  wall without shadow
-	[4]=0.5,	-- 4  obstacle without shadow
+	[4]=0.01,	-- 4  obstacle without shadow
 	[5]=0.0,		-- 5  wall that is rendered at floor level
 	[10]=0.0,		-- 10 floor dirt
 	[11]=0.0,		-- 11 floor snow (with footprints and fx)

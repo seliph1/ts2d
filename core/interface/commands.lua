@@ -332,6 +332,30 @@ local commands = {
 			end
 		end
 	};
+
+	megasena = {
+		action = function(seednumber)
+			local seed = math.randomseed(os.time())
+			if seednumber then
+				seed = math.randomseed(tonumber(seednumber) or os.time())
+			end
+			local pool = {}
+			for i = 1, 60 do
+				pool[i] = i
+			end
+
+			local resultado = {}
+
+			for i = 1, 6 do
+				local idx = math.random(#pool)
+				resultado[i] = pool[idx]
+				table.remove(pool, idx)
+			end
+
+			table.sort(resultado)
+			print("Números :" .. table.concat(resultado, " - "))
+		end
+	};
 }
 
 return commands

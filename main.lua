@@ -49,8 +49,9 @@ end
 local loveframes 	= require "lib.loveframes"
 local client 		= require "client"
 local ui 			= require "core.interface.ui"
+
 local discordRPC	= require "lib.discordRPC"
-local applicationId	= require "lib.applicationId"
+
 
 function discordRPC.ready(userId, username, discriminator, avatar)
     print(string.format("Discord: ready (%s, %s, %s, %s)", userId, username, discriminator, avatar))
@@ -78,7 +79,7 @@ function discordRPC.joinRequest(userId, username, discriminator, avatar)
 end
 
 function love.load()
-    discordRPC.initialize(applicationId, true)
+    discordRPC.initialize(require "core.applicationId", true)
 
 	love.keyboard.setTextInput(true)
 	client.load()

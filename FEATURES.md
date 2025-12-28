@@ -49,3 +49,21 @@ connect 50.21.187.191
     receive map cycle
     receive enabled server mod
     switch to ingame mode
+
+
+
+-- CONCEPTS TO STUDY
+SCREEN SPACE SHADOWS
+CONTACT SHADOWS
+
+---
+---Mounts a full platform-dependent path to a zip file or folder for reading or writing in love.filesystem. 
+---
+---@overload fun(filedata: love.FileData, mountpoint: string, appendToPath?: boolean):boolean
+---@overload fun(data: love.Data, archivename: string, mountpoint: string, appendToPath?: boolean):boolean
+---@param archive string # The folder or zip file in the game's save directory to mount.
+---@param mountpoint string # The new path the archive will be mounted to.
+---@param permission love.PermissionType
+---@param appendToPath? boolean # Whether the archive will be searched when reading a filepath before or after already-mounted archives. This includes the game's source and save directories.
+---@return boolean success # True if the archive was successfully mounted, false otherwise.
+function love.filesystem.mountFullPath( archive, mountpoint, permission, appendToPath) end

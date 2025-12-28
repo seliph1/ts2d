@@ -1,36 +1,33 @@
 local shader = {}
 local path = "core/shaders/"
+local shaders = {
+    "rainbow",
+    "earthquake",
+    "crt",
+    "gaussianblur",
+    "wave",
+    "shockwave",
+}
 
---shader.entity = love.graphics.newShader("")
+local baseShader = love.graphics.newShader [[
+vec4 effect(vec4 COLOR, Image TEXTURE, vec2 UV, vec2 SCREEN_UV) {
+    vec4 TEXTURE_COLOR = Texel(TEXTURE, UV);
+    TEXTURE_COLOR = TEXTURE_COLOR;
 
-shader.entity = {}
-
---[[
-local file
-
-file = love.filesystem.read(path .. "reinhard.glsl")
-shader.reinhard = love.graphics.newShader ( file )
-
-file = love.filesystem.read(path .. "magenta.glsl")
-shader.magenta = love.graphics.newShader ( file )
-
-file = love.filesystem.read(path .. "shadow.glsl")
-shader.shadow = love.graphics.newShader ( file )
-
-
-file = love.filesystem.read(path .. "raycast.glsl")
-shader.raycast = love.graphics.newShader( file )
-
-file = love.filesystem.read(path .. "experiment.glsl")
-shader.experiment = love.graphics.newShader( file )
-
---file = love.filesystem.read("shader/bleed.glsl")
---shader.bleed = love.graphics.newShader( file )
-
-file = love.filesystem.read(path .. "windcover.glsl")
-shader.wind = love.graphics.newShader( file )
-
-file = love.filesystem.read(path .. "raycastshadow.glsl")
-shader.raycasts = love.graphics.newShader( file )
+    return TEXTURE_COLOR * COLOR;
+}
 ]]
+
+shader.baseShader = baseShader
+for index, name in pairs(shaders) do
+    local fullPath = string.format("%s%s.glsl", path, name)
+    local validate, status = love.graphics.validateShader(false, fullPath)
+    if validate then
+        shader[name] = love.graphics.newShader ( fullPath )
+    else
+        shader[name] = baseShader
+        print(status)
+    end
+end
+
 return shader

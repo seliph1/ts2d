@@ -1,18 +1,5 @@
--- Mount a file system here
---[[
-require "lib.lovefs.lovefs"
-local fs = lovefs()
-if love.filesystem.isFused() then
-	fs:cd(love.filesystem.getSourceBaseDirectory() )
-else
-	fs:cd(love.filesystem.getSource() )
-end
-]]
-
 -- Loading some libs
---local List = require "lib.list"
 local bump = require "lib.bump"
-local shader = require "core.shaders.cs2dshaders"
 local effect = require "effect"
 local enum = require "enum"
 local LF = love.filesystem
@@ -37,6 +24,8 @@ local TILE_PROPERTY = enum.TILE_PROPERTY
 local TILE_BLEND_DIR = enum.TILE_BLEND_DIR
 local TILE_MODE_HEIGHT = enum.TILE_MODE_HEIGHT
 local ENTITY_TYPE = enum.ENTITY_TYPE
+local SOLID_THRESHOLD = 0.3
+local WALL_THRESHOLD = 1.0
 
 effect.register(LF.load "core/particle/sparkle.lua" (), "sparkle")
 effect.register(LF.load "core/particle/hitscan.lua" (), "hitscan")
@@ -153,7 +142,6 @@ function MapObject.new(width, height)
 		_oscillation = 0;
 		_item_field = {};
 		_world = bump.newWorld();
-
 		_camera = {
 			x = 0,
 			y = 0,
@@ -170,7 +158,9 @@ function MapObject.new(width, height)
 			width = 16,
 			height = 16,
 		};
-
+		_shadow_map = love.graphics.newShader("core/shaders/shadow_map.glsl"),
+		_shadow_silhouette = love.graphics.newShader("core/shaders/silhouette.glsl"),
+		_shadow_viewport = love.graphics.newCanvas(),
 	}
 
 	object._placeholder = love.image.newImageData(32, 32)
@@ -191,8 +181,8 @@ function MapObject.new(width, height)
 		author = "mapengine.lua";
 		tileset = "cs2dnorm.bmp";
 		tile_count = 255;
-		width = width-1 or 24;
-		height = height-1 or 24;
+		width = width-1 or 49;
+		height = height-1 or 49;
 		write_time = "000000";
 		background_file = "";
 		background_scroll_speed_x = 0;
@@ -208,7 +198,7 @@ function MapObject.new(width, height)
 		tile = {};
 		map = {};
 		map_mod = {};
-		--shadow_mask = love.image.newImageData(width+1, height+1);
+		shadow = love.image.newImageData(width+1, height+1);
 		entity_count = 0;
 		entity_table = {};
 		gfx = {
@@ -230,7 +220,7 @@ function MapObject.new(width, height)
 		local id = 0
 		mapdata.map[x] = mapdata.map[x] or {}
 		mapdata.map[x][y] = id
-		--mapdata.shadow_mask:setPixel(x, y, 0.0, 0.0, 0.0)
+		mapdata.shadow:setPixel(x, y, 0.0, 0.0, 0.0)
 		mapdata.map_mod[x] = mapdata.map_mod[x] or {}
 		mapdata.map_mod[x][y] = {
 			object_type = "tile",
@@ -248,12 +238,10 @@ function MapObject.new(width, height)
 			property = 0,
 			depth = 0,
 		}
-
-		--object._world:add( mapdata.map_mod[x][y], x*32, y*32, 32, 32 )
 	end
 	end
-	--mapdata.shadow_render = love.graphics.newImage(mapdata.shadow_mask)
-	--mapdata.shadow_render:setFilter("nearest", "nearest")
+	mapdata.shadow_render = love.graphics.newImage(mapdata.shadow)
+	mapdata.shadow_render:setFilter("nearest", "nearest")
 	local tileset_atlas = love.image.newImageData("gfx/tiles/"..mapdata.tileset)--fs:loadImageData("gfx/tiles/"..mapdata.tileset)
 	local w, h = tileset_atlas:getDimensions()
 	local s = mapdata.tile_size
@@ -297,20 +285,20 @@ function MapObject:clear()
 	self._world = bump.newWorld();
 
 	self._camera = {
-			x = 0,
-			y = 0,
-			width = 0,
-			height = 0,
-			chunk_x = 0,
-			chunk_y = 0,
-			tile_x = 0,
-			tile_y = 0,
-		};
+		x = 0,
+		y = 0,
+		width = 0,
+		height = 0,
+		chunk_x = 0,
+		chunk_y = 0,
+		tile_x = 0,
+		tile_y = 0,
+	};
 	self._render = {
-			x = 0,
-			y = 0,
-			width = 16,
-			height = 16,
+		x = 0,
+		y = 0,
+		width = 16,
+		height = 16,
 	};
 
 	local mapdata = {
@@ -340,7 +328,7 @@ function MapObject:clear()
 		tile = {};
 		map = {};
 		map_mod = {};
-		--shadow_mask = love.image.newImageData(width+1, height+1);
+		shadow = love.image.newImageData(50, 50);
 		entity_count = 0;
 		entity_table = {};
 		gfx = {
@@ -362,7 +350,7 @@ function MapObject:clear()
 		local id = 0
 		mapdata.map[x] = mapdata.map[x] or {}
 		mapdata.map[x][y] = id
-		--mapdata.shadow_mask:setPixel(x, y, 0.0, 0.0, 0.0)
+		mapdata.shadow:setPixel(x, y, 0.0, 0.0, 0.0)
 		mapdata.map_mod[x] = mapdata.map_mod[x] or {}
 		mapdata.map_mod[x][y] = {
 			object_type = "tile",
@@ -384,8 +372,8 @@ function MapObject:clear()
 		--object._world:add( mapdata.map_mod[x][y], x*32, y*32, 32, 32 )
 	end
 	end
-	--mapdata.shadow_render = love.graphics.newImage(mapdata.shadow_mask)
-	--mapdata.shadow_render:setFilter("nearest", "nearest")
+	mapdata.shadow_render = love.graphics.newImage(mapdata.shadow)
+	mapdata.shadow_render:setFilter("nearest", "nearest")
 	local tileset_atlas = love.image.newImageData("gfx/tiles/"..mapdata.tileset)--fs:loadImageData("gfx/tiles/"..mapdata.tileset)
 	local w, h = tileset_atlas:getDimensions()
 	local s = mapdata.tile_size
@@ -426,11 +414,9 @@ end
 --- @method Reads from a CS2D Map file
 --- @param path string file relative to maps/ path in CS2D
 function MapObject:read(path, noindexing)
-	--local filedata = love.filesystem.newFileData(path)
-	if not love.filesystem.getInfo(path) then --if not fs:isFile(path) then
+	if not love.filesystem.getInfo(path) then
 		return string.format("File %q does not exist. Check your files/folders and try again!", path)
 	end
-	--local filedata = fs:loadFile(path)
 	local filedata = love.filesystem.newFileData(path)
 	local size = filedata:getSize()
 
@@ -438,17 +424,26 @@ function MapObject:read(path, noindexing)
 	local cursor = 1
 	-- Read single byte
 	local function read_byte()
-		--local value = bytearray[cursor]
-		local value = love.data.unpack("B", filedata, cursor)
+		local stream = love.data.unpack("B", filedata, cursor)
+		local value = tonumber( stream )
 		cursor = cursor + 1
 		return value
 	end
-	-- Reading functions
+	-- Read short integer as unsigned endian.
+	local function read_short()
+		local stream = love.data.unpack("<i2", filedata, cursor)
+		local value = tonumber( stream )
+		cursor = cursor + 2
+		return value
+	end
+	-- Reading integer as signed endian
 	local function read_integer()
-		local value = love.data.unpack("<i4", filedata, cursor)
+		local stream = love.data.unpack("<i4", filedata, cursor)
+		local value = tonumber( stream )
 		cursor = cursor + 4
 		return value
 	end
+
 	-- Read string until \n
 	local function read_string()
 		local str = ""
@@ -464,17 +459,6 @@ function MapObject:read(path, noindexing)
 				str = str .. string.char( chr )
 			end
 		end
-	end
-	-- Read short integer as unsigned endian.
-	local function read_short()
-		local value = love.data.unpack("<i2", filedata, cursor)
-		cursor = cursor + 2
-		return value
-		--[[
-		local value = shortarray[math.floor(cursor/2)]
-		cursor = cursor+2
-		return value
-		]]
 	end
 	-- Jumps the cursor
 	local function seek_forward(bytes)
@@ -591,7 +575,7 @@ function MapObject:read(path, noindexing)
 	-- MAP (4)
 	-----------------------------------------------------------------------------------------------------------
 	mapdata.map = {}
-	--mapdata.shadow_mask = love.image.newImageData(mapdata.width+1, mapdata.height+1)
+	mapdata.shadow = love.image.newImageData(mapdata.width+1, mapdata.height+1)
 	for x = 0, mapdata.width do
 	for y = 0, mapdata.height do
 		local id = read_byte()
@@ -599,11 +583,11 @@ function MapObject:read(path, noindexing)
 		mapdata.map[x][y] = id
 		local property = mapdata.tile[id].property
 		local height = TILE_MODE_HEIGHT[property]
-		--mapdata.shadow_mask:setPixel(x, y, height, height, height)
+		mapdata.shadow:setPixel(x, y, height, height, height)
 	end
 	end
-	--mapdata.shadow_render = love.graphics.newImage(mapdata.shadow_mask)
-	--mapdata.shadow_render:setFilter("nearest", "nearest")
+	mapdata.shadow_render = love.graphics.newImage(mapdata.shadow)
+	mapdata.shadow_render:setFilter("nearest", "nearest")
 	----------------------------------------------------------------------------------------------
 	-- Tile id mod table.
 	mapdata.map_mod = {}
@@ -796,6 +780,13 @@ function MapObject:read(path, noindexing)
 	end
 	self._mapdata = mapdata
 	self:shiftRender()
+
+
+	print("Loading complete! ")
+	print(self)
+	print("tile size:", mapdata.width, mapdata.height)
+	print("pixel size:", mapdata.width*mapdata.tile_size, mapdata.height*mapdata.tile_size)
+	print("entities: ", mapdata.entity_count)
 end
 
 -- Methods
@@ -840,6 +831,7 @@ function MapObject:colorfill(x, y, replace)
 	end
 end
 --]]
+
 function MapObject:random()
 	for x = 0, self._mapdata.width do
 	for y = 0, self._mapdata.height do
@@ -848,10 +840,9 @@ function MapObject:random()
 		self._mapdata.map[x][y] = r
 		local property = self._mapdata.tile[r].property
 		local height = TILE_MODE_HEIGHT[property]
-		--mapfile.shadow_mask:setPixel(x, y, height, height, height)
+		self._mapdata.shadow:setPixel(x, y, height, height, height)
 	end
 	end
-	--mapdata_shadow_refresh()
 end
 
 function MapObject:settile(x, y, tile_id)
@@ -860,8 +851,7 @@ function MapObject:settile(x, y, tile_id)
 	end
 	local property = self._mapdata.tile[tile_id].property
 	local height = TILE_MODE_HEIGHT[property]
-	--self._mapdata.shadow_mask:setPixel(x, y, height, height, height)
-	--mapdata_shadow_refresh()
+	self._mapdata.shadow:setPixel(x, y, height, height, height)
 end
 
 function MapObject:gettile(x, y) -- coords in tiles
@@ -879,7 +869,7 @@ function MapObject:tile(x, y) -- coords in tiles
 		local property =  self._mapdata.tile[id].property
 		return id, mod, property
 	else
-		return -1, DEFAULT_MOD
+		return -1, DEFAULT_MOD, DEFAULT_PROPERTY
 	end
 end
 
@@ -908,7 +898,7 @@ function MapObject:isColliding(x, y)
 	local tx, ty = floor(x/32), floor(y/32)
 	local id, mod, property = self:tile(tx, ty)
 
-	if TILE_MODE_HEIGHT[property] and TILE_MODE_HEIGHT[property] >= 0.5 then
+	if TILE_MODE_HEIGHT[property] and TILE_MODE_HEIGHT[property] >= SOLID_THRESHOLD then
 		return true
 	end
 	return false
@@ -925,6 +915,10 @@ function MapObject:scroll(x, y)
 	self._camera.chunk_y = cy
 	self._camera.x = x
 	self._camera.y = y
+
+	-- For shader
+	self._camera[1] = x
+	self._camera[2] = y
 end
 
 function MapObject:shiftRender()
@@ -951,7 +945,8 @@ function MapObject:shiftRender()
 	for y = render_y, render_height do
 		local tile_id, mod, property = self:tile(x, y)
 		local quad = gfx.quad[tile_id]
-		local level = property == 1 and "wall" or "ground"
+		local height = TILE_MODE_HEIGHT[property or 0]
+		local level = (height >= WALL_THRESHOLD and "wall" or "ground")
 		if tile_id >= 0 then
 			local brightness = (mod.brightness/100)
 
@@ -1052,9 +1047,7 @@ end
 function MapObject:draw_ceiling()
 	local camera = self._camera
 	local mapdata = self._mapdata
-	local render = self._render
 	local sw, sh = love.graphics.getWidth(), love.graphics.getHeight()
-	local tile_size = mapdata.tile_size
 	-- Change camera perspective
 	love.graphics.push()
 	love.graphics.translate(-camera.x + sw/2, -camera.y + sh/2)
@@ -1066,7 +1059,85 @@ function MapObject:draw_ceiling()
 	-- Reset render
 	love.graphics.setBlendMode("alpha")
 	love.graphics.setColor(1, 1, 1, 1)
+end
 
+function MapObject:draw_shadow(share, client)
+	local camera = self._camera
+	local mapdata = self._mapdata
+	local sw, sh = love.graphics.getDimensions()
+	local width, height = self:getDimensions()
+
+	local heightmap = self._mapdata.shadow_render
+	local shader = self._shadow_map
+
+	-- Enable shadow shader and send the heightmap to it.
+	if shader:hasUniform "heightmap" then
+		shader:send("heightmap", heightmap)
+	end
+	if shader:hasUniform "camera" then
+		shader:send("camera", camera)
+	end
+	--if shader:hasUniform "scale" then
+		--shader:send("scale", 32)
+	--end
+	if shader:hasUniform "mouse" then
+		self._mouse = self._mouse or {}
+		self._mouse[1] = love.mouse.getX()
+		self._mouse[2] = love.mouse.getY()
+		self._mouse[3] = love.mouse.isDown(1) and 1 or 0
+		self._mouse[4] = love.mouse.isDown(2) and 1 or 0
+		shader:send("mouse", self._mouse)
+	end
+
+	love.graphics.setShader(shader)
+	love.graphics.setColor(0.0, 0.0, 0.1, 1.0)
+	love.graphics.rectangle("fill", 0, 0, sw, sh)
+	love.graphics.setShader()
+
+	--[[
+	local camera = self._camera
+	local mapdata = self._mapdata
+	local sw, sh = love.graphics.getDimensions()
+	local width, height = self:getDimensions()
+
+	local shadow_map = self._shadow_map
+	local shadow_silhouette = self._shadow_silhouette
+	local shadow_viewport = self._shadow_viewport
+	local heightmap = self._mapdata.shadow_render
+
+	local prev_canvas = love.graphics.getCanvas()
+	--love.graphics.setCanvas(shadow_viewport)
+	love.graphics.setCanvas { shadow_viewport, stencil=true }
+	love.graphics.clear()
+	-- Shadow channel for feeding the heightmap
+
+	-- Draw map by its position on camera
+	love.graphics.push()
+	love.graphics.translate(-camera.x + sw/2, -camera.y + sh/2)
+	love.graphics.draw(heightmap, 0, 0, 0, self._mapdata.tile_size)
+	love.graphics.pop()
+
+	
+	-- Draw players by calling the draw_players again
+	-- And applying the silhouette filter
+	--love.graphics.setShader(shadow_silhouette)
+	--shadow_silhouette:send("height", 0.4)
+	--love.graphics.setBlendMode("lighten","premultiplied")
+	--self:draw_players(share, client)
+	--love.graphics.setShader()
+	--love.graphics.setBlendMode("alpha")
+	
+
+	-- Close the heightmap canvas
+	love.graphics.setCanvas(prev_canvas)
+
+	-- Enable shadow shader and send the heightmap to it.
+	shadow_map:send("heightmap", shadow_viewport)
+	love.graphics.setShader(shadow_map)
+	love.graphics.setColor(0.0, 0.0, 0.05, 1.0)
+	love.graphics.rectangle("fill", 0, 0, sw, sh)
+	love.graphics.setShader()
+	]]
 end
 
 function MapObject:draw_effects()
@@ -1420,32 +1491,32 @@ end
 
 function MapObject:getDimensions()
 	local mapdata  = self._mapdata
-	return mapdata.width, mapdata.height
+	return mapdata.width+1, mapdata.height+1
 end
 
 function MapObject:getWidth()
 	local mapdata  = self._mapdata
-	return mapdata.width
+	return mapdata.width+1
 end
 
 function MapObject:getHeight()
 	local mapdata  = self._mapdata
-	return mapdata.height
+	return mapdata.height+1
 end
 
 function MapObject:getPixelDimensions()
 	local mapdata  = self._mapdata
-	return mapdata.width*32, mapdata.height*32
+	return (mapdata.width+1)*32, (mapdata.height+1)*32
 end
 
 function MapObject:getPixelWidth()
 	local mapdata  = self._mapdata
-	return mapdata.width*32
+	return (mapdata.width+1)*32
 end
 
 function MapObject:getPixelHeight()
 	local mapdata  = self._mapdata
-	return mapdata.height*32
+	return (mapdata.height+1)*32
 end
 
 function MapObject:mouseToMap(x, y)
@@ -1480,7 +1551,7 @@ function MapObject:isCollidingTile(tx, ty)
 	tx = clamp(tx, 0, self:getWidth())
 	ty = clamp(ty, 0, self:getHeight())
 	local id, mod, property = self:tile(tx, ty)
-	if TILE_MODE_HEIGHT[property] and TILE_MODE_HEIGHT[property] >= 0.5 then
+	if TILE_MODE_HEIGHT[property] and TILE_MODE_HEIGHT[property] >= SOLID_THRESHOLD then
 		return true
 	end
 	return false

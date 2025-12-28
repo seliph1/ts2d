@@ -54,6 +54,10 @@ local modules = {
 for index, module in pairs(modules) do
 	require(module)(client)
 end
+client.canvas:setWrap("clampzero")
+client.shaders = require "core.shaders.cs2dshaders"
+client.shader = client.shaders.baseShader
+
 
 function client.snapshot_lerp(dt)
 	local lerp_flags = {
@@ -437,6 +441,7 @@ end
 function client.render()
 	love.graphics.push('all')
 	love.graphics.setCanvas(client.canvas)
+	love.graphics.clear()
 
     -- Center display
     local ox = 0.5 * (love.graphics.getWidth() - client.width)
@@ -450,6 +455,7 @@ function client.render()
 		--client.map:draw_entities()
 	end
 
+	--love.graphics.setCanvas(client.canvas, client.shadow_map)
     if client.joined then
 		-- Draw items on the ground
 		client.map:draw_items(share, client)
@@ -462,9 +468,12 @@ function client.render()
 		client.map:draw_effects()
 	end
 
+	-- Draw shadows.
+	client.map:draw_shadow(share_lerp, client)
+
 	-- Resets scissoring and canvas
-	love.graphics.pop()
 	love.graphics.setCanvas()
+	love.graphics.pop()
 end
 
 --- Returns the client object to the main code block

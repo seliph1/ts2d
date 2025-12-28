@@ -114,13 +114,6 @@ function client.update(dt)
 
 	client.frame(dt)
 	client.postupdate(dt)
-
-	--[[
-	-- Update visual effects on client after data transfer take effect
-	if (client.mode == "game" or client.mode == "editor") and client.map then
-		client.render()
-	end
-	]]
 end
 
 ---Main game render loop
@@ -136,7 +129,18 @@ function client.draw()
 		-- Center and scale display
 		local ox = 0.5 * (love.graphics.getWidth() - client.width)
 		local oy = 0.5 * (love.graphics.getHeight() - client.height)
+		love.graphics.setShader(client.shader)
+		if client.shader:hasUniform("time") then
+			client.shader:send("time", love.timer.getTime())
+		end
 
+		if client.shader:hasUniform("mouse") then
+			client.mouse = client.mouse or {}
+			client.mouse[1], client.mouse[2] = love.mouse.getPosition()
+			client.mouse[3] = love.mouse.isDown(1) and 1 or 0
+			client.mouse[4] = love.mouse.isDown(2) and 1 or 0
+			client.shader:send("mouse", client.mouse)
+		end
 		if client.scale then
 			love.graphics.push()
 			love.graphics.setDefaultFilter("linear", "linear")
@@ -146,6 +150,7 @@ function client.draw()
 		else
 			love.graphics.draw(client.canvas, 0, 0)
 		end
+		love.graphics.setShader()
 	end
 
 	-- Crosshair debug

@@ -161,7 +161,7 @@ editor.tool_option = {
 		map_path_input_menu:SetVisible(false)
 		--]]
 		editor.pencil_mode = loveframes.Create("multichoice", editor.frame)
-		editor.pencil_mode:SetPos(80, 90):SetWidth(80)
+		editor.pencil_mode:SetPos(80, 120):SetWidth(80)
 		for k, v in pairs(editor.tool_option) do
 			editor.pencil_mode:AddChoice(k)
 		end	
@@ -171,7 +171,7 @@ editor.tool_option = {
 			--mapdata_toolmode(mode)
 		end
 		editor.pencil_label = loveframes.Create("label", editor.frame)
-		editor.pencil_label:SetPos(5, 90+2):SetText("Tool Mode: ")
+		editor.pencil_label:SetPos(5, 120+2):SetText("Tool Mode: ")
 		--[[
 		local pencil_button = loveframes.Create("button", editor_frame)
 		pencil_button:SetPos(5,95):SetText("Pencil"):SetWidth(40)
@@ -210,13 +210,23 @@ editor.tool_option = {
 				local status = client.map:read(path)
 				if status then
 					print(status)
+				else
+					client.camera_translate(0, 0)
+					client.map:shiftRender()
 				end
-				print(client.map)
 			end
-			client.mode = "game"
     		--editor.tile_panel:Clear()
 			--editor.tile_panel:Fill()
 		end
+		editor.exitbutton = loveframes.Create("button", editor.frame)
+		editor.exitbutton:SetText("Exit")
+		editor.exitbutton:SetWidth(40)
+		editor.exitbutton:SetPos(5, 85)
+		function editor.exitbutton:OnClick()
+			client.mode = "lobby"
+			loveframes.SetState()
+		end
+
 		editor.settings_panel = loveframes.Create("frame")
 		editor.settings_panel:SetVisible(false)
 		editor.settings_panel.OnClose = function(object)

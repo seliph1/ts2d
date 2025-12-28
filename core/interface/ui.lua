@@ -173,7 +173,7 @@ ui.editor_button = LF.Create("messagebox", ui.main_menu)
 :SetPos(0, 180):SetCursor(LF.cursors.hand)
 ui.editor_button.OnClick = function(self)
     if client.map then
-        local status = client.map:read( "maps/fun_roleplay.map" )
+        local status = client.map:read( "maps/room34.map" )
         if status then
             print(status)
         end
@@ -1187,17 +1187,34 @@ local hud_symbols = LF.CreateSpriteSheet("gfx/hud_symbols.bmp", 64, 64)
 ui.hud = LF.Create("container")
 ui.hud:SetSize(love.graphics.getWidth(), 96):AlignBottom()
 ui.hud:SetState("game")
+ui.hud:SetProperty("counter", 0)
 --ui.hud:SetCollidable(false)
 
 function ui.hud:Draw()
 	if not client.share.players then return end
 	if not client.share.players[client.id] then return end
 	local player = client.share.players[client.id]
+	self.counter = self.counter + 1
 
-	--local health = player.h or 0
-	local health = tostring( math.floor( love.timer.getTime() * 10 ) )
+	local timer = love.timer.getTime()
+	local health = tostring( player.h or 0 )
+	local time = os.date("%M:%S", math.floor( timer ) )
+	local money = tostring( player.m or 0 )
+	local ammo = ""
 
-	local time = os.date("%H:%M:%S", os.time())
+	if player.i then
+		local itemheld, itemdata = client.get_item_held(client.id)
+
+		local itemobject = player.i[itemheld]
+		if itemobject then
+			local ammo_mag = itemobject.am or 0
+			local ammo_cap = itemobject.ac or 0
+			--ammo = ammo_in .. ammo_reserve
+			if ammo_cap and ammo_mag then
+				ammo = string.format("%s|%s", ammo_mag, ammo_cap)
+			end
+		end
+	end
 
 	love.graphics.push()
 	love.graphics.translate(self.x, self.y)
@@ -1205,26 +1222,163 @@ function ui.hud:Draw()
 	local scale = 0.6
 	local icon_width = hud_symbols[0]:getWidth() * scale
 	local icon_height = hud_symbols[0]:getHeight() * scale
+	local padding = icon_width + 5
+	local money_width = hud_nums:getWidth(money)
+	local ammo_width = hud_nums:getWidth(ammo)
 	local width, height = self.width, self.height
-
 
 	local prev_font = love.graphics.getFont()
 	love.graphics.setFont(hud_nums)
 	love.graphics.setBlendMode("add")
-	love.graphics.setColor(1.0, 1.0, 0.0, 0.2)
+	love.graphics.setColor(1.0, 1.0, 0.0, 0.3)
 
-	
 	love.graphics.draw(hud_symbols[0], 0, height*0.5, 0, scale, scale)
-	love.graphics.print(health, icon_width+5, height*0.5, 0, scale, scale)
+	love.graphics.print(health, padding, height*0.5, 0, scale, scale)
 
-	love.graphics.draw(hud_symbols[2], width*0.5, height*0.5, 0, scale, scale)
+	love.graphics.draw(hud_symbols[2], width*0.3, height*0.5, 0, scale, scale)
+	love.graphics.print(time, width*0.3 + padding, height*0.5, 0, scale, scale)
 
-	love.graphics.print(time, width*0.5 + icon_width+5, height*0.5, 0, scale, scale)
+	love.graphics.draw(hud_symbols[7], width - money_width*scale - padding, height*0, 0, scale, scale)
+	love.graphics.printf(money, (1 - scale)*width, height*0, width, "right", 0, scale, scale)
+
+	love.graphics.printf(ammo, (1 - scale)*width, height*0.5, width, "right", 0, scale, scale)
 
 	love.graphics.setFont(prev_font)
 	love.graphics.setBlendMode("alpha")
 	love.graphics.pop()
 end
+
+-- Shader controls
+--------------------------------------------------------------------------------------------------
+function ui.shader_controls(shader, fields, name)
+	name = name or "Shader"
+	local fields_offset = 300
+	local shader_frame = LF.Create("frame")
+	:SetName(name.." controls")
+	:SetSize(500, #fields*25 + 30)
+	:SetState("*")
+	:Center()
+	--:SetVisible(false)
+	fields.storage = {}
+
+	for i = 1, #fields do
+		local field = LF.Create("slider", shader_frame)
+		local component = fields[i].component
+		local uniform = fields[i].name
+
+		field:SetPos(5, (i-1)*25 + 30)
+		field:SetMinMax( fields[i].hint[1], fields[i].hint[2] )
+		field:SetWidth(fields_offset)
+
+		local value = LF.Create("label", shader_frame)
+		value:SetPos(fields_offset + 10, (i-1)*25 + 30)
+		
+		function field:Update()
+			local v = tostring( self:GetValue() ) or ""
+			value:SetText( v )
+		end
+
+		function field:OnValueChanged(v)
+			if component then
+				fields.storage[uniform] = fields.storage[uniform] or {0.0, 0.0, 0.0, 0.0}
+				local storage = fields.storage[uniform]
+				local n = tonumber( v )
+
+				storage[component] = n
+
+				if shader:hasUniform(uniform) then
+					shader:send(uniform, storage)
+				end
+			else
+				local n = tonumber( v )
+				if shader:hasUniform(uniform) then
+					shader:send(uniform, n)
+				end
+			end
+		end
+		field:SetValue( fields[i].init_value )
+		local label = LF.Create("label", shader_frame)
+		if component then
+			label
+			:SetPos(fields_offset + 100, (i-1)*25 + 32)
+			:SetText(string.format("%s[%s]", uniform, component))
+		else
+			label:SetPos(fields_offset + 100, (i-1)*25 + 32):SetText(uniform)
+		end
+	end
+end
+
+
+ui.shader_controls(client.map._shadow_map, {
+	{name="steps", hint = {1.0, 64.0}, init_value = 32.0};
+	{name="maxSteps", hint = {1.0, 64.0}, init_value = 32.0};
+	{name="shadowStrength", hint = {0.0, 1.0}, init_value = 0.7};
+	{name="shadowLength", hint = {0.0, 64.0}, init_value = 22.0};
+	{name="direction", hint = {0, 360}, init_value = 45.0};
+	{name="mode", hint = {0.0, 1.0}, init_value = 1.0};
+	{name="distanceFactor", hint = {0.0, 1.0}, init_value = 0.8};
+	{name="blur", hint = {0.0, 1.0}, init_value = 1.0};
+	{name="v1", hint = {-3.0, 3.0}, init_value = 1.0};
+	{name="v2", hint = {-3.0, 3.0}, init_value = 1.0};
+}, "shadow")
+
+
+--[[
+ui.shader_controls(client.shaders.shockwave, {
+	{name="width", hint = {0.0, 1.0}, init_value = 0.05};
+	{name="t", hint = {0.0, 1.0}, init_value = 0.0};
+	{name="centre", hint = {0.0, 1.0}, init_value = 0.5, component=1};
+	{name="centre", hint = {0.0, 1.0}, init_value = 0.5, component=2};
+	{name="aberration", hint = {0.0, 0.5}, init_value = 0.01};
+	{name="speed", hint = {0.0, 20.0}, init_value = 1.0};
+	{name="shading", hint = {0.0, 20.0}, init_value = 1.0};
+}, "Shockwave")
+]]
+
+--[[
+ui.shader_controls(client.map._shadow_map, {
+	{name="steps", hint = {1.0, 500.0}, init_value = 32.0};
+	{name="shadowBrightness", hint = {0.0, 1.0}, init_value = 0.5};
+	{name="shadowLength", hint = {0.0, 96.0}, init_value = 32};
+	--{name="direction", hint = {-180, 180}, init_value = 45.0};
+	{name="direction", hint = {0, 360}, init_value = 45.0};
+	{name="mode", hint = {0.0, 1.0}, init_value = 1.0};
+	--{name="stepFactor", hint = {0.0, 1.0}, init_value = 0.05};
+	{name="distanceFactor", hint = {0.0, 32.0}, init_value = 0.05};
+})
+]]
+
+--[[
+ui.shader_controls(client.shaders.earthquake, {
+	{name="x", hint = {-32.0, 32.0}, init_value = 0.0};
+	{name="y", hint = {-32.0, 32.0}, init_value = 0.0};
+	{name="shake", hint = {0.0, 320.0}, init_value = 0.0};
+	{name="speed", hint = {0.0, 100.0}, init_value = 0.0};
+})
+]]
+
+--[[
+ui.shader_controls(client.shaders.crt, {
+	{name="elapsed", hint = {0.0, 100.0}, init_value = 10.0};
+	{name="offset", hint = {-0.01, 0.01}, init_value = 0.001};
+})
+]]
+
+--[[
+ui.shader_controls(client.shaders.crt2_0, {
+	{name="distortion", hint = {0.0, 1.0}, init_value = 0.1};
+	{name="aberration", hint = {0.0, 2,0}, init_value = 2.0};
+})]]
+--[[
+
+ui.shader_controls(client.shaders.wave, {
+	{name="waveAmount", hint = {0.0, 500.0}, init_value = 12.56};
+	{name="waveSize", hint = {0.0, 0.5}, init_value = 0.05};
+	{name="waveSpeed", hint = {0.0, 100.0}, init_value = 1.0};
+	{name="x", hint = {0.0, 1.0}, init_value = 1.0};
+	{name="y", hint = {0.0, 1.0}, init_value = 1.0};
+}, "Wave")
+]]
 
 --------------------------------------------------------------------------------------------------
 --exit window-------------------------------------------------------------------------------------

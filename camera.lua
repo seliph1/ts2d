@@ -53,6 +53,16 @@ function client.camera_follow(target)
 	client.camera.pointer = setmetatable( { target = target }, { __mode = "v"} )
 end
 
+function client.camera_translate(x, y)
+	client.camera_unbind()
+
+	local camera = client.camera
+	camera.x = x
+	camera.y = y
+	camera.tx = x
+	camera.ty = y
+end
+
 function client.camera_unbind()
 	client.camera.pointer = nil
 end

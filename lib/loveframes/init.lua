@@ -135,6 +135,13 @@ function loveframes.update(dt)
 		end
 	end
 
+	local hoverobject = loveframes.GetHoverObject()
+	if hoverobject then
+		if loveframes.config["DEBUG"] and love.keyboard.isDown("delete") then
+			hoverobject:Remove()
+		end
+	end
+
 	loveframes.collisions = nil
 	base:update(dt)
 end
