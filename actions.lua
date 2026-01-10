@@ -92,13 +92,7 @@ local actions = {
         ---@param x number
         ---@param y number
         action = function(x,y)
-            x = tonumber(x) or 0
-            y = tonumber(y) or 0
 
-            client.camera.x = x
-            client.camera.y = y
-            client.map:scroll(x, y)
-            print(string.format("scrolled to %s-%s", x, y))
         end
     };
 
@@ -117,7 +111,7 @@ local actions = {
             local message = table.concat({...}," ")
             local player = client.share.players[peer_id]
 
-            if player then
+            if client.joined and player then
                 local ui = require "core.interface.ui"
                 ui.chat_frame_message(player, message)
             end
@@ -203,7 +197,41 @@ local actions = {
         end
     };
 
-    --
+    camera = {
+        action = function(mode, ...)
+            if mode == "self" then
+                local player = client.share.players[client.id]
+                if player then
+                    client.camera_follow(player)
+                end
+            elseif mode == "follow" then
+                local category = arg[1]
+                local id = tonumber( arg[2] ) or 0
+
+                local share = client.share
+			    if not share[category] then return "There is no category with that name" end
+			    if not share[category][id] then return "There is no entity with this ID" end
+			    local entity = share[category][id]
+			    if entity and entity.x and entity.y then
+				    client.camera_follow(entity)
+                end
+
+            elseif mode == "translate" then
+                local x = tonumber(arg[1] ) or 0
+                local y = tonumber(arg[2] ) or 0
+                client.camera_translate(x, y)
+            elseif mode == "unbind" then
+                client.camera_unbind()
+            end
+        end
+    };
+
+    menu_team = {
+        action = function()
+            local ui = require "core.interface.ui"
+            ui.teampick()
+        end
+    };
     new = {
         action = function()
         end

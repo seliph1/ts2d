@@ -2,6 +2,7 @@
 uniform vec2 camera = vec2(0.0);
 uniform vec4 mouse = vec4(0.0);
 uniform Image heightmap;
+uniform Image overlay;
 
 //////////////////////////////////////
 // Uniforms                         //
@@ -9,15 +10,17 @@ uniform Image heightmap;
 
 uniform float steps = 32.0;
 uniform float maxSteps = 32.0;
-uniform float shadowStrength = 0.8;
+uniform float shadowStrength = 0.7;
 uniform float shadowLength = 22.0;
-uniform float direction = 45.0;
+uniform float direction = 235.0;
 uniform float mode = 1.0;
-uniform float distanceFactor = 0.8;
+uniform float distanceFactor = 0.7;
 uniform float blur = 1.0;
 
-uniform float v1 = 1.0;
-uniform float v2 = 1.0;
+uniform int numOccluders;
+uniform vec3 occluderPositions[128];
+
+uniform float vx, vy, v1, v2;
 
 //////////////////////////////////////
 // Constants                        //
@@ -29,32 +32,48 @@ float hash(vec2 p) {
     return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
 }
 
-float getHeight(vec2 UV) {
+
+
+
+float getHeight(vec2 mapPos) {
     // Get the texel from heightmap texture
-    vec4 color = Texel(heightmap, UV);
+    vec4 color = Texel(heightmap, mapPos);
     // If it's out of bounds, then treat it as 0.0
-    if ( any(lessThan(UV, vec2(0.0))) || any(greaterThan(UV, vec2(1.0))) ) {
+    if ( any(lessThan(mapPos, vec2(0.0))) || any(greaterThan(mapPos, vec2(1.0))) ) {
         color.r = 0.0;
     }
-
     // Return current height (on red channel)
     // TODO:
     //    add other kind of info on the remaining channels.
-    return color.r;
+    return min(color.r, 1.0);
 }
 
-vec3 getOcclusion(vec2 UV, vec2 size) {
+vec3 getOcclusion(vec2 UV, vec2 SCREEN_UV) {
+    // Get the map size
+    vec2 mapSize = vec2( textureSize(heightmap, 0) );
+
+    // Get the viewport size
+    vec2 screenSize = love_ScreenSize.xy;
+
+    // Conversion factor: screen pixels > map space
+    vec2 pixelsToMap = (mapSize * TILE_SIZE);
+
+    // Screen space position
+    vec2 screenCenter = screenSize * 0.5;
+    vec2 screenPos = (SCREEN_UV + camera - screenCenter);
+    vec2 mapPos = (SCREEN_UV + camera - screenCenter) / pixelsToMap;
+
     // Transform degrees to radians
     float direction = radians(direction);
 
     // Calculate angle from radians (0~1)
-    vec2 ray2D = normalize(vec2(sin(direction), cos(direction))) / size;
+    vec2 ray2D = normalize(vec2(sin(direction), cos(direction))) / mapSize;
 
     // Calculate base height on this position
-    float baseHeight = getHeight(UV);
+    float baseHeight = getHeight(mapPos);
 
     // Create position vector at step 0, including ground.
-    vec3 position = vec3(UV, baseHeight);
+    vec3 position = vec3(mapPos, baseHeight);
 
     // Calculate the step size of sample
     vec3 stepDir = normalize( vec3(ray2D * shadowLength, 32.0) ) / maxSteps;
@@ -105,36 +124,25 @@ vec3 getOcclusion(vec2 UV, vec2 size) {
 }
 
 vec4 getShadow(vec4 COLOR, vec2 UV, vec2 SCREEN_UV) {
-    // Get the map size
-    vec2 mapSize = vec2( textureSize(heightmap, 0) );
-
-    // Get the viewport size
-    vec2 screenSize = love_ScreenSize.xy;
-
-    // Conversion factor: screen pixels > map space
-    vec2 pixelsToMap = (mapSize * TILE_SIZE);
-
-    // Screen space position
-    vec2 screenCenter = screenSize * 0.5;
-    vec2 mapPos = (SCREEN_UV + camera - screenCenter) / pixelsToMap;
-
     // Calculated occlusion with position normalized
-    vec3 occlusion = getOcclusion( mapPos, mapSize );
-
-
+    vec3 occlusion = getOcclusion( UV, SCREEN_UV );
+    
     // Get the control variables
     float shadow = occlusion.x;
     float dist = occlusion.y;
     float height = occlusion.z;
 
     // Debug
-    if (mode < 0.25) {
+    if (mode < 0.2) {
+        return vec4( 1.0 );
+    }
+    if (mode >= 0.2 && mode < 0.4) {
         return vec4( vec3(height), 1.0 );
     };
-    if (mode >= 0.25 && mode < 0.5) {
+    if (mode >= 0.4 && mode < 0.6) {
         return vec4( vec3(shadow), 1.0 );
     };
-    if (mode >= 0.5 && mode < 0.75) {
+    if (mode >= 0.6 && mode < 0.8) {
         return vec4( vec3(dist), 1.0 );
     };
 

@@ -4,13 +4,11 @@ return function(client)
 ------------------------
 local binds = {}
 
+-- Client/Server binds
 -- Input types: stream, pulse
-
 binds[1]            = {input="attack", type="toggle"}
 binds[2]            = {input="attack2", type="toggle"}
 binds[3]            = {input="attack3", type="toggle"}
---binds["mwheelup"]   = {input="invnext", type="pulse"}
---binds["mwheeldown"] = {input="invprev", type="pulse"}
 binds["w"]          = {input="forward", type="stream"}
 binds["s"]          = {input="back", type="stream"}
 binds["a"]          = {input="left", type="stream"}
@@ -32,6 +30,9 @@ binds["f2"]         = {input="serveraction1", type="pulse"}
 binds["f3"]         = {input="serveraction2", type="pulse"}
 binds["f4"]         = {input="serveraction3", type="pulse"}
 binds["e"]          = {input="use", type="pulse"}
+
+-- UI/Local binds
+
 
 client.binds = binds
 ------------------------

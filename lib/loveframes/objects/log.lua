@@ -166,7 +166,7 @@ function newobject:wheelmoved(x, y)
 end
 --[[---------------------------------------------------------
 	- func: RedoLayout()
-	- desc: redo the layout of the scrollpane
+	- desc: redo the layout of the scrollpanel
 --]]---------------------------------------------------------
 function newobject:RedoLayout()
 	local elements = self.elements

@@ -28,10 +28,16 @@ function client.camera_move(dt)
 	end
 	-- Vector
 	local vx, vy = 0, 0
-	if (client.key.up) then vy = -s end
-	if (client.key.left) then vx = -s end
-	if (client.key.down) then vy = s end
-	if (client.key.right) then vx = s end
+	--[[
+	if (client.key.up 	 or client.key.w) then vy = -s end
+	if (client.key.left  or client.key.a) then vx = -s end
+	if (client.key.down  or client.key.s) then vy =  s end
+	if (client.key.right or client.key.d) then vx =  s end
+	--]]
+	if (client.key.up 	) then vy = -s end
+	if (client.key.left ) then vx = -s end
+	if (client.key.down ) then vy =  s end
+	if (client.key.right) then vx =  s end
 	-- Vector apply
 	camera.tx = camera.tx + vx
 	camera.ty = camera.ty + vy
@@ -53,6 +59,8 @@ function client.camera_follow(target)
 	client.camera.pointer = setmetatable( { target = target }, { __mode = "v"} )
 end
 
+---@param x number
+---@param y number
 function client.camera_translate(x, y)
 	client.camera_unbind()
 

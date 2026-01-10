@@ -7,13 +7,13 @@ return function(loveframes)
 ---------- module start ----------
 
 -- list object
-local ScrollPane = loveframes.NewObject("scrollpane", "loveframes_object_scrollpane", true)
+local ScrollPanel = loveframes.NewObject("scrollpanel", "loveframes_object_scrollpanel", true)
 --[[---------------------------------------------------------
 	- func: initialize()
 	- desc: initializes the object
 --]]---------------------------------------------------------
-function ScrollPane:initialize()
-	self.type = "scrollpane"
+function ScrollPanel:initialize()
+	self.type = "scrollpanel"
 	self.display = "vertical"
 	self.container = true
 	self.width = 300
@@ -42,6 +42,7 @@ function ScrollPane:initialize()
 	self.itemcache = {}
 	self.itemlength = 0
 	self.itemhash = loveframes.bump.newWorld(64)
+	self.background = false
 	self:SetDrawFunc()
 end
 
@@ -49,7 +50,7 @@ end
 	- func: update(deltatime)
 	- desc: updates the object
 --]]---------------------------------------------------------
-function ScrollPane:update(dt)
+function ScrollPanel:update(dt)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
 
@@ -102,7 +103,7 @@ end
 	- func: draw()
 	- desc: draws the object
 --]]---------------------------------------------------------
-function ScrollPane:draw()
+function ScrollPanel:draw()
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
 	local x = self.x
@@ -113,7 +114,7 @@ function ScrollPane:draw()
 	local drawoverfunc = self.DrawOver or self.drawoverfunc
 	local internals = self.internals
 	self:SetDrawOrder()
-	if drawfunc then
+	if drawfunc and self.background then
 		drawfunc(self)
 	end
 	local cut_x = self.vbar and -16 or 0
@@ -139,8 +140,8 @@ end
 	- func: mousepressed(x, y, button)
 	- desc: called when the player presses a mouse button
 --]]---------------------------------------------------------
-function ScrollPane:mousepressed(x, y, button)
-	ScrollPane.super.mousepressed(self, x, y, button)
+function ScrollPanel:mousepressed(x, y, button)
+	ScrollPanel.super.mousepressed(self, x, y, button)
 
 	if self.hover and button == 1 then
 		local baseparent = self:GetBaseParent()
@@ -154,16 +155,16 @@ end
 	- func: wheelmoved(x, y)
 	- desc: called when the player moves a mouse wheel
 --]]---------------------------------------------------------
---function ScrollPane:wheelmoved(x, y)
+--function ScrollPanel:wheelmoved(x, y)
 	--if not self.hover then return end
-	--ScrollPane.super.wheelmoved(self, x, y)
+	--ScrollPanel.super.wheelmoved(self, x, y)
 --end
 
 --[[---------------------------------------------------------
 	- func: AddItem(object)
 	- desc: adds an item to the object
 --]]---------------------------------------------------------
-function ScrollPane:AddItem(object)
+function ScrollPanel:AddItem(object)
 	if object.type == "frame" then -- Dont 
 		return
 	end
@@ -187,9 +188,9 @@ function ScrollPane:AddItem(object)
 
 	return self
 end
-ScrollPane.AddItemIntoContainer = ScrollPane.AddItem
+ScrollPanel.AddItemIntoContainer = ScrollPanel.AddItem
 
-function ScrollPane:AddItemsFromTable(objects)
+function ScrollPanel:AddItemsFromTable(objects)
 	for index, object in pairs(objects) do
 		if object.type == "frame" then -- Dont 
 			return
@@ -218,7 +219,7 @@ end
 	- func: RemoveItem(object or number)
 	- desc: removes an item from the object
 --]]---------------------------------------------------------
-function ScrollPane:RemoveItem(data)
+function ScrollPanel:RemoveItem(data)
 	local dtype = type(data)
 	if dtype == "number" then
 		local children = self.children
@@ -240,9 +241,9 @@ end
 
 --[[---------------------------------------------------------
 	- func: RedoLayout()
-	- desc: redo the layout of the scrollpane
+	- desc: redo the layout of the scrollpanel
 --]]---------------------------------------------------------
-function ScrollPane:RedoLayout()
+function ScrollPanel:RedoLayout()
 	local height = self.height
 	local width = self.width
 	local vbar = self.vbar
@@ -325,7 +326,7 @@ end
 	- func: Clear()
 	- desc: removes all of the object's children
 --]]---------------------------------------------------------
-function ScrollPane:Clear()
+function ScrollPanel:Clear()
 	local children = self.children
 	self.children = {}
 	for _, child in pairs(children) do
@@ -339,55 +340,12 @@ function ScrollPane:Clear()
 	return self
 end
 
---[[---------------------------------------------------------
-	- func: SetWidth(width, relative)
-	- desc: sets the object's width
---]]---------------------------------------------------------
-function ScrollPane:SetWidth(width, relative)
-	if relative then
-		self.width = self.parent.width * width
-	else
-		self.width = width
-	end
-	return self
-end
-
---[[---------------------------------------------------------
-	- func: SetHeight(height, relative)
-	- desc: sets the object's height
---]]---------------------------------------------------------
-function ScrollPane:SetHeight(height, relative)
-	if relative then
-		self.height = self.parent.height * height
-	else
-		self.height = height
-	end
-	return self
-end
-
---[[---------------------------------------------------------
-	- func: SetSize(width, height, r1, r2)
-	- desc: sets the object's size
---]]---------------------------------------------------------
-function ScrollPane:SetSize(width, height, r1, r2)
-	if r1 then
-		self.width = self.parent.width * width
-	else
-		self.width = width
-	end
-	if r2 then
-		self.height = self.parent.height * height
-	else
-		self.height = height
-	end
-	return self
-end
 
 --[[---------------------------------------------------------
 	- func: GetHorizontalScrollBody() GetVerticalScrollBody()
 	- desc: gets the object's scroll body
 --]]---------------------------------------------------------
-function ScrollPane:GetHorizontalScrollBody()
+function ScrollPanel:GetHorizontalScrollBody()
 	for k, v in pairs(self.internals) do
 		if v.bartype == "horizontal" then
 			return v
@@ -396,7 +354,7 @@ function ScrollPane:GetHorizontalScrollBody()
 	--return false
 end
 
-function ScrollPane:GetVerticalScrollBody()
+function ScrollPanel:GetVerticalScrollBody()
 	for k, v in pairs(self.internals) do
 		if v.bartype == "vertical" then
 			return v
@@ -404,12 +362,21 @@ function ScrollPane:GetVerticalScrollBody()
 	end
 	--return false
 end
+
+--[[---------------------------------------------------------
+	- func: ShowBackground()
+	- desc: set the background visibility
+--]]---------------------------------------------------------
+function ScrollPanel:ShowBackground(bool)
+	self.background = bool
+	return self
+end
 --[[---------------------------------------------------------
 	- func: GetScrollBar()
 	- desc: gets the object's scroll bar
 --]]---------------------------------------------------------
 --[[
-function ScrollPane:GetScrollBar()
+function ScrollPanel:GetScrollBar()
 	local vbar = self.vbar
 	local hbar = self.hbar
 	local internals  = self.internals
@@ -430,7 +397,7 @@ end
 			added to the list
 --]]---------------------------------------------------------
 --[[
-function ScrollPane:SetAutoScroll(bool)
+function ScrollPanel:SetAutoScroll(bool)
 	local scrollbar = self:GetScrollBar()
 	self.autoscroll = bool
 	if scrollbar then
@@ -446,7 +413,7 @@ end
 			added to the list
 --]]---------------------------------------------------------
 --[[
-function ScrollPane:GetAutoScroll()
+function ScrollPanel:GetAutoScroll()
 	return self.autoscroll
 end
 ]]
@@ -455,7 +422,7 @@ end
 	- desc: sets the scroll amount of the object's scrollbar
 			buttons
 --]]---------------------------------------------------------
---[[function ScrollPane:SetButtonScrollAmount(amount)
+--[[function ScrollPanel:SetButtonScrollAmount(amount)
 	self.buttonscrollamount = amount
 	return self
 end
@@ -465,7 +432,7 @@ end
 	- desc: gets the scroll amount of the object's scrollbar
 			buttons
 --]]---------------------------------------------------------
---[[function ScrollPane:GetButtonScrollAmount()
+--[[function ScrollPanel:GetButtonScrollAmount()
 	return self.buttonscrollamount
 end
 ]]
@@ -473,7 +440,7 @@ end
 	- func: SetMouseWheelScrollAmount(amount)
 	- desc: sets the scroll amount of the mouse wheel
 --]]---------------------------------------------------------
-function ScrollPane:SetMouseWheelScrollAmount(amount)
+function ScrollPanel:SetMouseWheelScrollAmount(amount)
 	self.mousewheelscrollamount = amount
 	return self
 end
@@ -482,7 +449,7 @@ end
 	- func: GetMouseWheelScrollAmount()
 	- desc: gets the scroll amount of the mouse wheel
 --]]---------------------------------------------------------
-function ScrollPane:GetMouseWheelScrollAmount()
+function ScrollPanel:GetMouseWheelScrollAmount()
 	return self.mousewheelscrollamount
 end
 

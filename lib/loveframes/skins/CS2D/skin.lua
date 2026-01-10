@@ -561,6 +561,78 @@ function skin.button(object)
 end
 
 --[[---------------------------------------------------------
+	- func: DrawButton(object)
+	- desc: draws the button object
+--]]---------------------------------------------------------
+function skin.textbutton(object)
+	local x = object:GetX()
+	local y = object:GetY()
+	local width = object:GetWidth()
+	local height = object:GetHeight()
+	local hover = object:GetHover()
+	local textmesh = object:GetDrawableText()
+	local hovertextmesh = object:GetDrawableHoverText()
+	local hovertext = object:GetHoverText()
+	local text_height = textmesh:getHeight()
+	local text_width = textmesh:getWidth()
+	local down = object:GetDown()
+	local checked = object:GetChecked()
+	local enabled = object:GetEnabled()
+	local align = object:GetAlign()
+
+	-- Image, text and color pointers
+	local xoffset, yoffset, padding = 0, 0, 3
+	local image_x, image_y, image_width, image_height = 0,0,0,0
+	local text_x, text_y = 0, 0
+
+	if down or checked then
+		-- Apply -1 -1 offset to make illusion of pressing
+		xoffset = xoffset + 1
+		yoffset = yoffset + 1
+	end
+	if not enabled then
+		xoffset = 0 -- Reset the offset if the text isn't clickable
+		yoffset = 0
+		down = false
+	end
+	if object.image then
+		image_width = object.image:getWidth()
+		image_height = object.image:getHeight()
+		if align == "center" then
+			image_x = math.floor(x + xoffset + (width - image_width - text_width)/2 )
+		elseif align == "left" then
+			image_x = math.floor(x + xoffset + padding)
+		elseif align == "right" then
+			image_x = math.floor(x + xoffset - padding + width - text_width - image_width)
+		end
+		image_y = math.floor(y + yoffset + (height - image_height)/2)
+	end
+
+	if align == "right" then
+		text_x = math.floor(x + xoffset - padding)
+	elseif align == "left" then
+		text_x = math.floor(x + xoffset + padding + image_width)
+	elseif align == "center" then
+		text_x = math.floor(x + xoffset + image_width/2)
+	end
+	text_y = math.floor((y + (height - text_height)/2) + yoffset)
+
+	-- Draw Image
+	if object.image then
+		love.graphics.setColor(1, 1, 1, 1)
+		love.graphics.draw(object.image, image_x, image_y)
+	end
+	-- Draw Text
+	love.graphics.setColor(1,1,1,1)
+	if hover and hovertext ~= "" then
+		love.graphics.draw(hovertextmesh, text_x, text_y)
+	else
+		love.graphics.draw(textmesh, text_x, text_y)
+	end
+end
+
+
+--[[---------------------------------------------------------
 	- func: DrawCloseButton(object)
 	- desc: draws the close button object
 --]]---------------------------------------------------------
@@ -920,6 +992,22 @@ end
 	- desc: draws the panel object
 --]]---------------------------------------------------------
 function skin.panel(object)
+	local x = object:GetX()
+	local y = object:GetY()
+	local width = object:GetWidth()
+	local height = object:GetHeight()
+	local bodycolor = skin.controls.panel_body_color
+	love.graphics.setColor(bodycolor)
+	love.graphics.rectangle("fill", x, y, width, height)
+	love.graphics.setColor(bordercolor)
+	skin.OutlinedRectangle(x, y, width, height)
+end
+
+--[[---------------------------------------------------------
+	- func: DrawScrollPanel(object)
+	- desc: draws the panel object
+--]]---------------------------------------------------------
+function skin.scrollpanel(object)
 	local x = object:GetX()
 	local y = object:GetY()
 	local width = object:GetWidth()
@@ -1330,27 +1418,14 @@ end
 function skin.messagebox(object)
 	local x = math.floor(object.x)
 	local y = math.floor(object.y)
-	local textmesh_normal = object.textmesh
-	local textmesh_hover = object.hovertextmesh
-	local hover = object:GetHover()
-	local hoverenabled = object.hoverenabled
+	local textmesh = object.textmesh
 	local shadow = object.shadow
-
 	if shadow then
 		love.graphics.setColor(0,0,0,1)
-		if hover and hoverenabled then
-			love.graphics.draw(textmesh_hover, x+1, y+1)
-		else
-			love.graphics.draw(textmesh_normal, x+1, y+1)
-		end
+		love.graphics.draw(textmesh, x+1, y+1)
 	end
-
 	love.graphics.setColor(1,1,1,1)
-	if hover and hoverenabled then
-		love.graphics.draw(textmesh_hover, x, y)
-	else
-		love.graphics.draw(textmesh_normal, x, y)
-	end
+	love.graphics.draw(textmesh, x, y)
 end
 --[[
 function skin.messagebox_over(object)

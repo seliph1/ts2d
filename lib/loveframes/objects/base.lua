@@ -233,11 +233,36 @@ end
 function Base:SetPos(x, y, center)
 	local base = loveframes.base
 	local parent = self.parent
+	if x < 0 then x = self.parent.width - self.width - math.abs(x) end
+	if y < 0 then y = self.parent.height - self.height - math.abs(y) end
 	if center then
-		local width = self.width
-		local height = self.height
-		x = x - width/2
-		y = y - height/2
+		x = x - self.width/2
+		y = y - self.height/2
+	end
+	if parent == base then
+		self.x = x
+		self.y = y
+	else
+		self.staticx = x
+		self.staticy = y
+	end
+
+	if parent.container and parent.RedoLayout then
+		parent:RedoLayout()
+	end
+	return self
+end
+
+function Base:SetRelativePos(x, y, center)
+	local base = loveframes.base
+	local parent = self.parent
+	x = self.parent.width * x
+	y = self.parent.height * y
+	if x < 0 then x = self.parent.width - self.width - math.abs(x) end
+	if y < 0 then y = self.parent.height - self.height - math.abs(y) end
+	if center then
+		x = x - self.width/2
+		y = y - self.height/2
 	end
 	if parent == base then
 		self.x = x
@@ -260,10 +285,25 @@ end
 function Base:SetX(x, center)
 	local base = loveframes.base
 	local parent = self.parent
-	if center then
-		local width = self.width
-		x = x - width/2
+	if x < 0 then x = self.parent.width - self.width - math.abs(x) end
+	if center then x = x - self.width/2	end
+	if parent == base then
+		self.x = x
+	else
+		self.staticx = x
 	end
+	if parent.container and parent.RedoLayout then
+		parent:RedoLayout()
+	end
+	return self
+end
+
+function Base:SetRelativeX(x, center)
+	local base = loveframes.base
+	local parent = self.parent
+	x = self.parent.width * x
+	if x < 0 then x = self.parent.width - self.width - math.abs(x) end
+	if center then x = x - self.width/2	end
 	if parent == base then
 		self.x = x
 	else
@@ -279,13 +319,28 @@ end
 	- func: SetY(y, center)
 	- desc: sets the object's y position
 --]]---------------------------------------------------------
+function Base:SetRelativeY(y, center)
+	local base = loveframes.base
+	local parent = self.parent
+	y = self.parent.height * y
+	if center then y = y - self.height/2 end
+	if y < 0 then y = self.parent.height - self.height - math.abs(y) end
+	if parent == base then
+		self.y = y
+	else
+		self.staticy = y
+	end
+	if parent.container and parent.RedoLayout then
+		parent:RedoLayout()
+	end
+	return self
+end
+
 function Base:SetY(y, center)
 	local base = loveframes.base
 	local parent = self.parent
-	if center then
-		local height = self.height
-		y = y - height/2
-	end
+	if y < 0 then y = self.parent.height - self.height - math.abs(y) end
+	if center then y = y - self.height/2 end
 	if parent == base then
 		self.y = y
 	else
@@ -489,23 +544,64 @@ function Base:AlignBottom()
 	return self
 end
 
+--[[---------------------------------------------------------
+	- func: Expand
+	- desc: expand the object's size to parent's boundary
+--]]---------------------------------------------------------
+function Base:Expand(direction)
+	local parent = self.parent
+	local base = loveframes.base
+	local x, y
+	if parent == base then
+		x, y = self.x, self.y
+	else
+		x, y = self.staticx, self.staticy
+	end
+	-- Reduce the size of object
+	direction = string.lower(direction)
+	if direction == "right" then
+		self.width =  parent.width - x
+	elseif direction == "down" or direction == "bottom" then
+		self.height = parent.height - y
+	elseif direction == "left" then
+		self.width = self.width + self.x - parent.x
+		if parent == base then
+			self.x = 0
+		else
+			self.staticx = 0
+		end
+	elseif direction == "up" or direction == "top" then
+		self.height = self.height + self.y - parent.y
+		if parent == base then
+			self.y = 0
+		else
+			self.staticy = 0
+		end
+	end
+	if parent.container and parent.RedoLayout then
+		parent:RedoLayout()
+	end
+	if self.RedoLayout then
+		self:RedoLayout()
+	end
+	return self
+end
 
 --[[---------------------------------------------------------
 	- func: SetSize(width, height, r1, r2)
 	- desc: sets the object's size
 --]]---------------------------------------------------------
-function Base:SetSize(width, height, r1, r2)
+function Base:SetSize(width, height)
 	local parent = self.parent
-	if r1 then
-		self.width = self.parent.width * width
-	else
-		self.width = width
+	if width >= 0 and width <= 1 then
+		width = self.parent.width * width
 	end
-	if r2 then
-		self.height = self.parent.height * height
-	else
-		self.height = height
+	if height >= 0 and height <= 1 then
+		height = self.parent.height * height
 	end
+	self.width = math.floor(width)
+	self.height = math.floor(height)
+
 	if parent.container and parent.RedoLayout then
 		parent:RedoLayout()
 	end
@@ -519,13 +615,12 @@ end
 	- func: SetWidth(width, relative)
 	- desc: sets the object's width
 --]]---------------------------------------------------------
-function Base:SetWidth(width, relative)
+function Base:SetWidth(width)
 	local parent = self.parent
-	if relative then
-		self.width = self.parent.width * width
-	else
-		self.width = width
+	if width >= 0 and width <= 1 then
+		width = self.parent.width * width
 	end
+	self.width = math.floor(width)
 	if parent.container and parent.RedoLayout then
 		parent:RedoLayout()
 	end
@@ -540,13 +635,12 @@ end
 	- func: SetHeight(height, relative)
 	- desc: sets the object's height
 --]]---------------------------------------------------------
-function Base:SetHeight(height, relative)
+function Base:SetHeight(height)
 	local parent = self.parent
-	if relative then
-		self.height = self.parent.height * height
-	else
-		self.height = height
+	if height >= 0 and height <= 1 then
+		height = self.parent.height * height
 	end
+	self.height = math.floor(height)
 	if parent.container and parent.RedoLayout then
 		parent:RedoLayout()
 	end

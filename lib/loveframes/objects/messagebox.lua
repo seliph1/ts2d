@@ -22,19 +22,14 @@ function MessageBox:initialize()
 	-- Font properties
 	local skin = loveframes.GetActiveSkin()
 	local default_font = skin.directives.text_default_font
-	local default_color = skin.directives.text_default_color
 
 	self.type = "messagebox"
 	self.text = ""
-	self.hovertext = ""
 	self.formattedtext = ""
-	self.formattedhovertext = ""
-	self.defaultcolor = default_color or {1,1,1,1}
-	self.hoverenabled = false
 	self.shadow = true
 	self.font = default_font or loveframes.basicfont
+	self.defaultcolor = {1,1,1,1}
 	self.textmesh = love.graphics.newTextBatch(self.font, "")
-	self.hovertextmesh = love.graphics.newTextBatch(self.font, "")
 
 	self.maxwidth = 100
 	self.width = 100
@@ -140,38 +135,6 @@ function MessageBox:SetText(text)
 	return self
 end
 
-function MessageBox:SetHoverText(text)
-	if text == "" then
-		self.hoverenabled = false
-	end
-
-	self.hovertextmesh:clear()
-	-- Fix the text
-	text = self:fixUTF8(text," ")
-
-	-- Parse the obtained string with cs2d formatting
-	local parsedtext, formattedtext = self:ParseText(text)
-
-	-- Add the fixed, formatted text to the texthash object
-	local status, err = pcall(
-		self.hovertextmesh.setf,
-		self.hovertextmesh,
-		parsedtext,
-		self.maxwidth,
-		"left"
-	)
-	if not status then
-		self.hovertextmesh:setf(tostring(err), self.maxwidth, "left")
-	end
-
-	self.hovertext = text
-	self.formattedhovertext = formattedtext
-
-
-	self.hoverenabled=true
-	return self
-end
-
 --[[---------------------------------------------------------
 	- func: ParseText(text)
 	- desc: parses the text of this object
@@ -249,7 +212,10 @@ end
 	- desc: sets the object's maximum width
 --]]---------------------------------------------------------
 function MessageBox:SetMaxWidth(width)
-	self.maxwidth = width
+	if width >= 0 and width <= 1 then
+		width = self.parent.width * width
+	end
+	self.maxwidth = math.floor(width)
 	return self
 end
 
@@ -268,12 +234,13 @@ end
 --]]---------------------------------------------------------
 function MessageBox:SetFont(font)
 	self.font = font
-	self.textmesh:setFont(font)
-	self.hovertextmesh:setFont(font)
-
 	-- Refresh the text width size
+	self.textmesh:setFont(font)
 	-- Resize the message width/height
 	local width, height = self.textmesh:getDimensions()
+	width = math.max(width, self.maxwidth)
+	height = math.max(height, self.font:getHeight())
+
 	self:SetSize(width, height)
 	return self
 end

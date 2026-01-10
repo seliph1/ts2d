@@ -5,8 +5,13 @@ local LF = require "lib.loveframes"
 local console_in = love.thread.getChannel("console_in")
 local console_out = love.thread.getChannel("console_out")
 
-ui.console_frame = LF.Create("frame"):SetSize(640, 480):SetResizable(false):SetScreenLocked(true)
-:SetName("Console"):SetCloseAction("hide"):SetState("*")
+ui.console_frame = LF.Create("frame")
+:SetSize(640, 480)
+:SetResizable(false)
+:SetScreenLocked(true)
+:SetName("Console")
+:SetCloseAction("hide")
+:SetState("*")
 
 ui.console_frame.Update = function(object, dt)
     object.name = string.format("Console [%s]",love.timer.getFPS())
@@ -31,7 +36,7 @@ ui.console_frame.Update = function(object, dt)
 				if block.action == "display_image" then
 					local frame = LF.Create("frame"):SetSize(500, 500)
 					local w, h = frame:GetSize()
-					local scroll = LF.Create("scrollpane", frame):SetSize(w, h-30):SetY(30)
+					local scroll = LF.Create("scrollpanel", frame):SetSize(w, h-30):SetY(30)
 					local image_holder = LF.Create("image", scroll)
 					local image_data = block.args.image_data
 
@@ -49,7 +54,7 @@ ui.console_frame.Update = function(object, dt)
 					local panel = LF.Create("panel", frame)
 						:SetSize(w, h-30)
 						:SetY(30)
-					local scroll = LF.Create("scrollpane", frame)
+					local scroll = LF.Create("scrollpanel", frame)
 						:SetSize(w, h-30)
 						:SetY(30)
 					local label = LF.Create("label", scroll)
@@ -116,6 +121,14 @@ ui.console_input.OnControlKeyPressed = function(self, key)
 end
 
 ui.console_input.commands = love.filesystem.load("core/interface/commands.lua")()
+for command, data in pairs(ui.console_input.commands) do
+	if data.alias then
+		for index, alias in pairs(data.alias) do
+			ui.console_input.commands[alias] = command
+		end
+	end
+end
+
 ui.console_input.parse = function(str)
 	local args = {}
 	for word in string.gmatch(str, "%S+") do

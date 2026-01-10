@@ -51,7 +51,7 @@ function client.join(peer_id)
 	local player = share.players[peer_id]
 	if player then
 		--client.camera_lock("players", peer_id)
-		client.camera_follow(player)
+		--client.camera_follow(player)
 	end
 end
 

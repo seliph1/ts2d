@@ -7,6 +7,14 @@ local shaders = {
     "gaussianblur",
     "wave",
     "shockwave",
+    "pixelate",
+    "xbr",
+    "scanlines",
+    "scanlines_ex",
+    "vhs",
+    "lcd",
+    "highlight",
+    "glitch",
 }
 
 local baseShader = love.graphics.newShader [[

@@ -23,20 +23,8 @@ end
 --------------------------------------------------------------------------------------------------
 --Objects-----------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------
-ui.container = LF.Create ("container"):Center()
 
-ui.input = LF.Create ("textbox", ui.container)
-
-function ui.container.OnControlKeyPressed(key)
-end
-
-function ui.container.Draw(object)
-    --love.graphics.setColor(1,1,1,1)
-    --love.graphics.rectangle("fill", object.x, object.y, object.width, object.height)
-end
-
-
-do return end
+--do return end
 ui.frame = LF.Create("frame"):SetName("Debug"):SetSize(400, 300):CenterX()
 ui.hoverlabel = LF.Create("label", ui.frame):SetPos(5, 30):SetText("Hover: ")
 ui.hoverdisplay = LF.Create("label", ui.frame):SetPos(ui.hoverlabel:GetWidth(-5), 30)

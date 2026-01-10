@@ -129,7 +129,7 @@ editor.tool_option = {
 			end
 			editor.tile_panel:Fill()
 			--]]
-			editor.entity_scrollable = loveframes.Create("scrollpane"):SetSize(190, 423)
+			editor.entity_scrollable = loveframes.Create("scrollpanel"):SetSize(190, 423)
 			editor.entity_panel = loveframes.Create("droplist", editor.entity_scrollable):SetWidth(190)
 			editor.entity_panel:AddItemsFromTable(ENTITY_TYPE)
 			--[[

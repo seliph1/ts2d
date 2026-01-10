@@ -118,58 +118,66 @@ end
 ui.main_menu = LF.Create("container")
 ui.main_menu:SetSize(100, 300):SetPos(20, 200)
 
-ui.console_button = LF.Create("messagebox", ui.main_menu)
+ui.console_button = LF.Create("textbutton", ui.main_menu)
 :SetPos(0, 0):SetCursor(LF.cursors.hand)
-:SetText("©192192192Console"):SetHoverText("©255255255Console")
+:SetText("©192192192Console")
+:SetHoverText("©255000000Console")
 ui.console_button.OnClick = function(object)
 	local bool = ui.console_frame:GetVisible()
 	ui.console_frame:SetVisible(not bool):Center():MoveToTop()
 	--ui.console_input:SetFocus(true)
 end
 --Main menu group 1-------------------------------------------------------------------------------
-ui.quickplay_button = LF.Create("messagebox", ui.main_menu)
+ui.quickplay_button = LF.Create("textbutton", ui.main_menu)
 :SetPos(0, 40):SetCursor(LF.cursors.hand)
-:SetText("©192192192Quick Play"):SetHoverText("©255255255Quick Play")
+:SetText("©192192192Quick Play")
+:SetHoverText("©255255255Quick Play")
 ui.quickplay_button.OnClick = function(self)
 	ui.console_input.parse("map as_snow")
 end
 
-ui.newgame_button = LF.Create("messagebox", ui.main_menu)
-:SetText("©192192192New Game"):SetHoverText("©255255255New Game")
+ui.newgame_button = LF.Create("textbutton", ui.main_menu)
+:SetText("©192192192New Game")
+:SetHoverText("©255255255New Game")
 :SetPos(0, 60):SetCursor(LF.cursors.hand)
 ui.newgame_button.OnClick = function(self)
 	local bool = ui.new_game_frame:GetVisible()
 	ui.new_game_frame:SetVisible(not bool):Center():MoveToTop()
 end
 
-ui.findservers_button = LF.Create("messagebox", ui.main_menu)
-:SetText("©192192192Find Servers"):SetHoverText("©255255255Find Servers")
+ui.findservers_button = LF.Create("textbutton", ui.main_menu)
+:SetText("©192192192Find Servers")
+:SetHoverText("©255255255Find Servers")
 :SetPos(0, 80):SetCursor(LF.cursors.hand)
 ui.findservers_button.OnClick = function(self)
 	ui.parse("connect 127.0.0.1 36963")
 end
 --Main menu group 2---------------------------------------------------------------------------
-ui.options_button = LF.Create("messagebox", ui.main_menu)
-:SetText("©192192192Options"):SetHoverText("©255255255Options")
+ui.options_button = LF.Create("textbutton", ui.main_menu)
+:SetText("©192192192Options")
+:SetHoverText("©255255255Options")
 :SetPos(0, 120):SetCursor(LF.cursors.hand)
 ui.options_button.OnClick = function(self)
 	local bool = ui.options_frame:GetVisible()
 	ui.options_frame:SetVisible(not bool):Center():MoveToTop()
 end
 
-ui.friends_button = LF.Create("messagebox", ui.main_menu)
-:SetText("©192192192Friends"):SetHoverText("©255255255Friends")
+ui.friends_button = LF.Create("textbutton", ui.main_menu)
+:SetText("©192192192Friends")
+:SetHoverText("©255255255Friends")
 :SetPos(0, 140):SetCursor(LF.cursors.hand)
 ui.friends_button.OnClick = function(self)
 	local testframe = LF.Create("frame"):SetResizable(true)
 end
 
-ui.mods_button = LF.Create("messagebox", ui.main_menu)
-:SetText("©192192192Mods"):SetHoverText("©255255255Mods")
+ui.mods_button = LF.Create("textbutton", ui.main_menu)
+:SetText("©192192192Mods")
+:SetHoverText("©255255255Mods")
 :SetPos(0, 160):SetCursor(LF.cursors.hand)
 
-ui.editor_button = LF.Create("messagebox", ui.main_menu)
-:SetText("©192192192Editor"):SetHoverText("©255255255Editor")
+ui.editor_button = LF.Create("textbutton", ui.main_menu)
+:SetText("©192192192Editor")
+:SetHoverText("©255255255Editor")
 :SetPos(0, 180):SetCursor(LF.cursors.hand)
 ui.editor_button.OnClick = function(self)
     if client.map then
@@ -182,16 +190,16 @@ ui.editor_button.OnClick = function(self)
 	LF.SetState("editor")
 end
 
-ui.help_button = LF.Create("messagebox", ui.main_menu)
+ui.help_button = LF.Create("textbutton", ui.main_menu)
 :SetText("©192192192Help"):SetHoverText("©255255255Help")
 :SetPos(0, 200):SetCursor(LF.cursors.hand)
 
-ui.discord_button = LF.Create("messagebox", ui.main_menu)
+ui.discord_button = LF.Create("textbutton", ui.main_menu)
 :SetText("©192192192Discord"):SetHoverText("©255255255Discord")
 :SetPos(0, 220):SetCursor(LF.cursors.hand)
 --ui.discord_button.OnClick = function(self, key) end
 --Main menu group 3-------------------------------------------------------------------------------
-ui.quit_button = LF.Create("messagebox", ui.main_menu)
+ui.quit_button = LF.Create("textbutton", ui.main_menu)
 :SetText("©192192192Quit"):SetHoverText("©255255255Quit")
 :SetPos(0, 260):SetCursor(LF.cursors.hand)
 ui.quit_button.OnClick = function() love.event.quit() end
@@ -320,7 +328,7 @@ ui.map_display_sort_button.OnClick = function(object)
 	end
 end
 
-ui.map_display_pane = LF.Create("scrollpane", ui.new_game_map):SetPos(0, 50+4):SetSize(406, 304)
+ui.map_display_pane = LF.Create("scrollpanel", ui.new_game_map):SetPos(0, 50+4):SetSize(406, 304)
 ui.map_display_list = LF.Create("droplist", ui.map_display_pane)
 :SetSize(406, 304):SetZebra(true):SetPadding(0)
 local elements = {}
@@ -410,7 +418,7 @@ ui.bots_weapons_option = LF.Create("multichoice", ui.new_game_bots):SetPos(150, 
 
 
 --Tab 6: More settings-----------------------------------------------------------------------------
-ui.command_scroll = LF.Create("scrollpane", ui.new_game_moresettings):SetPos(0, 10):SetSize(406, 304)
+ui.command_scroll = LF.Create("scrollpanel", ui.new_game_moresettings):SetPos(0, 10):SetSize(406, 304)
 ui.command_list = LF.Create("droplist", ui.command_scroll)
 :SetSize(406, 304):SetPadding(0):SetZebra(true)
 
@@ -464,32 +472,21 @@ ui.command_list:AddElementsFromTable(commands)
 --------------------------------------------------------------------------------------------------
 --10-pick menu frame------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------
-ui.menu_frame = LF.Create("frame"):SetSize(272, 440):SetName("Menu"):SetCloseAction("hide"):Center()
+ui.menu_frame = LF.Create("frame")
+:SetSize(272, 440)
+:SetName("Menu")
+:SetCloseAction("hide")
+:SetState("*")
+:SetScreenLocked(true)
+:Center()
 ui.menu_buttons = {}
 for i = 1,9 do
 	local button = LF.Create("button", ui.menu_frame)
-	:SetAlign("left"):SetSize(240, 25):SetPos(16, 30+(i-1)*30):SetImage("gfx/gametitle.png")
-
+	:SetAlign("left")
+	:SetSize(240, 25)
+	:SetPos(16, 30+(i-1)*30)
 	ui.menu_buttons[i] = button
 end
---[[
-ui.debug_button = LF.Create("slider", ui.menu_frame):SetText("Orientation"):SetPos(16, 30+9*30):SetWidth(240)
-
-ui.debug_button = LF.Create("button", ui.menu_frame):SetText("Orientation"):SetPos(16, 30+9*30):SetWidth(240)
-ui.debug_button.OnClick = function(object)
-	for i = 1,9 do
-		local button = ui.menu_buttons[i]
-		local align = button:GetAlign()
-		if align == "center" then
-			button:SetAlign("left")
-		elseif align == "left" then
-			button:SetAlign("right")
-		elseif align == "right" then
-			button:SetAlign("center")
-		end
-	end
-end
-]]
 
 ui.cancel_button = LF.Create("button", ui.menu_frame)
 :SetPos(16, 394):SetSize(240, 25):SetText("©1641641640 ©255255255Cancel"):SetAlign("left")
@@ -535,6 +532,11 @@ ui.menu_constructor = function(str)
 			button:SetCaption("")
 		end
 	end
+end
+
+
+function ui.interface_constructor(str)
+
 end
 --------------------------------------------------------------------------------------------------
 --options-----------------------------------------------------------------------------------------
@@ -654,43 +656,73 @@ ui.options_button_cancel = LF.Create("button", ui.options_frame):SetText("Cancel
 --more options tab--------------------------------------------------------------------------------
 
 --------------------------------------------------------------------------------------------------
---chat--------------------------------------------------------------------------------------------
+--server log--------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------
-ui.chat_width = 400
-ui.chat_height = 200
-
-ui.chat_frame = LF.Create("frame")
-:SetSize(ui.chat_width, ui.chat_height)
+ui.server_log_frame = LF.Create("frame")
+:SetSize(0.2, 0.1)
 :SetState("game")
 :SetScreenLocked(true)
 :ShowCloseButton(false)
-:SetPos(0, love.graphics.getHeight()-ui.chat_height-40)
+:SetRelativePos(0.5, 0, true)
+
+ui.server_log_frame.Draw = function(object)
+	local hover = object:GetHover()
+	local hovertime = 0
+	if hover and object.hovertime > 0 then
+		hovertime = love.timer.getTime() - object.hovertime
+	end
+	local brightness =  LF.Mix(0.1, 0.3, LF.Clamp(hovertime*5, 0, 1) )
+
+	LG.setColor(0, 0, 0, brightness)
+	LG.rectangle("fill", object.x, object.y, object.width, object.height, 10, 10)
+
+	LG.setColor(0, 0, 0, brightness)
+
+	local skin = LF.GetActiveSkin()
+	LG.setColor(0.8,0.8,0.8, brightness)
+	local drag = skin.images["vdrag.png"]
+	local scale = 0.3
+	LG.draw(drag, object.x + object.width/2 - drag:getWidth()/2*scale, object.y + 8, 0, scale)
+end
+
+ui.server_log = LF.Create("log", ui.server_log_frame)
+:SetWidth(1)
+:SetPos(0, 30)
+:Expand("down")
+:SetPadding(0)
+:SetFont(ui.font_small)
+:SetScrollBody(false)
+
+ui.server_log_push = function(message)
+	ui.server_log:AddElement(message)
+end
+
+--------------------------------------------------------------------------------------------------
+--chat--------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------
+
+ui.chat_frame = LF.Create("frame")
+:SetSize(0.25, 0.4)
+:SetState("game")
+:SetScreenLocked(true)
+:ShowCloseButton(false)
+:SetRelativePos(0, -0.2)
 
 ui.chat_frame_message = function(player, message)
-	local game = {mode = 1}
-	if not player then return end
-	local teamcolor = ""
-	if player.t == 0 then
-		teamcolor = "©128128128"
-	elseif player.t == 1 then
-		teamcolor = "©050150254"
-	elseif player.t == 2 then
-		teamcolor = "©254025000"
-	end
+	if not (client.joined and player) then return end
+	local teams = client.share.config.teams
+	local team = teams[player.t or 0]
+	local color = team.color and ("©"..team.color) or "©000255000"
 	local messagecolor = "©255220000"
-	local deadindicator = ""
+	local deadtag = ""
 	if player.h <= 0 then
-		deadindicator = "©255220000 *DEAD*"
+		deadtag = "©255220000 *DEAD*"
 	end
-	if game.mode == 1 and player.t ~= 0 then
-		teamcolor = "©000255000"
-	end
-
 	if hasRTL(message) then
 		message = reverse_utf8(message)
 	end
+	local full_message = string.format("%s%s%s: %s%s", color, player.n, deadtag, messagecolor, message)
 
-	local full_message = string.format("%s%s%s: %s%s", teamcolor, player.n, deadindicator, messagecolor, message)
 	ui.chat_log:AddElement(full_message)
 
 	return full_message
@@ -715,72 +747,28 @@ ui.chat_frame.Draw = function(object)
 	LG.setColor(0, 0, 0, brightness)
 
 	local skin = LF.GetActiveSkin()
-	LG.setColor(0.8,0.8,0.8, brightness)
+	LG.setColor(0.8, 0.8, 0.8, brightness)
 	local drag = skin.images["vdrag.png"]
 	local scale = 0.3
 	LG.draw(drag, object.x + object.width/2 - drag:getWidth()/2*scale, object.y + 8, 0, scale)
 end
 
 ui.chat_log = LF.Create("log", ui.chat_frame)
-:SetSize(ui.chat_width, ui.chat_height-30):SetPos(0, 30):SetPadding(0)
+:SetWidth(1):SetPos(0, 30):Expand("Down"):SetPadding(0)
 :SetFont(ui.font_chat)
-
---------------------------------------------------------------------------------------------------
---server log--------------------------------------------------------------------------------------
---------------------------------------------------------------------------------------------------
-ui.server_log_width = 200
-ui.server_log_height = 100
-
-ui.server_log_frame = LF.Create("frame")
-:SetSize(ui.server_log_width, ui.server_log_height)
-:SetState("game")
-:SetScreenLocked(true)
-:ShowCloseButton(false)
-:SetPos(love.graphics.getWidth()/2, 0)
-
-ui.server_log_frame.Draw = function(object)
-	local hover = object:GetHover()
-	local hovertime = 0
-	if hover and object.hovertime > 0 then
-		hovertime = love.timer.getTime() - object.hovertime
-	end
-	local brightness =  LF.Mix(0.1, 0.3, LF.Clamp(hovertime*5, 0, 1) )
-
-	LG.setColor(0, 0, 0, brightness)
-	LG.rectangle("fill", object.x, object.y, object.width, object.height, 10, 10)
-
-	LG.setColor(0, 0, 0, brightness)
-
-	local skin = LF.GetActiveSkin()
-	LG.setColor(0.8,0.8,0.8, brightness)
-	local drag = skin.images["vdrag.png"]
-	local scale = 0.3
-	LG.draw(drag, object.x + object.width/2 - drag:getWidth()/2*scale, object.y + 8, 0, scale)
-end
-
-ui.server_log = LF.Create("log", ui.server_log_frame)
-:SetSize(ui.server_log_width, ui.server_log_height-30)
-:SetPos(0, 30)
-:SetPadding(0)
-:SetFont(ui.font_small)
-:SetScrollBody(false)
-
-ui.server_log_push = function(message)
-	ui.server_log:AddElement(message)
-end
 
 --------------------------------------------------------------------------------------------------
 --chat input--------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------
 
-ui.chat_input = LF.Create("input")
-:SetSize(800, 30):SetCharacterLimit(80):SetFont(ui.font_chat)
+ui.chat_input = LF.Create("input", ui.chat_frame)
+:SetSize(1, 30):SetCharacterLimit(80):SetFont(ui.font_chat)
 :SetColor(1.00, 0.86, 0.00, 1.00)
 :SetCursorColor(1.00, 0.86, 0.00, 1.00)
 :SetHighlightColor(1.00, 0.86, 0.00, 0.20)
 :SetState("game")
 :SetVisible(false)
-:SetY(LG.getHeight()-60):CenterX()
+:SetRelativeY(1)
 
 ui.chat_input.Draw = function(object)
 	local x = object.x
@@ -825,8 +813,6 @@ end
 
 ui.weaponselect = LF.Create("container"):SetState("game")
 ui.weaponselect:SetPos( love.graphics.getWidth()/2 - ui.weaponselect:GetWidth(), (love.graphics.getHeight() - client.height)/2 )
---ui.weaponselect:SetSize()
---ui.weaponselect:SetPos(0, 0)
 ui.weaponselect:SetProperty("cursor", 0)
 ui.weaponselect:SetProperty("itemheld", 0)
 ui.weaponselect:SetProperty("slots", {})
@@ -1185,10 +1171,10 @@ local hud_nums = love.graphics.newImageFont("gfx/hud_nums.png", "0123456789:|", 
 local hud_symbols = LF.CreateSpriteSheet("gfx/hud_symbols.bmp", 64, 64)
 
 ui.hud = LF.Create("container")
-ui.hud:SetSize(love.graphics.getWidth(), 96):AlignBottom()
+ui.hud:SetSize(1, 0.15):AlignBottom()
 ui.hud:SetState("game")
 ui.hud:SetProperty("counter", 0)
---ui.hud:SetCollidable(false)
+ui.hud:SetCollidable(false)
 
 function ui.hud:Draw()
 	if not client.share.players then return end
@@ -1209,7 +1195,7 @@ function ui.hud:Draw()
 		if itemobject then
 			local ammo_mag = itemobject.am or 0
 			local ammo_cap = itemobject.ac or 0
-			--ammo = ammo_in .. ammo_reserve
+
 			if ammo_cap and ammo_mag then
 				ammo = string.format("%s|%s", ammo_mag, ammo_cap)
 			end
@@ -1248,7 +1234,8 @@ function ui.hud:Draw()
 	love.graphics.pop()
 end
 
--- Shader controls
+--------------------------------------------------------------------------------------------------
+--shader controls---------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------
 function ui.shader_controls(shader, fields, name)
 	name = name or "Shader"
@@ -1274,11 +1261,21 @@ function ui.shader_controls(shader, fields, name)
 		value:SetPos(fields_offset + 10, (i-1)*25 + 30)
 		
 		function field:Update()
-			local v = tostring( self:GetValue() ) or ""
-			value:SetText( v )
+			local v = self:GetValue()
+			if fields[i].integer == true then
+				v = math.floor(v)
+			end
+			local text = tostring( v ) or ""
+			value:SetText( text )
 		end
 
 		function field:OnValueChanged(v)
+			if fields[i].integer == true then
+				v = tonumber(v)
+				v = math.floor(v)
+			end
+
+
 			if component then
 				fields.storage[uniform] = fields.storage[uniform] or {0.0, 0.0, 0.0, 0.0}
 				local storage = fields.storage[uniform]
@@ -1308,7 +1305,26 @@ function ui.shader_controls(shader, fields, name)
 	end
 end
 
+--[[
+ui.shader_controls(client.shaders.lcd, {
+	{name="boundBrightness", hint = {0.0, 1.0}, init_value = 0.2};
+}, "lcd")
+]]
 
+--[[
+ui.shader_controls(client.shaders.scanlines_ex, {
+	{name="lines", hint = {0.0, 8.0}, init_value = 1.0, integer=true};
+	{name="lineBrightness", hint = {0.0, 1.0}, init_value = 0.2};
+}, "scanlines_ex")
+]]
+
+--[[
+ui.shader_controls(client.shaders.pixelate, {
+	{name="amount", hint = {0.0, 1000.0}, init_value = 1.0};
+}, "pixelate")
+]]
+
+--[[
 ui.shader_controls(client.map._shadow_map, {
 	{name="steps", hint = {1.0, 64.0}, init_value = 32.0};
 	{name="maxSteps", hint = {1.0, 64.0}, init_value = 32.0};
@@ -1318,10 +1334,11 @@ ui.shader_controls(client.map._shadow_map, {
 	{name="mode", hint = {0.0, 1.0}, init_value = 1.0};
 	{name="distanceFactor", hint = {0.0, 1.0}, init_value = 0.8};
 	{name="blur", hint = {0.0, 1.0}, init_value = 1.0};
-	{name="v1", hint = {-3.0, 3.0}, init_value = 1.0};
-	{name="v2", hint = {-3.0, 3.0}, init_value = 1.0};
-}, "shadow")
 
+	{name="v1", hint = {0.0, 1.0}, init_value = 0.011};
+	{name="v2", hint = {0.0, 1.0}, init_value = 0.01};
+}, "shadow")
+]]
 
 --[[
 ui.shader_controls(client.shaders.shockwave, {
@@ -1380,10 +1397,117 @@ ui.shader_controls(client.shaders.wave, {
 }, "Wave")
 ]]
 
+--[[
+ui.shader_controls(client.shaders.rainbow, {
+	{name="strength", hint = {0.0, 1.0}, init_value = 0.0};
+	{name="speed", hint = {0.0, 10.0}, init_value = 0.0};
+	{name="angle", hint = {0.0, 360.0}, init_value = 0.0};
+}, "rainbow")
+]]
+
+--[[
+local shader_target = love.graphics.newImage("cs2d.png")
+
+ui.shader_window = LF.Create("frame")
+ui.shader_window:SetSize(400, 400):SetState("*"):Center()
+function ui.shader_window:Draw()
+	ui.shader_window.drawfunc(self)
+
+	local current_shader = client.shaders.highlight
+
+	current_shader:send("time", love.timer.getTime())
+	love.graphics.setShader(current_shader)
+	love.graphics.draw(shader_target, self.x + 5, self.y + 30)
+	love.graphics.setShader()
+end]]
+
+--------------------------------------------------------------------------------------------------
+--server information ui---------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------
+ui.serverinfo = LF.Create("frame")
+--:SetSize( love.graphics.getWidth() - 60, love.graphics.getHeight() - 60 )
+:SetSize(0.9, 0.9)
+:SetScreenLocked(true)
+:SetName("CS2D Server - Info")
+:Center()
+
+ui.serverinfo_panel = LF.Create("scrollpanel", ui.serverinfo)
+:SetSize(0.96, 0.89)
+:SetY(25)
+:CenterX()
+:ShowBackground(true)
+
+ui.serverinfo_text = LF.Create("messagebox", ui.serverinfo_panel)
+:SetMaxWidth(0.97)
+:SetPos(5, 5)
+:SetFont(ui.font_chat)
+:SetText([[
+©255255255Welcome on my CS2D Server!
+©192192192This is the default server info message. Edit sys/serverinfo.txt to change it.
+Remove the file if you don't want to use a server message.
+©255000000
+- Don't cheat/hack
+- Don't spam/flame/flood
+- Don't teamkick/hostagekill
+- Don't votekick innocent players
+©192192192
+Have fun!
+©255255000
+www.cs2d.com
+www.usgn.de
+www.unrealsoftware.de
+]])
+
+ui.serverinfo_button = LF.Create("button", ui.serverinfo)
+:SetText("Close")
+:SetWidth(0.96)
+:SetY(-10)
+:CenterX()
+
+
+ui.serverinfo:SetVisible(false)
+--------------------------------------------------------------------------------------------------
+--team pick ui------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------
+ui.teampick_frame = nil
+function ui.teampick()
+	if client.joined and not ui.teampick_frame then
+		ui.teampick_frame = LF.Create("frame")
+		:SetSize(0.8, 0.8)
+		:SetName("Select a team")
+		:Center()
+		:SetState("game")
+		local scrollpanel = LF.Create("scrollpanel", ui.teampick_frame)
+		:SetPos(5, 35)
+		:Expand("down")
+		local teams = client.share.config.teams
+		local buttons = {}
+		for index, teamname in pairs(teams) do
+			local button = LF.Create("button", scrollpanel)
+			:SetSize(0.8, 30)
+			:CenterX()
+			:SetY((index) * 40)
+			:SetText( teams[index].name )
+
+			function button:OnClick()
+				local team = index
+				team = tonumber(team) or 0
+
+				client.send(string.format("team %s %s", team, 1))
+
+				ui.teampick_frame:Remove()
+			end
+		end
+	end
+end
+
 --------------------------------------------------------------------------------------------------
 --exit window-------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------
-ui.exit_window = LF.Create("frame"):SetSize(400, 300):SetName("Quit?"):SetCloseAction("hide")
+ui.exit_window = LF.Create("frame")
+:SetSize(400, 300)
+:SetName("Quit?")
+:SetCloseAction("hide")
 ui.exit_window_panel = LF.Create("panel", ui.exit_window):SetPos(16, 32):SetSize(368, 230)
 ui.exit_window_message = LF.Create("messagebox",ui.exit_window_panel)
 :SetFont(ui.font):SetPos(5, 5):SetMaxWidth(368)

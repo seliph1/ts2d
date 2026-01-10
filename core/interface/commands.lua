@@ -1,6 +1,38 @@
 local client = require "client"
 local serpent = require "lib.serpent"
 
+local CONSOLE_ENV = {}
+-- Small lua environment only acessible by this file
+([[
+_VERSION assert error    ipairs   next pairs
+pcall    select tonumber tostring type unpack xpcall
+
+coroutine.create coroutine.resume coroutine.running coroutine.status
+coroutine.wrap   coroutine.yield
+
+math.abs   math.acos math.asin  math.atan math.atan2 math.ceil
+math.cos   math.cosh math.deg   math.exp  math.fmod  math.floor
+math.frexp math.huge math.ldexp math.log  math.log10 math.max
+math.min   math.modf math.pi    math.pow  math.rad   math.random
+math.sin   math.sinh math.sqrt  math.tan  math.tanh
+
+os.clock os.difftime os.time
+
+string.byte string.char  string.find  string.format string.gmatch
+string.gsub string.len   string.lower string.match  string.reverse
+string.sub  string.upper
+
+table.insert table.maxn table.remove table.sort
+]]):gsub('%S+', function(id)
+  local module, method = id:match('([^%.]+)%.([^%.]+)')
+  if module then
+    CONSOLE_ENV[module]         = CONSOLE_ENV[module] or {}
+    CONSOLE_ENV[module][method] = _G[module][method]
+  else
+    CONSOLE_ENV[id] = _G[id]
+  end
+end)
+
 -- Client only commands
 local commands = {
     warning = {
@@ -166,14 +198,16 @@ local commands = {
 		---Evaluates a lua expression
 		---@param ... string
 		action = function(...)
-			local env = {
-				client = client,
-				print = print
-			}
 			local block = table.concat({...}, " ")
 			local expression, error_message = loadstring( block )
+			local ui = require "core.interface.ui"
+			CONSOLE_ENV.print = print
+			CONSOLE_ENV.client = client
+			CONSOLE_ENV.ui = ui
+			CONSOLE_ENV.msg = ui.chat_frame_server_message
+
 			if expression then
-				setfenv(expression, env)
+				setfenv(expression, CONSOLE_ENV)
 				local status, error_message = pcall(expression)
 				if not status then
 					print("©255000000LUA ERROR: "..error_message)
@@ -253,7 +287,7 @@ local commands = {
 		end
 	};
 
-	text = {
+	textdebug = {
 		action = function(size)
 			size = tonumber(size) or 10
 			local chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
@@ -271,7 +305,7 @@ local commands = {
 			local panel = LF.Create("panel", frame)
 				:SetSize(w, h-30)
 				:SetY(30)
-			local scroll = LF.Create("scrollpane", frame)
+			local scroll = LF.Create("scrollpanel", frame)
 				:SetSize(w, h-30)
 				:SetY(30)
 			local label = LF.Create("label", scroll)
@@ -280,9 +314,22 @@ local commands = {
 
 			local body = hugeString(size)
 			if body then
+				label:SetMaxWidth(100)
 				label:SetText(body)
 			end
 		end
+	};
+
+	team = {
+		action = function(team, look)
+			if not client.joined then
+				return "You're not connected!"
+			end
+			team = team or ""
+			look = look or ""
+			client.send(string.format("team %s %s", team, look))
+		end,
+		alias = {"chooseteam", "pickteam"},
 	};
 
 	vsync = {
@@ -332,7 +379,7 @@ local commands = {
 			end
 		end
 	};
-
+	--[[
 	megasena = {
 		action = function(seednumber)
 			local seed = math.randomseed(os.time())
@@ -355,7 +402,25 @@ local commands = {
 			table.sort(resultado)
 			print("Números :" .. table.concat(resultado, " - "))
 		end
+	};]]
+	help = {
+		action = function(property, ...)
+			local ui = require "core.interface.ui"
+			local commands = ui.console_input.commands
+
+			for name, data in pairs(commands) do
+				local argNames = {}
+				local action = data.action
+				for i = 1, debug.getinfo(action).nparams, 1 do
+					table.insert(argNames, debug.getlocal(action, i))
+				end
+
+				print(name, table.concat( argNames, ", " ))
+
+			end
+		end
 	};
+
 }
 
 return commands

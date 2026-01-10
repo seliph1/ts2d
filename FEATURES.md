@@ -25,6 +25,8 @@ connect 50.21.187.191
      stop cs2d2 working when grabbing window
      remove threshold for removing black pixels from sprites
      apply shaders to objects, items, images, buildings (from map editor and script)
+     
+    add fist
 
 
     entity: Func_Slick

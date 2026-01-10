@@ -59,6 +59,20 @@ client.shaders = require "core.shaders.cs2dshaders"
 client.shader = client.shaders.baseShader
 
 
+local function is_alive()
+	local player = share.players[client.id]
+	if player then
+		return player.h > 0
+	end
+end
+
+local function is_dead()
+	local player = share.players[client.id]
+	if player then
+		return player.h <= 0
+	end
+end
+
 function client.snapshot_lerp(dt)
 	local lerp_flags = {
 		x = true,
@@ -89,6 +103,8 @@ end
 --- Move player in smooth intervals
 ---@param peer_id number
 function client.predict_player(peer_id, dt) -- `home` is used to apply controls if given
+	if is_dead() then return end
+
 	-- Check if its own player id, and is connected
 	if not( client.id == peer_id and client.joined ) then return end
 
@@ -108,6 +124,8 @@ function client.predict_player(peer_id, dt) -- `home` is used to apply controls 
 end
 
 function client.predict_action(peer_id, dt)
+	if is_dead() then return end
+
 	-- Check if its own player id, and is connected
 	if not( client.id == peer_id and client.joined ) then return end
 
@@ -140,6 +158,8 @@ local m3 = love.audio.newSource("sfx/weapons/m3.wav", "static")
 local xm = love.audio.newSource("sfx/weapons/xm1014.wav", "static")
 
 function client.attack(peer_id, local_data)
+	if is_dead() then return 1 end
+
 	--local player = client.share_lerp.players[peer_id]
 	local player = client.share.players[peer_id]
 	if not player then return 1 end -- Return 1 second cooldown
@@ -327,6 +347,8 @@ function client.get_item_data(item_type)
 end
 
 function client.apply_input_to_player(input, peer_id)
+	if is_dead() then return end
+
 	local player = share.players[peer_id]
 	local map = client.map
 	if not (player and map) then return end
@@ -354,6 +376,8 @@ function client.apply_input_to_player(input, peer_id)
 end
 
 function client.apply_forces_to_player(peer_id, v, h, w)
+	if is_dead() then return end
+
 	local player = share.players[peer_id]
 	local map = client.map
 	if not (player and map) then return end
@@ -452,15 +476,15 @@ function client.render()
 
 	if (client.mode == "game" or client.mode == "editor") and client.map then
 		client.map:draw_floor()
-		--client.map:draw_entities()
+		client.map:draw_entities()
 	end
 
 	--love.graphics.setCanvas(client.canvas, client.shadow_map)
     if client.joined then
 		-- Draw items on the ground
-		client.map:draw_items(share, client)
+		client.map:draw_items(client)
 		-- Player render
-		client.map:draw_players(share_lerp, client)
+		client.map:draw_players(client)
     end
 
 	if (client.mode == "game" or client.mode == "editor") and client.map then

@@ -158,9 +158,11 @@ function MapObject.new(width, height)
 			width = 16,
 			height = 16,
 		};
+		_entity_cache = {};
+		_entity_length = 0;
 		_shadow_map = love.graphics.newShader("core/shaders/shadow_map.glsl"),
 		_shadow_silhouette = love.graphics.newShader("core/shaders/silhouette.glsl"),
-		_shadow_viewport = love.graphics.newCanvas(),
+		_shadow_overlay = love.graphics.newCanvas()
 	}
 
 	object._placeholder = love.image.newImageData(32, 32)
@@ -1061,6 +1063,18 @@ function MapObject:draw_ceiling()
 	love.graphics.setColor(1, 1, 1, 1)
 end
 
+--[[
+	local _entities = 10
+	local _entity_list = {}
+	for k = 1, 100 do
+		table.insert(_entity_list, {
+			math.random(love.graphics.getWidth()),
+			math.random(love.graphics.getHeight()),
+			math.random() * 10;
+		})
+	end
+]]
+
 function MapObject:draw_shadow(share, client)
 	local camera = self._camera
 	local mapdata = self._mapdata
@@ -1069,6 +1083,7 @@ function MapObject:draw_shadow(share, client)
 
 	local heightmap = self._mapdata.shadow_render
 	local shader = self._shadow_map
+	local overlay =  self._shadow_overlay
 
 	-- Enable shadow shader and send the heightmap to it.
 	if shader:hasUniform "heightmap" then
@@ -1077,9 +1092,9 @@ function MapObject:draw_shadow(share, client)
 	if shader:hasUniform "camera" then
 		shader:send("camera", camera)
 	end
-	--if shader:hasUniform "scale" then
-		--shader:send("scale", 32)
-	--end
+	--[[if shader:hasUniform "scale" then
+		shader:send("scale", 32)
+	end--]]
 	if shader:hasUniform "mouse" then
 		self._mouse = self._mouse or {}
 		self._mouse[1] = love.mouse.getX()
@@ -1089,55 +1104,29 @@ function MapObject:draw_shadow(share, client)
 		shader:send("mouse", self._mouse)
 	end
 
+	--[[
+	local prev_canvas = love.graphics.getCanvas()
+	love.graphics.setCanvas ( overlay )
+	love.graphics.clear(0.0, 0.0, 0.0, 1)
+
+	love.graphics.push()
+	love.graphics.translate(-camera.x + sw/2, -camera.y + sh/2)
+
+	for peer_id, player in pairs(share.players) do
+		love.graphics.setColor(1.0, 1.0, 1.0, 1.0)
+		love.graphics.circle("fill", player.x, player.y, 15)
+	end
+	love.graphics.pop()
+	love.graphics.setCanvas( prev_canvas )
+
+	shader:send("overlay", overlay)
+	]]
+	
+	-- Activate shadow shader
 	love.graphics.setShader(shader)
 	love.graphics.setColor(0.0, 0.0, 0.1, 1.0)
 	love.graphics.rectangle("fill", 0, 0, sw, sh)
 	love.graphics.setShader()
-
-	--[[
-	local camera = self._camera
-	local mapdata = self._mapdata
-	local sw, sh = love.graphics.getDimensions()
-	local width, height = self:getDimensions()
-
-	local shadow_map = self._shadow_map
-	local shadow_silhouette = self._shadow_silhouette
-	local shadow_viewport = self._shadow_viewport
-	local heightmap = self._mapdata.shadow_render
-
-	local prev_canvas = love.graphics.getCanvas()
-	--love.graphics.setCanvas(shadow_viewport)
-	love.graphics.setCanvas { shadow_viewport, stencil=true }
-	love.graphics.clear()
-	-- Shadow channel for feeding the heightmap
-
-	-- Draw map by its position on camera
-	love.graphics.push()
-	love.graphics.translate(-camera.x + sw/2, -camera.y + sh/2)
-	love.graphics.draw(heightmap, 0, 0, 0, self._mapdata.tile_size)
-	love.graphics.pop()
-
-	
-	-- Draw players by calling the draw_players again
-	-- And applying the silhouette filter
-	--love.graphics.setShader(shadow_silhouette)
-	--shadow_silhouette:send("height", 0.4)
-	--love.graphics.setBlendMode("lighten","premultiplied")
-	--self:draw_players(share, client)
-	--love.graphics.setShader()
-	--love.graphics.setBlendMode("alpha")
-	
-
-	-- Close the heightmap canvas
-	love.graphics.setCanvas(prev_canvas)
-
-	-- Enable shadow shader and send the heightmap to it.
-	shadow_map:send("heightmap", shadow_viewport)
-	love.graphics.setShader(shadow_map)
-	love.graphics.setColor(0.0, 0.0, 0.05, 1.0)
-	love.graphics.rectangle("fill", 0, 0, sw, sh)
-	love.graphics.setShader()
-	]]
 end
 
 function MapObject:draw_effects()
@@ -1185,131 +1174,142 @@ function MapObject:draw_bullets(share, home, client)
 	love.graphics.setColor(1, 1, 1, 1)
 end
 
-function MapObject:draw_players(share, client) -- get info from server!
+function MapObject:draw_players(client) -- get info from server!
 	local camera = self._camera
 	local sw, sh = love.graphics.getWidth(), love.graphics.getHeight()
-	-- Players in lerp
-	local players = share.players
-	-- Inputs
-	local home = client.home
-
-
 	-- Change camera perspective
 	love.graphics.push()
 	love.graphics.translate(-camera.x + sw/2, -camera.y + sh/2)
 
-	for peer_id, player in pairs(players) do
-		love.graphics.push()
-		-- Direction
-		local targetX, targetY = 0,0
-		if peer_id == client.id then
-			targetX, targetY = home.targetX, home.targetY
-		else
-			targetX, targetY = player.targetX, player.targetY
-		end
-		-- Calculate drawing angle
-		local angle = math.atan2(targetY - client.height/2, targetX - client.width/2) + math.pi/2
-		-- Get the player's held weapon
-		local holding = player.ih
-		-- Get the player's worn armor
-		local armor = player.a
-		-- Get the player's equipment
-		local equipment = player.e
-
-		-- Gets the weapon texture
-		local texture, quad
-		local weapon_texture, weapon_offset
-		if holding == 0 then
-			texture = client.gfx.player[player.p].texture
-			quad = client.gfx.player[player.p]["nothing"]
-		else
-			-- Check if that weapon ID exists in available list
-			local itemdata = client.content.itemlist[holding]
-			-- Check what stance should player hold that weapon
-			local stance = itemdata.player_stance
-			-- Get the player texture for that stance
-			texture = client.gfx.player[player.p].texture
-			quad = client.gfx.player[player.p][stance]
-			-- Get the weapon texture from weapon ID
-			local weapon_gfx_path = itemdata.common_path .. itemdata.held_image
-			weapon_texture = client.gfx.itemlist[weapon_gfx_path]
-			weapon_offset = itemdata.offset
-		end
-
-		local armor_texture
-		local armor_opacity
-		if armor ~= 0 then
-			-- Check if that weapon ID exists in available list
-			local itemdata = client.content.itemlist[armor]
-			local armor_gfx_path = itemdata.common_path .. itemdata.held_image
-			armor_texture = client.gfx.itemlist[armor_gfx_path]
-			armor_opacity = itemdata.opacity
-		end
-
-		-- Draw the debug square
-		if client.debug_level >= 2 and peer_id == client.id then
-			local __player = client.share_local.players[client.id]
-			love.graphics.push()
-			love.graphics.translate(__player.x, __player.y)
-			love.graphics.setColor(1, 0, 0, 0.2)
-			love.graphics.draw(texture, quad, 0, 0, angle, 1, 1, 16, 16)
-			love.graphics.pop()
-		end
-		-- Translate to player
-		love.graphics.translate(player.x, player.y)
-
-		if client.debug_level >= 2 then
-			-- Set to blue color
-			love.graphics.setColor(0, 0, 1, 1)
-			-- Draw the hitbox
-			love.graphics.rectangle("line", -player.size/2, -player.size/2, player.size, player.size)
-		end
-		local alpha = armor_opacity or 1
-		love.graphics.setColor(1, 1, 1, alpha)
-		if texture then
-			-- Draw the player
-			love.graphics.draw(texture, quad, 0, 0, angle, 1, 1, 16, 16)
-		end
-
-		if armor_texture then
-			local width = armor_texture:getWidth()
-			local height = armor_texture:getHeight()
-			-- Draw armor if possible
-			love.graphics.draw(armor_texture, 0, 0, angle, 1, 1, width/2, height/2)
-		end
-		
-		for item_type in pairs(equipment) do
-			local itemdata = client.content.itemlist[item_type]
-			if itemdata then
-				local equipment_gfx_path = 	itemdata.common_path .. itemdata.held_image
-				local equipment_texture = client.gfx.itemlist[equipment_gfx_path]
-
-				if equipment_texture then
-					local width = equipment_texture:getWidth()
-					local height = equipment_texture:getHeight()
-					local flip = itemdata.flip and math.pi or 0
-					local scale = itemdata.scale or 0
-					love.graphics.draw(equipment_texture, 0, 0, angle + flip, scale, scale, width/2, height/2)
-				end
-			end
-		end
-
-		if weapon_texture then
-			-- Draw weapon held
-			local width = weapon_texture:getWidth()
-			local height = weapon_texture:getHeight()
-			local offset = weapon_offset or 0
-			love.graphics.draw(weapon_texture, 0, 0, angle, 1, 1, width/2, height + offset)
-		end
-
-		-- Pop for the next player
-		love.graphics.pop()
+	for peer_id in pairs(client.share.players) do
+		self:draw_player(client, peer_id)
 	end
 	-- Reset the transformation stack
 	love.graphics.pop()
 	-- Reset render
 	love.graphics.setBlendMode("alpha")
 	love.graphics.setColor(1, 1, 1, 1)
+end
+
+
+function MapObject:draw_player(client, peer_id)
+	-- Player data
+	local players = client.share_lerp.players
+	local player = players[peer_id]
+	if not player then
+		return -- Player doesn't exist, return
+	end
+	if player.h <= 0 then
+		return -- Player HP is depleted, don't render.
+	end
+
+	love.graphics.push()
+	-- Direction
+	local targetX, targetY = 0,0
+	if peer_id == client.id then
+		-- Get inputs
+		local home = client.home
+		targetX, targetY = home.targetX, home.targetY
+	else
+		targetX, targetY = player.targetX, player.targetY
+	end
+	-- Calculate drawing angle
+	local angle = math.atan2(targetY - client.height/2, targetX - client.width/2) + math.pi/2
+	-- Get the player's held weapon
+	local holding = player.ih
+	-- Get the player's worn armor
+	local armor = player.a
+	-- Get the player's equipment
+	local equipment = player.e
+
+	-- Gets the weapon texture
+	local texture, quad
+	local weapon_texture, weapon_offset
+	if holding == 0 then
+		texture = client.gfx.player[player.p].texture
+		quad = client.gfx.player[player.p]["nothing"]
+	else
+		-- Check if that weapon ID exists in available list
+		local itemdata = client.content.itemlist[holding]
+		-- Check what stance should player hold that weapon
+		local stance = itemdata.player_stance
+		-- Get the player texture for that stance
+		texture = client.gfx.player[player.p].texture
+		quad = client.gfx.player[player.p][stance]
+		-- Get the weapon texture from weapon ID
+		local weapon_gfx_path = itemdata.common_path .. itemdata.held_image
+		weapon_texture = client.gfx.itemlist[weapon_gfx_path]
+		weapon_offset = itemdata.offset
+	end
+
+	local armor_texture
+	local armor_opacity
+	if armor ~= 0 then
+		-- Check if that weapon ID exists in available list
+		local itemdata = client.content.itemlist[armor]
+		local armor_gfx_path = itemdata.common_path .. itemdata.held_image
+		armor_texture = client.gfx.itemlist[armor_gfx_path]
+		armor_opacity = itemdata.opacity
+	end
+
+	-- Draw the debug square
+	if client.debug_level >= 2 and peer_id == client.id then
+		local __player = client.share_local.players[client.id]
+		love.graphics.push()
+		love.graphics.translate(__player.x, __player.y)
+		love.graphics.setColor(1, 0, 0, 0.2)
+		love.graphics.draw(texture, quad, 0, 0, angle, 1, 1, 16, 16)
+		love.graphics.pop()
+	end
+	-- Translate to player
+	love.graphics.translate(player.x, player.y)
+
+	if client.debug_level >= 2 then
+		-- Set to blue color
+		love.graphics.setColor(0, 0, 1, 1)
+		-- Draw the hitbox
+		love.graphics.rectangle("line", -player.size/2, -player.size/2, player.size, player.size)
+	end
+	local alpha = armor_opacity or 1
+	love.graphics.setColor(1, 1, 1, alpha)
+	if texture then
+		-- Draw the player
+		love.graphics.draw(texture, quad, 0, 0, angle, 1, 1, 16, 16)
+	end
+
+	if armor_texture then
+		local width = armor_texture:getWidth()
+		local height = armor_texture:getHeight()
+		-- Draw armor if possible
+		love.graphics.draw(armor_texture, 0, 0, angle, 1, 1, width/2, height/2)
+	end
+	
+	for item_type in pairs(equipment) do
+		local itemdata = client.content.itemlist[item_type]
+		if itemdata then
+			local equipment_gfx_path = 	itemdata.common_path .. itemdata.held_image
+			local equipment_texture = client.gfx.itemlist[equipment_gfx_path]
+
+			if equipment_texture then
+				local width = equipment_texture:getWidth()
+				local height = equipment_texture:getHeight()
+				local flip = itemdata.flip and math.pi or 0
+				local scale = itemdata.scale or 0
+				love.graphics.draw(equipment_texture, 0, 0, angle + flip, scale, scale, width/2, height/2)
+			end
+		end
+	end
+
+	if weapon_texture then
+		-- Draw weapon held
+		local width = weapon_texture:getWidth()
+		local height = weapon_texture:getHeight()
+		local offset = weapon_offset or 0
+		love.graphics.draw(weapon_texture, 0, 0, angle, 1, 1, width/2, height + offset)
+	end
+
+	-- Pop for the next player
+	love.graphics.pop()
 end
 
 function MapObject:draw_entity(e)
@@ -1367,10 +1367,10 @@ function MapObject:draw_entities()
 	love.graphics.translate(-camera.x + sw/2, -camera.y + sh/2)
 
 	local x, y, w, h = camera.x - 800, camera.y - 600, 800*2, 600*2
-  	local entity, len = self._world:queryRect(x, y, w, h)
-	table.sort(entity, sort_by_depth)
-	for i = 1, len do
-		local e = entity[i]
+  	self._entity_cache, self._entity_length = self._world:queryRect(x, y, w, h)
+	table.sort(self._entity_cache, sort_by_depth)
+	for i = 1, self._entity_length do
+		local e = self._entity_cache[i]
 		if e.object_type =="entity" and e.type == 22 then
 			self:draw_entity(e)
 		end
@@ -1379,8 +1379,8 @@ function MapObject:draw_entities()
 	love.graphics.setFont(self._smallfont)
 	-- Set blend mode
 	love.graphics.setBlendMode("add")
-	for i = 1, len do
-		local e = entity[i]
+	for i = 1, self._entity_length do
+		local e = self._entity_cache[i]
 		local t = ENTITY_TYPE[e.type] or ENTITY_TYPE["null"]
 		local c = t.color
 		love.graphics.setColor(c[1], c[2], c[3], 0.5 + self._oscillation/2)
@@ -1435,7 +1435,7 @@ function MapObject:getItemsFromCamera()
 	return dict, len
 end
 
-function MapObject:draw_items(share, client)
+function MapObject:draw_items(client)
 	local camera = self._camera
 	local mapdata = self._mapdata
 	local gfx = client.gfx
@@ -1446,7 +1446,7 @@ function MapObject:draw_items(share, client)
 	love.graphics.push()
 	love.graphics.translate(-camera.x + sw/2, -camera.y + sh/2)
 
-	for index, item in pairs(share.items) do
+	for index, item in pairs(client.share.items) do
 		local itemdata = itemlist[item.it]
 		local path = itemdata.common_path .. itemdata.dropped_image
 		local imagedata = gfx.itemlist[path]
