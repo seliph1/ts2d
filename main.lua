@@ -47,11 +47,10 @@ if fused or love.filesystem.isFused() then
 end
 
 local loveframes 	= require "lib.loveframes"
-local client 		= require "client"
+local console 		= require "core.interface.console"
 local ui 			= require "core.interface.ui"
-
+local client 		= require "client"
 local discordRPC	= require "lib.discordRPC"
-
 
 function discordRPC.ready(userId, username, discriminator, avatar)
     print(string.format("Discord: ready (%s, %s, %s, %s)", userId, username, discriminator, avatar))

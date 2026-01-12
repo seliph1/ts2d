@@ -1,7 +1,7 @@
 return function(loveframes)
 ---------- module start ----------
-local LK   = require"love.keyboard"
-local LS   = require"love.system"
+local LK   = require "love.keyboard"
+local LS   = require "love.system"
 local isMac = (LS.getOS() == "OS X")
 
 loveframes.keyhandlers = {
@@ -9,6 +9,10 @@ loveframes.keyhandlers = {
 	["^cas"]={}, ["^ca"]={}, ["^cs"]={}, ["^as"]={}, ["^c"]={}, ["^a"]={}, ["^s"]={}, ["^"]={}, -- macOS only.
 }
 
+---@param system string
+---@param mod_keys "cas" | "ca" | "cs" | "as" | "c" | "a" | "s" | "" | "^cas" | "^ca" | "^cs" | "^as" | "^c" | "^a" | "^s" | "^"
+---@param key string
+---@param action function
 function loveframes.bind(system, mod_keys, key, action)
 	if system == "all" or (system == "macos") == isMac then
 		loveframes.keyhandlers[mod_keys][key] = action

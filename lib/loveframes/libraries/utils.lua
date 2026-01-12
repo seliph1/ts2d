@@ -588,7 +588,7 @@ function loveframes.DebugDraw()
 	height = 0
 	for k, v in pairs(topcol) do
 		local str = tostring(v)
-		if string.len(str) > 20 then str = "..."..string.sub(str, -10) end
+		if string.len(str) > 30 then str = "..."..string.sub(str, -30) end
 
 		love.graphics.print(tostring(k)..": ".. str, ex_info_x, ex_info_y + height)
 		height = height + 10

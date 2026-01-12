@@ -92,7 +92,8 @@ function client.snapshot_lerp(dt)
 			if lerp_flags[property] then
 				local lerp_value = share_lerp.players[player_id][property] or value
 				-- Apply lerp
-				share_lerp.players[player_id][property] = b.lerp(lerp_value, value, client.lerp_speed * dt)
+				local lerp = lerp_value + (value - lerp_value) * (client.lerp_speed * dt)
+				share_lerp.players[player_id][property] = lerp
 			else
 				share_lerp.players[player_id][property] = value
 			end

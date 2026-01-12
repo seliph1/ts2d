@@ -25,7 +25,6 @@ end
 LF.bind("all", "", "escape", action_quit)
 LF.bind("all", "", "f1", action_debug)
 LF.bind("all", "", "f12", action_restart)
-LF.bind("all", "", "'", ui.console_button.OnClick)
 
 ---------- module end ------------
 end

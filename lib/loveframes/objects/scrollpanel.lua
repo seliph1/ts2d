@@ -329,12 +329,17 @@ end
 function ScrollPanel:Clear()
 	local children = self.children
 	self.children = {}
-	for _, child in pairs(children) do
-		child:Remove()
-		-- Remove item into hash table
+	for index, child in pairs(children) do
+		-- Remove item from hash table
 		if self.itemhash:hasItem(child) then
 			self.itemhash:remove(child)
 		end
+		children[index] = nil
+		child:Remove()
+	end
+
+	for k,v in pairs(self.children) do
+		print(k, v)
 	end
 	self:RedoLayout()
 	return self

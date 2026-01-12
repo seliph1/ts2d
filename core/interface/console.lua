@@ -1,19 +1,43 @@
-return function(ui)
 --//------------------------ MODULE START ------------------------//--
 local LF = require "lib.loveframes"
+
+local console = {}
 
 local console_in = love.thread.getChannel("console_in")
 local console_out = love.thread.getChannel("console_out")
 
-ui.console_frame = LF.Create("frame")
-:SetSize(640, 480)
+local font_fallbacks = {
+	--"gfx/fonts/NotoSansCJK-Regular.ttc",
+	"gfx/fonts/NotoSansArabic-Regular.ttf",
+	"gfx/fonts/NotoSansThai-Regular.ttf",
+	"gfx/fonts/NotoSansHebrew-Regular.ttf",
+	"gfx/fonts/NotoSansHindi-Regular.ttf",
+}
+
+local setFontFallbacks = function(font, size)
+	local fallbacks = {}
+	for index, fallback_src in ipairs(font_fallbacks) do
+		local fallback = love.graphics.newFont(fallback_src, size)
+		table.insert(fallbacks, fallback)
+	end
+	font:setFallbacks(unpack(fallbacks))
+end
+
+local font_mono = love.graphics.newFont("gfx/fonts/NotoSansMono-Regular.ttf", 15)
+setFontFallbacks(font_mono, 15)
+
+local font_mono_small = love.graphics.newFont("gfx/fonts/NotoSansMono-Regular.ttf", 12)
+setFontFallbacks(font_mono_small, 12)
+
+console.frame = LF.Create("frame")
+:SetSize(0.8, 0.8)
 :SetResizable(false)
 :SetScreenLocked(true)
 :SetName("Console")
 :SetCloseAction("hide")
 :SetState("*")
 
-ui.console_frame.Update = function(object, dt)
+console.frame.Update = function(object, dt)
     object.name = string.format("Console [%s]",love.timer.getFPS())
     local block = console_in:pop()
     if block then
@@ -59,7 +83,7 @@ ui.console_frame.Update = function(object, dt)
 						:SetY(30)
 					local label = LF.Create("label", scroll)
 						:SetMaxWidth(w)
-						:SetFont(ui.font_mono_small)
+						:SetFont(font_mono_small)
 						:SetColor(1,1,1,1)
 
 					local body = block.args.body
@@ -78,16 +102,26 @@ ui.console_frame.Update = function(object, dt)
     end
 end
 
-ui.console_window_panel = LF.Create("panel", ui.console_frame)
-:SetSize(630, 400):SetPos(5, 30)
-ui.console_window = LF.Create("log", ui.console_window_panel)
-:SetSize(630, 400):SetPadding(0):SetFont(ui.font_mono_small)
+console.window_panel = LF.Create("panel", console.frame)
+:SetY(30)
+:SetWidth(0.98)
+:Expand("bottom", 40)
+:CenterX()
+console.window = LF.Create("log", console.window_panel)
+:Expand()
+:SetPadding(0)
+:SetFont(font_mono_small)
 
-ui.console_input = LF.Create("textbox", ui.console_frame)
-ui.console_input:SetPos(5, 435):SetWidth(630):SetMaxHistory(1):SetFont(ui.font_mono)
-ui.console_input.rollback = 1
-ui.console_input.history = {""}
-ui.console_input.OnEnter = function(self, text)
+console.input = LF.Create("textbox", console.frame)
+:SetY(-8)
+:SetSize(0.98, 25)
+:CenterX()
+:SetMaxHistory(1)
+:SetFont(font_mono)
+
+console.input.rollback = 1
+console.input.history = {""}
+console.input.OnEnter = function(self, text)
 	if text == "" then return end
     if not(self.focus) then
         return
@@ -98,13 +132,13 @@ ui.console_input.OnEnter = function(self, text)
 	self.rollback = #self.history + 1
 end
 
-ui.console_input.OnControlKeyPressed = function(self, key)
+console.input.OnControlKeyPressed = function(self, key)
     if not(self.focus) then
         return
     end
 
 	if key=="up" then
-		local h = ui.console_input.history
+		local h = console.input.history
 		local r = math.max(self.rollback - 1, 1)
 
 		self:SetText(h[r])
@@ -120,23 +154,23 @@ ui.console_input.OnControlKeyPressed = function(self, key)
 	end
 end
 
-ui.console_input.commands = love.filesystem.load("core/interface/commands.lua")()
-for command, data in pairs(ui.console_input.commands) do
+console.input.commands = love.filesystem.load("core/interface/commands.lua")()
+for command, data in pairs(console.input.commands) do
 	if data.alias then
 		for index, alias in pairs(data.alias) do
-			ui.console_input.commands[alias] = command
+			console.input.commands[alias] = command
 		end
 	end
 end
 
-ui.console_input.parse = function(str)
+console.input.parse = function(str)
 	local args = {}
 	for word in string.gmatch(str, "%S+") do
 		table.insert(args, word)
 	end
 
 	local command_id = args[1]
-	local commands = ui.console_input.commands
+	local commands = console.input.commands
 	if commands[ command_id ] then
 		local command_object = commands[ command_id ]
 		if command_object.action then
@@ -150,21 +184,44 @@ ui.console_input.parse = function(str)
 		print(string.format("Unknown command: %s", str))
 	end
 end
-ui.parse = ui.console_input.parse
+
+console.parse = console.input.parse
 --- print override
 _Print = print
 function print(...)
-	local args = {...}
 	local str = {}
-	for k,v in pairs(args) do
-		table.insert(str, tostring(v))
+	for i = 1, select("#", ...) do
+		local v = select(i, ...)
+		v = tostring(v)
+		if v == "true" then
+			v = "©255255000"..v.."©255255255"
+		elseif v == "false" then
+			v = "©255000000"..v.."©255255255"
+		elseif v == "nil" then
+			v = "©255000000"..v.."©255255255"
+		end
+		table.insert(str, v)
 	end
-	if ui.console_window then
-		ui.console_window:AddElement(table.concat(str,"	"), true)
+
+	if console.window then
+		console.window:AddElement(table.concat(str, "	"), true)
 	end
 	_Print(...)
 end
 
+LF.bind("all", "", "'", function()
+	local toggle = not console.frame:GetVisible()
+	console.frame
+	:SetVisible(toggle)
+	:Center()
+	:MoveToTop()
+end)
+
+console.frame
+:SetVisible(false)
+:Center()
+:MoveToTop()
+
+return console
 
 --//------------------------ MODULE END ------------------------//--
-end

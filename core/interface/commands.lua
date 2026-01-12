@@ -35,6 +35,34 @@ end)
 
 -- Client only commands
 local commands = {
+	-------------------------------------------------------
+	-- UI/MISC
+	-------------------------------------------------------
+	--[[
+	megasena = {
+		action = function(seednumber)
+			local seed = math.randomseed(os.time())
+			if seednumber then
+				seed = math.randomseed(tonumber(seednumber) or os.time())
+			end
+			local pool = {}
+			for i = 1, 60 do
+				pool[i] = i
+			end
+
+			local resultado = {}
+
+			for i = 1, 6 do
+				local idx = math.random(#pool)
+				resultado[i] = pool[idx]
+				table.remove(pool, idx)
+			end
+
+			table.sort(resultado)
+			print("Números :" .. table.concat(resultado, " - "))
+		end
+	};
+	--]]
     warning = {
         action = function(...)
 			local message = table.concat({...}," ")
@@ -46,6 +74,136 @@ local commands = {
             messagebox:SetMaxWidth(width-20):SetText("©255000000"..message):Center()
         end
     };
+
+	edit = {
+		action = function(...)
+			local args = {...}
+			if client.map then
+				local LF = require "lib.loveframes"
+				local status = client.map:read( "maps/"..table.concat(args," ")..".map" )
+				if status then
+					print(status)
+				end
+				client.mode = "editor"
+				LF.SetState("editor")
+			end
+		end,
+		syntax = "/edit <mapfile>",
+	};
+
+	menu = {
+		---Invokes a client-side menu
+		---@param ... string
+		action = function(...)
+			local ui = require "core.interface.ui"
+			ui.menu_constructor(table.concat({...}," "))
+		end;
+	};
+
+	scale = {
+		action = function(bool)
+			client.scale = (bool == "true")
+		end;
+	};
+
+	-------------------------------------------------------
+	-- DEBUG
+	-------------------------------------------------------
+
+	clear = {
+		---Clear console
+		action = function()
+			local console = require "core.interface.console"
+			console.window:Clear()
+		end;
+	};
+
+
+	lua = {
+		---Evaluates a lua expression
+		---@param ... string
+		action = function(...)
+			local block = table.concat({...}, " ")
+			local expression, error_message = loadstring( block )
+			local ui = require "core.interface.ui"
+			CONSOLE_ENV.print = print
+			CONSOLE_ENV.client = client
+			CONSOLE_ENV.ui = ui
+			CONSOLE_ENV.msg = ui.chat_frame_server_message
+			CONSOLE_ENV.dump = serpent.dump
+
+			if expression then
+				setfenv(expression, CONSOLE_ENV)
+				local status, error_message = pcall(expression)
+				if not status then
+					print("©255000000LUA ERROR: "..error_message)
+				end
+			else
+				print("©255000000LUA ERROR: "..error_message)
+			end
+		end;
+	};
+
+	print = {
+		action = function(...)
+			local block = table.concat({...}, " ")
+			local expression, error_message = loadstring( "return ".. block)
+			local ui = require "core.interface.ui"
+			local console = require "core.interface.console"
+
+			CONSOLE_ENV.client = client
+			CONSOLE_ENV.ui = ui
+
+			if expression then
+				setfenv(expression, CONSOLE_ENV)
+				local output = { pcall(expression) }
+				if not output[1] then
+					console.window:AddElement("©255000000LUA ERROR: "..output[2])
+				else
+					for i = 2, #output do
+						local value = output[i]
+						console.window:AddElement( tostring(value) )
+					end
+				end
+			else
+				console.window:AddElement("©255000000LUA ERROR: "..error_message)
+			end
+		end,
+		syntax = "",
+	};
+
+	dump = {
+		action = function(...)
+			local block = table.concat({...}, " ")
+			local expression, error_message = loadstring( "return ".. block)
+			local ui = require "core.interface.ui"
+			local console = require "core.interface.console"
+
+			CONSOLE_ENV.client = client
+			CONSOLE_ENV.ui = ui
+
+			if expression then
+				setfenv(expression, CONSOLE_ENV)
+				local output = { pcall(expression) }
+				if not output[1] then
+					console.window:AddElement("©255000000LUA ERROR: "..output[2])
+				else
+					for i = 2, #output do
+						local value = output[i]
+						local dump = serpent.block(value, {
+							nocode=true,
+							comment=true,
+							sortkeys=true,
+						})
+						console.window:AddElement(dump)
+					end
+				end
+			else
+				console.window:AddElement("©255000000LUA ERROR: "..error_message)
+			end
+		end,
+		syntax = "",
+	};
 
 	map = {
 		action = function(...)
@@ -61,17 +219,6 @@ local commands = {
 		syntax = "/map <mapfile>",
 	};
 
-	clearmap = {
-		action = function(...)
-			local args = {...}
-			if client.map then
-				print("cleared?")
-				client.map:clear()
-			end
-		end,
-		syntax = "/clearmap",
-	};
-
 	cleareffect = {
 		action = function ()
 			if client.map then
@@ -80,6 +227,128 @@ local commands = {
 		end
 	};
 
+	clearmap = {
+		action = function(...)
+			local args = {...}
+			if client.map then
+				print("map clear request")
+				client.map:clear()
+			end
+		end,
+		syntax = "/clearmap",
+	};
+
+	debug = {
+		---Clear console
+		action = function(level)
+			client.debug_level = tonumber(level) or 0
+		end;
+	};
+
+	utf8 = {
+		action = function()
+			local frases = {
+				{ idioma = "Português", frase = "Você já viu o avião de João?" },
+				{ idioma = "Inglês", frase = "The quick brown fox jumps over the lazy dog." },
+				{ idioma = "Francês", frase = "Où est l'hôtel près du marché ?" },
+				{ idioma = "Alemão", frase = "Fußgängerüberweg vor der Straße." },
+				{ idioma = "Espanhol", frase = "El niño pidió piñata para su cumpleaños." },
+				{ idioma = "Polonês", frase = "Źródło wód żółtych wciąż bije." },
+				{ idioma = "Russo", frase = "Москва — столица России." },
+				{ idioma = "Grego", frase = "Η Αθήνα είναι όμορφη πόλη." },
+				{ idioma = "Árabe", frase = "اللغة العربية جميلة جدًا." },
+				{ idioma = "Hebraico", frase = "השפה העברית עתיקה מאוד." },
+				{ idioma = "Chinês", frase = "中文字符测试示例。" },
+				{ idioma = "Japonês", frase = "日本語の文字をテストします。" },
+				{ idioma = "Coreano", frase = "한국어 문자를 시험합니다." },
+				{ idioma = "Tailandês", frase = "ภาษาไทยสวยงามมาก." },
+			}
+
+			for k,v in ipairs(frases) do
+				print(v.idioma, v.frase)
+			end
+		end;
+	};
+
+	vsync = {
+		---@param mode "on"|"off"|"true"|"false"
+		action = function(mode)
+			local width, height = love.graphics.getDimensions()
+			if mode == "true" or mode == "on" then
+				love.window.updateMode(width, height, {
+					vsync = true;
+				})
+				print("vsync on")
+			elseif mode == "false" or mode == "off" then
+				love.window.updateMode(width, height, {
+					vsync = false;
+				})
+				print("vsync off")
+			else
+				return "unknown value "..mode
+			end
+		end
+	};
+
+	sendrate = {
+		---@param rate number
+		action = function(rate)
+			local old_rate = client.sendRate
+			local new_rate = tonumber(rate) or 35
+
+			client.sendRate = new_rate
+			return string.format(
+				"Global sendRate changed from %.2f to %.2f.",
+				old_rate,
+				new_rate
+			)
+		end
+	};
+
+	get = {
+		action = function(url, options)
+			local thread = love.thread.newThread("http_thread.lua")
+			if thread then
+				thread:start(url, options)
+			end
+		end
+	};
+
+	discordrpc = {
+		action = function(property, ...)
+			local value = table.concat({...}," ")
+			local discordRPC = require "lib.discordRPC"
+			if discordRPC then
+				local status = discordRPC.setProperty(property, value)
+				if status then
+					return status
+				end
+			end
+		end
+	};
+
+	help = {
+		action = function(property, ...)
+			local ui = require "core.interface.ui"
+			local commands = ui.console_input.commands
+
+			for name, data in pairs(commands) do
+				local argNames = {}
+				local action = data.action
+				for i = 1, debug.getinfo(action).nparams, 1 do
+					table.insert(argNames, debug.getlocal(action, i))
+				end
+
+				print(name, table.concat( argNames, ", " ))
+
+			end
+		end
+	};
+
+	-------------------------------------------------------
+	-- REMOTE ACTIONS
+	-------------------------------------------------------
+	
 	scroll = {
 		action = function(x,y)
 			if client.map then
@@ -96,22 +365,6 @@ local commands = {
 			local message = table.concat({...}," ")
 			ui.server_log_push(message)
 		end
-	};
-
-	edit = {
-		action = function(...)
-			local args = {...}
-			if client.map then
-				local LF = require "lib.loveframes"
-				local status = client.map:read( "maps/"..table.concat(args," ")..".map" )
-				if status then
-					print(status)
-				end
-				client.mode = "editor"
-				LF.SetState("editor")
-			end
-		end,
-		syntax = "/edit <mapfile>",
 	};
 
 	ping = {
@@ -178,86 +431,6 @@ local commands = {
 		end
 	};
 
-	menu = {
-		---Invokes a client-side menu
-		---@param ... string
-		action = function(...)
-			local ui = require "core.interface.ui"
-			ui.menu_constructor(table.concat({...}," "))
-		end;
-	};
-
-	scale = {
-		action = function(bool)
-			client.scale = (bool == "true")
-		end;
-	};
-
-
-	lua = {
-		---Evaluates a lua expression
-		---@param ... string
-		action = function(...)
-			local block = table.concat({...}, " ")
-			local expression, error_message = loadstring( block )
-			local ui = require "core.interface.ui"
-			CONSOLE_ENV.print = print
-			CONSOLE_ENV.client = client
-			CONSOLE_ENV.ui = ui
-			CONSOLE_ENV.msg = ui.chat_frame_server_message
-
-			if expression then
-				setfenv(expression, CONSOLE_ENV)
-				local status, error_message = pcall(expression)
-				if not status then
-					print("©255000000LUA ERROR: "..error_message)
-				end
-			else
-				print("©255000000LUA ERROR: "..error_message)
-			end
-		end;
-	};
-
-	clear = {
-		---Clear console
-		action = function()
-			local ui = require "core.interface.ui"
-			ui.console_window:Clear()
-		end;
-	};
-
-	debug = {
-		---Clear console
-		action = function(level)
-			client.debug_level = tonumber(level) or 0
-		end;
-	};
-
-	utf8 = {
-		action = function()
-			local frases = {
-				{ idioma = "Português", frase = "Você já viu o avião de João?" },
-				{ idioma = "Inglês", frase = "The quick brown fox jumps over the lazy dog." },
-				{ idioma = "Francês", frase = "Où est l'hôtel près du marché ?" },
-				{ idioma = "Alemão", frase = "Fußgängerüberweg vor der Straße." },
-				{ idioma = "Espanhol", frase = "El niño pidió piñata para su cumpleaños." },
-				{ idioma = "Polonês", frase = "Źródło wód żółtych wciąż bije." },
-				{ idioma = "Russo", frase = "Москва — столица России." },
-				{ idioma = "Grego", frase = "Η Αθήνα είναι όμορφη πόλη." },
-				{ idioma = "Árabe", frase = "اللغة العربية جميلة جدًا." },
-				{ idioma = "Hebraico", frase = "השפה העברית עתיקה מאוד." },
-				{ idioma = "Chinês", frase = "中文字符测试示例。" },
-				{ idioma = "Japonês", frase = "日本語の文字をテストします。" },
-				{ idioma = "Coreano", frase = "한국어 문자를 시험합니다." },
-				{ idioma = "Tailandês", frase = "ภาษาไทยสวยงามมาก." },
-			}
-
-			for k,v in ipairs(frases) do
-				print(v.idioma, v.frase)
-			end
-		end;
-	};
-
 	follow = {
 		action = function(category, id)
 			if not client.joined then return "Client isn't connected. Cannot follow anything." end
@@ -278,48 +451,6 @@ local commands = {
 		end;
 	};
 
-	get = {
-		action = function(url, options)
-			local thread = love.thread.newThread("http_thread.lua")
-			if thread then
-				thread:start(url, options)
-			end
-		end
-	};
-
-	textdebug = {
-		action = function(size)
-			size = tonumber(size) or 10
-			local chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
-			local function hugeString(len)
-				local t = {}
-				for i = 1, len do
-					local idx = math.random(#chars)
-					t[i] = chars:sub(idx, idx)
-				end
-				return table.concat(t)
-			end
-			local LF = require "lib.loveframes"
-			local frame = LF.Create("frame"):SetSize(500, 500)
-			local w, h = frame:GetSize()
-			local panel = LF.Create("panel", frame)
-				:SetSize(w, h-30)
-				:SetY(30)
-			local scroll = LF.Create("scrollpanel", frame)
-				:SetSize(w, h-30)
-				:SetY(30)
-			local label = LF.Create("label", scroll)
-				:SetMaxWidth(w)
-				:SetColor(1,1,1,1)
-
-			local body = hugeString(size)
-			if body then
-				label:SetMaxWidth(100)
-				label:SetText(body)
-			end
-		end
-	};
-
 	team = {
 		action = function(team, look)
 			if not client.joined then
@@ -332,93 +463,19 @@ local commands = {
 		alias = {"chooseteam", "pickteam"},
 	};
 
-	vsync = {
-		---@param mode "on"|"off"|"true"|"false"
-		action = function(mode)
-			local width, height = love.graphics.getDimensions()
-			if mode == "true" or mode == "on" then
-				love.window.updateMode(width, height, {
-					vsync = true;
-				})
-				print("vsync on")
-			elseif mode == "false" or mode == "off" then
-				love.window.updateMode(width, height, {
-					vsync = false;
-				})
-				print("vsync off")
-			else
-				return "unknown value "..mode
-			end
-		end
+	kill = {
+		action = function()
+			client.send("kill")
+		end,
+		alias = {"suicide"},
+		syntax = "",
 	};
 
-	sendrate = {
-		---@param rate number
-		action = function(rate)
-			local old_rate = client.sendRate
-			local new_rate = tonumber(rate) or 35
-
-			client.sendRate = new_rate
-			return string.format(
-				"Global sendRate changed from %.2f to %.2f.",
-				old_rate,
-				new_rate
-			)
-		end
-	};
-
-	discordrpc = {
-		action = function(property, ...)
-			local value = table.concat({...}," ")
-			local discordRPC = require "lib.discordRPC"
-			if discordRPC then
-				local status = discordRPC.setProperty(property, value)
-				if status then
-					return status
-				end
-			end
-		end
-	};
-	--[[
-	megasena = {
-		action = function(seednumber)
-			local seed = math.randomseed(os.time())
-			if seednumber then
-				seed = math.randomseed(tonumber(seednumber) or os.time())
-			end
-			local pool = {}
-			for i = 1, 60 do
-				pool[i] = i
-			end
-
-			local resultado = {}
-
-			for i = 1, 6 do
-				local idx = math.random(#pool)
-				resultado[i] = pool[idx]
-				table.remove(pool, idx)
-			end
-
-			table.sort(resultado)
-			print("Números :" .. table.concat(resultado, " - "))
-		end
-	};]]
-	help = {
-		action = function(property, ...)
-			local ui = require "core.interface.ui"
-			local commands = ui.console_input.commands
-
-			for name, data in pairs(commands) do
-				local argNames = {}
-				local action = data.action
-				for i = 1, debug.getinfo(action).nparams, 1 do
-					table.insert(argNames, debug.getlocal(action, i))
-				end
-
-				print(name, table.concat( argNames, ", " ))
-
-			end
-		end
+	slap = {
+		action = function(target_id)
+			client.send(string.format("slap %s", target_id))
+		end,
+		syntax = "",
 	};
 
 }

@@ -3,6 +3,7 @@ return function(client)
 -- Module start
 ------------------------
 local binds = {}
+local LF = require "lib.loveframes"
 
 -- Client/Server binds
 -- Input types: stream, pulse
@@ -32,10 +33,16 @@ binds["f4"]         = {input="serveraction3", type="pulse"}
 binds["e"]          = {input="use", type="pulse"}
 
 -- UI/Local binds
-
-
+LF.bind("all", "", "m", function ()
+    if client.joined then
+        local ui = require "core.interface.ui"
+        ui.teampick()
+    end
+end)
+------------------------
 client.binds = binds
 ------------------------
 -- Module end
 ------------------------
+
 end

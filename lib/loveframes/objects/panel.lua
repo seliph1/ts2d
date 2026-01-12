@@ -48,38 +48,5 @@ function newobject:update(dt)
 	end
 end
 
---[[---------------------------------------------------------
-	- func: mousepressed(x, y, button)
-	- desc: called when the player presses a mouse button
---]]---------------------------------------------------------
-function newobject:mousepressed(x, y, button)
-	if not self:OnState() then return end
-	if not self:isUpdating() then return end
-	local children = self.children
-	local hover = self.hover
-	if hover and button == 1 then
-		local baseparent = self:GetBaseParent()
-		if baseparent and baseparent.type == "frame" then
-			baseparent:MakeTop()
-		end
-	end
-	for k, v in ipairs(children) do
-		v:mousepressed(x, y, button)
-	end
-end
-
---[[---------------------------------------------------------
-	- func: mousereleased(x, y, button)
-	- desc: called when the player releases a mouse button
---]]---------------------------------------------------------
-function newobject:mousereleased(x, y, button)
-	if not self:OnState() then return end
-	if not self:isUpdating() then return end
-	local children = self.children
-	for k, v in ipairs(children) do
-		v:mousereleased(x, y, button)
-	end
-end
-
 ---------- module end ----------
 end

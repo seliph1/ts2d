@@ -123,9 +123,13 @@ ui.console_button = LF.Create("textbutton", ui.main_menu)
 :SetText("©192192192Console")
 :SetHoverText("©255000000Console")
 ui.console_button.OnClick = function(object)
-	local bool = ui.console_frame:GetVisible()
-	ui.console_frame:SetVisible(not bool):Center():MoveToTop()
-	--ui.console_input:SetFocus(true)
+	local console = require "core.interface.console"
+	local toggle = not console.frame:GetVisible()
+
+	console.frame
+		:SetVisible(toggle)
+		:Center()
+		:MoveToTop()
 end
 --Main menu group 1-------------------------------------------------------------------------------
 ui.quickplay_button = LF.Create("textbutton", ui.main_menu)
@@ -133,7 +137,8 @@ ui.quickplay_button = LF.Create("textbutton", ui.main_menu)
 :SetText("©192192192Quick Play")
 :SetHoverText("©255255255Quick Play")
 ui.quickplay_button.OnClick = function(self)
-	ui.console_input.parse("map as_snow")
+	local console = require "core.interface.console"
+	console.parse("map as_snow")
 end
 
 ui.newgame_button = LF.Create("textbutton", ui.main_menu)
@@ -150,7 +155,8 @@ ui.findservers_button = LF.Create("textbutton", ui.main_menu)
 :SetHoverText("©255255255Find Servers")
 :SetPos(0, 80):SetCursor(LF.cursors.hand)
 ui.findservers_button.OnClick = function(self)
-	ui.parse("connect 127.0.0.1 36963")
+	local console = require "core.interface.console"
+	console.parse("connect 127.0.0.1 36963")
 end
 --Main menu group 2---------------------------------------------------------------------------
 ui.options_button = LF.Create("textbutton", ui.main_menu)
@@ -204,10 +210,6 @@ ui.quit_button = LF.Create("textbutton", ui.main_menu)
 :SetPos(0, 260):SetCursor(LF.cursors.hand)
 ui.quit_button.OnClick = function() love.event.quit() end
 
---------------------------------------------------------------------------------------------------
---Console Window Frame---------------------------------------------------------------------------
---------------------------------------------------------------------------------------------------
-require "core.interface.console" (ui)
 
 --------------------------------------------------------------------------------------------------
 --New Game Frame----------------------------------------------------------------------------------
@@ -663,7 +665,7 @@ ui.server_log_frame = LF.Create("frame")
 :SetState("game")
 :SetScreenLocked(true)
 :ShowCloseButton(false)
-:SetRelativePos(0.5, 0, true)
+:SetPos(0.5, 0, true)
 
 ui.server_log_frame.Draw = function(object)
 	local hover = object:GetHover()
@@ -706,7 +708,7 @@ ui.chat_frame = LF.Create("frame")
 :SetState("game")
 :SetScreenLocked(true)
 :ShowCloseButton(false)
-:SetRelativePos(0, -0.2)
+:SetPos(0, -0.2)
 
 ui.chat_frame_message = function(player, message)
 	if not (client.joined and player) then return end
@@ -768,7 +770,7 @@ ui.chat_input = LF.Create("input", ui.chat_frame)
 :SetHighlightColor(1.00, 0.86, 0.00, 0.20)
 :SetState("game")
 :SetVisible(false)
-:SetRelativeY(1)
+:SetY(1)
 
 ui.chat_input.Draw = function(object)
 	local x = object.x
@@ -1165,6 +1167,62 @@ function ui.weaponselect:Draw()
 	LG.setBlendMode("alpha")
 end
 --------------------------------------------------------------------------------------------------
+--spectator controls------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------
+ui.spec_control = LF.Create("panel")
+:SetState("game")
+:SetSize(1, 0.07)
+:AlignBottom()
+:SetAlwaysUpdate(true)
+:SetCollidable(false)
+
+function ui.spec_control:Update()
+	if not client.share.players then return end
+	if not client.share.players[client.id] then return end
+	local player = client.share.players[client.id]
+
+	if player.h <= 0 then
+		if not self:IsVisible() then
+			self:SetVisible(true)
+			client.parse("camera unbind")
+		end
+	else -- ded
+		if self:IsVisible() then
+			self:SetVisible(false)
+			client.parse("camera self")
+		end
+	end
+end
+
+function ui.spec_control:Draw()
+	local opacity = 0.2
+	love.graphics.setColor(0.0, 0.0, 0.0, opacity)
+	love.graphics.rectangle("fill", self.x, self.y, self.width, self.height)
+end
+
+ui.spec_control_menu = LF.Create("button", ui.spec_control)
+:SetSize(0.06, 0.8)
+:SetText("Menu")
+
+ui.spec_control_map = LF.Create("button", ui.spec_control)
+:SetSize(0.06, 0.8)
+:SetText("Map")
+
+ui.spec_control_fog = LF.Create("button", ui.spec_control)
+:SetSize(0.06, 0.8)
+:SetText("Fog")
+
+ui.spec_control_player = LF.Create("button", ui.spec_control)
+:SetSize(0.58, 0.8)
+:SetText("-")
+
+ui.spec_control_mode = LF.Create("button", ui.spec_control)
+:SetSize(0.18, 0.8)
+:SetText("Free Look")
+
+ui.spec_control:Spread("horizontal"):AlignChildren("horizontal")
+
+--------------------------------------------------------------------------------------------------
 --health ui---------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------
 local hud_nums = love.graphics.newImageFont("gfx/hud_nums.png", "0123456789:|", 10)
@@ -1180,6 +1238,7 @@ function ui.hud:Draw()
 	if not client.share.players then return end
 	if not client.share.players[client.id] then return end
 	local player = client.share.players[client.id]
+	if player.h <= 0 then return end
 	self.counter = self.counter + 1
 
 	local timer = love.timer.getTime()
@@ -1471,33 +1530,53 @@ ui.serverinfo:SetVisible(false)
 --------------------------------------------------------------------------------------------------
 ui.teampick_frame = nil
 function ui.teampick()
-	if client.joined and not ui.teampick_frame then
+	if client.joined and ui.teampick_frame == nil then
+		local teams = client.share.config.teams
+
 		ui.teampick_frame = LF.Create("frame")
 		:SetSize(0.8, 0.8)
 		:SetName("Select a team")
 		:Center()
-		:SetState("game")
+		:SetState("*")
+
+		function ui.teampick_frame:OnClose()
+			ui.teampick_frame = nil
+		end
 		local scrollpanel = LF.Create("scrollpanel", ui.teampick_frame)
 		:SetPos(5, 35)
-		:Expand("down")
-		local teams = client.share.config.teams
-		local buttons = {}
-		for index, teamname in pairs(teams) do
+		:Expand("down", 105)
+		:Expand("right", 0.5)
+
+		local lookpanel = LF.Create("panel", ui.teampick_frame)
+		:SetPos(0.5, 35)
+		:Expand("down", 35)
+		:Expand("right", 5)
+
+		for i = 1, #teams do
+			local team_id = i
+			local team = teams[team_id]
 			local button = LF.Create("button", scrollpanel)
-			:SetSize(0.8, 30)
+			:SetSize(0.8, 28)
 			:CenterX()
-			:SetY((index) * 40)
-			:SetText( teams[index].name )
+			:SetY((team_id - 1) * 34)
+			:SetText( team.name )
 
 			function button:OnClick()
-				local team = index
-				team = tonumber(team) or 0
-
-				client.send(string.format("team %s %s", team, 1))
-
-				ui.teampick_frame:Remove()
+				scrollpanel:Clear()
 			end
 		end
+
+		local autoselect_button = LF.Create("button", ui.teampick_frame)
+		:SetY(-35)
+		:SetHeight(28)
+		:ExpandTo(scrollpanel, "horizontal", 0.8)
+		:SetText("Auto-Select")
+		local spectator_button = LF.Create("button", ui.teampick_frame)
+		:SetY(-70)
+		:SetHeight(28)
+		:ExpandTo(scrollpanel, "horizontal", 0.8)
+		:SetText("Spectator")
+
 	end
 end
 
@@ -1545,24 +1624,9 @@ ui.binds = require "core.interface.binds" (ui)
 --final wrapping of windows-----------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------
 ui.new_game_frame:SetVisible(false)
-ui.console_frame:SetVisible(false):SetAlwaysOnTop(true)
 ui.menu_frame:SetVisible(false)
 ui.options_frame:SetVisible(false)
---------------------------------------------------------------------------------------------------
---temporary windows!------------------------------------------------------------------------------
---------------------------------------------------------------------------------------------------
---[[
-ui.temp_connect_frame = LF.Create("frame"):SetSize(400, 100):SetName("Connect")
-ui.temp_connect_local = LF.Create("button", ui.temp_connect_frame)
-:SetY(30):SetWidth(300):SetText("Connect to localhost (127.0.0.1:36963)"):CenterX()
-ui.temp_connect_local.OnClick = function(object)
-	ui.parse("connect 127.0.0.1 36963")
-end
-ui.temp_connect_remote = LF.Create("button", ui.temp_connect_frame)
-:SetY(60):SetWidth(300):SetText("Connect to remote server (50.21.187.191)"):CenterX()
-ui.temp_connect_remote.OnClick = function(object)
-	ui.parse("connect 50.21.187.191 36963")
-end]]
+
 --------------------------------------------------------------------------------------------------
 --end of module-----------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------
