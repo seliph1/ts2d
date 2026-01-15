@@ -34,11 +34,17 @@ binds["e"]          = {input="use", type="pulse"}
 
 -- UI/Local binds
 LF.bind("all", "", "m", function ()
-    if client.joined then
-        local ui = require "core.interface.ui"
-        ui.teampick()
-    end
+    if not client.joined then return end
+
+    local ui = require "core.interface.ui"
+    ui.teampick()
 end)
+
+LF.bind("all", "", "tab", function()
+    local ui = require "core.interface.ui"
+    ui.tabscreen_display()
+end)
+
 ------------------------
 client.binds = binds
 ------------------------

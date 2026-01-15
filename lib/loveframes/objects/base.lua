@@ -445,13 +445,18 @@ end
 	- func: AlignChildren
 	- desc: Move object to the border of parent
 --]]---------------------------------------------------------
-function Base:AlignLeft()
+function Base:AlignLeft(margin)
 	local base = loveframes.base
 	local parent = self.parent
+	margin = margin or 0
+	if margin > 0 and margin < 1 then
+		margin = math.floor( margin * parent.width )
+	end
+
 	if parent == base then
-		self.x = 0
+		self.x = 0 + margin
 	else
-		self.x = parent.x
+		self.x = parent.x + margin
 	end
 
 	if parent.container and parent.RedoLayout then
@@ -460,13 +465,18 @@ function Base:AlignLeft()
 	return self
 end
 
-function Base:AlignRight()
+function Base:AlignRight(margin)
 	local base = loveframes.base
 	local parent = self.parent
+	margin = margin or 0
+	if margin > 0 and margin < 1 then
+		margin = math.floor( margin * parent.width )
+	end
+
 	if parent == base then
-		self.x = love.graphics.getWidth() - self.width
+		self.x = love.graphics.getWidth() - self.width - margin
 	else
-		self.x = self.width - parent.width + parent.x
+		self.x = self.width - parent.width + parent.x - margin
 	end
 
 	if parent.container and parent.RedoLayout then
@@ -475,14 +485,18 @@ function Base:AlignRight()
 	return self
 end
 
-function Base:AlignTop()
+function Base:AlignTop(margin)
 	local base = loveframes.base
 	local parent = self.parent
+	margin = margin or 0
+	if margin > 0 and margin < 1 then
+		margin = math.floor( margin * parent.height )
+	end
 
 	if parent then
-		self.y = 0
+		self.y = 0 + margin
 	else
-		self.y = parent.y
+		self.y = parent.y + margin
 	end
 
 	if parent.container and parent.RedoLayout then
@@ -491,13 +505,18 @@ function Base:AlignTop()
 	return self
 end
 
-function Base:AlignBottom()
+function Base:AlignBottom(margin)
 	local base = loveframes.base
 	local parent = self.parent
+	margin = margin or 0
+	if margin > 0 and margin < 1 then
+		margin = math.floor( margin * parent.height )
+	end
+
 	if parent then
-		self.y = love.graphics.getHeight() - self.height
+		self.y = love.graphics.getHeight() - self.height - margin
 	else
-		self.y = self.height - parent.height + parent.y
+		self.y = self.height - parent.height + parent.y - margin
 	end
 
 	if parent.container and parent.RedoLayout then
@@ -615,14 +634,14 @@ function Base:ExpandTo(object, axis, margin)
 	local offset_y = math.floor( height * (1 - factor) * 0.5 )
 
 	if axis == "horizontal" then
-		self.width = (width * factor) - offset
+		self.width = math.floor((width * factor) - offset)
 		if self.parent == loveframes.base then
 			self.x = x + offset_x
 		else
 			self.staticx = x + offset_x
 		end
 	elseif axis == "vertical" then
-		self.height = (height * factor) - offset
+		self.height = math.floor((height * factor) - offset)
 		if self.parent == loveframes.base then
 			self.y = y + offset_y
 		else

@@ -363,6 +363,7 @@ function TextBox:RedoLayout()
 	local hpadding = self.horizontalpadding
 	local vpadding = self.verticalpadding
 	self.field:setDimensions(x - hpadding, y - vpadding)
+	self.field:resetBlinking()
 end
 
 --[[---------------------------------------------------------
@@ -414,6 +415,7 @@ function TextBox:SetFocus(focus)
 	self.focus = focus
 	if focus then
 		loveframes.inputobject = self
+		self.field:resetBlinking()
 		if onfocusgained then
 			onfocusgained(self)
 		end
@@ -573,6 +575,13 @@ end
 
 function TextBox:SetMaxHistory(size)
 	self.field:setMaxHistory(size)
+	return self
+end
+
+
+function TextBox:SetVisible(bool)
+	self.visible = bool
+	self.field:resetBlinking()
 	return self
 end
 ---------- module end ----------

@@ -72,7 +72,7 @@ local filltable = {}
 for i=1,5000 do table.insert(filltable, random_string(30)) end
 
 ui.droplistframe = LF.Create("frame"):SetName("Droplist"):SetSize(400, 400)
-ui.droplistscroll = LF.Create("scrollpane", ui.droplistframe)
+ui.droplistscroll = LF.Create("scrollpanel", ui.droplistframe)
 :SetY(30):SetSize( ui.droplistframe:GetWidth(10), ui.droplistframe:GetHeight(40) - 100 ):CenterX()
 ui.droplist = LF.Create("droplist", ui.droplistscroll):SetSize(ui.droplistscroll:GetSize())
 ui.droplist:AddItemsFromTable(filltable)
@@ -107,7 +107,7 @@ ui.resizableframe = LF.Create("frame")
 
 ----------------------
 ui.inputs = LF.Create("frame"):SetName("Input"):SetSize(300, 730)
-ui.input_scroll = LF.Create("scrollpane", ui.inputs):SetY(30):SetSize(300, 700)
+ui.input_scroll = LF.Create("scrollpanel", ui.inputs):SetY(30):SetSize(300, 700)
 for i=1, 1000 do
     local input = LF.Create("textbox", ui.input_scroll)
     input:SetPos(5, (i-1)*30)
@@ -124,7 +124,7 @@ ui.textbox = LF.Create("textbox", ui.textboxframe):SetSize(280, 280):CenterX():S
 --ui.textbox:SetText(table.concat(filltable, "\n"))
 
 ui.seaoftextframe = LF.Create ( "frame" ):SetName("Sea of Text"):SetSize(300, 330)
-ui.seaoftextscroll = LF.Create("scrollpane",ui.seaoftextframe):SetSize(280, 280):CenterX():SetY(30)
+ui.seaoftextscroll = LF.Create("scrollpanel",ui.seaoftextframe):SetSize(280, 280):CenterX():SetY(30)
 ui.seaoftext = LF.Create("messagebox", ui.seaoftextscroll):SetMaxWidth(260)
 
 --print(table.concat(filltable, "\n"))

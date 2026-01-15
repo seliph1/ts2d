@@ -38,12 +38,12 @@ function ScrollPanel:initialize()
 	self.dtscrolling = false
 	self.internals = {}
 	self.children = {}
-	self.OnScroll = nil
 	self.itemcache = {}
 	self.itemlength = 0
 	self.itemhash = loveframes.bump.newWorld(64)
 	self.background = false
 	self:SetDrawFunc()
+	self.OnScroll = nil
 end
 
 --[[---------------------------------------------------------
@@ -79,15 +79,20 @@ function ScrollPanel:update(dt)
 
 	self:CheckHover()
 	if scrolled then
-		self.itemcache, self.itemlength = self.itemhash:queryRect(offsetx, offsety, self.width, self.height)
+		self.itemcache, self.itemlength = self.itemhash:queryRect(
+			self.last_offsetx,
+			self.last_offsety,
+			self.width,
+			self.height
+		)
 	end
 
 	for i = 1, self.itemlength do
 		local child = self.itemcache[i]
 		child:update(dt)
 		child:SetClickBounds(x, y, width, height)
-		child.x = math.floor( child.x - offsetx )
-		child.y = math.floor( child.y - offsety )
+		child.x = math.floor( child.x - self.last_offsetx )
+		child.y = math.floor( child.y - self.last_offsety )
 	end
 
 	for _, internal in pairs(internals) do
@@ -150,15 +155,6 @@ function ScrollPanel:mousepressed(x, y, button)
 		end
 	end
 end
-
---[[---------------------------------------------------------
-	- func: wheelmoved(x, y)
-	- desc: called when the player moves a mouse wheel
---]]---------------------------------------------------------
---function ScrollPanel:wheelmoved(x, y)
-	--if not self.hover then return end
-	--ScrollPanel.super.wheelmoved(self, x, y)
---end
 
 --[[---------------------------------------------------------
 	- func: AddItem(object)
@@ -320,6 +316,14 @@ function ScrollPanel:RedoLayout()
 		self.extrawidth = self.extrawidth + verticalbar.width
 		self.extraheight = self.extraheight + horizontalbar.height
 	end
+
+	-- Do one cycle
+	self.itemcache, self.itemlength = self.itemhash:queryRect(
+		self.last_offsetx,
+		self.last_offsety,
+		self.width,
+		self.height
+	)
 end
 
 --[[---------------------------------------------------------
@@ -327,20 +331,14 @@ end
 	- desc: removes all of the object's children
 --]]---------------------------------------------------------
 function ScrollPanel:Clear()
-	local children = self.children
+	for index ,child in pairs(self.children) do
+		--child:Remove()
+	end
+	self.itemhash:clear()
 	self.children = {}
-	for index, child in pairs(children) do
-		-- Remove item from hash table
-		if self.itemhash:hasItem(child) then
-			self.itemhash:remove(child)
-		end
-		children[index] = nil
-		child:Remove()
-	end
+	self.itemcache = {}
+	self.itemlength = 0
 
-	for k,v in pairs(self.children) do
-		print(k, v)
-	end
 	self:RedoLayout()
 	return self
 end

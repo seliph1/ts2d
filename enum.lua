@@ -1159,7 +1159,7 @@ enum.itemlist = {
 		dropped_image = "knife.bmp",
 		held_image = "knife.bmp",
 		kill_image = "knife_k.bmp",
-		display_image = "knife.bmp", 
+		display_image = "knife.bmp",
 		player_stance = "melee",
 		acessory = {};
 	};
@@ -1177,12 +1177,13 @@ enum.itemlist = {
 		frame_delay = 24,
 		range = 320,
 		weight = 400,
-		accuracy = 0, 
+		accuracy = 0,
+		offset = -5,
 		common_path = "gfx/weapons/",
 		dropped_image = "he.bmp",
 		held_image = "he.bmp",
 		kill_image = "he_k.bmp",
-		display_image = "he_m.bmp", 
+		display_image = "he_m.bmp",
 		player_stance = "object",
 		acessory = {};
 	};
@@ -1296,7 +1297,7 @@ enum.itemlist = {
 		held_image = "",
 		kill_image = "",
 		display_image = "defusekit_d.bmp",
-		player_stance = "nothing",
+		player_stance = "idle",
 		acessory = {};
 	};
 	[57] = {
@@ -1317,7 +1318,7 @@ enum.itemlist = {
 		held_image = "",
 		kill_image = "",
 		display_image = "kevlar_d.bmp",
-		player_stance = "nothing",
+		player_stance = "idle",
 		acessory = {};
 	};
 	[58] = {
@@ -1338,7 +1339,7 @@ enum.itemlist = {
 		held_image = "",
 		kill_image = "",
 		display_image = "kevlar+helm_d.bmp",
-		player_stance = "nothing",
+		player_stance = "idle",
 		acessory = {};
 	};
 	[59] = {
@@ -1360,7 +1361,7 @@ enum.itemlist = {
 		held_image = "nightvision.bmp",
 		kill_image = "",
 		display_image = "nightvision.bmp",
-		player_stance = "nothing",
+		player_stance = "idle",
 		acessory = {};
 	};
 	[60] = {
@@ -1382,7 +1383,7 @@ enum.itemlist = {
 		held_image = "gasmask.bmp",
 		kill_image = "",
 		display_image = "",
-		player_stance = "nothing",
+		player_stance = "idle",
 		acessory = {};
 	};
 	[61] = {
@@ -1404,7 +1405,7 @@ enum.itemlist = {
 		held_image = "primaryammo.bmp",
 		kill_image = "",
 		display_image = "primaryammo.bmp",
-		player_stance = "nothing",
+		player_stance = "idle",
 		acessory = {};
 	};
 	[62] = {
@@ -1426,7 +1427,7 @@ enum.itemlist = {
 		held_image = "secondaryammo.bmp",
 		kill_image = "",
 		display_image = "secondaryammo.bmp",
-		player_stance = "nothing",
+		player_stance = "idle",
 		acessory = {};
 	};
 	[63] = {
@@ -1448,7 +1449,7 @@ enum.itemlist = {
 		held_image = "bomb.bmp",
 		kill_image = "",
 		display_image = "bomb.bmp",
-		player_stance = "nothing",
+		player_stance = "idle",
 		acessory = {};
 	};
 	[64] = {
@@ -1470,7 +1471,7 @@ enum.itemlist = {
 		held_image = "medikit.bmp",
 		kill_image = "",
 		display_image = "medikit.bmp", 
-		player_stance = "nothing",
+		player_stance = "idle",
 		acessory = {};
 	};
 	[65] = {
@@ -1493,7 +1494,7 @@ enum.itemlist = {
 		held_image = "bandage.bmp",
 		kill_image = "",
 		display_image = "bandage.bmp", 
-		player_stance = "nothing",
+		player_stance = "idle",
 		acessory = {};
 	};
 	[66] = {
@@ -1515,7 +1516,7 @@ enum.itemlist = {
 		held_image = "coins.bmp",
 		kill_image = "coins.bmp",
 		display_image = "coins.bmp", 
-		player_stance = "nothing",
+		player_stance = "idle",
 		acessory = {};
 	};
 	[67] = {
@@ -1537,7 +1538,7 @@ enum.itemlist = {
 		held_image = "money.bmp",
 		kill_image = "money_k.bmp",
 		display_image = "money_m.bmp", 
-		player_stance = "nothing",
+		player_stance = "idle",
 		acessory = {};
 	};
 	[68] = {
@@ -1559,7 +1560,7 @@ enum.itemlist = {
 		held_image = "gold.bmp",
 		kill_image = "",
 		display_image = "gold.bmp", 
-		player_stance = "nothing",
+		player_stance = "idle",
 		acessory = {};
 	};
 	[69] = {
@@ -1604,7 +1605,7 @@ enum.itemlist = {
 		held_image = "redflag.bmp",
 		kill_image = "redflag.bmp",
 		display_image = "redflag.bmp",
-		player_stance = "nothing",
+		player_stance = "idle",
 		acessory = {};
 		flip = true;
 		scale = 0.8;
@@ -1629,7 +1630,7 @@ enum.itemlist = {
 		held_image = "blueflag.bmp",
 		kill_image = "blueflag.bmp",
 		display_image = "blueflag.bmp", 
-		player_stance = "nothing",
+		player_stance = "idle",
 		acessory = {};
 		flip = true;
 		scale = 0.8;
@@ -1817,7 +1818,7 @@ enum.itemlist = {
 		held_image = "lightarmor.bmp",
 		kill_image = "lightarmor_k.bmp",
 		display_image = "lightarmor_m.bmp", 
-		player_stance = "nothing",
+		player_stance = "idle",
 		acessory = {};
 	};
 	[80] = {
@@ -1838,7 +1839,7 @@ enum.itemlist = {
 		held_image = "armor.bmp",
 		kill_image = "armor_k.bmp",
 		display_image = "armor_m.bmp", 
-		player_stance = "nothing",
+		player_stance = "idle",
 		acessory = {};
 	};
 	[81] = {
@@ -1859,7 +1860,7 @@ enum.itemlist = {
 		held_image = "heavyarmor.bmp",
 		kill_image = "heavyarmor_k.bmp",
 		display_image = "heavyarmor_m.bmp", 
-		player_stance = "nothing",
+		player_stance = "idle",
 		acessory = {};
 	};
 	[82] = {
@@ -1881,7 +1882,7 @@ enum.itemlist = {
 		held_image = "medicarmor.bmp",
 		kill_image = "medicarmor_k.bmp",
 		display_image = "medicarmor_m.bmp", 
-		player_stance = "nothing",
+		player_stance = "idle",
 		acessory = {};
 	};
 	[83] = {
@@ -1902,7 +1903,7 @@ enum.itemlist = {
 		held_image = "superarmor.bmp",
 		kill_image = "",
 		display_image = "superarmor_d.bmp", 
-		player_stance = "nothing",
+		player_stance = "idle",
 		acessory = {};
 	};
 	[84] = {
@@ -1923,7 +1924,7 @@ enum.itemlist = {
 		held_image = "",
 		kill_image = "",
 		display_image = "stealthsuit_d.bmp",
-		player_stance = "nothing",
+		player_stance = "idle",
 		opacity = 0.2,
 		acessory = {};
 	};
@@ -2140,116 +2141,16 @@ enum.npc = {
 }
 
 enum.player = {
-	ct1 = {
-		path = "gfx/player/ct1.bmp",
-		stance = {
-			handgun = {32, 32, 32, 32};
-			rifle = {32, 64, 32, 32};
-			melee = {32, 0, 32, 32};
-			object = {32, 0, 32, 32};
-			zombie = {0, 32, 32, 32};
-			nothing = {0, 0, 32, 32};
-		};
-	};
-	ct2 = {
-		path = "gfx/player/ct2.bmp",
-		stance = {
-			handgun = {32, 32, 32, 32};
-			rifle = {32, 64, 32, 32};
-			melee = {32, 0, 32, 32};
-			object = {32, 0, 32, 32};
-			zombie = {0, 32, 32, 32};
-			nothing = {0, 0, 32, 32};
-		};
-	};
-	ct3 = {
-		path = "gfx/player/ct3.bmp",
-		stance = {
-			handgun = {32, 32, 32, 32};
-			rifle = {32, 64, 32, 32};
-			melee = {32, 0, 32, 32};
-			object = {32, 0, 32, 32};
-			zombie = {0, 32, 32, 32};
-			nothing = {0, 0, 32, 32};
-		};
-	};
-	ct4 = {
-		path = "gfx/player/ct4.bmp",
-		stance = {
-			handgun = {32, 32, 32, 32};
-			rifle = {32, 64, 32, 32};
-			melee = {32, 0, 32, 32};
-			object = {32, 0, 32, 32};
-			zombie = {0, 32, 32, 32};
-			nothing = {0, 0, 32, 32};
-		};
-	};
-	t1 = {
-		path = "gfx/player/t1.bmp",
-		stance = {
-			handgun = {32, 32, 32, 32};
-			rifle = {32, 64, 32, 32};
-			melee = {32, 0, 32, 32};
-			object = {32, 0, 32, 32};
-			zombie = {0, 32, 32, 32};
-			nothing = {0, 0, 32, 32};
-		};
-	};
-	t2 = {
-		path = "gfx/player/t2.bmp",
-		stance = {
-			handgun = {32, 32, 32, 32};
-			rifle = {32, 64, 32, 32};
-			melee = {32, 0, 32, 32};
-			object = {32, 0, 32, 32};
-			zombie = {0, 32, 32, 32};
-			nothing = {0, 0, 32, 32};
-		};
-	};
-	t3 = {
-		path = "gfx/player/t3.bmp",
-		stance = {
-			handgun = {32, 32, 32, 32};
-			rifle = {32, 64, 32, 32};
-			melee = {32, 0, 32, 32};
-			object = {32, 0, 32, 32};
-			zombie = {0, 32, 32, 32};
-			nothing = {0, 0, 32, 32};
-		};
-	};
-	t4 = {
-		path = "gfx/player/t4.bmp",
-		stance = {
-			handgun = {32, 32, 32, 32};
-			rifle = {32, 64, 32, 32};
-			melee = {32, 0, 32, 32};
-			object = {32, 0, 32, 32};
-			zombie = {0, 32, 32, 32};
-			nothing = {0, 0, 32, 32};
-		};
-	};
-	vip = {
-		path = "gfx/player/vip.bmp",
-		stance = {
-			handgun = {32, 32, 32, 32};
-			rifle = {32, 64, 32, 32};
-			melee = {32, 0, 32, 32};
-			object = {32, 0, 32, 32};
-			zombie = {0, 32, 32, 32};
-			nothing = {0, 0, 32, 32};
-		};
-	};
-	zombie = {
-		path = "gfx/npc/zombie.bmp",
-		stance = {
-			handgun = {32, 32, 32, 32};
-			rifle = {32, 64, 32, 32};
-			melee = {32, 0, 32, 32};
-			object = {32, 0, 32, 32};
-			zombie = {0, 32, 32, 32};
-			nothing = {0, 0, 32, 32};
-		};
-	};
+	"gfx/player/ct1.bmp",
+	"gfx/player/ct2.bmp",
+	"gfx/player/ct3.bmp",
+	"gfx/player/ct4.bmp",
+	"gfx/player/t1.bmp",
+	"gfx/player/t2.bmp",
+	"gfx/player/t3.bmp",
+	"gfx/player/t4.bmp",
+	"gfx/player/vip.bmp",
+	"gfx/npc/zombie.bmp",
 }
 
 

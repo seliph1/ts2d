@@ -235,7 +235,6 @@ function newobject:ParseText(str)
 	local formattedchunks = {}
 	local formattedstring = {}
 	local defaultColor = self.defaultcolor
-	local currentColor = {0,0,0,1}
 
 	local last = 1
 	while true do

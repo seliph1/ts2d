@@ -40,7 +40,7 @@
 	canScroll, canScrollHorizontally, canScrollVertically
 	clearHistory
 	eachVisibleLine, eachSelection, eachSelectionOptimized
-	getBlinkPhase, resetBlinkCursor, moveCursor, getCursorSelectionSide, getAnchorSelectionSide
+	getBlinkPhase, resetBlinking, moveCursor, getCursorSelectionSide, getAnchorSelectionSide
 	getCursorLayout
 	getInfoAtCoords, getInfoAtCursor, getInfoAtCharacter
 	getScroll, getScrollX, getScrollY, setScroll, setScrollX, setScrollY, scroll, scrollToCursor

@@ -31,9 +31,10 @@ share_lerp.scores 	= {}
 
 client.version 			= "v1.0.1"
 client.enabled 			= true
-client.width 			= 800
-client.height 			= 600
-client.lerp_speed 		= 30
+client.width 			= 800 -- pixels
+client.height 			= 600 -- pixels
+client.lerp_speed 		= 30 -- frames
+client.lerp_threshold 	= 32 -- pixels
 client.debug_level		= 0
 client.sendRate 		= 35
 client.scale 			= false
@@ -166,8 +167,7 @@ function client.attack(peer_id, local_data)
 	if not player then return 1 end -- Return 1 second cooldown
 
 	-- Get player held item
-	local itemheld = client.get_item_held(peer_id)
-	local itemdata = client.get_item_data(itemheld)
+	local itemheld, itemdata = client.get_item_held(peer_id)
 	if not itemdata then return 1 end -- Return 1 second cooldown for no item
 
 	-- Get player position and target
@@ -196,6 +196,16 @@ function client.attack(peer_id, local_data)
 	end
 
 	if action == "bullet" then
+		local itemobject = player.i[itemheld]
+		local ammo_mag = itemobject.am or 0
+		local ammo_cap = itemobject.ac or 0
+		if ammo_mag and ammo_cap then
+			-- Check if player have enough bullets
+			if ammo_mag <= 0 then
+				return 1
+			end
+		end
+
 		local spawn = tonumber( args[1] ) or 1
 		local spread = tonumber( args[2] ) or 1
 		local angle = math.atan2(mouse_y - client.height/2, mouse_x - client.width/2)
@@ -317,7 +327,6 @@ function client.collect(peer_id, item_type)
 	end
 	--print("collected:", peer_id, item_type)
 end
-
 function client.select(peer_id, item_type)
 	if peer_id == client.id then
 		local player = share.players[peer_id]
@@ -328,6 +337,10 @@ function client.select(peer_id, item_type)
 	end
 
 	--print("selected:", peer_id, item_type)
+end
+
+
+function client.spawn(peer_id, health)
 end
 
 function client.get_item_held(peer_id)
@@ -433,18 +446,22 @@ function client.raycast(x1, y1, x2, y2)
 	if not client.map then return false end
 
 	local start_x, start_y = x1, y1
-	local impact_x, impact_y, hit = client.map:hitscan(x1, y1, x2, y2)
+	local impact_x, impact_y, hit = client.map:hitscan(x1, y1, x2, y2, 1)
 
 	local item_info, len = client.world:querySegmentWithCoords(start_x, start_y, impact_x, impact_y)
 	for i=1, len do
 		local info = item_info[i]
+		local object = info.item
 
-		-- Update the values for the first object impacted
-		impact_x = info.x1
-		impact_y = info.y1
-		hit = true
-		-- Breaks on the first impact
-		break
+		-- check if it's a player
+		if object.ct == 1 and object.h > 0 then
+			-- Update the values for the first object impacted
+			impact_x = info.x1
+			impact_y = info.y1
+			hit = true
+			-- Breaks on the first impact
+			break
+		end
 	end
 
 	return impact_x, impact_y, hit
@@ -500,6 +517,7 @@ function client.render()
 	love.graphics.setCanvas()
 	love.graphics.pop()
 end
+
 
 --- Returns the client object to the main code block
 return client

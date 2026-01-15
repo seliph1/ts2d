@@ -1,3 +1,4 @@
+#pragma language glsl3
 // Love2d variables
 uniform vec2 camera = vec2(0.0);
 uniform vec4 mouse = vec4(0.0);

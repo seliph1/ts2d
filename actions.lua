@@ -1,3 +1,5 @@
+local serpent = require "lib.serpent"
+
 -- Module start
 return function(client)
 ---------- module start ----------
@@ -119,10 +121,31 @@ local actions = {
     };
 
     effect = {
-        action = function(effect_id, x, y)
+        action = function(effect_id, x, y, p1, p2, r, g, b)
             x = tonumber(x) or 0
             y = tonumber(y) or 0
-            client.map:spawn_effect(effect_id, x, y)
+            local amount, radius, velocity
+            if (r and g and b) then
+                r = (tonumber(r) or 255)/255
+                g = (tonumber(g) or 255)/255
+                b = (tonumber(b) or 255)/255
+            end
+
+            if effect_id == "fire" then
+            elseif effect_id == "smoke" then
+            elseif effect_id == "blood" then
+            elseif effect_id == "flare" then
+                if (r and g and b) then
+                    client.map:spawn_effect(effect_id, x, y, {
+                        setColors = {r, g, b, 1};
+                    })
+                else
+                    client.map:spawn_effect(effect_id, x, y)
+                end
+            elseif effect_id == "colorsmoke" then
+            elseif effect_id == "particles" then
+            end
+
         end
     };
 
@@ -187,13 +210,11 @@ local actions = {
 
     hit = {
         action = function(...)
-            print("hit: ", ...)
         end
     };
 
     kill = {
         action = function(...)
-            print("kill: ", ...)
         end
     };
 
@@ -232,13 +253,60 @@ local actions = {
             ui.teampick()
         end
     };
-    new = {
-        action = function()
-        end
+
+    spawn = {
+        action = function(peer_id, x, y)
+            -- Release the spawning effect on this peer_id player
+            peer_id = tonumber(peer_id)
+            x = tonumber(x) or 0
+            y = tonumber(y) or 0
+            if not client.joined then return end
+            if not (client.share or client.share.players or client.share.config) then return end
+            local player = client.share.players[peer_id]
+            local teams = client.share.config.teams
+
+            if player then
+                local team_id = player.t
+                local team = teams[team_id]
+                local color = {0.75, 0.75, 0.75}
+                if team then
+                   	local r, g, b = team.color:match("(%d%d%d)(%d%d%d)(%d%d%d)")
+                    if (r and g and b) then
+                        color[1] = tonumber(r) / 255
+                        color[2] = tonumber(g) / 255
+                        color[3] = tonumber(b) / 255
+                    end
+                end
+
+                client.map:spawn_effect("spawn", x, y, {
+                    -- Transition from opaque to transparent (1->0)
+                    setColors = {
+                        color[1], color[2], color[3], 1.0,
+                        color[1], color[2], color[3], 0.0,
+                    },
+                })
+            end
+
+        end,
+    };
+
+    die = {
+        action = function(victim_id, attacker_id, item_type, x, y)
+            -- Release the spawning effect on this peer_id player
+            victim_id = tonumber(victim_id)
+            x = tonumber(x) or 0
+            y = tonumber(y) or 0
+            if not client.joined then return end
+            if not (client.share or client.share.players or client.share.config) then return end
+            local player = client.share.players[victim_id]
+
+            if player then
+                client.map:spawn_effect("bloodpile", x, y)
+            end
+        end,
     };
 }
 actions.msg = actions.message
-
 
 client.actions = actions
 ---------- module end ------------

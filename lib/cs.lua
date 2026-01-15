@@ -219,7 +219,6 @@ function client.sendState(dt)
     -- Likewise, server wont accept these inputs.
     if not client.joined then return end
 
-
     -- Apply all of the changed states at once from the buffer in a single tick.
     if client.stateBuffer:count() > 0 then
         for index, lastState in client.stateBuffer:walk() do

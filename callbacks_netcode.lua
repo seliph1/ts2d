@@ -136,6 +136,8 @@ function client.peer_connected(peer_id)
 end
 
 function client.peer_disconnected(peer_id)
+	if not (share.players and share_lerp.players) then return end
+
 	-- Store it temporarily
 	local player = share.players[peer_id]
 	local player_s = share_lerp.players[peer_id]

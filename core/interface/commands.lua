@@ -124,7 +124,7 @@ local commands = {
 		---@param ... string
 		action = function(...)
 			local block = table.concat({...}, " ")
-			local expression, error_message = loadstring( block )
+			local expression, error_message = loadstring( block, "")
 			local ui = require "core.interface.ui"
 			CONSOLE_ENV.print = print
 			CONSOLE_ENV.client = client
@@ -348,7 +348,14 @@ local commands = {
 	-------------------------------------------------------
 	-- REMOTE ACTIONS
 	-------------------------------------------------------
-	
+	effect = {
+		action = function(effect_id, x, y)
+		    x = tonumber(x) or 0
+            y = tonumber(y) or 0
+            client.map:spawn_effect(effect_id, x, y)
+		end,
+	};
+
 	scroll = {
 		action = function(x,y)
 			if client.map then

@@ -12,7 +12,7 @@ client.camera = {
 	snap_pointer = {category = nil, id = nil},
 	snap_enabled = false,
 	speed = 500, -- pixel/frame
-	tween_speed = 15, -- pixel/frame
+	tween_speed = 10, -- pixel/frame
 	pointer = nil
 }
 

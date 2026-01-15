@@ -1,6 +1,7 @@
 local LG 		= love.graphics
 local LF 		= require "lib.loveframes"
 local client 	= require "client"
+local serpent	= require "lib.serpent"
 
 local ui 		= {}
 ui.font_fallbacks = {
@@ -63,6 +64,98 @@ end
 
 local _, pointers =  LF.CreateSpriteSheet("gfx/pointer.bmp", 46, 46)
 --ui.setCursor("arrow", pointers[0], 0.6)
+
+function ui.getcoloredtext(text)
+	local function fixUTF8(s, replacement)
+		local p, len, invalid = 1, #s, {}
+		while p <= len do
+			if     p == s:find("[%z\1-\127]", p) then p = p + 1
+			elseif p == s:find("[\194-\223][\128-\191]", p) then p = p + 2
+			elseif p == s:find(       "\224[\160-\191][\128-\191]", p)
+				or p == s:find("[\225-\236][\128-\191][\128-\191]", p)
+				or p == s:find(       "\237[\128-\159][\128-\191]", p)
+				or p == s:find("[\238-\239][\128-\191][\128-\191]", p) then p = p + 3
+			elseif p == s:find(       "\240[\144-\191][\128-\191][\128-\191]", p)
+				or p == s:find("[\241-\243][\128-\191][\128-\191][\128-\191]", p)
+				or p == s:find(       "\244[\128-\143][\128-\191][\128-\191]", p) then p = p + 4
+			else
+			s = s:sub(1, p-1)..replacement..s:sub(p+1)
+			table.insert(invalid, p)
+			end
+		end
+		return s, invalid
+	end
+
+	local function parsetext(str)
+		local formattedchunks = {}
+		local formattedstring = {}
+		local defaultColor = {0,0,0,1}
+
+		local last = 1
+		while true do
+			local i, j = str:find("©", last)
+			if not i then
+				-- restante
+				table.insert(formattedchunks, defaultColor)
+				table.insert(formattedchunks, str:sub(last))
+				table.insert(formattedstring, str:sub(last))
+				break
+			end
+
+			-- trecho antes do ©
+			if i > last then
+				local segment = str:sub(last, i-1)
+				table.insert(formattedchunks, defaultColor)
+				table.insert(formattedchunks, segment)
+				table.insert(formattedstring, segment)
+			end
+
+			-- agora pega o próximo trecho até o próximo © ou fim
+			local k = str:find("©", j+1) or (#str+1)
+			local capture = str:sub(j+1, k-1)
+
+			local r,g,b = capture:match("(%d%d%d)(%d%d%d)(%d%d%d)")
+			local captured_text = capture:sub(10)
+			if r and g and b then
+				table.insert(formattedchunks, {tonumber(r)/255, tonumber(g)/255, tonumber(b)/255})
+				table.insert(formattedchunks, captured_text)
+				table.insert(formattedstring, captured_text)
+			else
+				-- não é cor válida, volta o texto inteiro
+				local bad = "©"..capture
+				local previousColor
+				if #formattedchunks > 0 then
+					previousColor = formattedchunks[#formattedchunks-2]
+				else
+					previousColor = defaultColor
+				end
+				table.insert(formattedchunks, previousColor)
+				table.insert(formattedchunks, bad)
+				table.insert(formattedstring, bad)
+			end
+			last = k
+		end
+
+		return formattedchunks, table.concat(formattedstring)
+	end
+
+	local fixed_text = fixUTF8(text, "")
+	local formatted_chunk, formatted_text = parsetext(fixed_text)
+	return formatted_chunk, formatted_text
+end
+
+function ui.getcolortable(color_tag)
+	local r,g,b = color_tag:match("(%d%d%d)(%d%d%d)(%d%d%d)")
+	if r and g and b then
+		return { 
+			tonumber(r)/255,
+			tonumber(g)/255,
+			tonumber(b)/255,
+			1.0,
+		}
+	end
+	return {1,1,1,1}
+end
 
 --------------------------------------------------------------------------------------------------
 --Local function helpers--------------------------------------------------------------------------
@@ -769,8 +862,8 @@ ui.chat_input = LF.Create("input", ui.chat_frame)
 :SetCursorColor(1.00, 0.86, 0.00, 1.00)
 :SetHighlightColor(1.00, 0.86, 0.00, 0.20)
 :SetState("game")
+:SetY(0.99)
 :SetVisible(false)
-:SetY(1)
 
 ui.chat_input.Draw = function(object)
 	local x = object.x
@@ -793,7 +886,8 @@ ui.chat_input.OnControlKeyPressed = function (object, key)
 			local text = object:GetText()
 			if text ~= ""  then
 				if text:sub(1, 1) == "/" then
-					ui.console_input.parse(text:sub(2))
+					local console = require "core.interface.console"
+					console.parse(text:sub(2))
 				else
 					if client.joined then
 						client.send(string.format("say %s", text))
@@ -1473,8 +1567,10 @@ function ui.shader_window:Draw()
 	ui.shader_window.drawfunc(self)
 
 	local current_shader = client.shaders.highlight
-
-	current_shader:send("time", love.timer.getTime())
+	if current_shader:hasUniform("time") then
+		current_shader:send("time", love.timer.getTime())
+	end
+	
 	love.graphics.setShader(current_shader)
 	love.graphics.draw(shader_target, self.x + 5, self.y + 30)
 	love.graphics.setShader()
@@ -1542,6 +1638,7 @@ function ui.teampick()
 		function ui.teampick_frame:OnClose()
 			ui.teampick_frame = nil
 		end
+
 		local scrollpanel = LF.Create("scrollpanel", ui.teampick_frame)
 		:SetPos(5, 35)
 		:Expand("down", 105)
@@ -1552,32 +1649,207 @@ function ui.teampick()
 		:Expand("down", 35)
 		:Expand("right", 5)
 
-		for i = 1, #teams do
-			local team_id = i
-			local team = teams[team_id]
-			local button = LF.Create("button", scrollpanel)
-			:SetSize(0.8, 28)
-			:CenterX()
-			:SetY((team_id - 1) * 34)
-			:SetText( team.name )
-
-			function button:OnClick()
-				scrollpanel:Clear()
-			end
-		end
-
 		local autoselect_button = LF.Create("button", ui.teampick_frame)
 		:SetY(-35)
 		:SetHeight(28)
 		:ExpandTo(scrollpanel, "horizontal", 0.8)
 		:SetText("Auto-Select")
+
+		function autoselect_button:OnClick()
+			local team_id = teams[ math.random(1, #teams) ]
+			local look_id
+			if teams[team_id] and teams[team_id].looks then
+				local looks = teams[team_id].looks
+				look_id = looks[ math.random(1, #looks) ]
+			else
+				look_id = ""
+			end
+			client.send(string.format("team %s %s", team_id, look_id))
+
+			ui.teampick_frame:Remove()
+			ui.teampick_frame = nil
+		end
+
 		local spectator_button = LF.Create("button", ui.teampick_frame)
 		:SetY(-70)
 		:SetHeight(28)
 		:ExpandTo(scrollpanel, "horizontal", 0.8)
 		:SetText("Spectator")
 
+		function spectator_button:OnClick()
+			client.send("team 0")
+
+			ui.teampick_frame:Remove()
+			ui.teampick_frame = nil
+		end
+
+		function ui.teampick_frame.list_teams()
+			for i = 1, #teams do
+				local team_id = i
+				local team = teams[team_id]
+				local button = LF.Create("button", scrollpanel)
+				:SetSize(0.8, 28)
+				:CenterX()
+				:SetY((team_id - 1) * 34)
+				:SetText( team.name )
+
+				function button:OnClick()
+					if team.looks then
+						scrollpanel:Clear()
+						ui.teampick_frame.list_looks(team_id, team)
+					else
+						client.send(string.format("team %s", team_id))
+
+						ui.teampick_frame:Remove()
+						ui.teampick_frame = nil
+					end
+				end
+			end
+		end
+		ui.teampick_frame.list_teams()
+
+		-------------------------------------------------------------
+		--looks
+		-------------------------------------------------------------
+		function ui.teampick_frame.list_looks(team_id, team)
+			local looks = team.looks
+			for i = 1, #looks do
+				local look_id = i
+				local look = looks[look_id]
+				local button = LF.Create("button", scrollpanel)
+				:SetSize(0.8, 28)
+				:CenterX()
+				:SetY((look_id - 1) * 34)
+				:SetText( look.name )
+
+				function button:OnClick()
+					client.send(string.format("team %s", team_id))
+
+					ui.teampick_frame:Remove()
+					ui.teampick_frame = nil
+				end
+			end
+
+			local backbutton = LF.Create("button", scrollpanel)
+			:SetSize(0.8, 28)
+			:CenterX()
+			:SetY( #looks * 34)
+			:SetText( "Back" )
+
+			function backbutton:OnClick()
+				scrollpanel:Clear()
+				ui.teampick_frame.list_teams()
+			end
+		end
+
 	end
+end
+--------------------------------------------------------------------------------------------------
+--tabscreen ui------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------
+---@param team_id number
+---@return string, string, number
+function ui.tabscreen_getplayerlist(team_id)
+	local share = client.share
+	if not (share or share.players) then return "", "", 0 end
+
+	local str_names = ""
+	local str_ids = ""
+	local count = 0
+	for peer_id, player in pairs(share.players) do
+		if player.t == team_id then
+			str_names = str_names .. player.n.. "\n"
+			str_ids = str_ids .. peer_id.. "\n"
+			count = count + 1
+		end
+	end
+	return str_names, str_ids, count
+end
+
+function ui.tabscreen_display()
+    if ui.tabscreen or not (client.joined) then return end
+
+	local share = client.share
+	if not (share or share.players or share.config) then return end
+
+    local players = share.players
+    if not players then return end
+
+	local teams = share.config.teams
+	if not teams then return end
+
+    ui.tabscreen = LF.Create("panel")
+    :SetSize(0.8, 0.8)
+    :Center()
+	:SetCollidable(false)
+    :SetState("game")
+
+	local team_columns = {}
+
+	for i = #teams, 0, -1 do
+		local team_id = i
+		local team = teams[team_id]
+
+		if team then
+			--print("©"..team.color, team.color, team.name)
+			table.insert(team_columns, {
+				color = team.color,
+				title = ui.getcoloredtext("©"..team.color..team.name.." Forces"),
+				players = ui.getcoloredtext("©"..team.color),
+				id = team_id,
+				color_table = ui.getcolortable(team.color)
+			})
+
+			if team_id == 0 then
+				team_columns[#team_columns].title = ui.getcoloredtext("©"..team.color..team.name)
+			end
+
+		end
+	end
+
+    function ui.tabscreen:Update()
+        if not love.keyboard.isDown("tab") then
+            ui.tabscreen:Remove()
+            ui.tabscreen = nil
+        end
+    end
+
+	local font_height = ui.font_chat:getHeight()
+	local margin = 20
+    function ui.tabscreen:Draw()
+		love.graphics.push("all")
+		love.graphics.translate(self.x, self.y)
+
+
+        love.graphics.setColor(0.0, 0.0, 0.0, 0.5)
+        love.graphics.rectangle("fill", 0, 0, self.width, self.height, 5, 5)
+
+        love.graphics.setColor(1.0, 1.0, 1.0, 1.0)
+        love.graphics.setFont(ui.font_chat)
+
+		local height = 0
+		for index, team_row in ipairs(team_columns) do
+			local str_names, str_ids, count = ui.tabscreen_getplayerlist(team_row.id)
+			team_row.players[2] = str_names
+
+			love.graphics.setColor(1.0, 1.0, 1.0, 1.0)
+			love.graphics.print(team_row.title, margin, height)
+			height = height + font_height
+
+			love.graphics.setColor(team_row.color_table)
+			love.graphics.setLineStyle("smooth")
+			love.graphics.setLineWidth(1)
+			love.graphics.line(margin, height, self.width-margin, height)
+
+			love.graphics.setColor(1.0, 1.0, 1.0, 1.0)
+			love.graphics.print(team_row.players, margin, height)
+
+			love.graphics.print(str_ids, 0, height)
+			height = height + font_height * (count) + 10
+		end
+
+		love.graphics.pop()
+    end
 end
 
 --------------------------------------------------------------------------------------------------

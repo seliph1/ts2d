@@ -297,6 +297,7 @@ function newobject:RedoLayout()
 	local y = self.height
 	local hpadding = self.horizontalpadding
 	local vpadding = self.verticalpadding
+	self.field:resetBlinking()
 	self.field:setDimensions(x - hpadding, y - vpadding)
 end
 
@@ -465,6 +466,7 @@ end
 function newobject:EnableInput(bool)
 	if bool then
 		loveframes.inputobject = self
+		self.field:resetBlinking()
 	else
 		loveframes.inputobject = nil
 	end
@@ -533,6 +535,7 @@ end
 --]]---------------------------------------------------------
 function newobject:SetVisible(bool)
 	self.visible = bool
+	self.field:resetBlinking()
 	return self
 end
 

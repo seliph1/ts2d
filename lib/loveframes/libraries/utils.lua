@@ -574,26 +574,49 @@ function loveframes.DebugDraw()
 	love.graphics.print("Down Object: " .. tostring(loveframes.downobject), infox + 10, infoy+ 100 )
 	love.graphics.print("Input Object: " .. tostring(loveframes.inputobject), infox + 10, infoy+ 110 )
 
-	local ex_info_x = love.mouse.getX()+30
-	local ex_info_y = love.mouse.getY()+30
-	local height = 0
-	local reverse = false
-	for k,v in pairs(topcol) do	height = height + 10 end
-	if ex_info_y + height > love.graphics.getHeight() then
-		ex_info_y = ex_info_y - height
-	end
-	love.graphics.setColor(0,0,0,0.8)
-	love.graphics.rectangle("fill", ex_info_x - 10, ex_info_y - 10, 320, height+20)
-	love.graphics.setColor(1,1,1,1)
-	height = 0
-	for k, v in pairs(topcol) do
-		local str = tostring(v)
-		if string.len(str) > 30 then str = "..."..string.sub(str, -30) end
+	if love.keyboard.isDown "lshift" then
+		local ex_info_x = love.mouse.getX()+30
+		local ex_info_y = love.mouse.getY()+30
 
-		love.graphics.print(tostring(k)..": ".. str, ex_info_x, ex_info_y + height)
-		height = height + 10
+		love.graphics.setColor(0,0,0,0.8)
+		love.graphics.rectangle("fill", ex_info_x - 10, ex_info_y - 10, 320, 85)
+		love.graphics.setColor(1,1,1,1)
+
+		local children = topcol.children and #topcol.children or 0
+		local internals = topcol.internals and #topcol.internals or 0
+		local parent = tostring (topcol.parent)
+		local item_type = topcol.type
+
+		love.graphics.print("Position: " ..topcol.x.."|"..topcol.y, ex_info_x, ex_info_y + 0)
+		love.graphics.print("Size: " ..topcol.width.."|"..topcol.height, ex_info_x, ex_info_y + 10)
+		love.graphics.print("Children #: "..children, ex_info_x, ex_info_y + 20)
+		love.graphics.print("Internals #: "..internals, ex_info_x, ex_info_y + 30)
+		love.graphics.print("Parent: "..parent, ex_info_x, ex_info_y + 40)
+		love.graphics.print("Type: "..item_type, ex_info_x, ex_info_y + 50)
 	end
 
+
+	if love.keyboard.isDown "lctrl" then
+		local ex_info_x = love.mouse.getX()+30
+		local ex_info_y = love.mouse.getY()+30
+		local height = 0
+		local reverse = false
+		for k,v in pairs(topcol) do	height = height + 10 end
+		if ex_info_y + height > love.graphics.getHeight() then
+			ex_info_y = ex_info_y - height
+		end
+		love.graphics.setColor(0,0,0,0.8)
+		love.graphics.rectangle("fill", ex_info_x - 10, ex_info_y - 10, 320, height+20)
+		love.graphics.setColor(1,1,1,1)
+		height = 0
+		for k, v in pairs(topcol) do
+			local str = tostring(v)
+			if string.len(str) > 30 then str = "..."..string.sub(str, -30) end
+
+			love.graphics.print(tostring(k)..": ".. str, ex_info_x, ex_info_y + height)
+			height = height + 10
+		end
+	end	
 end
 
 --return util

@@ -11,7 +11,11 @@ local function lerp(a, b, t)
 end
 
 function effect.register(particle, name, options)
-	effect.list[name] = particle
+	if type(particle) == "function" then
+		effect.list[name] = particle()
+	elseif type(particle) == "table" then
+		effect.list[name] = particle
+	end
 end
 
 function effect.new(name, x, y, args)

@@ -46,12 +46,7 @@ return function(client)
 	end
 
 	for name, player in pairs(client.content.player) do
-		client.gfx.player[name] = client.gfx.player[name] or {}
-		local texture = imageload(player.path)
-		client.gfx.player[name].texture = texture
-		for entry, value in pairs(player.stance) do
-			client.gfx.player[name][entry] = love.graphics.newQuad(value[1], value[2], value[3], value[4], texture) --fs:loadImage(player.path)
-		end
+		client.gfx.player[player] = imageload(player)
 	end
 
 	for _, item in pairs(client.content.ui) do

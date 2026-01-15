@@ -27,14 +27,15 @@ local ENTITY_TYPE = enum.ENTITY_TYPE
 local SOLID_THRESHOLD = 0.3
 local WALL_THRESHOLD = 1.0
 
-effect.register(LF.load "core/particle/sparkle.lua" (), "sparkle")
-effect.register(LF.load "core/particle/hitscan.lua" (), "hitscan")
-effect.register(LF.load "core/particle/bullettrail.lua" (), "trail")
---effect.register(LF.load "core/particle/fire.lua" (), "fire")
-effect.register(LF.load "core/particle/smoke_inst.lua" (), "blacksmoke")
-effect.register(LF.load "core/particle/smoke_white.lua" (), "whitesmoke")
+effect.register(LF.load "core/particle/sparkle.lua", "sparkle")
+effect.register(LF.load "core/particle/hitscan.lua", "hitscan")
+effect.register(LF.load "core/particle/bullettrail.lua", "trail")
+effect.register(LF.load "core/particle/smoke_inst.lua", "blacksmoke")
+effect.register(LF.load "core/particle/smoke_white.lua", "whitesmoke")
+effect.register(LF.load "core/particle/spawn.lua", "spawn")
+effect.register(LF.load "core/particle/bloodpile.lua", "bloodpile")
 
---effect.register(dofile "core/particle/fire.lua", "fire")
+--effect.register(LF.load "core/particle/fire.lua" (), "fire")
 --effect.register(dofile "core/particle/snow.lua", "snow")
 --effect.register(dofile "cor'e/particle/rain.lua", "rain")
 --[[---------------------------------------------------------
@@ -109,6 +110,22 @@ local function clamp(x, minVal, maxVal)
     if x < minVal then return minVal end
     if x > maxVal then return maxVal end
     return x
+end
+
+local PLAYER_SIZE = 32
+local PLAYER_QUAD =  {
+	handgun = {PLAYER_SIZE, PLAYER_SIZE  , PLAYER_SIZE, PLAYER_SIZE};
+	rifle 	= {PLAYER_SIZE, PLAYER_SIZE*2, PLAYER_SIZE, PLAYER_SIZE};
+	melee 	= {PLAYER_SIZE, 0            , PLAYER_SIZE, PLAYER_SIZE};
+	object 	= {PLAYER_SIZE, 0            , PLAYER_SIZE, PLAYER_SIZE};
+	zombie 	= {0          , PLAYER_SIZE  , PLAYER_SIZE, PLAYER_SIZE};
+	idle    = {0          , 0            , PLAYER_SIZE, PLAYER_SIZE};
+}
+
+local PLAYER_STANCE = {}
+for index, quad in pairs(PLAYER_QUAD) do
+	local x, y, w, h = unpack(quad)
+	PLAYER_STANCE[index] = love.graphics.newQuad( x, y, w, h, 64, 96 )
 end
 
 --[[---------------------------------------------------------
@@ -896,11 +913,12 @@ end
 ---@param x number
 ---@param y number
 ---@return boolean
-function MapObject:isColliding(x, y)
+function MapObject:isColliding(x, y, height)
+	height = height or 0.5
 	local tx, ty = floor(x/32), floor(y/32)
 	local id, mod, property = self:tile(tx, ty)
 
-	if TILE_MODE_HEIGHT[property] and TILE_MODE_HEIGHT[property] >= SOLID_THRESHOLD then
+	if TILE_MODE_HEIGHT[property] and TILE_MODE_HEIGHT[property] >= height then
 		return true
 	end
 	return false
@@ -978,7 +996,6 @@ function MapObject:update(dt)
 	local time = love.timer.getTime()
 	self._oscillation = (sin( time * math.pi * 2) + 1)/2
 
-
 	effect.update(dt)
 end
 
@@ -1013,18 +1030,6 @@ function MapObject:draw_background()
 		)
 		love.graphics.rectangle("fill", 0, 0, love.graphics.getWidth(), love.graphics.getHeight())
 		love.graphics.setColor(1,1,1,1)
-		--[[
-		love.graphics.setBackgroundColor(
-			mapdata.background_color_red/255,
-			mapdata.background_color_green/255,
-			mapdata.background_color_blue/255
-		)
-		]]
-		--love.graphics.clear(
-			--mapdata.background_color_red/255,
-			--mapdata.background_color_green/255,
-			--mapdata.background_color_blue/255
-		--)
 	end
 end
 
@@ -1062,18 +1067,6 @@ function MapObject:draw_ceiling()
 	love.graphics.setBlendMode("alpha")
 	love.graphics.setColor(1, 1, 1, 1)
 end
-
---[[
-	local _entities = 10
-	local _entity_list = {}
-	for k = 1, 100 do
-		table.insert(_entity_list, {
-			math.random(love.graphics.getWidth()),
-			math.random(love.graphics.getHeight()),
-			math.random() * 10;
-		})
-	end
-]]
 
 function MapObject:draw_shadow(share, client)
 	local camera = self._camera
@@ -1191,7 +1184,6 @@ function MapObject:draw_players(client) -- get info from server!
 	love.graphics.setColor(1, 1, 1, 1)
 end
 
-
 function MapObject:draw_player(client, peer_id)
 	-- Player data
 	local players = client.share_lerp.players
@@ -1222,24 +1214,30 @@ function MapObject:draw_player(client, peer_id)
 	-- Get the player's equipment
 	local equipment = player.e
 
+	-- Get the player appearance
+	local player_texture_path = string.format("gfx/player/%s", player.p)
+
 	-- Gets the weapon texture
-	local texture, quad
+	local player_texture = client.gfx.player[player_texture_path]
+	if not player_texture then
+		client.gfx.player[player_texture_path] = love.graphics.newImage(player_texture_path)
+	end
+
+	local stance
 	local weapon_texture, weapon_offset
 	if holding == 0 then
-		texture = client.gfx.player[player.p].texture
-		quad = client.gfx.player[player.p]["nothing"]
+		-- Set player stance to idle since it isn't wearing anything
+		stance = PLAYER_STANCE.idle
 	else
 		-- Check if that weapon ID exists in available list
 		local itemdata = client.content.itemlist[holding]
-		-- Check what stance should player hold that weapon
-		local stance = itemdata.player_stance
-		-- Get the player texture for that stance
-		texture = client.gfx.player[player.p].texture
-		quad = client.gfx.player[player.p][stance]
 		-- Get the weapon texture from weapon ID
 		local weapon_gfx_path = itemdata.common_path .. itemdata.held_image
 		weapon_texture = client.gfx.itemlist[weapon_gfx_path]
 		weapon_offset = itemdata.offset
+
+		-- Set what stance should player hold that weapon
+		stance = PLAYER_STANCE[ itemdata.player_stance ]
 	end
 
 	local armor_texture
@@ -1258,7 +1256,7 @@ function MapObject:draw_player(client, peer_id)
 		love.graphics.push()
 		love.graphics.translate(__player.x, __player.y)
 		love.graphics.setColor(1, 0, 0, 0.2)
-		love.graphics.draw(texture, quad, 0, 0, angle, 1, 1, 16, 16)
+		love.graphics.draw(player_texture, stance, 0, 0, angle, 1, 1, 16, 16)
 		love.graphics.pop()
 	end
 	-- Translate to player
@@ -1272,9 +1270,9 @@ function MapObject:draw_player(client, peer_id)
 	end
 	local alpha = armor_opacity or 1
 	love.graphics.setColor(1, 1, 1, alpha)
-	if texture then
+	if player_texture then
 		-- Draw the player
-		love.graphics.draw(texture, quad, 0, 0, angle, 1, 1, 16, 16)
+		love.graphics.draw(player_texture, stance, 0, 0, angle, 1, 1, 16, 16)
 	end
 
 	if armor_texture then
@@ -1283,7 +1281,7 @@ function MapObject:draw_player(client, peer_id)
 		-- Draw armor if possible
 		love.graphics.draw(armor_texture, 0, 0, angle, 1, 1, width/2, height/2)
 	end
-	
+
 	for item_type in pairs(equipment) do
 		local itemdata = client.content.itemlist[item_type]
 		if itemdata then
@@ -1394,45 +1392,7 @@ function MapObject:draw_entities()
 end
 
 function MapObject:update_items(share, client)
-	local camera = self._camera
-	local mapdata = self._mapdata
-	local items = share.items
-	local gfx = client.gfx
-	local itemlist = client.content.itemlist
-
-	self._item_field = {}
-	for _, item in pairs(items) do
-		local cx = floor( item.x / 32)
-		local cy = floor( item.y / 32)
-
-		self._item_field[cx] = self._item_field[cx] or {}
-		self._item_field[cx][cy] = self._item_field[cx][cy] or {}
-
-		table.insert(self._item_field[cx][cy], item)
-	end
-	print("Map: item field updated")
-end
-
-function MapObject:getItemsFromCamera()
-	local render = self._render
-
-	local x1 = floor(render.x/32)
-	local x2 = floor(render.width/32)
-	local y1 = floor(render.y/32)
-	local y2 = floor(render.height/32)
-
-	local len = 0
-	local dict = {}
-	for x = x1, x2 do
-	for y = y1, y2 do
-		if self._item_field[x] and self._item_field[x][y] then
-			dict[ self._item_field[x][y] ] = true
-			len = len + 1
-		end
-	end
-	end
-
-	return dict, len
+	--
 end
 
 function MapObject:draw_items(client)
@@ -1471,21 +1431,6 @@ function MapObject:draw_items(client)
 		end
 	end
 
-	--[[
-	for chunk in pairs(self:getItemsFromCamera()) do
-		for index, item in pairs(chunk) do
-			local itemdata = itemlist[item.it]
-			local path = itemdata.common_path .. itemdata.dropped_image
-			local imagedata = gfx.itemlist[path]
-
-			if itemdata and imagedata then
-				-- Transpose and rotate the image relative to the center
-				love.graphics.setColor(1, 1, 1, 1)
-				love.graphics.draw(imagedata, item.x*tile_size + tile_size/2, item.y*tile_size + tile_size/2, item.r + love.timer.getTime()%360, 1, 1, imagedata:getWidth()/2, imagedata:getHeight()/2)
-			end
-		end
-	end
-	]]
 	love.graphics.pop()
 end
 
@@ -1547,15 +1492,17 @@ end
 ---@param tx number
 ---@param ty number
 ---@return boolean
-function MapObject:isCollidingTile(tx, ty)
+function MapObject:isCollidingTile(tx, ty, height)
+	height = height or 0.5
 	tx = clamp(tx, 0, self:getWidth())
 	ty = clamp(ty, 0, self:getHeight())
 	local id, mod, property = self:tile(tx, ty)
-	if TILE_MODE_HEIGHT[property] and TILE_MODE_HEIGHT[property] >= SOLID_THRESHOLD then
+	if TILE_MODE_HEIGHT[property] and TILE_MODE_HEIGHT[property] >= height then
 		return true
 	end
 	return false
 end
+MapObject.isCollidingWithTile = MapObject.isCollidingTile
 
 local EPSILON = 0.0001 -- deslocamento mínimo para evitar ficar preso
 --- Função auxiliar: colisão contínua com um tile
@@ -1569,7 +1516,7 @@ local EPSILON = 0.0001 -- deslocamento mínimo para evitar ficar preso
 function MapObject:sweptAABB(size, x1, y1, vx, vy, tileX, tileY)
 	local half 		= floor(size/2)
 	local tile_size = self:getTileSize()
-	
+
     local ox1 = x1 - half
     local oy1 = y1 - half
     local ox2 = x1 + half
@@ -1641,7 +1588,7 @@ function MapObject:moveWithSliding(size, x1, y1, dx, dy)
 
     for ty = ty1, ty2 do
         for tx = tx1, tx2 do
-            if self:isCollidingTile(tx, ty) then
+            if self:isCollidingTile(tx, ty, SOLID_THRESHOLD) then
                 local t, nxx, nyy = self:sweptAABB(size, x1, y1, dx, dy, tx, ty)
                 if t and t < earliest then
                     earliest = t
@@ -1677,7 +1624,7 @@ function MapObject:moveWithSliding(size, x1, y1, dx, dy)
 end
 
 
-function MapObject:hitscan(x1, y1, x2, y2)
+function MapObject:hitscan(x1, y1, x2, y2, height)
     local dx = x2 - x1
     local dy = y2 - y1
 
@@ -1688,7 +1635,7 @@ function MapObject:hitscan(x1, y1, x2, y2)
 
     if steps == 0 then
         -- linha degenerada (ponto único)
-        if self:isColliding(x1, y1) then
+        if self:isColliding(x1, y1, height) then
             return x1, y1, true
         else
             return x1, y1, false
@@ -1700,7 +1647,7 @@ function MapObject:hitscan(x1, y1, x2, y2)
     local x, y = x1, y1
 
     for i = 1, steps do
-        if self:isColliding(x, y) then
+        if self:isColliding(x, y, height) then
             return x, y, true -- impacto
         end
         x = x + sx
