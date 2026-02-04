@@ -70,7 +70,7 @@ vec4 effect( vec4 color, Image SCREEN_TEXTURE, vec2 UV, vec2 SCREEN_UV ) {
 	remapped_line /= Brightness;
 	remapped_line = min(remapped_line, Alpha);
 
-	vec4 surface_tex = texture(SCREEN_TEXTURE, UV);
+	vec4 surface_tex = Texel(SCREEN_TEXTURE, UV);
     float highlight = 1 / (1.0 - remapped_line);
     surface_tex.rgb += vec3(highlight);
     return surface_tex;

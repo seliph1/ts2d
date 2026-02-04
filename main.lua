@@ -15,14 +15,12 @@
 ---@diagnostic disable: duplicate-set-field, undefined-field, redundant-parameter
 
 ---------------------------------------------------------------------------------------
-local client 		= require "client"
-local loveframes 	= require "lib.loveframes"
+if love.getVersion() < 12 then
+	love.graphics.newTextBatch = love.graphics.newText
+end
 
-local console 		= require "core.interface.console"
-local ui 			= require "core.interface.ui"
-local discordRPC	= require "lib.discordRPC"
-
-SLEEP_AMOUNT = 1/100
+local fps_cap = 1/120
+--fps_cap = 0.001
 
 function love.run()
 	if love.load then love.load(love.parsedGameArguments, love.rawGameArguments) end
@@ -60,14 +58,21 @@ function love.run()
 			love.graphics.present()
 		end
 
-        -- Limit FPS
-		if love.timer then
-			love.timer.sleep(SLEEP_AMOUNT)
-		end
+		if love.timer then love.timer.sleep(fps_cap) end
 	end
 end
 
+local loveframes 	= require "lib.loveframes"
+local console 		= require "core.interface.console"
 
+do
+	--require "uidebug.uidebug"
+	--return
+end
+
+local ui 			= require "core.interface.ui"
+local client 		= require "client"
+local discordRPC	= require "lib.discordRPC"
 
 local initializer = {
 	["debug"] = function()
@@ -120,9 +125,12 @@ function love.load(arguments)
 	if love.getVersion() ~= 12 then
 		love.graphics.newTextBatch = love.graphics.newText
 	end
-	for index, argument in pairs(arguments) do
-		if initializer[argument] then
-			initializer[argument]()
+
+	if arguments and type(arguments) == "table" then
+		for index, argument in pairs(arguments) do
+			if initializer[argument] then
+				initializer[argument]()
+			end
 		end
 	end
 	love.keyboard.setTextInput(true)

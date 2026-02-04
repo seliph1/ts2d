@@ -25,7 +25,6 @@ function newobject:initialize()
 	self.width = 200
 	self.height = 50
 	self.internal = false
-	self.children = {}
     self.internals = {}
 	self.elements = {}
 	self.padding = 5

@@ -1,6 +1,7 @@
-extern int mask = 0;
-extern int blend = 0;
-extern float epsilon = 0.1;
+uniform int mask = 0;
+uniform int blend = 0;
+//uniform float entity_alpha = 1.0;
+uniform float epsilon = 0.1;
 
 vec4 color_mask(vec4 sub_color, vec4 tex_color, float threshold){
 	if (
@@ -20,10 +21,12 @@ vec4 effect( vec4 color, Image tex, vec2 texture_coords, vec2 screen_coords )
 {
 	vec4 texcolor = Texel(tex, texture_coords);
 	if (blend == 6) { // Grayscale
-		texcolor.a = (texcolor.r + texcolor.g + texcolor.b) / 3.0;
-		
+		float alpha = (texcolor.r + texcolor.g + texcolor.b) / 3.0;
+		texcolor.a *= alpha;
+		return texcolor * color;
+
 	} else if (blend == 3) { // Light
-		texcolor.rgb *= color.a * 2.0;
+		texcolor.rgb *= color.a;
 	}
 	
 	if ( mask == 4 ) {

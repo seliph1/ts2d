@@ -33,6 +33,10 @@ function newobject:initialize()
 	self.checked = false
 	self.text = "Button"
 	self.caption = ""
+	self.padding = 3
+	self.image_align = "left"
+	self.image_padding = 4
+	self.left_padding = 4
 	self.formattedtext = "Button"
 	self.formattedcaption = "Button"
 	self.align = "center"
@@ -206,7 +210,7 @@ function newobject:fixUTF8(s, replacement)
 end
 
 --[[---------------------------------------------------------
-	- func: GetText()
+	- func: Get/SetText()
 	- desc: gets/sets the object's text and aligment
 --]]---------------------------------------------------------
 function newobject:SetText(text)
@@ -316,12 +320,40 @@ function newobject:SetFont(font)
 end
 
 --[[---------------------------------------------------------
-	- func: GetFont()
-	- desc: gets the object's font
+	- func: Get/SetPadding()
+	- desc: gets/sets the object's padding
 --]]---------------------------------------------------------
-function newobject:GetFont()
-	return self.font
+function newobject:GetPadding()
+	return self.padding
 end
+
+function newobject:SetPadding(padding)
+	self.padding = padding
+	return self
+end
+
+--[[---------------------------------------------------------
+	- func: Get/SetImagePadding()
+	- desc: gets/sets the object's image padding
+--]]---------------------------------------------------------
+function newobject:GetImagePadding()
+	return self.image_padding
+end
+
+function newobject:SetImagePadding(padding)
+	self.image_padding = padding
+	return self
+end
+
+function newobject:GetImageAlign()
+	return self.image_align
+end
+
+function newobject:SetImageAlign(align)
+	self.image_align = align
+	return self
+end
+
 --[[---------------------------------------------------------
 	- func: SetImage(image)
 	- desc: adds an image to the object

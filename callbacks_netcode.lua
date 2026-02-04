@@ -58,6 +58,22 @@ end
 --- Callback for information in sync with server
 ---@param payload table
 function client.changing(payload)
+	if payload.players then
+		-- Update players position
+		for peer_id in pairs(payload.players) do
+			local player
+			local player_payload = payload.players[peer_id]
+			if share.players and share.players[peer_id] then
+				player = share.players[peer_id]
+			end
+
+			if client.setmoney then
+				if player and player.m and player_payload.m then
+					client.setmoney(peer_id, player.m, player_payload.m)
+				end
+			end
+		end
+	end
 end
 
 --- Callback for information synced with server

@@ -11,11 +11,11 @@ uniform Image overlay;
 
 uniform float steps = 32.0;
 uniform float maxSteps = 32.0;
-uniform float shadowStrength = 0.7;
-uniform float shadowLength = 22.0;
+uniform float shadowStrength = 0.5;
+uniform float shadowLength = 32.0;
 uniform float direction = 235.0;
 uniform float mode = 1.0;
-uniform float distanceFactor = 0.7;
+uniform float distanceFactor = 0.9;
 uniform float blur = 1.0;
 
 uniform int numOccluders;

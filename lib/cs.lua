@@ -355,10 +355,20 @@ function client.request_handler(event)
 
         -- Send sessionToken now that we have an id
         -- Also send credentials to the server so he knows who this client is.
+        local local_settings = {
+            screen_width = love.graphics.getWidth(),
+            screen_height = love.graphics.getHeight(),
+            language = "English",
+            language_iso = "en",
+            fullscreen = love.window.getFullscreen(),
+            widescreen = true,
+        }
+
         peer:send(encode({
             sessionToken = client.sessionToken,
             name = client.name,
             version = client.version,
+            settings = local_settings,
         }))
 
     end

@@ -147,7 +147,7 @@ function discordRPC.initialize(applicationId, autoRegister, optionalSteamId)
         checkStrArg(optionalSteamId, nil, "optionalSteamId", func)
     end
 
-    ---@class userdata
+    ---@class eventHandler: userdata
     local eventHandlers = ffi.new("struct DiscordEventHandlers")
     eventHandlers.ready = ready_proxy
     eventHandlers.disconnected = disconnected_proxy
@@ -203,7 +203,7 @@ function discordRPC.updatePresence(presence)
 
     checkIntArg(presence.instance, 8, "presence.instance", func, true)
 
-    ---@class userdata
+    ---@class discordPresence: userdata
     local cpresence = ffi.new("struct DiscordRichPresence")
     cpresence.state = presence.state
     cpresence.details = presence.details

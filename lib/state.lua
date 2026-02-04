@@ -14,7 +14,6 @@ local function nonempty(t) return next(t) ~= nil end
 
 local function serializable(v) return type(v) ~= 'userdata' end
 
----@class state
 local Methods = {}
 
 
@@ -64,13 +63,14 @@ local ipairs = oldIPairs
 
 -- Make a node out of of `t` with given `name`, makes a root node if `parent` is `nil`
 local function adopt(parent, name, t)
-    ---@class userdata
-    ---@field __autoSync fun(state: userdata, sync:boolean)
-    ---@field __sync fun(state: userdata, key:any, recursive:any)
-    ---@field __diff fun(state: userdata, exact:any, alreadyExact:boolean?, cache:table?)
-    ---@field __flush fun(state: userdata, getDiff:any?, proxy:userdata?)
+    ---@class state: userdata
+    ---@field __autoSync fun(state: state, sync:boolean)
+    ---@field __sync fun(state: state, key:any, recursive:any)
+    ---@field __diff fun(state: state, exact:any, alreadyExact:boolean?, cache:table?)
+    ---@field __flush fun(state: state, getDiff:any?, proxy:state?)
     ---@field __table fun():table The node as a table
-    local node, proxy
+    local node
+    local proxy
 
     -- Make it a node
     if proxies[t] then -- Was already a node -- make sure it's orphaned and reuse
@@ -445,6 +445,9 @@ end
 
 
 return {
+    ---@param t? table
+    ---@param name? string
+    ---@return state state
     new = function(t, name)
         return adopt(nil, name or 'root', t or {})
     end,

@@ -7,25 +7,26 @@ return function(loveframes)
 ---------- module start ----------
 
 -- menu object
-local newobject = loveframes.NewObject("menu", "loveframes_object_menu", true)
+local Menu = loveframes.NewObject("menu", "loveframes_object_menu", true)
 
 --[[---------------------------------------------------------
 	- func: initialize()
 	- desc: initializes the object
 --]]---------------------------------------------------------
-function newobject:initialize(menu)
-	
+function Menu:initialize(menu)
 	self.type = "menu"
 	self.width = 80
 	self.height = 25
 	self.largest_item_width = 0
 	self.largest_item_height = 0
-	self.is_sub_menu = false
+	self.sub_menu = false
 	self.internal = false
 	self.parentmenu = nil
-	self.options = {}
 	self.internals = {}
-	
+	self.visible = false
+	self.context = loveframes.base
+	self.margin = 60
+	self.lastselected = nil
 	self:SetDrawFunc()
 end
 
@@ -33,26 +34,60 @@ end
 	- func: update(deltatime)
 	- desc: updates the object
 --]]---------------------------------------------------------
-function newobject:update(dt)
+function Menu:update(dt)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
-	
 	self:CheckHover()
-	
-	local hover = self.hover
 	local parent = self.parent
 	local base = loveframes.base
 	local update = self.Update
-	
+	local selected = self.lastselected
 	-- move to parent if there is a parent
 	if parent ~= base then
 		self.x = self.parent.x + self.staticx
 		self.y = self.parent.y + self.staticy
 	end
-	
-	for k, v in ipairs(self.internals) do
-		local width = v.contentwidth
-		local height = v.contentheight
+
+	for index, internal in ipairs(self.internals) do
+		internal:update(dt)
+	end
+
+	local hoverobject = loveframes.GetHoverObject()
+	if hoverobject and hoverobject.type == "menuoption" then
+		local option = hoverobject
+		local time = option:GetHoverTime()
+
+		if option.menu
+		and option.parent == self
+		and option.activated == false
+		and time > 0.2
+		then
+			option.activated = true
+			option.menu.visible = true
+			option.menu:MoveToTop()
+
+			if selected then
+				selected.activated = false
+				selected.menu:Close()
+			end
+			self.lastselected = option
+
+		end
+
+	end
+
+	if update then
+		update(self, dt)
+	end
+end
+-- Override
+function Menu:RedoLayout()
+	self.largest_item_width = 0
+	self.largest_item_height = 0
+	for index, internal in ipairs(self.internals) do
+		local width = internal.contentwidth
+		local height = internal.contentheight + internal.margin*2
+		
 		if width > self.largest_item_width then
 			self.largest_item_width = width
 		end
@@ -60,67 +95,98 @@ function newobject:update(dt)
 			self.largest_item_height = height
 		end
 	end
-	
-	local y = 0
-	self.height = 0
-	
-	for k, v in ipairs(self.internals) do
-		v:SetWidth(self.largest_item_width)
-		if v.option_type ~= "divider" then
-			v:SetHeight(self.largest_item_height)
-		else
-			v:SetHeight(5)
-		end
-		v:SetY(y)
-		self.height = self.height + v.height
-		y = y + v.height
-		v:update(dt)
-	end
-	
-	self.width = self.largest_item_width
-	self.largest_item_width = 0
-	self.largest_item_height = 0
-	
-	local screen_width = love.graphics.getWidth()
-	local screen_height = love.graphics.getHeight()
-	local sx = self.x
-	local sy = self.y
-	local width = self.width
-	local height = self.height
-	local x1 = sx + width
-	if sx + width > screen_width then
-		self.x = screen_width - width
-	end
-	if sy + self.height > screen_height then
-		self.y = screen_height - self.height
-	end
-	
-	if update then
-		update(self, dt)
+
+	local height = 0
+	for index, internal in ipairs(self.internals) do
+		internal:SetWidth( self.largest_item_width + self.margin)
+		internal:SetY( height )
+		height = height + internal.height
 	end
 
+	self.width = self.largest_item_width + self.margin
+	self.height = height
+
+	return self
 end
 
+---@override
+function Menu:SetParent(parent)
+	if parent == loveframes.base then
+		-- Dont add frames inside objects
+		self.parent = loveframes.base
+		self:SetState( loveframes.base.state )
+		table.insert( loveframes.base.children, self )
+	else
+		-- It's an object that can update children
+		if parent.children then
+			self:Remove()
+			self.parent = parent
+			self:SetState(parent.state)
+			table.insert(parent.children, self)
+		else
+			-- Search for another object in the upper node tree
+			if parent.parent then
+				self:SetParent(parent.parent)
+			end
+		end
+	end
+
+	self.context = parent
+	return self
+end
 --[[---------------------------------------------------------
 	- func: mousepressed(x, y, button)
 	- desc: called when the player presses a mouse button
 --]]---------------------------------------------------------
-function newobject:mousepressed(x, y, button)
+function Menu:mousepressed(x, y, button)
 	if not self:OnState() then return end
-	if not self:isUpdating() then return end
+	--if not self:isUpdating() then return end
+
+	local hoverobject = loveframes.GetHoverObject() or loveframes.base
+	local submenu = self.sub_menu
+
+	if not submenu then
+
+		if button == 2 and self.context:InBounds() then
+			if not self.visible then
+				local baseparent = self:GetBaseParent()
+				if baseparent then
+					baseparent:MoveToTop()
+				end
+
+				self:Open(x, y)
+				self:update(0)
+			end
+		else
+
+			if self.visible then
+				if hoverobject.type ~= "menu" and hoverobject.type ~= "menuoption" then
+					self:Close()
+				end
+			end
+
+		end
+	end
 end
 
 --[[---------------------------------------------------------
 	- func: mousereleased(x, y, button)
 	- desc: called when the player releases a mouse button
 --]]---------------------------------------------------------
-function newobject:mousereleased(x, y, button)
+function Menu:mousereleased(x, y, button)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
 	local internals = self.internals
 	for k, v in ipairs(internals) do
 		v:mousereleased(x, y, button)
 	end
+end
+
+--[[---------------------------------------------------------
+	- func: ConstructFromTable(tbl)
+	- desc: Construct a menu from a given table
+--]]---------------------------------------------------------
+function Menu:ConstructFromTable(tbl)
 
 end
 
@@ -128,122 +194,127 @@ end
 	- func: AddOption(text, icon, func)
 	- desc: adds an option to the object
 --]]---------------------------------------------------------
-function newobject:AddOption(text, icon, func)
-
+function Menu:AddOption(text, icon, func)
 	local menuoption = loveframes.objects["menuoption"]:new(self)
 	menuoption:SetText(text)
 	menuoption:SetIcon(icon)
 	menuoption:SetFunction(func)
-	
+
 	table.insert(self.internals, menuoption)
+
+	self:RedoLayout()
 	return self
-	
+end
+
+function Menu:GetOption(n)
+	return self.internals[n]
 end
 
 --[[---------------------------------------------------------
 	- func: RemoveOption(id)
 	- desc: removes an option
 --]]---------------------------------------------------------
-function newobject:RemoveOption(id)
-
+function Menu:RemoveOption(id)
 	for k, v in ipairs(self.internals) do
 		if k == id then
 			table.remove(self.internals, k)
 			return
 		end
 	end
-	
 	return self
-	
 end
 
 --[[---------------------------------------------------------
 	- func: AddSubMenu(text, icon, menu)
 	- desc: adds a submenu to the object
 --]]---------------------------------------------------------
-function newobject:AddSubMenu(text, icon, menu)
-
-	local function activatorFunc(object)
-		if menu:GetVisible() then
-			local hoverobject = loveframes.hoverobject
-			if hoverobject ~= object and hoverobject:GetBaseParent() ~= menu then
-				menu:SetVisible(false)
-			end
-		else
-			menu:SetVisible(true)
-			menu:SetPos(object:GetX() + object:GetWidth(), object:GetY())
-		end
-	end
-	
-	menu:SetVisible(false)
-	
+function Menu:AddSubMenu(text, icon, menu)
 	local menuoption = loveframes.objects["menuoption"]:new(self, "submenu_activator", menu)
 	menuoption:SetText(text)
 	menuoption:SetIcon(icon)
-	
 	if menu then
-		menu.is_sub_menu = true
+		menu.visible = false
+		menu.sub_menu = true
 		menu.parentmenu = self
+		menu.parent = self.parent
 	end
-	
 	table.insert(self.internals, menuoption)
-	return self
 	
+	self:RedoLayout()
+	return self
 end
 
 --[[---------------------------------------------------------
 	- func: AddDivider()
 	- desc: adds a divider to the object
 --]]---------------------------------------------------------
-function newobject:AddDivider()
-
+function Menu:AddDivider()
 	local menuoption = loveframes.objects["menuoption"]:new(self, "divider")
-	
 	table.insert(self.internals, menuoption)
+
+	self:RedoLayout()
 	return self
-	
 end
 
 --[[---------------------------------------------------------
 	- func: GetBaseMenu(t)
 	- desc: gets the object's base menu
 --]]---------------------------------------------------------
-function newobject:GetBaseMenu(t)
-	
-	local t = t or {}
-	
-	if self.parentmenu then
-		table.insert(t, self.parentmenu)
-		self.parentmenu:GetBaseMenu(t)
+function Menu:GetBaseMenu()
+	if self.sub_menu then
+		return self.parentmenu:GetBaseMenu()
 	else
 		return self
 	end
-	
-	return t[#t]
-	
 end
 
---[[---------------------------------------------------------
-	- func: SetVisible(bool)
-	- desc: sets the object's visibility
---]]---------------------------------------------------------
-function newobject:SetVisible(bool)
+function Menu:Open(x, y)
+	x = x or 0
+	y = y or 0
 
-	self.visible = bool
-	
-	if not bool then
-		local internals = self.internals
-		for k, v in ipairs(internals) do
-			if v.menu then
-				v.activated = false
-				v.menu:SetVisible(bool)
+	self.visible = true
+	self:SetAbsolutePos(x, y)
+	self:MoveToTop()
+
+	if self.sub_menu then
+		self.visible = false
+	end
+
+	for index, internal in ipairs(self.internals) do
+		if internal.type == "menuoption" then
+			internal.visible = true
+			if internal.menu then
+				internal.menu:Open(x + self.width, y + internal.staticy)
+				internal.activated = false
 			end
 		end
 	end
-	
-	return self
+
 	
 end
 
+function Menu:Close()
+	self.visible = false
+	self.activated = false
+
+	self.lastselected = nil
+
+	for index, internal in ipairs(self.internals) do
+		if internal.type == "menuoption" then
+			if internal.menu then
+				internal.menu:Close()
+				internal.activated = false
+			end
+		end
+	end
+	return self
+end
+
+---@override
+function Menu:SetVisible(visible)
+	if visible == false then
+		self:Close()
+	end
+end
 ---------- module end ----------
 end

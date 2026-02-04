@@ -34,7 +34,7 @@ for index, name in pairs(shaders) do
         shader[name] = love.graphics.newShader ( fullPath )
     else
         shader[name] = baseShader
-        print(status)
+        print(string.format("[%s]: %s",fullPath, status))
     end
 end
 

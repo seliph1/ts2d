@@ -26,16 +26,6 @@ function loveframes.Create(data, parent)
 		local newobject = object:new()
 		-- apply template properties to the object
 		loveframes.ApplyTemplatesToObject(newobject)
-		-- if the object is a tooltip, return it and go no further
-		if data == "tooltip" then
-			return newobject
-		end
-		-- remove the object if it is an internal
-		--[[
-		if newobject.internal then
-			newobject:Remove()
-			return
-		end]]
 		-- parent the new object by default to the base gui object
 		newobject.parent = loveframes.base
 		-- if the parent argument is not nil, make that argument the object's new parent

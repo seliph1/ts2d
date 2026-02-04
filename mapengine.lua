@@ -157,7 +157,6 @@ function MapObject.new(width, height)
 		_updateRequest = true;
 		_breath = 0;
 		_oscillation = 0;
-		_item_field = {};
 		_world = bump.newWorld();
 		_camera = {
 			x = 0,
@@ -179,6 +178,7 @@ function MapObject.new(width, height)
 		_entity_length = 0;
 		_shadow_map = love.graphics.newShader("core/shaders/shadow_map.glsl"),
 		_shadow_silhouette = love.graphics.newShader("core/shaders/silhouette.glsl"),
+		_entity_shader = love.graphics.newShader("core/shaders/entity.glsl"),
 		_shadow_overlay = love.graphics.newCanvas()
 	}
 
@@ -300,7 +300,6 @@ function MapObject:clear()
 	self._updateRequest = true;
 	self._breath = 0;
 	self._oscillation = 0;
-	self._item_field = {};
 	self._world = bump.newWorld();
 
 	self._camera = {
@@ -1085,9 +1084,6 @@ function MapObject:draw_shadow(share, client)
 	if shader:hasUniform "camera" then
 		shader:send("camera", camera)
 	end
-	--[[if shader:hasUniform "scale" then
-		shader:send("scale", 32)
-	end--]]
 	if shader:hasUniform "mouse" then
 		self._mouse = self._mouse or {}
 		self._mouse[1] = love.mouse.getX()
@@ -1117,7 +1113,7 @@ function MapObject:draw_shadow(share, client)
 	
 	-- Activate shadow shader
 	love.graphics.setShader(shader)
-	love.graphics.setColor(0.0, 0.0, 0.1, 1.0)
+	love.graphics.setColor(0.0, 0.0, 0.0, 1.0)
 	love.graphics.rectangle("fill", 0, 0, sw, sh)
 	love.graphics.setShader()
 end
@@ -1334,18 +1330,21 @@ function MapObject:draw_entity(e)
 	local scale_y = size_y/height
 	local sx = (e.x * 32) + shift_x + size_x/2
 	local sy = (e.y * 32) + shift_y + size_y/2
-	--love.graphics.setShader(shader.entity)
+	local entity_shader = self._entity_shader
+	love.graphics.setShader(entity_shader)
 	if blend == 0 then -- No filter/solid
 		love.graphics.setBlendMode("alpha")
 	elseif blend == 3 then -- Light
 		love.graphics.setBlendMode("screen", "premultiplied")
 	elseif blend == 4 then -- Shade
 		love.graphics.setBlendMode("multiply", "premultiplied")
-	else
+	elseif blend == 6 then -- Grayscale
 		love.graphics.setBlendMode("alpha")
+	else
+		love.graphics.setBlendMode("add")
 	end
-	--shader.entity:send("mask", mask)
-	--shader.entity:send("blend", blend)
+	entity_shader:send("mask", mask)
+	entity_shader:send("blend", blend)
 
 	love.graphics.setColor(love.math.colorFromBytes(red, green, blue, alpha))
 	love.graphics.draw(sprite, sx, sy, angle, scale_x, scale_y, width/2, height/2)
@@ -1354,10 +1353,8 @@ function MapObject:draw_entity(e)
 	love.graphics.setColor(1, 1, 1, 1)
 end
 
-function MapObject:draw_entities()
+function MapObject:draw_entities(client)
 	local camera = self._camera
-	local mapdata = self._mapdata
-	local render = self._render
 	local sw, sh = love.graphics.getWidth(), love.graphics.getHeight()
 	-- Create new transformation stack
 	love.graphics.push()
@@ -1373,21 +1370,24 @@ function MapObject:draw_entities()
 			self:draw_entity(e)
 		end
 	end
- 	-- Change font of small entity sprites
-	love.graphics.setFont(self._smallfont)
-	-- Set blend mode
-	love.graphics.setBlendMode("add")
-	for i = 1, self._entity_length do
-		local e = self._entity_cache[i]
-		local t = ENTITY_TYPE[e.type] or ENTITY_TYPE["null"]
-		local c = t.color
-		love.graphics.setColor(c[1], c[2], c[3], 0.5 + self._oscillation/2)
-		love.graphics.draw(self._hudicon[9], e.x*32+16, e.y*32+16, 0, 1, 1, 8, 8)
-		love.graphics.printf(t.label or "", e.x*32+20, e.y*32+20, 48 ,"left")
+
+	if client.debug_level >= 1 then
+		-- Change font of small entity sprites
+		love.graphics.setFont(self._smallfont)
+		-- Set blend mode
+		love.graphics.setBlendMode("add")
+		for i = 1, self._entity_length do
+			local e = self._entity_cache[i]
+			local t = ENTITY_TYPE[e.type] or ENTITY_TYPE["null"]
+			local c = t.color
+			love.graphics.setColor(c[1], c[2], c[3], 0.5 + self._oscillation/2)
+			love.graphics.draw(self._hudicon[9], e.x*32+16, e.y*32+16, 0, 1, 1, 8, 8)
+			love.graphics.printf(t.label or "", e.x*32+20, e.y*32+20, 48 ,"left")
+		end
+		love.graphics.setBlendMode("alpha")
+		love.graphics.setFont(self._normalfont)
+		-- Reset the transformation stack
 	end
-	love.graphics.setBlendMode("alpha")
-	love.graphics.setFont(self._normalfont)
-	-- Reset the transformation stack
 	love.graphics.pop()
 end
 

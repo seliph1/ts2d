@@ -35,20 +35,33 @@ binds["e"]          = {input="use", type="pulse"}
 -- UI/Local binds
 LF.bind("all", "", "m", function ()
     if not client.joined then return end
-
     local ui = require "core.interface.ui"
-    ui.teampick()
+    ui.teampick_display()
+end)
+
+LF.bind("all", "", "b", function()
+    if not client.joined then return end
+    local ui = require "core.interface.ui"
+    ui.buymenu_display()
 end)
 
 LF.bind("all", "", "tab", function()
+    if not client.joined then return end
     local ui = require "core.interface.ui"
     ui.tabscreen_display()
 end)
 
+
+LF.bind("all", "", "escape", function()
+    local ui = require "core.interface.ui"
+	local bool = ui.exit_window:IsVisible()
+	ui.exit_window:SetVisible(not bool):MoveToTop():Center()
+end)
+
 ------------------------
 client.binds = binds
+
 ------------------------
 -- Module end
 ------------------------
-
 end

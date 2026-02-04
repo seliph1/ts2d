@@ -250,8 +250,15 @@ local actions = {
     menu_team = {
         action = function()
             local ui = require "core.interface.ui"
-            ui.teampick()
+            ui.teampick_display()
         end
+    };
+
+    menu_buy = {
+        action = function(...)
+            local ui = require "core.interface.ui"
+            ui.buymenu_display()
+        end,
     };
 
     spawn = {

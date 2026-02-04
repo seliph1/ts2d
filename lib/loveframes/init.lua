@@ -151,20 +151,35 @@ end
 	- desc: draws all library objects
 --]]---------------------------------------------------------
 function loveframes.draw()
+	-- Store previous graphic settings
 	local base = loveframes.base
 	local r, g, b, a = love.graphics.getColor()
 	local font = love.graphics.getFont()
 
+	-- Start the draw counter fot debug window
 	loveframes.drawcount = 0
-	--------------------------------------
-	base:draw()
-	--------------------------------------
+	--// ---------------------------------//--
+	base:draw() -- D R A W 
+	--//----------------------------------//--
+
+	-- Tooltip ( should be drawn above other objects)
+	local hoverobject = loveframes.GetHoverObject()
+	if hoverobject and hoverobject.tooltip then
+		local skin = hoverobject:GetSkin()
+		skin.tooltip(hoverobject)
+	end
+
+	-- Debug draw
 	if loveframes.config["DEBUG"] then
 		loveframes.DebugDraw()
 	end
+
+	-- Reset the graphic pipeline
 	love.graphics.setColor(r, g, b, a)
 	love.graphics.setScissor()
 	love.graphics.reset()
+
+	-- Reset font
 	if font then
 		love.graphics.setFont(font)
 	end

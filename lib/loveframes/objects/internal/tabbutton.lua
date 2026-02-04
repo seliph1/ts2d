@@ -31,27 +31,26 @@ function newobject:initialize(parent, text, tabnumber, tip, image, onopened, onc
 	self.OnOpened = nil
 	self.OnClosed = nil
 	self.internals = {}
-	
+
 	if tip then
-		self.tooltip = loveframes.objects["tooltip"]:new(self, tip)
-		table.insert(self.internals, self.tooltip)
+		self.tooltip = tip
 	end
-	
+
 	if image then
 		self:SetImage(image)
 	end
-	
+
 	if onopened then
 		self.OnOpened = onopened
 	end
-	
+
 	if onclosed then
 		self.OnClosed = onclosed
 	end
-	
+
 	-- apply template properties to the object
 	loveframes.ApplyTemplatesToObject(self)
-	
+
 	self:SetDrawFunc()
 end
 

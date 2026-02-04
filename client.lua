@@ -1,33 +1,32 @@
 --- Client base framework
-local b				= require "lib.battery"
 local Map 			= require "mapengine"
+local b				= require "lib.battery"
 local Bump			= require "lib.bump"
 local client 		= require "lib.cs"
 local serpent 		= require "lib.serpent"
 
----@class userdata
+---@class Home: state
 ---Home class that holds player local client data
 local home = client.home
----@class Share
+---@class Share: state
 --- @field bullets table
 --- @field players table
 --- @field items table
---- @field scores table
+--- @field game table
 --- Table that gets info from server
 local share = client.share
 
----@class Share
+---@class ShareLocal: Share
 ---Table that holds similar data from server, gets updated after server tick
 local share_local = client.share_local
 
----@class Share
+---@class ShareLerp: Share
 ---Table that holds interpolated data
 local share_lerp = client.share_lerp
 share_lerp.players 	= {}
 share_lerp.entities = {}
-share_lerp.bullets 	= {}
 share_lerp.items 	= {}
-share_lerp.scores 	= {}
+share_lerp.game 	= {}
 
 client.version 			= "v1.0.1"
 client.enabled 			= true
@@ -265,9 +264,7 @@ function client.fire(start_x, start_y, angle, distance, peer_id)
 
 	local target_x = start_x + math.cos(angle) * distance
 	local target_y = start_y + math.sin(angle) * distance
-
-	local hit_x, hit_y, hit = client.raycast(start_x, start_y, target_x, target_y)
-
+	local hit_x, hit_y, hit, players = client.hitscan(start_x, start_y, target_x, target_y)
 	local hit_distance = distance
 	if hit then
 		local rand = math.random()
@@ -304,8 +301,11 @@ function client.fire(start_x, start_y, angle, distance, peer_id)
 		scaleX = (hit_distance)/32,
 		--offsetX = -10,
 	})
-end
 
+	for index, victim in ipairs(players) do
+		client.map:spawn_effect("blood", victim.x, victim.y)
+	end
+end
 
 function client.discard(peer_id, item_type)
 	if peer_id == client.id then
@@ -339,6 +339,9 @@ function client.select(peer_id, item_type)
 	--print("selected:", peer_id, item_type)
 end
 
+function client.setmoney(peer_id, oldvalue, newvalue)
+	print(string.format("Player [ID: %s] money changed from %s to %s.", peer_id, oldvalue, newvalue))
+end
 
 function client.spawn(peer_id, health)
 end
@@ -470,7 +473,30 @@ end
 --- Cast a ray that dont collide with anything, but register intersection
 --- with map, players, items and entities.
 --- Returns a list of tiles and objects that intersected with this segment
-function client.raycast_t(x1, y1, x2, y2)
+function client.hitscan(x1, y1, x2, y2)
+	if not client.map then return false end
+
+	local start_x, start_y = x1, y1
+	-- First calculate map impacts
+	-- If stopped into a wall, calculate until that wall point of impact
+	-- Else, go with the original point
+	local impact_x, impact_y, hit = client.map:hitscan(x1, y1, x2, y2, 1)
+	local players = {}
+
+	-- Now calculate bump collision
+	local item_info, len = client.world:querySegmentWithCoords(start_x, start_y, impact_x, impact_y)
+	for i=1, len do
+		local info = item_info[i]
+		local object = info.item
+
+		-- check if it's a player
+		if object.ct == 1 and object.h > 0 then
+			table.insert(players, object)
+			hit = true
+		end
+	end
+
+	return impact_x, impact_y, hit, players
 end
 
 function client.draw_splash(ox, oy)
@@ -494,7 +520,7 @@ function client.render()
 
 	if (client.mode == "game" or client.mode == "editor") and client.map then
 		client.map:draw_floor()
-		client.map:draw_entities()
+		client.map:draw_entities(client)
 	end
 
 	--love.graphics.setCanvas(client.canvas, client.shadow_map)

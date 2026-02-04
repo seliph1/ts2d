@@ -7,7 +7,6 @@ return function(loveframes)
 ---------- module start ----------
 
 -- base object
----@class table
 local Base = loveframes.NewObject("base", "loveframes_object_base")
 
 --[[---------------------------------------------------------
@@ -40,6 +39,18 @@ function Base:update(dt)
 			v:update(dt)
 		end
 	end
+end
+
+function Base:UpdateZero()
+	local state = self.state
+	local visible = self.visible
+	self.state = "*"
+	self.visible = true
+	--//------------------
+	self:update(0)
+	--//------------------
+	self.state = state
+	self.visible = visible
 end
 
 --[[---------------------------------------------------------
@@ -261,6 +272,39 @@ function Base:SetPos(x, y, center)
 	return self
 end
 
+function Base:SetAbsolutePos(x, y, center)
+	local base = loveframes.base
+	local parent = self.parent
+
+	if math.abs(x) >= 0 and math.abs(x) < 1 then
+		x = self.parent.width * x
+	end
+	if math.abs(y) >= 0 and math.abs(y) < 1 then
+		y = self.parent.height * y
+	end
+
+	if x < 0 then x = self.parent.width - self.width - math.abs(x) end
+	if y < 0 then y = self.parent.height - self.height - math.abs(y) end
+	if center then
+		x = x - self.width/2
+		y = y - self.height/2
+	end
+	if parent == base then
+		self.x = math.floor(x)
+		self.y = math.floor(y)
+	else
+		self.staticx = math.floor(x - parent.x)
+		self.staticy = math.floor(y - parent.y)
+	end
+
+	if parent.container and parent.RedoLayout then
+		parent:RedoLayout()
+	end
+	return self
+end
+
+function Base:MoveToParent()
+end
 
 --[[---------------------------------------------------------
 	- func: SetX(x, center)
@@ -442,7 +486,7 @@ function Base:CenterWithinArea(x, y, width, height)
 end
 
 --[[---------------------------------------------------------
-	- func: AlignChildren
+	- func: Align(Direction)
 	- desc: Move object to the border of parent
 --]]---------------------------------------------------------
 function Base:AlignLeft(margin)
@@ -588,15 +632,15 @@ function Base:Expand(direction, margin)
 		else
 			self.staticy = 0
 		end
-	else
+	elseif direction == "all" then
 		local offset_x = math.floor( parent.width * (1 - factor) * 0.5 )
 		local offset_y = math.floor( parent.height * (1 - factor) * 0.5 )
 		if parent == base then
-			self.x = parent.x + offset_x
-			self.y = parent.y + offset_y
+			self.x = offset_x
+			self.y = offset_y
 		else
-			self.staticx = parent.x + offset_x
-			self.staticy = parent.y + offset_y
+			self.staticx = offset_x
+			self.staticy = offset_y
 		end
 
 		self.width = math.floor( parent.width * factor )
@@ -666,6 +710,7 @@ function Base:Spread(align, ...)
 	local gaps = #args + 1 -- Count gaps between children and the start/end border
 	local totalwidth = 0
 	local totalheight = 0
+
 	-- First pass: sum all child width/height sizes
 	for index, element in pairs(args) do
 		totalwidth = totalwidth + element:GetWidth()
@@ -701,6 +746,39 @@ function Base:Spread(align, ...)
 end
 
 --[[---------------------------------------------------------
+	- func: Wrap(align, elements..)
+	- desc: Resize object's width and height to accomodate all children
+--]]---------------------------------------------------------
+function Base:Wrap(margin)
+	local maxwidth = 0
+	local maxheight = 0
+	margin = margin or 0
+	if self.children then
+		for index, child in pairs(self.children) do
+			local width_diff = child:GetStaticX() - self.x + child.width
+			local height_diff = child:GetStaticY() - self.y + child.height
+
+			print(width_diff, height_diff)
+			if width_diff > self.width then
+				maxwidth = width_diff
+			end
+
+			if height_diff > self.height then
+				maxheight = height_diff
+			end
+		end
+	end
+
+	if maxwidth > self.width then
+		self:SetWidth(maxwidth + math.max(margin, 0))
+	end
+
+	if maxheight > self.height then
+		self:SetHeight(maxheight + math.max(margin, 0))
+	end
+end
+
+--[[---------------------------------------------------------
 	- func: Centralize(align, elements..)
 	- desc: Centralizes children evenly along the container's length
 --]]---------------------------------------------------------
@@ -714,6 +792,9 @@ end
 --]]---------------------------------------------------------
 function Base:SetSize(width, height)
 	local parent = self.parent
+	if not height then
+		height = width
+	end
 	if width >= 0 and width <= 1 then
 		width = self.parent.width * width
 	end
@@ -808,6 +889,18 @@ function Base:GetHeight(padding)
 	end
 end
 
+--[[---------------------------------------------------------
+	- func: SetTooltip(bool)
+	- desc: sets the object's tooltip text
+--]]---------------------------------------------------------
+function Base:SetTooltip(text)
+	self.tooltip = text
+	return self
+end
+
+function Base:GetTooltip()
+	return self.tooltip
+end
 --[[---------------------------------------------------------
 	- func: SetVisible(bool)
 	- desc: sets the object's visibility
@@ -990,27 +1083,31 @@ end
 	- desc: sets the object's parent
 --]]---------------------------------------------------------
 function Base:SetParent(parent)
-	local container = parent.container
-	if self.type == "frame"  then
+	if self.orphan then
 		-- Dont add frames inside objects
 		self.parent = loveframes.base
 		self:SetState( loveframes.base.state )
 		table.insert( loveframes.base.children, self )
-		return
+		return self
 	end
 
-	if container then
+	if parent.container then
 		-- Call the override function if available
 		if parent.AddItemIntoContainer then
 			parent:AddItemIntoContainer(self)
-			return
+			return self
 		end
 	end
 
-	self:Remove()
-	self.parent = parent
-	self:SetState(parent.state)
-	table.insert(parent.children, self)
+	if parent.children then
+
+		self:Remove()
+		self.parent = parent
+		self:SetState(parent.state)
+		table.insert(parent.children, self)
+
+	end
+
 	return self
 end
 
@@ -1135,19 +1232,36 @@ function Base:InClickBounds()
 	return self
 end
 
+function Base:InBounds()
+	local x, y = love.mouse.getPosition()
+	local col = loveframes.BoundingBox(
+		x,
+		self.x,
+		y, self.y,
+		1,
+		self.width,
+		1,
+		self.height
+	)
+
+	return col
+end
+
 --[[---------------------------------------------------------
 	- func: GetBaseParent(object, t)
 	- desc: finds the object's base parent
 --]]---------------------------------------------------------
-function Base:GetBaseParent(t)
-	t = t or {}
+function Base:GetBaseParent()
 	local base = loveframes.base
 	local parent = self.parent
-	if parent ~= base then
-		table.insert(t, parent)
-		parent:GetBaseParent(t)
+	if parent == base then
+		return self
 	end
-	return t[#t]
+	if parent.parent == base then
+		return parent
+	else
+		return parent:GetBaseParent()
+	end
 end
 
 --[[---------------------------------------------------------
@@ -1236,6 +1350,10 @@ function Base:GetHover()
 	return self.hover
 end
 
+function Base:GetHoverTime()
+	return love.timer.getTime() - self.hovertime
+end
+
 --[[---------------------------------------------------------
 	- func: GetChildren()
 	- desc: returns the object's children
@@ -1318,6 +1436,10 @@ end
 			children table
 --]]---------------------------------------------------------
 function Base:MoveToTop()
+	if self == loveframes.base then
+		return self
+	end
+
 	local pchildren = self.parent.children
 	local pinternals = self.parent.internals
 	local internal = false
@@ -1330,9 +1452,13 @@ function Base:MoveToTop()
 	end
 	self:Remove()
 	if internal then
-		table.insert(pinternals, self)
+		if pinternals then
+			table.insert(pinternals, self)
+		end
 	else
-		table.insert(pchildren, self)
+		if pchildren then
+			table.insert(pchildren, self)
+		end
 	end
 	return self
 end
@@ -1457,7 +1583,7 @@ end
 --]]---------------------------------------------------------
 function Base:GetParents()
 	local function GetParents(object, t)
-		local t = t or {}
+		t = t or {}
 		local type = object.type
 		local parent = object.parent
 		if type ~= "base" then

@@ -102,6 +102,13 @@ console.frame.Update = function(object, dt)
     end
 end
 
+console.input = LF.Create("textbox", console.frame)
+:SetY(-8)
+:SetSize(0.98, 25)
+:CenterX()
+:SetMaxHistory(1)
+:SetFont(font_mono)
+
 console.window_panel = LF.Create("panel", console.frame)
 :SetY(30)
 :SetWidth(0.98)
@@ -112,12 +119,20 @@ console.window = LF.Create("log", console.window_panel)
 :SetPadding(0)
 :SetFont(font_mono_small)
 
-console.input = LF.Create("textbox", console.frame)
-:SetY(-8)
-:SetSize(0.98, 25)
-:CenterX()
-:SetMaxHistory(1)
-:SetFont(font_mono)
+console.window.menu = LF.Create("menu", console.window)
+:AddOption("Clear Console", nil, function ()
+	console.window:Clear()
+end)
+:AddDivider()
+:AddOption("Copy Line")
+:AddOption("Copy All")
+
+console.input.menu = LF.Create("menu", console.input)
+:AddOption("Clear Input", nil, function() console.input:Clear() end)
+:AddOption("Cut Input", nil, function() console.input:Cut() end)
+:AddOption("Copy Input", nil, function() console.input:Copy() end)
+:AddOption("Paste Input", nil, function() console.input:Paste() end)
+
 
 console.input.rollback = 1
 console.input.history = {""}
@@ -158,7 +173,7 @@ console.input.commands = love.filesystem.load("core/interface/commands.lua")()
 for command, data in pairs(console.input.commands) do
 	if data.alias then
 		for index, alias in pairs(data.alias) do
-			console.input.commands[alias] = command
+			console.input.commands[alias] = data
 		end
 	end
 end
@@ -216,6 +231,16 @@ LF.bind("all", "", "'", function()
 	:Center()
 	:MoveToTop()
 end)
+
+LF.bind("all", "", "f1", function()
+	local state = LF.config["DEBUG"]
+	LF.config["DEBUG"] = not state
+end)
+
+LF.bind("all", "", "f12", function()
+	love.event.quit("restart")
+end)
+
 
 console.frame
 :SetVisible(false)

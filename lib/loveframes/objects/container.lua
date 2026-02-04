@@ -6,7 +6,7 @@
 return function(loveframes)
 ---------- module start ----------
 
--- panel object
+-- Container object for subset of love graphics
 local Container = loveframes.NewObject("container", "loveframes_object_container", true)
 
 --[[---------------------------------------------------------

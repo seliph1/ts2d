@@ -244,6 +244,7 @@ enum.TILE_MODE_HEIGHT = {
 	[53]=0.0,		-- 53 deadly abyss
 }
 
+---@enum entity_type
 enum.entity_type={
 	[0]="Info_T",
 	[1]="Info_CT",
@@ -300,6 +301,7 @@ enum.entity_type={
 	[96]="Trigger_If"
 }
 
+---@enum itemname
 enum.itemname = {
 	["USP"]=1;
 	["GLOCK"]=2;
@@ -379,27 +381,7 @@ enum.itemname = {
 	["TESLA"]=92;
 }
 
----@class Item
----@field name string
----@field alt_name string
----@field internal_name string
----@field category string
----@field damage number
----@field price number
----@field ammo_cap number
----@field ammo_mag number
----@field frame_delay number
----@field range number
----@field weight number
----@field accuracy number
----@field common_path string
----@field dropped_image string
----@field display_image string
----@field kill_image string
----@field held_image string
----@field player_stance string
----@field acessory table
----@field offset number
+---@enum items
 enum.itemlist = {
 	[1] = {
 		name = "USP", -- Display name
@@ -1203,7 +1185,7 @@ enum.itemlist = {
 		weight = 400,
 		accuracy = 0, 
 		common_path = "gfx/weapons/",
-		dropped_image = "flashbang_bmp",
+		dropped_image = "flashbang.bmp",
 		held_image = "flashbang.bmp",
 		kill_image = "flashbang.bmp",
 		display_image = "flashbang_m.bmp",
@@ -1229,7 +1211,7 @@ enum.itemlist = {
 		dropped_image = "smokegrenade.bmp",
 		held_image = "smokegrenade.bmp",
 		kill_image = "smokegrenade.bmp",
-		display_image = "smokegrenade.bmp", 
+		display_image = "smokegrenade.bmp",
 		player_stance = "object",
 		acessory = {};
 	};

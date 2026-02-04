@@ -443,6 +443,71 @@ function TextBox:Clear()
 end
 
 --[[---------------------------------------------------------
+	- func: Cut()/Copy()/Paste()
+	- desc: common text input features
+--]]---------------------------------------------------------
+function TextBox:Cut()
+	local text = ""
+	local selectionStart, selectionEnd = self.field:getSelection()
+	if selectionStart ~= selectionEnd then
+		text = self.field:getSelectedVisibleText()
+	else
+		text = self.field:getText()
+	end
+
+	love.system.setClipboardText(text)
+	if self.field.editingEnabled then
+		if selectionStart == selectionEnd then
+			self.field:setText("")
+		else
+			self.field:insert("")
+		end
+	else
+		self.field:resetBlinking()
+	end
+
+	local oncut = self.OnCut
+	if oncut then
+		oncut(self, love.system.getClipboardText())
+	end
+end
+
+function TextBox:Copy()
+	local text = ""
+	local selectionStart, selectionEnd = self.field:getSelection()
+	if selectionStart ~= selectionEnd then
+		text = self.field:getSelectedVisibleText()
+	else
+		text = self.field:getText()
+	end
+	if text == "" then return end
+
+	love.system.setClipboardText(text)
+	self.field:resetBlinking()
+
+	local oncopy = self.OnCopy
+	if oncopy then
+		oncopy(self, love.system.getClipboardText())
+	end
+end
+
+function TextBox:Paste()
+	if not self.field.editingEnabled then return end
+	local text = love.system.getClipboardText()
+	local isMultiline = self.field:isMultiline()
+
+	text = text:gsub((isMultiline and "[%z\1-\8\11-\31]+" or "[%z\1-\8\10-\31]+"), "") -- Should we allow horizontal tab?
+	if text ~= "" then
+		self.field:insert(text)
+	end
+
+	local onpaste = self.OnPaste
+	if onpaste then
+		onpaste(self, love.system.getClipboardText())
+	end
+end
+
+--[[---------------------------------------------------------
 	- func: SetText(text)
 	- desc: sets the object's text
 --]]---------------------------------------------------------

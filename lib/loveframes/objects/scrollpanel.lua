@@ -374,6 +374,7 @@ function ScrollPanel:ShowBackground(bool)
 	self.background = bool
 	return self
 end
+ScrollPanel.SetBackground = ScrollPanel.ShowBackground
 --[[---------------------------------------------------------
 	- func: GetScrollBar()
 	- desc: gets the object's scroll bar

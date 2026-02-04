@@ -7,20 +7,22 @@ return function(loveframes)
 ---------- module start ----------
 
 -- menuoption object
-local newobject = loveframes.NewObject("menuoption", "loveframes_object_menuoption", true)
+local MenuOption = loveframes.NewObject("menuoption", "loveframes_object_menuoption", true)
 
 --[[---------------------------------------------------------
 	- func: initialize()
 	- desc: initializes the object
 --]]---------------------------------------------------------
-function newobject:initialize(parent, option_type, menu)
-	
+function MenuOption:initialize(parent, option_type, menu)
+	local skin = self:GetSkin()
+	local font = skin.controls.menuoption_text_font
+
 	self.type = "menuoption"
 	self.text = "Option"
 	self.width = 100
-	self.height = 25
-	self.contentwidth = 0
-	self.contentheight = 0
+	self.height = font:getHeight() or 25
+	self.contentwidth = self.width
+	self.contentheight = self.height
 	self.parent = parent
 	self.option_type = option_type or "option"
 	self.menu = menu
@@ -28,74 +30,41 @@ function newobject:initialize(parent, option_type, menu)
 	self.internal = true
 	self.icon = false
 	self.func = nil
+	self.margin = 5
 	self:SetDrawFunc()
+
+	if option_type == "divider" then
+		self.height = 5
+	end
 end
 
 --[[---------------------------------------------------------
 	- func: update(deltatime)
 	- desc: updates the object
 --]]---------------------------------------------------------
-function newobject:update(dt)
+function MenuOption:update(dt)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
 	self:CheckHover()
-	
-	local hover = self.hover
 	local parent = self.parent
-	local option_type = self.option_type
-	local activated = self.activated
 	local base = loveframes.base
 	local update = self.Update
-	
-	if option_type == "submenu_activator" then
-		if hover and not activated then
-			self.menu:SetVisible(true)
-			self.menu:MoveToTop()
-			self.activated = true
-		elseif not hover and activated then
-			local hoverobject = loveframes.GetHoverObject()
-			if hoverobject and hoverobject:GetBaseParent() == self.parent then
-				self.menu:SetVisible(false)
-				self.activated = false
-			end
-		elseif activated then
-			local screen_width = love.graphics.getWidth()
-			local screen_height = love.graphics.getHeight()
-			local sx = self.x
-			local sy = self.y
-			local width = self.width
-			local height = self.height
-			local x1 = sx + width
-			if x1 + self.menu.width <= screen_width then
-				self.menu.x = x1
-			else
-				self.menu.x = sx - self.menu.width
-			end
-			if sy + self.menu.height <= screen_height then
-				self.menu.y = sy
-			else
-				self.menu.y = (sy + height) - self.menu.height
-			end
-		end
-	end
-	
+
 	-- move to parent if there is a parent
 	if parent ~= base then
 		self.x = self.parent.x + self.staticx
 		self.y = self.parent.y + self.staticy
 	end
-	
 	if update then
 		update(self, dt)
 	end
-
 end
 
 --[[---------------------------------------------------------
 	- func: mousepressed(x, y, button)
 	- desc: called when the player presses a mouse button
 --]]---------------------------------------------------------
-function newobject:mousepressed(x, y, button)
+function MenuOption:mousepressed(x, y, button)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
 end
@@ -104,7 +73,7 @@ end
 	- func: mousereleased(x, y, button)
 	- desc: called when the player releases a mouse button
 --]]---------------------------------------------------------
-function newobject:mousereleased(x, y, button)
+function MenuOption:mousereleased(x, y, button)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
 	local hover = self.hover
@@ -116,36 +85,46 @@ function newobject:mousereleased(x, y, button)
 			func(self, text)
 		end
 		local basemenu = self.parent:GetBaseMenu()
-		basemenu:SetVisible(false)
+		basemenu:Close()
 	end
-
 end
 
 --[[---------------------------------------------------------
 	- func: SetText(text)
 	- desc: sets the object's text
 --]]---------------------------------------------------------
-function newobject:SetText(text)
+function MenuOption:SetText(text)
+	if self.option_type == "divider" then return self end
 
+	local skin = self:GetSkin()
+	local font = skin.controls.menuoption_text_font
+	self.width = font:getWidth(text)
+	self.height = font:getHeight() + self.margin*2
+	self.contentwidth = self.width
+	self.contentheight = self.height
 	self.text = text
-	
+
+	if self.parentmenu and self.parentmenu.RedoLayout then
+		self.parentmenu.RedoLayout()
+	end
+
+	return self
 end
 
 --[[---------------------------------------------------------
 	- func: GetText()
 	- desc: gets the object's text
 --]]---------------------------------------------------------
-function newobject:GetText()
-
+function MenuOption:GetText()
 	return self.text
-	
 end
 
 --[[---------------------------------------------------------
 	- func: SetIcon(icon)
 	- desc: sets the object's icon
 --]]---------------------------------------------------------
-function newobject:SetIcon(icon)
+function MenuOption:SetIcon(icon)
+	if self.option_type == "divider" then return self end
 
 	if type(icon) == "string" then
 		self.icon = love.graphics.newImage(icon)
@@ -159,20 +138,16 @@ end
 	- func: GetIcon()
 	- desc: gets the object's icon
 --]]---------------------------------------------------------
-function newobject:GetIcon()
-
+function MenuOption:GetIcon()
 	return self.icon
-	
 end
 
 --[[---------------------------------------------------------
 	- func: SetFunction(func)
 	- desc: sets the object's function
 --]]---------------------------------------------------------
-function newobject:SetFunction(func)
-
+function MenuOption:SetFunction(func)
 	self.func = func
-	
 end
 
 ---------- module end ----------

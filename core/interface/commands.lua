@@ -1,6 +1,4 @@
-local client = require "client"
 local serpent = require "lib.serpent"
-
 local CONSOLE_ENV = {}
 -- Small lua environment only acessible by this file
 ([[
@@ -77,6 +75,7 @@ local commands = {
 
 	edit = {
 		action = function(...)
+			local client = require "client"
 			local args = {...}
 			if client.map then
 				local LF = require "lib.loveframes"
@@ -102,6 +101,7 @@ local commands = {
 
 	scale = {
 		action = function(bool)
+			local client = require "client"
 			client.scale = (bool == "true")
 		end;
 	};
@@ -126,6 +126,7 @@ local commands = {
 			local block = table.concat({...}, " ")
 			local expression, error_message = loadstring( block, "")
 			local ui = require "core.interface.ui"
+			local client = require "client"
 			CONSOLE_ENV.print = print
 			CONSOLE_ENV.client = client
 			CONSOLE_ENV.ui = ui
@@ -150,6 +151,7 @@ local commands = {
 			local expression, error_message = loadstring( "return ".. block)
 			local ui = require "core.interface.ui"
 			local console = require "core.interface.console"
+			local client = require "client"
 
 			CONSOLE_ENV.client = client
 			CONSOLE_ENV.ui = ui
@@ -178,6 +180,7 @@ local commands = {
 			local expression, error_message = loadstring( "return ".. block)
 			local ui = require "core.interface.ui"
 			local console = require "core.interface.console"
+			local client = require "client"
 
 			CONSOLE_ENV.client = client
 			CONSOLE_ENV.ui = ui
@@ -205,42 +208,19 @@ local commands = {
 		syntax = "",
 	};
 
-	map = {
-		action = function(...)
-			local args = {...}
-			if client.map then
-				local status = client.map:read( "maps/"..table.concat(args," ")..".map" )
-				if status then
-					print(status)
-				end
-			end
-			client.mode = "game"
-		end,
-		syntax = "/map <mapfile>",
-	};
-
 	cleareffect = {
 		action = function ()
+			local client = require "client"
 			if client.map then
 				client.map:clearEffects()
 			end
 		end
 	};
 
-	clearmap = {
-		action = function(...)
-			local args = {...}
-			if client.map then
-				print("map clear request")
-				client.map:clear()
-			end
-		end,
-		syntax = "/clearmap",
-	};
-
 	debug = {
 		---Clear console
 		action = function(level)
+			local client = require "client"
 			client.debug_level = tonumber(level) or 0
 		end;
 	};
@@ -293,6 +273,7 @@ local commands = {
 	sendrate = {
 		---@param rate number
 		action = function(rate)
+			local client = require "client"
 			local old_rate = client.sendRate
 			local new_rate = tonumber(rate) or 35
 
@@ -329,18 +310,18 @@ local commands = {
 
 	help = {
 		action = function(property, ...)
-			local ui = require "core.interface.ui"
-			local commands = ui.console_input.commands
-
+			local console = require "core.interface.console"
+			local commands = console.input.commands
+		
 			for name, data in pairs(commands) do
 				local argNames = {}
 				local action = data.action
+
 				for i = 1, debug.getinfo(action).nparams, 1 do
 					table.insert(argNames, debug.getlocal(action, i))
 				end
 
 				print(name, table.concat( argNames, ", " ))
-
 			end
 		end
 	};
@@ -348,8 +329,37 @@ local commands = {
 	-------------------------------------------------------
 	-- REMOTE ACTIONS
 	-------------------------------------------------------
+
+	map = {
+		action = function(...)
+			local client = require "client"
+			local args = {...}
+			if client.map then
+				local status = client.map:read( "maps/"..table.concat(args," ")..".map" )
+				if status then
+					print(status)
+				end
+			end
+			client.mode = "game"
+		end,
+		syntax = "/map <mapfile>",
+	};
+
+	clearmap = {
+		action = function(...)
+			local args = {...}
+			local client = require "client"
+			if client.map then
+				print("map clear request")
+				client.map:clear()
+			end
+		end,
+		syntax = "/clearmap",
+	};
+
 	effect = {
 		action = function(effect_id, x, y)
+			local client = require "client"
 		    x = tonumber(x) or 0
             y = tonumber(y) or 0
             client.map:spawn_effect(effect_id, x, y)
@@ -358,6 +368,7 @@ local commands = {
 
 	scroll = {
 		action = function(x,y)
+			local client = require "client"
 			if client.map then
 				x = x or 0
 				y = y or 0
@@ -382,6 +393,7 @@ local commands = {
 
 	connect = {
 		action = function(ip, port)
+			local client = require "client"
 			if not client.connected then
 				ip = ip or "127.0.0.1"
 				port = port or "36963"
@@ -394,6 +406,7 @@ local commands = {
 
 	disconnect = {
 		action = function()
+			local client = require "client"
 			local LF = require "lib.loveframes"
 			if client.connected then
 				client.kick()
@@ -403,6 +416,7 @@ local commands = {
 
 	setname = {
 		action = function(...)
+			local client = require "client"
 			if client.connected then
 				local name = table.concat({...}," ")
 				client.send("setname "..name)
@@ -412,6 +426,7 @@ local commands = {
 
 	say = {
 		action = function(...)
+			local client = require "client"
 			local message = table.concat({...}, " ")
 			client.send(string.format("say %s", message))
 		end;
@@ -419,12 +434,14 @@ local commands = {
 
 	equip = {
 		action = function(target_id, item_type)
+			local client = require "client"
 			client.send( string.format("equip %s %s", target_id, item_type) )
 		end
 	};
 
 	tp = {
 		action = function()
+			local client = require "client"
 			local targetX = client.attribute "targetX"
 			local targetY = client.attribute "targetY"
 
@@ -440,6 +457,7 @@ local commands = {
 
 	follow = {
 		action = function(category, id)
+			local client = require "client"
 			if not client.joined then return "Client isn't connected. Cannot follow anything." end
 			id = tonumber(id) or 0
 			if id == 0 then
@@ -460,6 +478,7 @@ local commands = {
 
 	team = {
 		action = function(team, look)
+			local client = require "client"
 			if not client.joined then
 				return "You're not connected!"
 			end
@@ -472,6 +491,7 @@ local commands = {
 
 	kill = {
 		action = function()
+			local client = require "client"
 			client.send("kill")
 		end,
 		alias = {"suicide"},
@@ -480,6 +500,7 @@ local commands = {
 
 	slap = {
 		action = function(target_id)
+			local client = require "client"
 			client.send(string.format("slap %s", target_id))
 		end,
 		syntax = "",

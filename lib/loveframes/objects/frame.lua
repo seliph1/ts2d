@@ -21,6 +21,7 @@ function Frame:initialize()
 	self.height = 150
 	self.clickx = 0
 	self.clicky = 0
+	self.orphan = true
 	self.internal = false
 	self.screenlocked = false
 	self.parentlocked = false

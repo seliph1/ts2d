@@ -76,28 +76,6 @@ if skin.directives.text_default_font_src then
 	end
 end
 
---[[
-if default_font then
-	skin.controls.tinyfont = love.graphics.newFont(default_font,12)
-	skin.controls.smallfont = love.graphics.newFont(default_font,14)
-	skin.controls.titlefont = love.graphics.newFont(default_font,15)
-	skin.controls.imagebuttonfont = love.graphics.newFont(default_font,18)
-
-	skin.controls.tinyfont:setLineHeight(skin.directives.text_font_height)
-	skin.controls.smallfont:setLineHeight(skin.directives.text_font_height)
-	skin.controls.titlefont:setLineHeight(skin.directives.text_font_height)
-	skin.controls.imagebuttonfont:setLineHeight(skin.directives.text_font_height)
-else
-	skin.controls.tinyfont = love.graphics.newFont(12)
-	skin.controls.smallfont = love.graphics.newFont(14)
-	skin.controls.titlefont = love.graphics.newFont(15)
-	skin.controls.imagebuttonfont = love.graphics.newFont(18)
-
-	skin.controls.tinyfont:setLineHeight(skin.directives.text_font_height)
-	skin.controls.smallfont:setLineHeight(skin.directives.text_font_height)
-	skin.controls.titlefont:setLineHeight(skin.directives.text_font_height)
-	skin.controls.imagebuttonfont:setLineHeight(skin.directives.text_font_height)
-end]]
 
 -- skin global colors
 skin.controls.text_nohover_color  			= {0.59, 0.59, 0.59, 1}
@@ -192,7 +170,6 @@ skin.controls.tab_text_hover_color                  = {1, 1, 1, 1}
 skin.controls.tab_text_active_color         		= {1, 1, 1, 1}
 skin.controls.tab_text_font                         = skin.controls.smallfont
 
-
 -- multichoice
 skin.controls.multichoice_body_color                = {0.15, 0.15, 0.16, 1}
 skin.controls.multichoice_border_hover_color		= {0.78, 0.78, 0.78, 1}
@@ -226,7 +203,7 @@ skin.controls.droplist_text_font					= skin.controls.smallfont
 
 -- tooltip
 skin.controls.tooltip_body_color                    = {0, 0, 0, 0.5}
-skin.controls.tooltip_font_color                    = {0.5, 0.5, 0.5, 1}
+skin.controls.tooltip_font_color                    = {1, 1, 1, 1}
 
 -- textbox
 skin.controls.textinput_borderhover_color			= {0.78, 0.78, 0.78, 1}
@@ -285,24 +262,16 @@ skin.controls.columnlistrow_text_selected_color     = {1, 1, 1, 1}
 -- modalbackground
 skin.controls.modalbackground_body_color            = {1, 1, 1, 0.39}
 
--- linenumberspanel
-skin.controls.linenumberspanel_text_color           = {0.5, 0.5, 0.5, 1}
-skin.controls.linenumberspanel_body_color			= {0.08, 0.08, 0.08, 1}
-
 -- grid
 skin.controls.grid_body_color                       = {0.15, 0.15, 0.15, 1}
 
--- form
-skin.controls.form_text_color                       = {0, 0, 0, 1}
-skin.controls.form_text_font                        = skin.controls.smallfont
+-- menu & menuoption
+skin.controls.menu_body_color                       = {0.25, 0.25, 0.25, 0.9}
+skin.controls.menuoption_body_hover_color           = {0.35, 0.35, 0.35, 0.8}
+skin.controls.menuoption_text_hover_color           = {0.78, 0.78, 0.78, 1}
+skin.controls.menuoption_text_color                 = {0.59, 0.59, 0.59, 1}
+skin.controls.menuoption_text_font						= skin.controls.tinyfont
 
--- menu
-skin.controls.menu_body_color                       = {1, 1, 1, 1}
-
--- menuoption
-skin.controls.menuoption_body_hover_color           = {0.2, 0.8, 1, 1}
-skin.controls.menuoption_text_hover_color           = {1, 1, 1, 1}
-skin.controls.menuoption_text_color                 = {0.71, 0.71, 0.71, 1}
 
 local function ParseHeaderText(str, hx, hwidth, tx, twidth)
 	local font = love.graphics.getFont()
@@ -425,8 +394,7 @@ end
 	- desc: draws the button object
 --]]---------------------------------------------------------
 function skin.button(object)
-	local x = object:GetX()
-	local y = object:GetY()
+	local x, y = object:GetPos()
 	local width = object:GetWidth()
 	local height = object:GetHeight()
 	local hover = object:GetHover()
@@ -434,15 +402,20 @@ function skin.button(object)
 	local caption = object:GetCaption()
 	local formattedtext = object:GetFormattedText()
 	local formattedcaption = object:GetFormattedCaption()
-	local textmesh = object:GetDrawableText()
-	local captionmesh = object:GetDrawableCaption()
-	local text_height = textmesh:getHeight()
-	local text_width = textmesh:getWidth()
 	local down = object:GetDown()
 	local checked = object:GetChecked()
 	local enabled = object:GetEnabled()
 	local clickable = object:GetClickable()
 	local align = object:GetAlign()
+	local captionmesh = object:GetDrawableCaption()
+	local textmesh = object:GetDrawableText()
+	local text_height = textmesh:getHeight()
+	local text_width = textmesh:getWidth()
+	local padding = object:GetPadding()
+	local left_padding = object.left_padding
+	local image_padding = object:GetImagePadding()
+	local image_align = object:GetImageAlign()
+
 	-- Default color
 	local defaultcolor = skin.controls.button_text_color
 	-- Text colors
@@ -467,7 +440,7 @@ function skin.button(object)
 	local image_hover = skin.images["button-hover.png"]
 	local image_hover_sh = height/image_hover:getHeight()
 	local roundcorner = skin.controls.button_round_corner
-	local xoffset, yoffset, padding = 0, 0, 3
+	local xoffset, yoffset = 0, 0
 	local image_x, image_y, image_width, image_height = 0,0,0,0
 	local text_x, text_y, caption_x, caption_y = 0, 0, 0, 0
 
@@ -492,42 +465,41 @@ function skin.button(object)
 		hover = false
 		down = false
 	end
+
+	love.graphics.push()
+	love.graphics.translate(x, y)
+
 	if object.image then
 		image_width = object.image:getWidth()
 		image_height = object.image:getHeight()
-		if align == "center" then
-			image_x = math.floor(x + xoffset + (width - image_width - text_width)/2 )
-		elseif align == "left" then
-			image_x = math.floor(x + xoffset + padding)
-		elseif align == "right" then
-			image_x = math.floor(x + xoffset - padding + width - text_width - image_width)
+
+		if image_align == "center" then
+			image_x = math.floor(xoffset + image_padding - image_width/2)
+			image_padding = image_padding - image_width/2
+		else
+			image_x = math.floor(xoffset + image_padding)
 		end
-		image_y = math.floor(y + yoffset + (height - image_height)/2)
+		image_y = math.floor(yoffset + (height - image_height)/2)
 	end
 
 	if align == "right" then
-		text_x = math.floor(x + xoffset - padding)
+		text_x = math.floor(xoffset - padding)
 	elseif align == "left" then
-		text_x = math.floor(x + xoffset + padding + image_width)
+		text_x = math.floor(xoffset + math.max(padding, image_width + image_padding) )
 	elseif align == "center" then
-		text_x = math.floor(x + xoffset + image_width/2)
+		text_x = math.floor(xoffset)
 	end
-	text_y = math.floor((y + (height - text_height)/2) + yoffset)
+	text_y = math.floor(((height - text_height)/2) + yoffset)
 
-	caption_x = math.floor( x + xoffset - padding )
-	caption_y = math.floor( (y + (height - text_height)/2) + yoffset)
-
-	if text ~= formattedtext then -- Colored text
-		--textcolor = defaultcolor -- (0,0,0,0)
-	end
+	caption_x = math.floor(xoffset - left_padding)
+	caption_y = math.floor(((height - text_height)/2) + yoffset)
 
 	if caption ~= formattedcaption then
 		captioncolor = defaultcolor
 	end
-
 	-- Draw body
 	love.graphics.setColor(bodycolor)
-	love.graphics.rectangle("fill", x, y, width, height, roundcorner, roundcorner)
+	love.graphics.rectangle("fill", 0, 0, width, height, roundcorner, roundcorner)
 
 	-- Draw text
 	love.graphics.setColor(textcolor)
@@ -539,7 +511,13 @@ function skin.button(object)
 	-- Image
 	if object.image then
 		love.graphics.setColor(1, 1, 1, 1)
-		love.graphics.draw(object.image, image_x, image_y)
+
+		if image_align == "center" then
+			--love.graphics.draw(object.image, image_x, image_y, 0, 1, 1, image_width/2 - image_x)
+			love.graphics.draw(object.image, image_x, image_y)
+		else
+			love.graphics.draw(object.image, image_x, image_y)
+		end
 	end
 
 	local hovertime = 0
@@ -553,11 +531,13 @@ function skin.button(object)
 	if hover then
 		love.graphics.setColor(1, 1, 1, brightness)
 	end
-	love.graphics.draw(image_hover, x, y, 0, width, image_hover_sh/2)
+	love.graphics.draw(image_hover, 0, 0, 0, width, image_hover_sh/2)
 
 	-- Draw border
 	love.graphics.setColor(bordercolor)
-	skin.OutlinedRectangle(x, y, width, height)
+	skin.OutlinedRectangle(0, 0, width, height)
+
+	love.graphics.pop()
 end
 
 --[[---------------------------------------------------------
@@ -1302,16 +1282,31 @@ end
 	- desc: draws the tool tip object
 --]]---------------------------------------------------------
 function skin.tooltip(object)
-	local skin = object:GetSkin()
-	local x = object:GetX()
-	local y = object:GetY()
-	local width = object:GetWidth()
-	local height = object:GetHeight()
+	local x, y = love.mouse.getPosition()
+	local text = object.tooltip
+	local font = skin.directives.tooltip_default_font
+	local width = font:getWidth(text)
+	local height = font:getHeight()
+	local margin = 4
+	local offset_x = math.floor(x - width/2)
+	+ math.max(0, math.floor( width/2 - x + margin))
+	- math.max(0, math.floor( width/2 + x + margin - love.graphics.getWidth()))
+	local offset_y = y + 30
+	if y + 30 + height + margin > love.graphics.getHeight() then
+		offset_y = y - 30
+	end
+
 	local bodycolor = skin.controls.tooltip_body_color
-	love.graphics.setColor(bodycolor)
-	love.graphics.rectangle("fill", x, y, width, height, 5, 5)
-	--love.graphics.setColor(bordercolor)
-	--skin.OutlinedRectangle(x, y, width, height)
+	local textcolor = skin.controls.tooltip_font_color
+	local time = object:GetHoverTime()
+
+	if time > 0.5 then
+		love.graphics.setColor(bodycolor)
+		love.graphics.rectangle("fill", offset_x - margin, offset_y - margin, width + margin*2, height + margin*2, 5, 5)
+		love.graphics.setColor(textcolor)
+		love.graphics.setFont(font)
+		love.graphics.print(text, offset_x, offset_y)
+	end
 end
 
 --[[---------------------------------------------------------
@@ -2088,55 +2083,7 @@ function skin.modalbackground(object)
 	love.graphics.rectangle("fill", x, y, width, height)
 end
 
---[[---------------------------------------------------------
-	- func: skin.DrawLineNumbersPanel(object)
-	- desc: draws the line numbers panel object
---]]---------------------------------------------------------
-function skin.linenumberspanel(object)
-	local x = object:GetX()
-	local y = object:GetY()
-	local width = object:GetWidth()
-	local height = object:GetHeight()
-	local offsety = object:GetOffsetY()
-	local parent = object:GetParent()
-	local lines = parent:GetLines()
-	local font = parent:GetFont()
-	local theight = font:getHeight("a")
-	local textcolor = skin.controls.linenumberspanel_text_color
-	local bodycolor = skin.controls.linenumberspanel_body_color
-	
-	object:SetWidth(10 + font:getWidth(#lines))
-	love.graphics.setFont(font)
-	
-	love.graphics.setColor(bodycolor)
-	love.graphics.rectangle("fill", x, y, width, height)
-	
-	love.graphics.setColor(bordercolor)
-	--skin.OutlinedRectangle(x, y, width, height, true, true, true, false)
-	
-	local startline = math.ceil(offsety / theight)
-	if startline < 1 then
-		startline = 1
-	end
-	local endline = math.ceil(startline + (height / theight)) + 1
-	if endline > #lines then
-		endline = #lines
-	end
-	
-	for i=startline, endline do
-		love.graphics.setColor(textcolor)
-		skin.PrintText(i, x + 5, (y + (theight * (i - 1))) - offsety)
-	end
-	
-end
 
---[[---------------------------------------------------------
-	- func: skin.DrawNumberBox(object)
-	- desc: draws the numberbox object
---]]---------------------------------------------------------
-function skin.numberbox(object)
-
-end
 --[[---------------------------------------------------------
 	- func: skin.DrawGrid(object)
 	- desc: draws the grid object
@@ -2234,35 +2181,53 @@ function skin.menuoption(object)
 	local hover = object:GetHover()
 	local text = object:GetText()
 	local icon = object:GetIcon()
+	local margin = object.margin
 	local option_type = object.option_type
 	local body_hover_color = skin.controls.menuoption_body_hover_color
 	local text_hover_color = skin.controls.menuoption_text_hover_color
 	local text_color = skin.controls.menuoption_text_color
-	local twidth = skin.controls.smallfont:getWidth(text)
+	local text_font = skin.controls.menuoption_text_font
+
+	love.graphics.push()
+	love.graphics.translate(x, y)
 
 	if option_type == "divider" then
 		love.graphics.setColor(0.78, 0.78, 0.78, 1)
-		love.graphics.rectangle("fill", x + 4, y + 2, width - 8, 1)
-		object.contentheight = 10
+		love.graphics.rectangle("fill", 4, 2, width - 8, 1)
 	else
-		love.graphics.setFont(skin.controls.smallfont)
+		love.graphics.setFont(text_font)
 		if hover then
 			love.graphics.setColor(body_hover_color)
-			love.graphics.rectangle("fill", x + 2, y + 2, width - 4, height - 4)
+			love.graphics.rectangle("fill", 2, 2, width - 4, height - 4)
 			love.graphics.setColor(text_hover_color)
-			skin.PrintText(text, x + 26, y + 5)
+			skin.PrintText(text, 26, margin)
 		else
 			love.graphics.setColor(text_color)
-			skin.PrintText(text, x + 26, y + 5)
+			skin.PrintText(text, 26, margin)
 		end
+
+		if object.activated then
+			love.graphics.setColor(body_hover_color)
+			love.graphics.rectangle("fill", 2, 2, width - 4, height - 4)
+		end
+
+		love.graphics.setColor(1,1,1,1)
+		if option_type == "submenu_activator" then
+			local arrow = skin.images["arrow-right.png"]
+			love.graphics.draw(arrow, width - arrow:getWidth(), height/2 - arrow:getHeight()/2)
+		end
+
 		if icon then
-			love.graphics.setColor(1, 1, 1, 1)
-			love.graphics.draw(icon, x + 5, y + 5)
+			local image_width, image_height = icon:getDimensions()
+			local image_width_h, image_height_h = image_width/2, image_height/2
+			local scale_x = 1/image_width * 16
+			local scale_y = 1/image_height * 16
+			love.graphics.draw(icon, 5, height/2, 0, scale_x, scale_y, 0, image_height_h)
 		end
-		object.contentwidth = twidth + 31
-		object.contentheight = 25
 	end
-	
+
+	love.graphics.pop()
+
 end
 
 function skin.tree(object)
