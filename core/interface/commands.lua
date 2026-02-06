@@ -506,6 +506,14 @@ local commands = {
 		syntax = "",
 	};
 
+	rcon = {
+		action = function(...)
+			local command = table.concat({...}, " ")
+			local client = require "client"
+			client.send(string.format("rcon %s", command))
+		end,
+		syntax = "",
+	}
 }
 
 return commands

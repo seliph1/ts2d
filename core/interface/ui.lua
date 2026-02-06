@@ -1335,7 +1335,7 @@ function ui.hud:Draw()
 	if not(game and game.timer and game.timer_start) then return end
 	local timer_now = os.time() - game.timer_start
 	local timer = game.timer - timer_now
-	local time = os.date("%M:%S", math.floor( timer ) )
+	local time = os.date("%M:%S", math.floor( timer ) ) or ""
 
 	local player = client.share.players[client.id]
 	if player.h <= 0 then return end
