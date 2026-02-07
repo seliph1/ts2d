@@ -72,7 +72,7 @@ end
 
 local ui 			= require "core.interface.ui"
 local client 		= require "client"
-local discordRPC	= require "lib.discordRPC"
+--local discordRPC	= require "lib.discordRPC"
 
 local initializer = {
 	["debug"] = function()
@@ -93,31 +93,33 @@ local initializer = {
 	end,
 
 	["discord"] = function()
-		discordRPC.initialize(require "core.applicationId", true)
-		function discordRPC.ready(userId, username, discriminator, avatar)
-			print(string.format("Discord: ready (%s, %s, %s, %s)", userId, username, discriminator, avatar))
-		end
+        if discordRPC then
+		    discordRPC.initialize(require "core.applicationId", true)
+		    function discordRPC.ready(userId, username, discriminator, avatar)
+			    print(string.format("Discord: ready (%s, %s, %s, %s)", userId, username, discriminator, avatar))
+		    end
 
-		function discordRPC.disconnected(errorCode, message)
-			print(string.format("Discord: disconnected (%d: %s)", errorCode, message))
-		end
+		    function discordRPC.disconnected(errorCode, message)
+			    print(string.format("Discord: disconnected (%d: %s)", errorCode, message))
+		    end
 
-		function discordRPC.errored(errorCode, message)
-			print(string.format("Discord: error (%d: %s)", errorCode, message))
-		end
+		    function discordRPC.errored(errorCode, message)
+			    print(string.format("Discord: error (%d: %s)", errorCode, message))
+		    end
 
-		function discordRPC.joinGame(joinSecret)
-			print(string.format("Discord: join (%s)", joinSecret))
-		end
+		    function discordRPC.joinGame(joinSecret)
+			    print(string.format("Discord: join (%s)", joinSecret))
+		    end
 
-		function discordRPC.spectateGame(spectateSecret)
-			print(string.format("Discord: spectate (%s)", spectateSecret))
-		end
+		    function discordRPC.spectateGame(spectateSecret)
+			    print(string.format("Discord: spectate (%s)", spectateSecret))
+		    end
 
-		function discordRPC.joinRequest(userId, username, discriminator, avatar)
-			print(string.format("Discord: join request (%s, %s, %s, %s)", userId, username, discriminator, avatar))
-			discordRPC.respond(userId, "yes")
-		end
+		    function discordRPC.joinRequest(userId, username, discriminator, avatar)
+			    print(string.format("Discord: join request (%s, %s, %s, %s)", userId, username, discriminator, avatar))
+			    discordRPC.respond(userId, "yes")
+		    end
+        end
 	end,
 }
 
@@ -138,7 +140,9 @@ function love.load(arguments)
 end
 
 function love.update( dt )
-	discordRPC.update( dt )
+    if discordRPC then
+    	discordRPC.update( dt )
+    end
 
 	loveframes.update(dt)
 	client.update(dt)
@@ -188,7 +192,9 @@ function love.textinput(text)
 end
 
 function love.quit()
-	discordRPC.shutdown()
+    if discordRPC then
+    	discordRPC.shutdown()
+    end
 end
 
 function love.resize(w, h)
