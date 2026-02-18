@@ -6,7 +6,6 @@
 
 *.bak
 *.bat
-*.map
 *.dll
 *.exe
 *.zip
