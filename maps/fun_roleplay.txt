@@ -1,0 +1,20 @@
+1.2 ROLEPLAY CHANGELOG:
+Added house system
+House features:
+- Guest management
+- Buying and selling
+- Building functions
+- Save/load system
+
+Added new item save functionality
+Item features:
+- Item now saves on map on next loading (stays on ground)
+- Item in your hands is saved as well when joining server
+- Now you can collect two primary weapons and three melee weapons
+- You can wield more but can only collect two primary weapons at a time
+
+Fixed earthquake bug
+Fixed building construction bug
+Fixed some misplacement in map tiles
+
+

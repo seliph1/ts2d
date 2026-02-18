@@ -1,0 +1,14 @@
+parse('mp_building_limit "Dispenser" 2');
+parse('mp_building_limit "Turret" 2');
+parse('mp_building_limit "Supply" 2');
+parse('mp_building_limit "Teleporter Entrance" 1');
+parse('mp_building_limit "Teleporter Exit" 1');
+parse('mp_building_limit "Gate Field" 6');
+parse('mp_building_limit "Wall III" 5');
+parse('mp_building_limit "Wall II" 5');
+parse('mp_building_limit "Wall I" 5');
+parse("mp_roundtime 6");
+parse("mp_startmoney 16000");
+parse("sv_friendlyfire 0");
+parse("sv_gamemode 0");
+parse("mp_autoteambalance 0");
