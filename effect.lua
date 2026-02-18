@@ -11,7 +11,11 @@ local function lerp(a, b, t)
 end
 
 function effect.register(particle, name, options)
-	if type(particle) == "function" then
+	if type(particle) ==  "string" then
+		local data = love.filesystem.load(particle)
+		effect.register(data, name, options)
+
+	elseif type(particle) == "function" then
 		effect.list[name] = particle()
 	elseif type(particle) == "table" then
 		effect.list[name] = particle

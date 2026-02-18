@@ -22,7 +22,6 @@ function client.connect_attempt()
 	home.targetY = 0
 	home._attack1Timer = 0
 	home._attack2Timer = 0
-	home._reloadTimer = 0
 end
 
 --- Callback for when client sucessfully connects to server

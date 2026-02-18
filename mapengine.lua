@@ -16,6 +16,8 @@ local cos = math.cos
 local sin = math.sin
 local abs = math.abs
 local rad = math.rad
+local PI = math.pi
+local HUGE = math.huge
 
 -- Default config tables for tiles/tilesets/maps
 local DEFAULT_PROPERTY = 0
@@ -27,13 +29,15 @@ local ENTITY_TYPE = enum.ENTITY_TYPE
 local SOLID_THRESHOLD = 0.3
 local WALL_THRESHOLD = 1.0
 
-effect.register(LF.load "core/particle/sparkle.lua", "sparkle")
-effect.register(LF.load "core/particle/hitscan.lua", "hitscan")
-effect.register(LF.load "core/particle/bullettrail.lua", "trail")
-effect.register(LF.load "core/particle/smoke_inst.lua", "blacksmoke")
-effect.register(LF.load "core/particle/smoke_white.lua", "whitesmoke")
-effect.register(LF.load "core/particle/spawn.lua", "spawn")
-effect.register(LF.load "core/particle/bloodpile.lua", "bloodpile")
+effect.register("core/particle/sparkle.lua", "sparkle")
+effect.register("core/particle/hitscan.lua", "hitscan")
+effect.register("core/particle/bullettrail.lua", "trail")
+effect.register("core/particle/smoke_inst.lua", "blacksmoke")
+effect.register("core/particle/smoke_white.lua", "whitesmoke")
+effect.register("core/particle/spawn.lua", "spawn")
+effect.register("core/particle/bloodpile.lua", "bloodpile")
+effect.register("core/particle/slash.lua", "slash")
+
 
 --effect.register(LF.load "core/particle/fire.lua" (), "fire")
 --effect.register(dofile "core/particle/snow.lua", "snow")
@@ -154,6 +158,10 @@ function MapObject.new(width, height)
 	width = width or 50
 	height = height or 50
 	local object = {
+		_content = {
+			gfx = {};
+			sfx = {};
+		};
 		_updateRequest = true;
 		_breath = 0;
 		_oscillation = 0;
@@ -184,7 +192,6 @@ function MapObject.new(width, height)
 
 	object._placeholder = love.image.newImageData(32, 32)
 	object._placeholder_img = love.graphics.newImage(object._placeholder)
-	object._flare = love.graphics.newImage("gfx/sprites/flare2.bmp") --fs:loadImage("gfx/sprites/flare2.bmp")
 	object._blendmap = create_spritesheet("gfx/blendmap.bmp", 32, 32)
 	object._hudicon = create_spritesheet("gfx/gui_icons.bmp", 16, 16)
 	object._smallfont = love.graphics.newFont("gfx/fonts/liberationsans.ttf", 10)
@@ -302,6 +309,10 @@ function MapObject:clear()
 	self._oscillation = 0;
 	self._world = bump.newWorld();
 
+	self._content = {
+		gfx = {};
+		sfx = {};
+	}
 	self._camera = {
 		x = 0,
 		y = 0,
@@ -630,10 +641,10 @@ function MapObject:read(path, noindexing)
 				if modifier >= 192 then -- Some stuff that DC planned.
 					read_string()
 				elseif modifier >= 64 and modifier < 128 then -- Blending
-					brightness = math.floor( ( modifier - 64 - rotation) * 2.5 )
+					brightness = floor( ( modifier - 64 - rotation) * 2.5 )
 					blending = read_byte() + 2
 				elseif modifier >= 128 then -- Color + Blending
-					brightness = math.floor( ( modifier - 128 - rotation) * 2.5 )
+					brightness = floor( ( modifier - 128 - rotation) * 2.5 )
 					color.red = read_byte()
 					color.green = read_byte()
 					color.blue = read_byte()
@@ -835,8 +846,8 @@ function MapObject:colorfill(x, y, replace)
 		for i = w.x+1, e.x-1 do
 			mapdata_settile(i, n.y, replace)
 			
-			local north = math.min(n.y + 1, mapfile.height)
-			local south = math.max(n.y - 1, 0)
+			local north = min(n.y + 1, mapfile.height)
+			local south = max(n.y - 1, 0)
 			
 			if t[i][south]==color then
 				table.insert(q,{x = i, y = south})
@@ -853,7 +864,7 @@ end
 function MapObject:random()
 	for x = 0, self._mapdata.width do
 	for y = 0, self._mapdata.height do
-		local r = math.random(0,255)
+		local r = random(0,255)
 		self._mapdata.map[x] = self._mapdata.map[x] or {}
 		self._mapdata.map[x][y] = r
 		local property = self._mapdata.tile[r].property
@@ -906,8 +917,50 @@ function MapObject:get(property)
 	end
 end
 
+
+function MapObject:getImage(path)
+	if path == "" then return self._placeholder_img end
+	local gfx = self._content.gfx
+	local texture = gfx[path]
+	if not texture then
+		if love.filesystem.getInfo(path) then
+			local imageData = love.image.newImageData(path)
+			imageData:mapPixel(function(x, y, r, g, b, a)
+				-- detect magenta color(255,0,255)
+				if r == 1 and g == 0 and b == 1 then
+					return 1, 0, 1, 0 -- make alpha = 0
+				else
+					return r, g, b, a
+				end
+			end)
+			gfx[path] = love.graphics.newImage(imageData)-- Remove magenta pixels
+			return gfx[path]
+		end
+	end
+	if not texture then
+		gfx[path] = self._placeholder_img
+		return gfx[path]
+	end
+	return texture
+end
+
+function MapObject:getSound(path)
+	if path == "" then return end
+	local sfx = self._content.sfx
+	local sound = self._content.sfx[path]
+	if not sound then
+		if love.filesystem.getInfo(path) then
+			sound = love.audio.newSource(path, "static")
+			sfx[path] = sound
+		end
+	end
+	if sound then
+		return sound
+	end
+end
+
+
 ---Check if a collision is happening between `object` that has x|y property and a map tile
----
 ---If `x` and `y` is not specified, it will calculate collision at its own camera position
 ---@param x number
 ---@param y number
@@ -993,7 +1046,7 @@ end
 
 function MapObject:update(dt)
 	local time = love.timer.getTime()
-	self._oscillation = (sin( time * math.pi * 2) + 1)/2
+	self._oscillation = (sin( time * PI * 2) + 1)/2
 
 	effect.update(dt)
 end
@@ -1148,7 +1201,7 @@ function MapObject:draw_bullets(share, home, client)
 		love.graphics.push()
 		love.graphics.translate(bullet.x, bullet.y)
 		--love.graphics.translate(bullet_cache.x, bullet_cache.y)
-		love.graphics.rotate(math.atan2(bullet.dy, bullet.dx))
+		love.graphics.rotate(atan2(bullet.dy, bullet.dx))
 		love.graphics.setColor(1, 1, 1, 1)
 		love.graphics.ellipse('fill', 0, 0, 24, 1)
 		love.graphics.setColor(1, 1, 1, 0.38)
@@ -1202,7 +1255,10 @@ function MapObject:draw_player(client, peer_id)
 		targetX, targetY = player.targetX, player.targetY
 	end
 	-- Calculate drawing angle
-	local angle = math.atan2(targetY - client.height/2, targetX - client.width/2) + math.pi/2
+	local angle = atan2(targetY - client.height/2, targetX - client.width/2) + PI/2
+	if player._swingTimer then
+		angle = angle - player._swingTimer*5
+	end
 	-- Get the player's held weapon
 	local holding = player.ih
 	-- Get the player's worn armor
@@ -1214,13 +1270,11 @@ function MapObject:draw_player(client, peer_id)
 	local player_texture_path = string.format("gfx/player/%s", player.p)
 
 	-- Gets the weapon texture
-	local player_texture = client.gfx.player[player_texture_path]
-	if not player_texture then
-		client.gfx.player[player_texture_path] = love.graphics.newImage(player_texture_path)
-	end
+	local player_texture = self:getImage(player_texture_path)
 
 	local stance
 	local weapon_texture, weapon_offset
+	local stance_name = "idle"
 	if holding == 0 then
 		-- Set player stance to idle since it isn't wearing anything
 		stance = PLAYER_STANCE.idle
@@ -1229,11 +1283,12 @@ function MapObject:draw_player(client, peer_id)
 		local itemdata = client.content.itemlist[holding]
 		-- Get the weapon texture from weapon ID
 		local weapon_gfx_path = itemdata.common_path .. itemdata.held_image
-		weapon_texture = client.gfx.itemlist[weapon_gfx_path]
+		weapon_texture = self:getImage(weapon_gfx_path)
 		weapon_offset = itemdata.offset
 
 		-- Set what stance should player hold that weapon
 		stance = PLAYER_STANCE[ itemdata.player_stance ]
+		stance_name = itemdata.player_stance
 	end
 
 	local armor_texture
@@ -1242,7 +1297,7 @@ function MapObject:draw_player(client, peer_id)
 		-- Check if that weapon ID exists in available list
 		local itemdata = client.content.itemlist[armor]
 		local armor_gfx_path = itemdata.common_path .. itemdata.held_image
-		armor_texture = client.gfx.itemlist[armor_gfx_path]
+		armor_texture = self:getImage(armor_gfx_path)
 		armor_opacity = itemdata.opacity
 	end
 
@@ -1255,6 +1310,7 @@ function MapObject:draw_player(client, peer_id)
 		love.graphics.draw(player_texture, stance, 0, 0, angle, 1, 1, 16, 16)
 		love.graphics.pop()
 	end
+
 	-- Translate to player
 	love.graphics.translate(player.x, player.y)
 
@@ -1264,6 +1320,10 @@ function MapObject:draw_player(client, peer_id)
 		-- Draw the hitbox
 		love.graphics.rectangle("line", -player.size/2, -player.size/2, player.size, player.size)
 	end
+
+	--love.graphics.setColor(0.00, 0.00, 0.00, 0.10)
+	--love.graphics.circle("fill", 0, 0, 14)
+
 	local alpha = armor_opacity or 1
 	love.graphics.setColor(1, 1, 1, alpha)
 	if player_texture then
@@ -1282,12 +1342,12 @@ function MapObject:draw_player(client, peer_id)
 		local itemdata = client.content.itemlist[item_type]
 		if itemdata then
 			local equipment_gfx_path = 	itemdata.common_path .. itemdata.held_image
-			local equipment_texture = client.gfx.itemlist[equipment_gfx_path]
+			local equipment_texture = self:getImage(equipment_gfx_path)
 
 			if equipment_texture then
 				local width = equipment_texture:getWidth()
 				local height = equipment_texture:getHeight()
-				local flip = itemdata.flip and math.pi or 0
+				local flip = itemdata.flip and PI or 0
 				local scale = itemdata.scale or 0
 				love.graphics.draw(equipment_texture, 0, 0, angle + flip, scale, scale, width/2, height/2)
 			end
@@ -1299,7 +1359,12 @@ function MapObject:draw_player(client, peer_id)
 		local width = weapon_texture:getWidth()
 		local height = weapon_texture:getHeight()
 		local offset = weapon_offset or 0
-		love.graphics.draw(weapon_texture, 0, 0, angle, 1, 1, width/2, height + offset)
+		local flipH = 1
+		local flipV = 1
+		if stance_name == "melee" then
+			flipV = -1
+		end
+		love.graphics.draw(weapon_texture, 0, 0, angle, flipV, flipH, width/2, height + offset)
 	end
 
 	-- Pop for the next player
@@ -1325,7 +1390,7 @@ function MapObject:draw_entity(e)
 	local alpha 	= ( tonumber( e.string_settings[2] ) or 1 ) * 255
 	local mask 		= ( tonumber( e.string_settings[3] ) or 0 )
 	local rotationspeed = ( tonumber( e.string_settings[4] ) or 0 )
-	local angle = math.rad(rotation + rotationspeed * love.timer.getTime() * 90)
+	local angle = rad(rotation + rotationspeed * love.timer.getTime() * 90)
 	local scale_x = size_x/width
 	local scale_y = size_y/height
 	local sx = (e.x * 32) + shift_x + size_x/2
@@ -1392,13 +1457,13 @@ function MapObject:draw_entities(client)
 end
 
 function MapObject:update_items(share, client)
-	--
+	-- void
 end
 
 function MapObject:draw_items(client)
 	local camera = self._camera
 	local mapdata = self._mapdata
-	local gfx = client.gfx
+	--local gfx = client.gfx
 	local itemlist = client.content.itemlist
 	local sw, sh = love.graphics.getWidth(), love.graphics.getHeight()
 	local tile_size = mapdata.tile_size
@@ -1409,7 +1474,8 @@ function MapObject:draw_items(client)
 	for index, item in pairs(client.share.items) do
 		local itemdata = itemlist[item.it]
 		local path = itemdata.common_path .. itemdata.dropped_image
-		local imagedata = gfx.itemlist[path]
+		--local imagedata = gfx.itemlist[path]
+		local imagedata = self:getImage(path)
 
 		if itemdata and imagedata then
 			-- Transpose and rotate the image relative to the center
@@ -1483,6 +1549,30 @@ function MapObject:clearEffects()
 	effect.clear()
 end
 
+function MapObject:playSound(soundfile, volume)
+	local sound = self:getSound(soundfile)
+	if not sound then return end
+	volume = volume or 1.0
+	sound:stop()
+	sound:setRelative(true)
+	sound:setVolume(volume)
+	sound:play()
+	return sound
+end
+
+function MapObject:playSoundAt(soundfile, x, y, volume)
+	local sound = self:getSound(soundfile)
+	if not sound then return end
+	volume = volume or 1.0
+	sound:stop()
+	sound:setVolume(volume)
+	sound:setAttenuationDistances(400, 1200)
+	sound:setRolloff(1.2)
+	sound:setRelative(false)
+	sound:setPosition(x, y, 0)
+	sound:play()
+end
+
 function MapObject:getTileSize()
 	return self._mapdata.tile_size
 end
@@ -1536,8 +1626,8 @@ function MapObject:sweptAABB(size, x1, y1, vx, vy, tileX, tileY)
         xEntry = (tx2 - ox1) / vx
         xExit  = (tx1 - ox2) / vx
     else
-        xEntry = -math.huge
-        xExit  = math.huge
+        xEntry = -HUGE
+        xExit  = HUGE
     end
 
     if vy > 0 then
@@ -1547,12 +1637,12 @@ function MapObject:sweptAABB(size, x1, y1, vx, vy, tileX, tileY)
         yEntry = (ty2 - oy1) / vy
         yExit  = (ty1 - oy2) / vy
     else
-        yEntry = -math.huge
-        yExit  = math.huge
+        yEntry = -HUGE
+        yExit  = HUGE
     end
 
-    local entryTime = math.max(xEntry, yEntry)
-    local exitTime  = math.min(xExit, yExit)
+    local entryTime = max(xEntry, yEntry)
+    local exitTime  = min(xExit, yExit)
 
     if entryTime > exitTime or (xEntry < 0 and yEntry < 0) or entryTime > 1 or entryTime < 0 then
         return nil
@@ -1576,15 +1666,15 @@ function MapObject:moveWithSliding(size, x1, y1, dx, dy)
 	local half 		= floor(size/2)
 	local tile_size = self:getTileSize()
 
-    local minx = math.min(x1-half, x1 + dx - half)
-    local maxx = math.max(x1+half, x1 + dx + half)
-    local miny = math.min(y1-half, y1 + dy - half)
-    local maxy = math.max(y1+half, y1 + dy + half)
+    local minx = min(x1-half, x1 + dx - half)
+    local maxx = max(x1+half, x1 + dx + half)
+    local miny = min(y1-half, y1 + dy - half)
+    local maxy = max(y1+half, y1 + dy + half)
 
-    local tx1 = math.floor(minx / tile_size)
-    local ty1 = math.floor(miny / tile_size)
-    local tx2 = math.floor(maxx / tile_size)
-    local ty2 = math.floor(maxy / tile_size)
+    local tx1 = floor(minx / tile_size)
+    local ty1 = floor(miny / tile_size)
+    local tx2 = floor(maxx / tile_size)
+    local ty2 = floor(maxy / tile_size)
 
     for ty = ty1, ty2 do
         for tx = tx1, tx2 do
@@ -1628,9 +1718,9 @@ function MapObject:hitscan(x1, y1, x2, y2, height)
     local dx = x2 - x1
     local dy = y2 - y1
 
-    local steps = math.abs(dx)
-    if math.abs(dy) > steps then
-        steps = math.abs(dy)
+    local steps = abs(dx)
+    if abs(dy) > steps then
+        steps = abs(dy)
     end
 
     if steps == 0 then

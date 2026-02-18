@@ -1,6 +1,5 @@
 --- Client base framework
 local Map 			= require "mapengine"
-local b				= require "lib.battery"
 local Bump			= require "lib.bump"
 local client 		= require "lib.cs"
 local serpent 		= require "lib.serpent"
@@ -54,9 +53,14 @@ local modules = {
 for index, module in pairs(modules) do
 	require(module)(client)
 end
+-- Global shader config
 client.canvas:setWrap("clampzero")
 client.shaders = require "core.shaders.cs2dshaders"
 client.shader = client.shaders.baseShader
+
+-- Global audio config
+love.audio.setDistanceModel("linearclamped")
+
 
 
 local function is_alive()
@@ -125,8 +129,6 @@ function client.predict_player(peer_id, dt) -- `home` is used to apply controls 
 end
 
 function client.predict_action(peer_id, dt)
-	if is_dead() then return end
-
 	-- Check if its own player id, and is connected
 	if not( client.id == peer_id and client.joined ) then return end
 
@@ -141,6 +143,11 @@ function client.predict_action(peer_id, dt)
 	if home._attack1Timer > 0 then
 		home._attack1Timer = home._attack1Timer - dt
 	end
+
+	if player._swingTimer and player._swingTimer > 0 then
+		player._swingTimer = player._swingTimer - dt
+	end
+
 	if client.attribute("attack") == true then
 		-- Increment timer if player is pressing attack
 		-- Dont go below 0
@@ -149,17 +156,20 @@ function client.predict_action(peer_id, dt)
 			if cooldown > 0 then
 				home._attack1Timer = home._attack1Timer + cooldown
 			end
+
+			-- If this peer can respawn, request server to respawn
+			if is_dead() then
+				client.send("respawnrequest")
+			end
 		end
 	end
 
 end
 
-local bulletsound = love.audio.newSource("sfx/weapons/ak47.wav", "static")
-local m3 = love.audio.newSource("sfx/weapons/m3.wav", "static")
-local xm = love.audio.newSource("sfx/weapons/xm1014.wav", "static")
-
 function client.attack(peer_id, local_data)
-	if is_dead() then return 1 end
+	if is_dead() then
+		return 1
+	end
 
 	--local player = client.share_lerp.players[peer_id]
 	local player = client.share.players[peer_id]
@@ -194,6 +204,8 @@ function client.attack(peer_id, local_data)
 		if peer_id == client.id then return 0 end
 	end
 
+	-- Calculate angle for all attack modes
+	local angle = math.atan2(mouse_y - client.height/2, mouse_x - client.width/2)
 	if action == "bullet" then
 		local itemobject = player.i[itemheld]
 		local ammo_mag = itemobject.am or 0
@@ -201,13 +213,13 @@ function client.attack(peer_id, local_data)
 		if ammo_mag and ammo_cap then
 			-- Check if player have enough bullets
 			if ammo_mag <= 0 then
+				client.map:playSoundAt("sfx/weapons/w_empty.wav", player_x, player_y, 0.1)
 				return 1
 			end
 		end
 
 		local spawn = tonumber( args[1] ) or 1
 		local spread = tonumber( args[2] ) or 1
-		local angle = math.atan2(mouse_y - client.height/2, mouse_x - client.width/2)
 		-- In CS2D the range value is multiplied by 3
 		local distance = itemdata.range * 3
 		--local rpm = itemdata.rpm or 200 -- 0.3
@@ -219,18 +231,10 @@ function client.attack(peer_id, local_data)
 		local offset_x = player_x + math.cos(angle) * offset
 		local offset_y = player_y + math.sin(angle) * offset
 
-		if itemheld == 10 then
-			m3:setVolume(0.1)
-			m3:stop()
-			m3:play()
-		elseif itemheld == 11 then
-			xm:setVolume(0.1)
-			xm:stop()
-			xm:play()
-		else
-			bulletsound:setVolume(0.1)
-			bulletsound:stop()
-			bulletsound:play()
+		-- Play the weapon sound when firing
+		if itemdata.sound then
+			client.map:playSoundAt(itemdata.sound, offset_x, offset_y)
+			--client.map:playSound(itemdata.sound)
 		end
 
 		-- Simulate locally that we fired a weapon
@@ -246,6 +250,22 @@ function client.attack(peer_id, local_data)
 			local subangle = angle + math.rad(i * spread - half * spread)
 			client.fire(offset_x, offset_y, subangle, distance, client.id)
 		end
+		return seconds
+	end
+
+	if action == "swing" then
+		player._swingTimer = 0.2
+		--local rpm = itemdata.frame_delay or 22
+		local frame_delay = itemdata.frame_delay or 22
+		-- Actions per second
+		local seconds = frame_delay / 60
+		client.map:spawn_effect("slash", player_x, player_y, {setDirection = angle + math.pi/2 })
+
+		if itemdata.sound then
+			client.map:playSoundAt(itemdata.sound, player_x, player_y)
+			--client.map:playSound(itemdata.sound)
+		end
+
 		return seconds
 	end
 

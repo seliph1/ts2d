@@ -211,7 +211,7 @@ editor.tool_option = {
 				if status then
 					print(status)
 				else
-					client.camera_translate(0, 0)
+					client.camera_snap(0, 0)
 					client.map:shiftRender()
 				end
 			end

@@ -107,7 +107,6 @@ function loveframes.LoadSkins(dir)
 	for k, v in ipairs(skinlist) do
 		if v.extension == "lua" then
 			skin = loveframes.require(v.requirepath)
-			--loveframes.RegisterSkin(skin)
 		end
 	end
 end

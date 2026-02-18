@@ -16,17 +16,17 @@ skin.name = "CS2D"
 skin.author = "mozilla"
 skin.version = "1.0"
 
+-- get current path
+skin.current_path = debug.getinfo(1, "S").source:sub(2):match("(.*[/\\\\])") or "./"
+
 local bordercolor = {0.5, 0.5, 0.5, 1}
 
 -- add skin directives to this table
 skin.directives = {}
 -- Text
-skin.directives.text_global = "gfx/fonts/liberationsans.ttf"
+skin.directives.text_global = skin.current_path.."images/liberationsans.ttf"
 skin.directives.text_fallbacks = {
 	--"gfx/fonts/NotoSansCJK-Regular.ttc",
-	--"gfx/fonts/NotoSansArabic-Regular.ttf",
-	--"gfx/fonts/NotoSansThai-Regular.ttf",
-	--"gfx/fonts/NotoSansHebrew-Regular.ttf",
 }
 
 skin.directives.text_font_height 			= 1

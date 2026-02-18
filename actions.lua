@@ -52,14 +52,17 @@ local actions = {
             local ui = require "core.interface.ui"
             ui.chat_frame_server_message(message)
 		end,
+        alias = {"msg", "sv_msg"}
 	};
 
     log = {
         action = function(...)
-            local message = table.concat({...}," ")
+            local message = "©255220000"..table.concat({...}," ")
 
             local ui = require "core.interface.ui"
-            ui.server_log_push("©255220000"..message)
+            local console = require "core.interface.console"
+            ui.server_log_push(message)
+            console.message(message)
 		end,
     };
 
@@ -115,7 +118,9 @@ local actions = {
 
             if client.joined and player then
                 local ui = require "core.interface.ui"
-                ui.chat_frame_message(player, message)
+                local console = require "core.interface.console"
+                local full_message = ui.chat_frame_message(player, message)
+                console.message(full_message)
             end
         end
     };
@@ -193,6 +198,30 @@ local actions = {
     };
 
     reload = {
+        action = function(peer_id, reload_step, seconds)
+            local ui = require "core.interface.ui"
+            -- reload_step 0 = cancelled reloading
+	        -- reload_step 1 = starting reload
+	        -- reload_step 2 = done reloading
+            peer_id = tonumber(peer_id)
+            reload_step = tonumber(reload_step)
+            seconds = tonumber(seconds)
+
+            local player = client.share.players[peer_id]
+
+            if peer_id == client.id then
+                if reload_step == 1 then -- We are reloading
+                    ui.reload_display(seconds)
+                    client.map:playSoundAt("sfx/weapons/w_clipout.wav", player.x, player.y)
+                elseif reload_step == 2 then -- We finished reloading
+                    ui.reload_dispose()
+                    client.map:playSoundAt("sfx/weapons/w_clipin.wav", player.x, player.y)
+                elseif reload_step == 0 then -- We cancelled reloading
+                    ui.reload_dispose()
+                end
+            end
+        end,
+        syntax = "",
     };
 
     fire = {
@@ -241,6 +270,10 @@ local actions = {
                 local x = tonumber(arg[1] ) or 0
                 local y = tonumber(arg[2] ) or 0
                 client.camera_translate(x, y)
+            elseif mode == "snap" then
+                local x = tonumber(arg[1] ) or 0
+                local y = tonumber(arg[2] ) or 0
+                client.camera_snap(x, y)
             elseif mode == "unbind" then
                 client.camera_unbind()
             end
@@ -312,6 +345,14 @@ local actions = {
             end
         end,
     };
+
+    restart = {
+        action = function(...)
+            print("Round restarted by server.")
+        end,
+        syntax = "",
+    };
+
 }
 actions.msg = actions.message
 

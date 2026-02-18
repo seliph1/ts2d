@@ -46,8 +46,6 @@ function client.camera_move(dt)
 	if p and p.x and p.y then
 		local x = p.x
 		local y = p.y
-		--local delta_x = (client.width/2 - home.targetX)/2
-		--local delta_y = (client.height/2 - home.targetY)/2
 		local delta_x = 0
 		local delta_y = 0
 		camera.tx = x - delta_x
@@ -71,6 +69,15 @@ function client.camera_translate(x, y)
 	camera.ty = y
 end
 
+---@param x number
+---@param y number
+function client.camera_snap(x, y)
+	client.camera_unbind()
+	local camera = client.camera
+	camera.tx = x
+	camera.ty = y
+end
+
 function client.camera_unbind()
 	client.camera.pointer = nil
 end
@@ -83,6 +90,7 @@ end
 function client.camera_tween(dt)
 	client.camera.x = tween(client.camera.x, client.camera.tx, client.camera.tween_speed * dt)
 	client.camera.y = tween(client.camera.y, client.camera.ty, client.camera.tween_speed * dt)
+	love.audio.setPosition(client.camera.x, client.camera.y, 0)
 end
 ---------- module end ------------
 end

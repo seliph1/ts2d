@@ -12,6 +12,8 @@ ui.font_fallbacks = {
 	"gfx/fonts/NotoSansHindi-Regular.ttf",
 }
 
+--ui.sounds = {}
+
 ui.setFontFallbacks = function(font, size)
 	local fallbacks = {}
 	for index, fallback_src in ipairs(ui.font_fallbacks) do
@@ -752,43 +754,45 @@ ui.options_button_cancel = LF.Create("button", ui.options_frame):SetText("Cancel
 --------------------------------------------------------------------------------------------------
 --server log--------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------
-ui.server_log_frame = LF.Create("frame")
+
+ui.server_log = LF.Create("log")
 :SetSize(0.2, 0.1)
-:SetState("game")
-:SetScreenLocked(true)
-:ShowCloseButton(false)
-:SetPos(0.5, 0, true)
-
-ui.server_log_frame.Draw = function(object)
-	local hover = object:GetHover()
-	local hovertime = 0
-	if hover and object.hovertime > 0 then
-		hovertime = love.timer.getTime() - object.hovertime
-	end
-	local brightness =  LF.Mix(0.1, 0.3, LF.Clamp(hovertime*5, 0, 1) )
-
-	LG.setColor(0, 0, 0, brightness)
-	LG.rectangle("fill", object.x, object.y, object.width, object.height, 10, 10)
-
-	LG.setColor(0, 0, 0, brightness)
-
-	local skin = LF.GetActiveSkin()
-	LG.setColor(0.8,0.8,0.8, brightness)
-	local drag = skin.images["vdrag.png"]
-	local scale = 0.3
-	LG.draw(drag, object.x + object.width/2 - drag:getWidth()/2*scale, object.y + 8, 0, scale)
-end
-
-ui.server_log = LF.Create("log", ui.server_log_frame)
-:SetWidth(1)
-:SetPos(0, 30)
-:Expand("down")
+:SetPos(0.8, 0)
 :SetPadding(0)
 :SetFont(ui.font_small)
 :SetScrollBody(false)
+:SetState("game")
 
 ui.server_log_push = function(message)
 	ui.server_log:AddElement(message)
+end
+
+function ui.server_log:Draw()
+	local hovertime = 0
+	if self.hover then
+		hovertime = self:GetHoverTime()
+	end
+	local brightness = LF.Clamp(hovertime * 5.0, 0.3, 1.0)
+
+	love.graphics.setColor(1, 1, 1, brightness)
+	local x, y = self:GetPos()
+	local offsetx = self.offsetx
+	local offsety = self.offsety
+	local text = self.texthash
+	-- Retrieve the cell size
+	local fx = math.floor(x - offsetx)
+	local fy = math.floor(y - offsety)
+	local skin = self:GetSkin()
+	local color = skin.directives.text_default_shadowcolor
+	love.graphics.setColor(
+		color[1],
+		color[2],
+		color[3],
+		brightness
+	 )
+	love.graphics.draw(text, fx+1, fy+1)
+	love.graphics.setColor(1, 1, 1, brightness)
+	love.graphics.draw(text, fx, fy)
 end
 
 --------------------------------------------------------------------------------------------------
@@ -886,7 +890,10 @@ ui.chat_input.OnControlKeyPressed = function (object, key)
 			if text ~= ""  then
 				if text:sub(1, 1) == "/" then
 					local console = require "core.interface.console"
-					console.parse(text:sub(2))
+					local status = console.parse(text:sub(2))
+					if status then
+						ui.chat_frame_server_message(status)
+					end
 				else
 					if client.joined then
 						client.send(string.format("say %s", text))
@@ -1017,17 +1024,8 @@ function ui.weaponselect:Display(slot, x, y)
 	for index, item_type in ipairs(slot) do
 		-- Item
 		local itemdata = client.get_item_data(item_type)
-		local itemlist_gfx = client.gfx.itemlist
 		local item_path = itemdata.common_path .. itemdata.dropped_image
-		local item_gfx = itemlist_gfx[item_path]
-		if not item_gfx then
-			local item_gfx_d = love.image.newImageData(16, 16) -- Generate a new placeholder so the client dont crash
-			item_gfx_d:mapPixel(function ()
-				return 1,0,1,1 -- Turn all into magenta.
-			end)
-			item_gfx = love.graphics.newImage(item_gfx_d)
-			itemlist_gfx[item_path] = item_gfx
-		end
+		local item_gfx = client.map:getImage(item_path)
 		local item_width, item_height = item_gfx:getDimensions()
 
 		local x_pos = x + item_offset
@@ -1334,7 +1332,11 @@ function ui.hud:Draw()
 	local game = client.share.game
 	if not(game and game.timer and game.timer_start) then return end
 	local timer_now = os.time() - game.timer_start
+	if game.paused == true then
+		timer_now = game.pause_start - game.timer_start
+	end
 	local timer = game.timer - timer_now
+
 	local time = os.date("%M:%S", math.floor( timer ) ) or ""
 
 	local player = client.share.players[client.id]
@@ -2063,6 +2065,98 @@ function ui.buymenu_display()
 	end
 	ui.buymenu.list_shop()
 end
+
+--------------------------------------------------------------------------------------------------
+--reload window-----------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------
+function ui.reload_display(seconds)
+	if ui.reload_window or not (client.joined) then return end
+	seconds = seconds or 3.5
+
+	ui.reload_window = LF.Create("panel")
+	:SetCollidable(false)
+	:SetSize(100, 19)
+	:CenterX()
+	:SetY(0.4)
+	:SetProperty("margin", 3)
+	:SetProperty("line_width", 1)
+	:SetProperty("font_height", ui.font_small:getHeight())
+	:SetProperty("font", ui.font_small)
+	:SetProperty("time_start", love.timer.getTime())
+	:SetProperty("progress", 0)
+	:SetProperty("progress_max", seconds)
+
+	function ui.reload_window:Draw()
+		love.graphics.push()
+		-- Change coordinate origin
+		love.graphics.translate(self.x, self.y)
+
+		-- Color and blend mode (to make it semi transparent)
+		love.graphics.setColor(0.72, 0.72, 0.00, 1.00)
+		love.graphics.setBlendMode("add")
+
+		-- Font and line width
+		love.graphics.setFont(self.font)
+		love.graphics.setLineWidth(self.line_width)
+
+		-- "Reloading" label
+		love.graphics.printf("Reloading", 0, -(self.font_height+1), self.width, "center")
+
+		-- Outline
+		love.graphics.rectangle(
+			"line",
+			0,
+			0,
+			self.width,
+			self.height
+		)
+
+		-- Calculate time progress
+		self.progress = love.timer.getTime() - self.time_start
+
+		-- Calculate line fill
+		local line_progress =
+			math.min(1, self.progress/self.progress_max)
+			* (self.width - self.margin*2)
+			+ (self.margin*2)
+
+		-- Fill
+		love.graphics.rectangle(
+			"fill",
+			self.margin,
+			self.margin,
+			line_progress - self.margin*2,
+			self.height - self.margin*2
+		)
+
+		-- Reset graphic settings
+		love.graphics.pop()
+		love.graphics.setBlendMode("alpha")
+		love.graphics.setColor(1.00, 1.00, 1.00, 1.00)
+	end
+end
+
+function ui.reload_dispose()
+	if ui.reload_window then
+		ui.reload_window:Remove()
+		ui.reload_window = nil
+	end
+end
+
+--------------------------------------------------------------------------------------------------
+--middlescreen message----------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------
+ui.toastMessageScreen = nil
+function ui.toastMessage(message)
+	local toast = ui.toastMessageScreen
+	if not toast then
+		toast = LF.Create("log")
+
+		function toast:Update(dt)
+		end
+	end
+end
+
 
 --------------------------------------------------------------------------------------------------
 --server window-----------------------------------------------------------------------------------

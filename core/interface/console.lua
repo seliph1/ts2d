@@ -192,15 +192,28 @@ console.input.parse = function(str)
 			local status = command_object.action( unpack(args,2) )
 			if status then
 				print(status)
-				return
+				return status
 			end
 		end
 	else
-		print(string.format("Unknown command: %s", str))
+		local status = string.format("Unknown command: %s", str)
+		print(status)
+		return status
+	end
+end
+console.parse = console.input.parse
+
+function console.message(...)
+	local str = {}
+	for i = 1, select("#", ...) do
+		local v = select(i, ...)
+		table.insert(str, tostring(v))
+	end
+	if console.window then
+		console.window:AddElement(table.concat(str, "	"), true)
 	end
 end
 
-console.parse = console.input.parse
 --- print override
 _Print = print
 function print(...)

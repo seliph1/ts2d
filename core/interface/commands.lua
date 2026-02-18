@@ -106,10 +106,80 @@ local commands = {
 		end;
 	};
 
+	volume = {
+		action = function(level)
+			level = tonumber(level) or 0
+			level = math.min(math.max(0, level), 1)
+			love.audio.setVolume(level)
+		end,
+		alias = nil,
+		syntax = "",
+	};
+
+	mute = {
+		action = function()
+			love.audio.setVolume(0)
+		end,
+		alias = nil,
+		syntax = "",
+	};
+
 	-------------------------------------------------------
 	-- DEBUG
 	-------------------------------------------------------
+	lerp = {
+		action = function(speed)
+			local client = require "client"
+			speed = tonumber(speed) or 30
+			client.lerp_speed = speed
+		end,
+	};
 
+    camera = {
+        action = function(mode, ...)
+			local args = {...}
+			local client = require "client"
+            if mode == "self" then
+                local player = client.share.players[client.id]
+                if player then
+                    client.camera_follow(player)
+                end
+            elseif mode == "follow" then
+                local category = args[1]
+                local id = tonumber( args[2] ) or 0
+
+                local share = client.share
+			    if not share[category] then return "There is no category with that name" end
+			    if not share[category][id] then return "There is no entity with this ID" end
+			    local entity = share[category][id]
+			    if entity and entity.x and entity.y then
+				    client.camera_follow(entity)
+                end
+            elseif mode == "translate" then
+                local x = tonumber(args[1] ) or 0
+                local y = tonumber(args[2] ) or 0
+                client.camera_translate(x, y)
+            elseif mode == "snap" then
+                local x = tonumber(args[1] ) or 0
+                local y = tonumber(args[2] ) or 0
+                client.camera_snap(x, y)
+            elseif mode == "unbind" then
+                client.camera_unbind()
+			elseif mode == "lerp" then
+				local speed = tonumber(args[1]) or 10
+				client.camera.tween_speed = speed
+            else
+                local s = "camera mode not found. Try one of these: "
+                for index, camera_mode in
+					pairs({"self", "follow", "translate", "snap", "unbind", "lerp"})
+				do
+                    s = s .. "\n©000255255camera ©255255000"..camera_mode
+                end
+				return s
+            end
+        end
+    };
+	
 	clear = {
 		---Clear console
 		action = function()
@@ -137,10 +207,10 @@ local commands = {
 				setfenv(expression, CONSOLE_ENV)
 				local status, error_message = pcall(expression)
 				if not status then
-					print("©255000000LUA ERROR: "..error_message)
+					return "©255000000LUA ERROR: "..error_message
 				end
 			else
-				print("©255000000LUA ERROR: "..error_message)
+				return "©255000000LUA ERROR: "..error_message
 			end
 		end;
 	};
@@ -160,15 +230,15 @@ local commands = {
 				setfenv(expression, CONSOLE_ENV)
 				local output = { pcall(expression) }
 				if not output[1] then
-					console.window:AddElement("©255000000LUA ERROR: "..output[2])
+					console.message("©255000000LUA ERROR: "..output[2])
 				else
 					for i = 2, #output do
 						local value = output[i]
-						console.window:AddElement( tostring(value) )
+						console.message( tostring(value) )
 					end
 				end
 			else
-				console.window:AddElement("©255000000LUA ERROR: "..error_message)
+				console.message("©255000000LUA ERROR: "..error_message)
 			end
 		end,
 		syntax = "",
@@ -208,15 +278,6 @@ local commands = {
 		syntax = "",
 	};
 
-	cleareffect = {
-		action = function ()
-			local client = require "client"
-			if client.map then
-				client.map:clearEffects()
-			end
-		end
-	};
-
 	debug = {
 		---Clear console
 		action = function(level)
@@ -243,10 +304,11 @@ local commands = {
 				{ idioma = "Coreano", frase = "한국어 문자를 시험합니다." },
 				{ idioma = "Tailandês", frase = "ภาษาไทยสวยงามมาก." },
 			}
-
+			local s = ""
 			for k,v in ipairs(frases) do
-				print(v.idioma, v.frase)
+				s = s + "\n"..v.idioma.." ".. v.frase
 			end
+			return s
 		end;
 	};
 
@@ -258,12 +320,12 @@ local commands = {
 				love.window.updateMode(width, height, {
 					vsync = true;
 				})
-				print("vsync on")
+				return "vsync on"
 			elseif mode == "false" or mode == "off" then
 				love.window.updateMode(width, height, {
 					vsync = false;
 				})
-				print("vsync off")
+				return "vsync off"
 			else
 				return "unknown value "..mode
 			end
@@ -312,7 +374,8 @@ local commands = {
 		action = function(property, ...)
 			local console = require "core.interface.console"
 			local commands = console.input.commands
-		
+			local list = {}
+			table.insert(list, "List of all commands available: ")
 			for name, data in pairs(commands) do
 				local argNames = {}
 				local action = data.action
@@ -321,8 +384,9 @@ local commands = {
 					table.insert(argNames, debug.getlocal(action, i))
 				end
 
-				print(name, table.concat( argNames, ", " ))
+				table.insert(list, "©000255255"..name.." ©255255000"..table.concat( argNames, ", " ))
 			end
+			return table.concat(list, "\n")
 		end
 	};
 
@@ -355,6 +419,15 @@ local commands = {
 			end
 		end,
 		syntax = "/clearmap",
+	};
+	
+	cleareffect = {
+		action = function ()
+			local client = require "client"
+			if client.map then
+				client.map:clearEffects()
+			end
+		end
 	};
 
 	effect = {
@@ -495,14 +568,6 @@ local commands = {
 			client.send("kill")
 		end,
 		alias = {"suicide"},
-		syntax = "",
-	};
-
-	slap = {
-		action = function(target_id)
-			local client = require "client"
-			client.send(string.format("slap %s", target_id))
-		end,
 		syntax = "",
 	};
 

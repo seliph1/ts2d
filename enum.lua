@@ -1,104 +1,104 @@
 local enum = {}
 enum.TILE_PROPERTY = {
-	[0]="normal floor without sound";
-	[1]="wall";
-	[2]="obstacle";
-	[3]="wall without shadow";
-	[4]="obstacle without shadow";
-	[5]="wall that is rendered at floor level";
-	[10]="floor dirt";
-	[11]="floor snow (with footprints and fx)";
-	[12]="floor step";
-	[13]="floor tile";
-	[14]="floor wade (water with wave fx)";
-	[15]="floor metal";
-	[16]="floor wood";
-	[50]="deadly normal";
-	[51]="deadly toxic";
-	[52]="deadly explosion";
-	[53]="deadly abyss";
+	[0] = "normal floor without sound",
+	[1] = "wall",
+	[2] = "obstacle",
+	[3] = "wall without shadow",
+	[4] = "obstacle without shadow",
+	[5] = "wall that is rendered at floor level",
+	[10] = "floor dirt",
+	[11] = "floor snow (with footprints and fx)",
+	[12] = "floor step",
+	[13] = "floor tile",
+	[14] = "floor wade (water with wave fx)",
+	[15] = "floor metal",
+	[16] = "floor wood",
+	[50] = "deadly normal",
+	[51] = "deadly toxic",
+	[52] = "deadly explosion",
+	[53] = "deadly abyss",
 }
 
 enum.HOOK_LIST = {
-    "always",
-    "assist",
-    "attack",
-    "attack2",
-    "bombdefuse",
-    "bombexplode",
-    "bombplant",
-    "break",
-    "build",
-    "buildattempt",
-    "buy",
-    "clientdata",
-    "clientsetting",
-    "collect",
-    "connect",
-    "connect_attempt",
-    "connect_initplayer",
-    "die",
-    "disconnect",
-    "dominate",
-    "drop",
-    "endround",
-    "flagcapture",
-    "flagtake",
-    "flashlight",
-    "hit",
-    "hitzone",
-    "hostagedamage",
-    "hostagekill",
-    "hostagerescue",
-    "hostageuse",
-    "httpdata",
-    "itemfadeout",
-    "join",
-    "key",
-    "kill",
-    "leave",
-    "log",
-    "mapchange",
-    "menu",
-    "minute",
-    "move",
-    "movetile",
-    "ms100",
-    "name",
-    "objectdamage",
-    "objectkill",
-    "objectupgrade",
-    "parse",
-    "projectile",
-    "projectile_impact",
-    "radio",
-    "rcon",
-    "reload",
-    "say",
-    "sayteam",
-    "sayteamutf8",
-    "sayutf8",
-    "second",
-    "select",
-    "serveraction",
-    "shieldhit",
-    "shutdown",
-    "spawn",
-    "specswitch",
-    "spray",
-    "startround",
-    "startround_prespawn",
-    "suicide",
-    "team",
-    "trigger",
-    "triggerentity",
-    "turretscan",
-    "use",
-    "usebutton",
-    "vipescape",
-    "voice",
-    "vote",
-    "walkover",
+	"always",
+	"assist",
+	"attack",
+	"attack2",
+	"bombdefuse",
+	"bombexplode",
+	"bombplant",
+	"break",
+	"build",
+	"buildattempt",
+	"buy",
+	"clientdata",
+	"clientsetting",
+	"collect",
+	"connect",
+	"connect_attempt",
+	"connect_initplayer",
+	"die",
+	"disconnect",
+	"dominate",
+	"drop",
+	"endround",
+	"flagcapture",
+	"flagtake",
+	"flashlight",
+	"hit",
+	"hitzone",
+	"hostagedamage",
+	"hostagekill",
+	"hostagerescue",
+	"hostageuse",
+	"httpdata",
+	"itemfadeout",
+	"join",
+	"key",
+	"kill",
+	"leave",
+	"log",
+	"mapchange",
+	"menu",
+	"minute",
+	"move",
+	"movetile",
+	"ms100",
+	"name",
+	"objectdamage",
+	"objectkill",
+	"objectupgrade",
+	"parse",
+	"projectile",
+	"projectile_impact",
+	"radio",
+	"rcon",
+	"reload",
+	"say",
+	"sayteam",
+	"sayteamutf8",
+	"sayutf8",
+	"second",
+	"select",
+	"serveraction",
+	"shieldhit",
+	"shutdown",
+	"spawn",
+	"specswitch",
+	"spray",
+	"startround",
+	"startround_prespawn",
+	"suicide",
+	"team",
+	"trigger",
+	"triggerentity",
+	"turretscan",
+	"use",
+	"usebutton",
+	"vipescape",
+	"voice",
+	"vote",
+	"walkover",
 }
 
 enum.EFFECT_LIST = {
@@ -122,300 +122,300 @@ enum.DEFAULT_PROPERTY = 0
 
 enum.ENTITY_TYPE = {
 	["null"] = {
-		name = "Null";
-		color = {1,1,1};
-	};
+		name = "Null",
+		color = { 1, 1, 1 },
+	},
 	[0] = {
-		name = "Info_T";
-		color = {1,0,0};
-		label = "T";
-	};
-	[1] = { 
-		name = "Info_CT";
-		color = {0,0,1};
-		label = "CT";
-	};
+		name = "Info_T",
+		color = { 1, 0, 0 },
+		label = "T",
+	},
+	[1] = {
+		name = "Info_CT",
+		color = { 0, 0, 1 },
+		label = "CT",
+	},
 	[21] = {
-		name ="Env_Item";
-		color = {0,1,0};
-		label = "Item";
-	};
+		name = "Env_Item",
+		color = { 0, 1, 0 },
+		label = "Item",
+	},
 	[22] = {
-		name ="Env_Sprite";
-		color = {0,1,0};
-		label = "Spr";
-	};
-	[23]={
-		name ="Env_Sound";
-		color = {0,1,0};
-		label = "Sound";
-	};
-	[24]={
-		name ="Env_Decal";
-		color = {0,1,0};
-		label = "Decal";
-	};
-	[25]={
-		name ="Env_Breakable";
-		color = {0,1,0};
-		label = "Spr";
-	};
-	[26]={
-		name ="Env_Explode";
-		color = {0,1,0};
-		label = "Explode";
-	};
-	[27]={
-		name ="Env_Hurt";
-		color = {0,1,0};
-		label = "Hurt";
-	};
-	[28]={
-		name ="Env_Image";
-		color = {0,1,0};
-		label = "Image";
-	};
-	[29]={
-		name ="Env_Object";
-		color = {0,1,0};
-		label = "Object";
-	};
-	[30]={
-		name ="Env_Building";
-		color = {0,1,0};
-		label = "Build";
-	};
-	[31]={
-		name ="Env_NPC";
-		color = {0,1,0};
-		label = "NPC";
-	};
-	[32]={
-		name ="Env_Room";
-		color = {0,1,0};
-		label = "Room";
-	};
-	[33]={
-		name ="Env_Light";
-		color = {0,1,0};
-		label = "Light";
-	};
-	[34]={
-		name ="Env_LightStripe";
-		color = {0,1,0};
-		label = "LStripe";
-	};
-	[35]={
-		name ="Env_Cube3D";
-		color = {0,1,0};
-		label = "C3D";
-	};
+		name = "Env_Sprite",
+		color = { 0, 1, 0 },
+		label = "Spr",
+	},
+	[23] = {
+		name = "Env_Sound",
+		color = { 0, 1, 0 },
+		label = "Sound",
+	},
+	[24] = {
+		name = "Env_Decal",
+		color = { 0, 1, 0 },
+		label = "Decal",
+	},
+	[25] = {
+		name = "Env_Breakable",
+		color = { 0, 1, 0 },
+		label = "Spr",
+	},
+	[26] = {
+		name = "Env_Explode",
+		color = { 0, 1, 0 },
+		label = "Explode",
+	},
+	[27] = {
+		name = "Env_Hurt",
+		color = { 0, 1, 0 },
+		label = "Hurt",
+	},
+	[28] = {
+		name = "Env_Image",
+		color = { 0, 1, 0 },
+		label = "Image",
+	},
+	[29] = {
+		name = "Env_Object",
+		color = { 0, 1, 0 },
+		label = "Object",
+	},
+	[30] = {
+		name = "Env_Building",
+		color = { 0, 1, 0 },
+		label = "Build",
+	},
+	[31] = {
+		name = "Env_NPC",
+		color = { 0, 1, 0 },
+		label = "NPC",
+	},
+	[32] = {
+		name = "Env_Room",
+		color = { 0, 1, 0 },
+		label = "Room",
+	},
+	[33] = {
+		name = "Env_Light",
+		color = { 0, 1, 0 },
+		label = "Light",
+	},
+	[34] = {
+		name = "Env_LightStripe",
+		color = { 0, 1, 0 },
+		label = "LStripe",
+	},
+	[35] = {
+		name = "Env_Cube3D",
+		color = { 0, 1, 0 },
+		label = "C3D",
+	},
 }
 
 enum.TILE_BLEND_DIR = {
-	[-1] = {0, 0};
-	[0] = { 0,-1};
-	[1] = { 1,-1};
-	[2] = { 1, 0};
-	[3] = { 1, 1};
-	[4] = { 0, 1};
-	[5] = {-1, 1};
-	[6] = {-1, 0};
-	[7] = {-1,-1};
+	[-1] = { 0, 0 },
+	[0] = { 0, -1 },
+	[1] = { 1, -1 },
+	[2] = { 1, 0 },
+	[3] = { 1, 1 },
+	[4] = { 0, 1 },
+	[5] = { -1, 1 },
+	[6] = { -1, 0 },
+	[7] = { -1, -1 },
 }
 
 enum.TILE_MODE_HEIGHT = {
-	[0]=0.0,		-- 0  normal floor without sound
-	[1]=1.0,	-- 1  wall
-	[2]=0.5,	-- 2  obstacle
-	[3]=1.0,	-- 3  wall without shadow
-	[4]=0.01,	-- 4  obstacle without shadow
-	[5]=0.0,		-- 5  wall that is rendered at floor level
-	[10]=0.0,		-- 10 floor dirt
-	[11]=0.0,		-- 11 floor snow (with footprints and fx)
-	[12]=0.0,		-- 12 floor step
-	[13]=0.0,		-- 13 floor tile
-	[14]=0.0,		-- 14 floor wade (water with wave fx)
-	[15]=0.0,		-- 15 floor metal
-	[16]=0.0,		-- 16 floor wood
-	[50]=0.0,		-- 50 deadly normal
-	[51]=0.0,		-- 51 deadly toxic
-	[52]=0.0,		-- 52 deadly explosion
-	[53]=0.0,		-- 53 deadly abyss
+	[0] = 0.0, -- 0  normal floor without sound
+	[1] = 1.0, -- 1  wall
+	[2] = 0.5, -- 2  obstacle
+	[3] = 1.0, -- 3  wall without shadow
+	[4] = 0.01, -- 4  obstacle without shadow
+	[5] = 0.0, -- 5  wall that is rendered at floor level
+	[10] = 0.0, -- 10 floor dirt
+	[11] = 0.0, -- 11 floor snow (with footprints and fx)
+	[12] = 0.0, -- 12 floor step
+	[13] = 0.0, -- 13 floor tile
+	[14] = 0.0, -- 14 floor wade (water with wave fx)
+	[15] = 0.0, -- 15 floor metal
+	[16] = 0.0, -- 16 floor wood
+	[50] = 0.0, -- 50 deadly normal
+	[51] = 0.0, -- 51 deadly toxic
+	[52] = 0.0, -- 52 deadly explosion
+	[53] = 0.0, -- 53 deadly abyss
 }
 
----@enum entity_type
-enum.entity_type={
-	[0]="Info_T",
-	[1]="Info_CT",
-	[2]="Info_VIP",
-	[3]="Info_Hostage",
-	[4]="Info_RescuePoint",
-	[5]="Info_BombSpot",
-	[6]="Info_EscapePoint",
-	[7]="Info_Target",
-	[8]="Info_Animation",
-	[9]="Info_Storm",
-	[10]="Info_TileFX",
-	[11]="Info_NoBuying",
-	[12]="Info_NoWeapons",
-	[13]="Info_NoFOW",
-	[14]="Info_Quake",
-	[15]="Info_CTF_Flag",
-	[16]="Info_OldRender",
-	[17]="Info_Dom_Point",
-	[18]="Info_NoBuildings",
-	[19]="Info_BotNode",
-	[20]="Info_TeamGate",
-	[21]="Env_Item",
-	[22]="Env_Sprite",
-	[23]="Env_Sound",
-	[24]="Env_Decal",
-	[25]="Env_Breakable",
-	[26]="Env_Explode",
-	[27]="Env_Hurt",
-	[28]="Env_Image",
-	[29]="Env_Object",
-	[30]="Env_Building",
-	[31]="Env_NPC",
-	[32]="Env_Room",
-	[33]="Env_Light",
-	[34]="Env_LightStripe",
-	[35]="Env_Cube3D",
-	[50]="Gen_Particles",
-	[51]="Gen_Sprites",
-	[52]="Gen_Weather",
-	[53]="Gen_FX",
-	[70]="Func_Teleport",
-	[71]="Func_DynWall",
-	[72]="Func_Message",
-	[73]="Func_GameAction",
-	[80]="Info_NoWeather",
-	[81]="Info_RadarIcon",
-	[90]="Trigger_Start",
-	[91]="Trigger_Move",
-	[92]="Trigger_Hit",
-	[93]="Trigger_Use",
-	[94]="Trigger_Delay",
-	[95]="Trigger_Once",
-	[96]="Trigger_If"
+enum.entity_type = {
+	[0] = "Info_T",
+	[1] = "Info_CT",
+	[2] = "Info_VIP",
+	[3] = "Info_Hostage",
+	[4] = "Info_RescuePoint",
+	[5] = "Info_BombSpot",
+	[6] = "Info_EscapePoint",
+	[7] = "Info_Target",
+	[8] = "Info_Animation",
+	[9] = "Info_Storm",
+	[10] = "Info_TileFX",
+	[11] = "Info_NoBuying",
+	[12] = "Info_NoWeapons",
+	[13] = "Info_NoFOW",
+	[14] = "Info_Quake",
+	[15] = "Info_CTF_Flag",
+	[16] = "Info_OldRender",
+	[17] = "Info_Dom_Point",
+	[18] = "Info_NoBuildings",
+	[19] = "Info_BotNode",
+	[20] = "Info_TeamGate",
+	[21] = "Env_Item",
+	[22] = "Env_Sprite",
+	[23] = "Env_Sound",
+	[24] = "Env_Decal",
+	[25] = "Env_Breakable",
+	[26] = "Env_Explode",
+	[27] = "Env_Hurt",
+	[28] = "Env_Image",
+	[29] = "Env_Object",
+	[30] = "Env_Building",
+	[31] = "Env_NPC",
+	[32] = "Env_Room",
+	[33] = "Env_Light",
+	[34] = "Env_LightStripe",
+	[35] = "Env_Cube3D",
+	[50] = "Gen_Particles",
+	[51] = "Gen_Sprites",
+	[52] = "Gen_Weather",
+	[53] = "Gen_FX",
+	[70] = "Func_Teleport",
+	[71] = "Func_DynWall",
+	[72] = "Func_Message",
+	[73] = "Func_GameAction",
+	[80] = "Info_NoWeather",
+	[81] = "Info_RadarIcon",
+	[90] = "Trigger_Start",
+	[91] = "Trigger_Move",
+	[92] = "Trigger_Hit",
+	[93] = "Trigger_Use",
+	[94] = "Trigger_Delay",
+	[95] = "Trigger_Once",
+	[96] = "Trigger_If"
 }
 
----@enum itemname
 enum.itemname = {
-	["USP"]=1;
-	["GLOCK"]=2;
-	["DEAGLE"]=3;
-	["P228"]=4;
-	["ELITE"]=5;
-	["FIVE-SEVEN"]=6;
-	["M3"]=10;
-	["XM1014"]=11;
-	["MP5"]=20;
-	["TMP"]=21;
-	["P90"]=22;
-	["MAC 10"]=23;
-	["UMP45"]=24;
-	["AK-47"]=30;
-	["SG552"]=31;
-	["M4A1"]=32;
-	["AUG"]=33;
-	["SCOUT"]=34;
-	["AWP"]=35;
-	["G3SG1"]=36;
-	["SG550"]=37;
-	["GALIL"]=38;
-	["FAMAS"]=39;
-	["M249"]=40;
-	["TACTICAL SHIELD"]=41;
-	["SHIELD"]=41;
-	["LASER"]=45;
-	["FLAMETHROWER"]=46;
-	["RPG LAUNCHER"]=47;
-	["ROCKET LAUNCHER"]=48;
-	["GRENADE LAUNCHER"]=49;
-	["HE"]=51;
-	["FLASHBANG"]=52;
-	["SMOKE GRENADE"]=53;
-	["SMOKE"]=53;
-	["FLARE"]=54;
-	["DEFUSE KIT"]=56;
-	["KEVLAR"]=57;
-	["KEVLAR+HELM"]=58;
-	["NIGHT VISION"]=59;
-	["GAS MASK"]=60;
-	["PRIMARY AMMO"]=61;
-	["SECONDARY AMMO"]=62;
-	["MEDIKIT"]=64;
-	["BANDAGE"]=65;
-	["COINS"]=66;
-	["MONEY"]=67;
-	["GOLD"]=68;
-	["MACHETE"]=69;
-	["GAS GRENADE"]=72;
-	["GAS"]=72;
-	["MOLOTOV COCKTAIL"]=73;
-	["MOLOTOV"]=73;
-	["WRENCH"]=74;
-	["SNOWBALL"]=75;
-	["AIR STRIKE"]=76;
-	["MINE"]=77;
-	["CLAW"]=78;
-	["LIGHT ARMOR"]=79;
-	["ARMOR"]=80;
-	["HEAVY ARMOR"]=81;
-	["MEDIC ARMOR"]=82;
-	["SUPER ARMOR"]=83;
-	["STEALTH SUIT"]=84;
-	["STEALTH ARMOR"]=84;
-	["STEALTH"]=84;
-	["CHAINSAW"]=85;
-	["GUT BOMB"]=86;
-	["LASER MINE"]=87;
-	["PORTAL GUN"]=88;
-	["PORTAL"]=88;
-	["SATCHEL CHARGE"]=89;
-	["SATCHEL"]=89;
-	["M134"]=90;
-	["FN F2000"]=91;
-	["TESLA"]=92;
+	["USP"] = 1,
+	["GLOCK"] = 2,
+	["DEAGLE"] = 3,
+	["P228"] = 4,
+	["ELITE"] = 5,
+	["FIVE-SEVEN"] = 6,
+	["M3"] = 10,
+	["XM1014"] = 11,
+	["MP5"] = 20,
+	["TMP"] = 21,
+	["P90"] = 22,
+	["MAC 10"] = 23,
+	["UMP45"] = 24,
+	["AK-47"] = 30,
+	["SG552"] = 31,
+	["M4A1"] = 32,
+	["AUG"] = 33,
+	["SCOUT"] = 34,
+	["AWP"] = 35,
+	["G3SG1"] = 36,
+	["SG550"] = 37,
+	["GALIL"] = 38,
+	["FAMAS"] = 39,
+	["M249"] = 40,
+	["TACTICAL SHIELD"] = 41,
+	["SHIELD"] = 41,
+	["LASER"] = 45,
+	["FLAMETHROWER"] = 46,
+	["RPG LAUNCHER"] = 47,
+	["ROCKET LAUNCHER"] = 48,
+	["GRENADE LAUNCHER"] = 49,
+	["HE"] = 51,
+	["FLASHBANG"] = 52,
+	["SMOKE GRENADE"] = 53,
+	["SMOKE"] = 53,
+	["FLARE"] = 54,
+	["DEFUSE KIT"] = 56,
+	["KEVLAR"] = 57,
+	["KEVLAR+HELM"] = 58,
+	["NIGHT VISION"] = 59,
+	["GAS MASK"] = 60,
+	["PRIMARY AMMO"] = 61,
+	["SECONDARY AMMO"] = 62,
+	["MEDIKIT"] = 64,
+	["BANDAGE"] = 65,
+	["COINS"] = 66,
+	["MONEY"] = 67,
+	["GOLD"] = 68,
+	["MACHETE"] = 69,
+	["GAS GRENADE"] = 72,
+	["GAS"] = 72,
+	["MOLOTOV COCKTAIL"] = 73,
+	["MOLOTOV"] = 73,
+	["WRENCH"] = 74,
+	["SNOWBALL"] = 75,
+	["AIR STRIKE"] = 76,
+	["MINE"] = 77,
+	["CLAW"] = 78,
+	["LIGHT ARMOR"] = 79,
+	["ARMOR"] = 80,
+	["HEAVY ARMOR"] = 81,
+	["MEDIC ARMOR"] = 82,
+	["SUPER ARMOR"] = 83,
+	["STEALTH SUIT"] = 84,
+	["STEALTH ARMOR"] = 84,
+	["STEALTH"] = 84,
+	["CHAINSAW"] = 85,
+	["GUT BOMB"] = 86,
+	["LASER MINE"] = 87,
+	["PORTAL GUN"] = 88,
+	["PORTAL"] = 88,
+	["SATCHEL CHARGE"] = 89,
+	["SATCHEL"] = 89,
+	["M134"] = 90,
+	["FN F2000"] = 91,
+	["TESLA"] = 92,
 }
 
----@enum items
+---@enum itemdata
 enum.itemlist = {
 	[1] = {
-		name = "USP", -- Display name
+		name = "USP",              -- Display name
 		alt_name = "Heckler & Koch USP", -- Name gotten from external source (wikipedia, etc)
-		internal_name = "usp", -- Name used internally by code
-		category = "secondary", -- Category (primary, secondary, melee, armor, throwable, other [example of other: flag, bomb, medikit] )
-		attack = "bullet:1:1", -- Type of attack (bullet, projectile, throwable)
-		reload = "reload:12", -- Reloading will fully reload this weapon or one at at ime
-		slot = 2, -- Which slot this weapon will be on the HUD
-		price = 500, -- Value in shop menu
-		damage = 24, -- Damage
-		ammo_cap = 100, -- Reserve ammo 
-		ammo_mag = 12, -- Ammo in magazine
-		frame_delay = 22, -- Frame delay 
-		range = 300, -- Range in pixels  -[[(afair this range is multipled by formula * 3, so pixels is 900, 300 is value)]]
-		weight = 900, -- real-life weight of this weapon, gotten from wikipedia or something
-		accuracy = 100,  -- Accuracy in percentage (100% = perfect, decreases by 10% for every point in https://www.cs2d.com/weapons.php)
+		internal_name = "usp",     -- Name used internally by code
+		category = "secondary",    -- Category (primary, secondary, melee, armor, throwable, other [example of other: flag, bomb, medikit] )
+		attack = "bullet:1:1",     -- Type of attack (bullet, projectile, throwable)
+		reload = 70,       		   -- Reload timer (in frames)
+		slot = 2,                  -- Which slot this weapon will be on the HUD
+		price = 500,               -- Value in shop menu
+		damage = 24,               -- Damage
+		ammo_cap = 100,            -- Reserve ammo
+		ammo_mag = 12,             -- Ammo in magazine
+		frame_delay = 22,          -- Frame delay
+		range = 300,               -- Range in pixels  -[[(afair this range is multipled by formula * 3, so pixels is 900, 300 is value)]]
+		weight = 900,              -- real-life weight of this weapon, gotten from wikipedia or something
+		accuracy = 100,            -- Accuracy in percentage (100% = perfect, decreases by 10% for every point in https://www.cs2d.com/weapons.php)
 		common_path = "gfx/weapons/", -- Weapon image source directory
 		dropped_image = "usp_d.bmp", -- Dropped image
-		held_image = "usp.bmp", -- Held (in hand or worn) image
+		held_image = "usp.bmp",    -- Held (in hand or worn) image
 		display_image = "usp_m.bmp", -- Image that appears when buying
-		kill_image = "usp_k.bmp", -- Small icon that appears on the kill log on the top right corner
+		kill_image = "usp_k.bmp",  -- Small icon that appears on the kill log on the top right corner
 		player_stance = "handgun", -- Which player sprite should appear when holding/wearing this item (stances: handgun, rifle, melee, object, armor, zombie, nothing)
 		acessory = {
 			silencer_image = "usp_silenced.bmp",
-		};
-	};
+			silencer_sound = "sfx/weapons/usp_silenced.wav";
+		},
+		sound = "sfx/weapons/usp.wav";
+	},
 	[2] = {
 		name = "Glock",
 		alt_name = "Glock 18",
 		internal_name = "glock",
 		category = "secondary",
 		attack = "bullet",
-		reload = "reload",
+		reload = 70,
 		slot = 2,
 		price = 400,
 		damage = 21,
@@ -431,14 +431,15 @@ enum.itemlist = {
 		display_image = "glock_m.bmp",
 		kill_image = "glock_k.bmp",
 		player_stance = "handgun",
-	};
+		sound = "sfx/weapons/glock18.wav";
+	},
 	[3] = {
 		name = "Deagle",
 		alt_name = "Desert Eagle",
 		internal_name = "deagle",
 		category = "secondary",
 		attack = "bullet",
-		reload = "reload",
+		reload = 66,
 		slot = 2,
 		price = 650,
 		damage = 34,
@@ -454,14 +455,15 @@ enum.itemlist = {
 		display_image = "deagle_m.bmp",
 		kill_image = "deagle_k.bmp",
 		player_stance = "handgun",
-	};
+		sound = "sfx/weapons/deagle.wav";
+	},
 	[4] = {
 		name = "P228",
 		alt_name = "SIG Sauer P228",
 		internal_name = "p228",
 		category = "secondary",
 		attack = "bullet",
-		reload = "reload",
+		reload = 84,
 		slot = 2,
 		price = 600,
 		damage = 22,
@@ -477,14 +479,15 @@ enum.itemlist = {
 		display_image = "p228_m.bmp",
 		kill_image = "p228_k.bmp",
 		player_stance = "handgun",
-	};	
+		sound = "sfx/weapons/p228.wav";
+	},
 	[5] = {
 		name = "Elite",
 		alt_name = "Elite Guardian Tactical Sidearm",
 		internal_name = "elite",
 		category = "secondary",
 		attack = "bullet",
-		reload = "reload",
+		reload = 78,
 		slot = 2,
 		price = 1000,
 		damage = 22,
@@ -500,14 +503,15 @@ enum.itemlist = {
 		display_image = "elite_m.bmp",
 		kill_image = "elite_k.bmp",
 		player_stance = "handgun",
-	};
+		sound = "sfx/weapons/elite.wav";
+	},
 	[6] = {
 		name = "Five-Seven",
 		alt_name = "FN Herstal Five-Seven",
 		internal_name = "fiveseven",
 		category = "secondary",
 		attack = "bullet",
-		reload = "reload",
+		reload = 152,
 		slot = 2,
 		price = 750,
 		damage = 21,
@@ -523,14 +527,15 @@ enum.itemlist = {
 		display_image = "fiveseven_m.bmp",
 		kill_image = "fiveseven_k.bmp",
 		player_stance = "handgun",
-	};
+		sound = "sfx/weapons/fiveseven.wav";
+	},
 	[10] = {
 		name = "M3",
 		alt_name = "M3 Grease Gun",
 		internal_name = "m3",
 		category = "primary",
 		attack = "bullet:7:3",
-		reload = "reload:1",
+		reload = 142,
 		slot = 1,
 		price = 1700,
 		damage = 26,
@@ -539,21 +544,22 @@ enum.itemlist = {
 		frame_delay = 60,
 		range = 50,
 		weight = 3900,
-		accuracy = 0,  --https://www.cs2d.com/weapons.php accuracy: 10. 100% - (10 * 10%) = 0 
+		accuracy = 0, --https://www.cs2d.com/weapons.php accuracy: 10. 100% - (10 * 10%) = 0
 		common_path = "gfx/weapons/",
 		dropped_image = "m3_d.bmp",
 		held_image = "m3.bmp",
 		kill_image = "m3_k.bmp",
-		display_image = "m3_m.bmp", 
+		display_image = "m3_m.bmp",
 		player_stance = "rifle",
-	};
+		sound = "sfx/weapons/m3.wav";
+	},
 	[11] = {
 		name = "XM1014",
 		alt_name = "Benelli XM1014",
 		internal_name = "xm1014",
 		category = "primary",
 		attack = "bullet:7:3",
-		reload = "reload",
+		reload = 110,
 		slot = 1,
 		price = 3000,
 		damage = 22,
@@ -562,21 +568,22 @@ enum.itemlist = {
 		frame_delay = 17,
 		range = 50,
 		weight = 3400,
-		accuracy = 0,  --https://www.cs2d.com/weapons.php accuracy: 10. 100% - (10 * 10%) = 0 
+		accuracy = 0, --https://www.cs2d.com/weapons.php accuracy: 10. 100% - (10 * 10%) = 0
 		common_path = "gfx/weapons/",
 		dropped_image = "xm1014_d.bmp",
 		held_image = "xm1014.bmp",
 		kill_image = "xm1014_k.bmp",
-		display_image = "xm1014_m.bmp", 
+		display_image = "xm1014_m.bmp",
 		player_stance = "rifle",
-	};
+		sound = "sfx/weapons/xm1014.wav";
+	},
 	[20] = {
 		name = "MP5",
 		alt_name = "Heckler & Koch Maschinenpistole 5",
 		internal_name = "mp5",
 		category = "primary",
 		attack = "bullet",
-		reload = "reload",
+		reload = 72,
 		slot = 1,
 		price = 1500,
 		damage = 13,
@@ -585,22 +592,23 @@ enum.itemlist = {
 		frame_delay = 8,
 		range = 300,
 		weight = 2500,
-		accuracy = 80, 
+		accuracy = 80,
 		common_path = "gfx/weapons/",
 		dropped_image = "mp5_d.bmp",
 		held_image = "mp5.bmp",
 		kill_image = "mp5_k.bmp",
-		display_image = "mp5_m.bmp", 
+		display_image = "mp5_m.bmp",
 		player_stance = "rifle",
-		acessory = {};
-	};
+		acessory = {},
+		sound = "sfx/weapons/mp5.wav";
+	},
 	[21] = {
 		name = "TMP",
 		alt_name = "Steyr Mannlicher Tactical Machine Pistol",
 		internal_name = "tmp",
 		category = "primary",
 		attack = "bullet",
-		reload = "reload",
+		reload = 62,
 		slot = 1,
 		price = 1250,
 		damage = 9,
@@ -609,22 +617,23 @@ enum.itemlist = {
 		frame_delay = 5,
 		range = 100,
 		weight = 1300,
-		accuracy = 60, 
+		accuracy = 60,
 		common_path = "gfx/weapons/",
 		dropped_image = "tmp_d.bmp",
 		held_image = "tmp.bmp",
 		kill_image = "tmp_k.bmp",
-		display_image = "tmp_m.bmp", 
+		display_image = "tmp_m.bmp",
 		player_stance = "rifle",
-		acessory = {};
-	};
+		acessory = {},
+		sound = "sfx/weapons/tmp.wav";
+	},
 	[22] = {
 		name = "P90",
 		alt_name = "FN Herstal P90",
 		internal_name = "p90",
 		category = "primary",
 		attack = "bullet",
-		reload = "reload",
+		reload = 110,
 		slot = 1,
 		price = 2350,
 		damage = 11,
@@ -633,22 +642,23 @@ enum.itemlist = {
 		frame_delay = 5,
 		range = 300,
 		weight = 2000,
-		accuracy = 70, 
+		accuracy = 70,
 		common_path = "gfx/weapons/",
 		dropped_image = "p90_d.bmp",
 		held_image = "p90.bmp",
 		kill_image = "p90_k.bmp",
-		display_image = "p90_m.bmp", 
+		display_image = "p90_m.bmp",
 		player_stance = "rifle",
-		acessory = {};
-	};
+		acessory = {},
+		sound = "sfx/weapons/p90.wav";
+	},
 	[23] = {
 		name = "Mac 10",
 		alt_name = "Gordon Ingram Military Armament Corporation Model 10",
 		internal_name = "mac10",
 		category = "primary",
 		attack = "bullet",
-		reload = "reload",
+		reload = 108,
 		slot = 1,
 		price = 1400,
 		damage = 9,
@@ -657,22 +667,23 @@ enum.itemlist = {
 		frame_delay = 5,
 		range = 100,
 		weight = 1600,
-		accuracy = 60, 
+		accuracy = 60,
 		common_path = "gfx/weapons/",
 		dropped_image = "mac10_d.bmp",
 		held_image = "mac10.bmp",
 		kill_image = "mac10_k.bmp",
-		display_image = "mac10_m.bmp", 
+		display_image = "mac10_m.bmp",
 		player_stance = "rifle",
-		acessory = {};
-	};
+		acessory = {},
+		sound = "sfx/weapons/mac10.wav";
+	},
 	[24] = {
 		name = "UMP45",
 		alt_name = "Heckler & Koch Universal Machine Pistol",
 		internal_name = "ump45",
 		category = "primary",
 		attack = "bullet",
-		reload = "reload",
+		reload = 110,
 		slot = 1,
 		price = 1700,
 		damage = 15,
@@ -681,22 +692,23 @@ enum.itemlist = {
 		frame_delay = 10,
 		range = 300,
 		weight = 2800,
-		accuracy = 70, 
+		accuracy = 70,
 		common_path = "gfx/weapons/",
 		dropped_image = "ump45_d.bmp",
 		held_image = "ump45.bmp",
 		kill_image = "ump45_k.bmp",
 		display_image = "ump45_m.bmp",
 		player_stance = "rifle",
-		acessory = {};
-	};
+		acessory = {},
+		sound = "sfx/weapons/ump45.wav";
+	},
 	[30] = {
 		name = "AK-47",
 		alt_name = "Avtomat Kalashnikova 1947",
 		internal_name = "ak47",
 		category = "primary",
 		attack = "bullet",
-		reload = "reload",
+		reload = 86,
 		slot = 1,
 		price = 2500,
 		damage = 22,
@@ -705,24 +717,25 @@ enum.itemlist = {
 		frame_delay = 7,
 		range = 300,
 		weight = 3470,
-		accuracy = 70, 
+		accuracy = 70,
 		common_path = "gfx/weapons/",
 		dropped_image = "ak47_d.bmp",
 		held_image = "ak47.bmp",
 		kill_image = "ak47_k.bmp",
 		display_image = "ak47_m.bmp",
 		player_stance = "rifle",
-		acessory = {};
-	};
+		acessory = {},
+		sound = "sfx/weapons/ak47.wav";
+	},
 	[31] = {
 		name = "SG552",
 		alt_name = "SIG SG 552",
 		internal_name = "sg552",
 		category = "primary",
 		attack = "bullet",
-		reload = "reload",
+		reload = 3500,
 		slot = 1,
-		price = 3500,
+		price = 78,
 		damage = 24,
 		damage_z1 = 35,
 		ammo_cap = 90,
@@ -730,48 +743,51 @@ enum.itemlist = {
 		frame_delay = 10,
 		range = 350,
 		weight = 3500,
-		accuracy = 100, 
+		accuracy = 100,
 		common_path = "gfx/weapons/",
 		dropped_image = "sg552_d.bmp",
 		held_image = "sg552.bmp",
 		kill_image = "sg552_k.bmp",
-		display_image = "sg552_m.bmp", 
+		display_image = "sg552_m.bmp",
 		player_stance = "rifle",
-		acessory = {};
-	};
+		acessory = {},
+		sound = "sfx/weapons/sg552.wav";
+	},
 	[32] = {
 		name = "M4A1",
 		alt_name = "M4A1 Carbine",
 		internal_name = "m4a1",
 		category = "primary",
 		attack = "bullet",
-		reload = "reload",
+		reload = 3500,
 		slot = 1,
-		price = 3100,
+		price = 70,
 		damage = 22,
 		ammo_cap = 90,
 		ammo_mag = 30,
 		frame_delay = 8,
 		range = 300,
 		weight = 3520,
-		accuracy = 80, 
+		accuracy = 80,
 		common_path = "gfx/weapons/",
 		dropped_image = "m4a1_d.bmp",
 		held_image = "m4a1.bmp",
-		display_image = "m4a1_m.bmp", 
+		display_image = "m4a1_m.bmp",
 		kill_image = "m4a1_k.bmp",
 		player_stance = "rifle",
 		acessory = {
 			silencer_image = "m4a1_silenced.bmp",
-		};
-	};
+			silencer_sound = "sfx/weapons/m4a1_silenced.wav";
+		},
+		sound = "sfx/weapons/m4a1.wav";
+	},
 	[33] = {
 		name = "AUG",
 		alt_name = "Steyr Mannlicher AUG",
 		internal_name = "aug",
 		category = "primary",
 		attack = "bullet",
-		reload = "reload",
+		reload = 132,
 		slot = 1,
 		price = 3500,
 		damage = 24,
@@ -781,22 +797,23 @@ enum.itemlist = {
 		frame_delay = 10,
 		range = 350,
 		weight = 3700,
-		accuracy = 100, 
+		accuracy = 100,
 		common_path = "gfx/weapons/",
 		dropped_image = "aug_d.bmp",
 		held_image = "aug.bmp",
 		kill_image = "aug_k.bmp",
-		display_image = "aug_m.bmp", 
+		display_image = "aug_m.bmp",
 		player_stance = "rifle",
-		acessory = {};
-	};
+		acessory = {},
+		sound = "sfx/weapons/aug.wav";
+	},
 	[34] = {
 		name = "Scout",
 		alt_name = "Steyr Mannlicher AUG",
 		internal_name = "scout",
 		category = "primary",
 		attack = "bullet",
-		reload = "reload",
+		reload = 56,
 		slot = 1,
 		price = 2750,
 		damage = 45,
@@ -807,22 +824,23 @@ enum.itemlist = {
 		frame_delay = 48,
 		range = 350,
 		weight = 2700,
-		accuracy = 100, 
+		accuracy = 100,
 		common_path = "gfx/weapons/",
 		dropped_image = "scout_d.bmp",
 		held_image = "scout.bmp",
 		kill_image = "scout_k.bmp",
-		display_image = "scout_m.bmp", 
+		display_image = "scout_m.bmp",
 		player_stance = "rifle",
-		acessory = {};
-	};
+		acessory = {},
+		sound = "sfx/weapons/scout.wav";
+	},
 	[35] = {
 		name = "AWP",
 		alt_name = "Arctic Warfare Police",
 		internal_name = "awp",
 		category = "primary",
 		attack = "bullet",
-		reload = "reload",
+		reload = 126,
 		slot = 1,
 		price = 4750,
 		damage = 50,
@@ -833,22 +851,23 @@ enum.itemlist = {
 		frame_delay = 152,
 		range = 400,
 		weight = 5500,
-		accuracy = 100, 
+		accuracy = 100,
 		common_path = "gfx/weapons/",
 		dropped_image = "awp_d.bmp",
 		held_image = "awp.bmp",
 		kill_image = "awp_k.bmp",
-		display_image = "awp_m.bmp", 
+		display_image = "awp_m.bmp",
 		player_stance = "rifle",
-		acessory = {};
-	};
+		acessory = {},
+		sound = "sfx/weapons/awp.wav";
+	},
 	[36] = {
 		name = "G3SG1",
 		alt_name = "Heckler & Koch G3SG1",
 		internal_name = "g3sg1",
 		category = "primary",
 		attack = "bullet",
-		reload = "reload",
+		reload = 146,
 		slot = 1,
 		price = 5000,
 		damage = 32,
@@ -859,22 +878,23 @@ enum.itemlist = {
 		frame_delay = 14,
 		range = 350,
 		weight = 4500,
-		accuracy = 100, 
+		accuracy = 100,
 		common_path = "gfx/weapons/",
 		dropped_image = "g3sg1_d.bmp",
 		held_image = "g3sg1.bmp",
 		kill_image = "g3sg1_k.bmp",
-		display_image = "g3sg1_m.bmp", 
+		display_image = "g3sg1_m.bmp",
 		player_stance = "rifle",
-		acessory = {};
-	};
+		acessory = {},
+		sound = "sfx/weapons/g3sg1.wav";
+	},
 	[37] = {
 		name = "SG550",
 		alt_name = "SIG SG 550",
 		internal_name = "sg550",
 		category = "primary",
 		attack = "bullet",
-		reload = "reload",
+		reload = 142,
 		slot = 1,
 		price = 4200,
 		damage = 30,
@@ -885,22 +905,23 @@ enum.itemlist = {
 		frame_delay = 14,
 		range = 350,
 		weight = 4200,
-		accuracy = 100, 
+		accuracy = 100,
 		common_path = "gfx/weapons/",
 		dropped_image = "sg550_d.bmp",
 		held_image = "sg550.bmp",
 		kill_image = "sg550_k.bmp",
-		display_image = "sg550_m.bmp", 
+		display_image = "sg550_m.bmp",
 		player_stance = "rifle",
-		acessory = {};
-	};
+		acessory = {},
+		sound = "sfx/weapons/sg550.wav";
+	},
 	[38] = {
 		name = "Galil",
 		alt_name = "Yisrael Galil",
 		internal_name = "galil",
 		category = "primary",
 		attack = "bullet",
-		reload = "reload",
+		reload = 70,
 		slot = 1,
 		price = 2000,
 		damage = 13,
@@ -909,22 +930,23 @@ enum.itemlist = {
 		frame_delay = 8,
 		range = 300,
 		weight = 3500,
-		accuracy = 90, 
+		accuracy = 90,
 		common_path = "gfx/weapons/",
 		dropped_image = "galil_d.bmp",
 		held_image = "galil.bmp",
 		kill_image = "galil_k.bmp",
-		display_image = "galil_m.bmp", 
+		display_image = "galil_m.bmp",
 		player_stance = "rifle",
-		acessory = {};
-	};
+		acessory = {},
+		sound = "sfx/weapons/galil.wav";
+	},
 	[39] = {
 		name = "FAMAS",
 		alt_name = "FAMAS",
 		internal_name = "famas",
 		category = "primary",
 		attack = "bullet",
-		reload = "reload",
+		reload = 70,
 		slot = 1,
 		price = 2250,
 		damage = 14,
@@ -933,22 +955,23 @@ enum.itemlist = {
 		frame_delay = 8,
 		range = 300,
 		weight = 3600,
-		accuracy = 90, 
+		accuracy = 90,
 		common_path = "gfx/weapons/",
 		dropped_image = "famas_d.bmp",
 		held_image = "famas.bmp",
 		kill_image = "famas_k.bmp",
-		display_image = "famas_m.bmp", 
+		display_image = "famas_m.bmp",
 		player_stance = "rifle",
-		acessory = {};
-	};
+		acessory = {},
+		sound = "sfx/weapons/famas.wav";
+	},
 	[40] = {
 		name = "M249",
 		alt_name = "SAW M249",
 		internal_name = "m249",
 		category = "primary",
 		attack = "bullet",
-		reload = "reload",
+		reload = 146,
 		slot = 1,
 		price = 5750,
 		damage = 15,
@@ -957,15 +980,16 @@ enum.itemlist = {
 		frame_delay = 5,
 		range = 300,
 		weight = 7720,
-		accuracy = 20, 
+		accuracy = 20,
 		common_path = "gfx/weapons/",
 		dropped_image = "m249_d.bmp",
 		held_image = "m249.bmp",
 		kill_image = "m249_k.bmp",
-		display_image = "m249_m.bmp", 
+		display_image = "m249_m.bmp",
 		player_stance = "rifle",
-		acessory = {};
-	};
+		acessory = {},
+		sound = "sfx/weapons/m249.wav";
+	},
 	[41] = {
 		name = "Tactical Shield",
 		alt_name = "Tactical Shield",
@@ -989,15 +1013,15 @@ enum.itemlist = {
 		kill_image = "",
 		display_image = "",
 		player_stance = "rifle",
-		acessory = {};
-	};
+		acessory = {},
+	},
 	[45] = {
 		name = "Laser",
 		alt_name = "Laser",
 		internal_name = "laser",
 		category = "primary",
 		attack = "laser",
-		reload = "reload",
+		reload = 14,
 		spawn = 1,
 		spread = 0,
 		slot = 1,
@@ -1013,17 +1037,18 @@ enum.itemlist = {
 		dropped_image = "laser_d.bmp",
 		held_image = "laser.bmp",
 		kill_image = "laser_k.bmp",
-		display_image = "laser_m.bmp", 
+		display_image = "laser_m.bmp",
 		player_stance = "rifle",
-		acessory = {};
-	};
+		acessory = {},
+		sound = "sfx/weapons/laser.ogg";
+	},
 	[46] = {
 		name = "Flamethrower",
 		alt_name = "FLAMETHROWER",
 		internal_name = "flamethrower",
 		category = "primary",
 		attack = "laser",
-		reload = "reload",
+		reload = 14,
 		spawn = 1,
 		spread = 0,
 		slot = 1,
@@ -1042,15 +1067,16 @@ enum.itemlist = {
 		kill_image = "flamethrower_k.bmp",
 		display_image = "flamethrower_m.bmp",
 		player_stance = "rifle",
-		acessory = {};
-	};
+		acessory = {},
+		sound = {"sfx/weapons/flamethrower.ogg", "sfx/weapons/flamethrower2.ogg";};
+	},
 	[47] = {
 		name = "RPG Launcher",
 		alt_name = "RPG Launcher",
 		internal_name = "rpglauncher",
 		category = "primary",
 		attack = "launch:1",
-		reload = "reload",
+		reload = 70,
 		slot = 1,
 		price = 4000,
 		damage = 325,
@@ -1067,15 +1093,16 @@ enum.itemlist = {
 		kill_image = "rpglauncher_k.bmp",
 		display_image = "rpglauncher_m.bmp",
 		player_stance = "rifle",
-		acessory = {};
-	};
+		acessory = {},
+		sound = "sfx/weapons/rocket.ogg";
+	},
 	[48] = {
 		name = "Rocket Launcher",
 		alt_name = "Rocket Launcher",
 		internal_name = "rocketlauncher",
 		category = "primary",
 		attack = "launch:2",
-		reload = "reload",
+		reload = 70,
 		spawn = 1,
 		spread = 0,
 		slot = 1,
@@ -1086,22 +1113,23 @@ enum.itemlist = {
 		frame_delay = 48,
 		range = 700,
 		weight = 3000,
-		accuracy = 0, 
+		accuracy = 0,
 		common_path = "gfx/weapons/",
 		dropped_image = "rocketlauncher_d.bmp",
 		held_image = "rocketlauncher.bmp",
 		kill_image = "rocketlauncher_k.bmp",
-		display_image = "rocketlauncher_m.bmp", 
+		display_image = "rocketlauncher_m.bmp",
 		player_stance = "rifle",
-		acessory = {};
-	};
+		acessory = {},
+		sound = "sfx/weapons/rocket.ogg";
+	},
 	[49] = {
 		name = "Grenade Launcher",
 		alt_name = "Grenade Launcher",
 		internal_name = "grenadelauncher",
 		category = "primary",
 		attack = "launch:3",
-		reload = "reload",
+		reload = 70,
 		spawn = 1,
 		spread = 0,
 		slot = 1,
@@ -1112,15 +1140,16 @@ enum.itemlist = {
 		frame_delay = 48,
 		range = 320,
 		weight = 3000,
-		accuracy = 0, 
+		accuracy = 0,
 		common_path = "gfx/weapons/",
 		dropped_image = "grenadelauncher_d.bmp",
 		held_image = "grenadelauncher.bmp",
 		kill_image = "grenadelauncher_k.bmp",
-		display_image = "grenadelauncher_m.bmp", 
+		display_image = "grenadelauncher_m.bmp",
 		player_stance = "rifle",
-		acessory = {};
-	};
+		acessory = {},
+		sound = "sfx/weapons/glaunch.ogg";
+	},
 	[50] = {
 		name = "Knife",
 		alt_name = "Knife",
@@ -1136,15 +1165,16 @@ enum.itemlist = {
 		frame_delay = 19,
 		range = 7,
 		weight = 150,
-		accuracy = 0, 
+		accuracy = 0,
 		common_path = "gfx/weapons/",
 		dropped_image = "knife.bmp",
 		held_image = "knife.bmp",
 		kill_image = "knife_k.bmp",
 		display_image = "knife.bmp",
 		player_stance = "melee",
-		acessory = {};
-	};
+		acessory = {},
+		sound = "sfx/weapons/knife_slash.wav";
+	},
 	[51] = {
 		name = "HE",
 		alt_name = "High-Explosion Grenade",
@@ -1160,15 +1190,15 @@ enum.itemlist = {
 		range = 320,
 		weight = 400,
 		accuracy = 0,
-		offset = -5,
+		offset = -10,
 		common_path = "gfx/weapons/",
 		dropped_image = "he.bmp",
 		held_image = "he.bmp",
 		kill_image = "he_k.bmp",
 		display_image = "he_m.bmp",
 		player_stance = "object",
-		acessory = {};
-	};
+		acessory = {},
+	},
 	[52] = {
 		name = "Flashbang",
 		alt_name = "Flashbang Grenade",
@@ -1183,15 +1213,15 @@ enum.itemlist = {
 		frame_delay = 24,
 		range = 320,
 		weight = 400,
-		accuracy = 0, 
+		accuracy = 0,
 		common_path = "gfx/weapons/",
-		dropped_image = "flashbang.bmp",
+		dropped_image = "flashbang_bmp",
 		held_image = "flashbang.bmp",
 		kill_image = "flashbang.bmp",
 		display_image = "flashbang_m.bmp",
 		player_stance = "object",
-		acessory = {};
-	};
+		acessory = {},
+	},
 	[53] = {
 		name = "Smoke Grenade",
 		alt_name = "Smoke Grenade",
@@ -1206,15 +1236,15 @@ enum.itemlist = {
 		frame_delay = 24,
 		range = 320,
 		weight = 400,
-		accuracy = 0, 
+		accuracy = 0,
 		common_path = "gfx/weapons/",
 		dropped_image = "smokegrenade.bmp",
 		held_image = "smokegrenade.bmp",
 		kill_image = "smokegrenade.bmp",
 		display_image = "smokegrenade.bmp",
 		player_stance = "object",
-		acessory = {};
-	};
+		acessory = {},
+	},
 	[54] = {
 		name = "Flare",
 		alt_name = "Flare",
@@ -1229,15 +1259,15 @@ enum.itemlist = {
 		frame_delay = 24,
 		range = 320,
 		weight = 400,
-		accuracy = 0, 
+		accuracy = 0,
 		common_path = "gfx/weapons/",
 		dropped_image = "flare.bmp",
 		held_image = "flare.bmp",
 		kill_image = "flare.bmp",
-		display_image = "flare.bmp", 
+		display_image = "flare.bmp",
 		player_stance = "object",
-		acessory = {};
-	};
+		acessory = {},
+	},
 	[55] = {
 		name = "Bomb",
 		alt_name = "Bomb",
@@ -1251,15 +1281,15 @@ enum.itemlist = {
 		frame_delay = 60,
 		range = 0,
 		weight = 2150,
-		accuracy = 0, 
+		accuracy = 0,
 		common_path = "gfx/weapons/",
 		dropped_image = "bomb_d.bmp",
 		held_image = "bomb.bmp",
 		kill_image = "bomb.bmp",
 		display_image = "bomb.bmp",
 		player_stance = "melee",
-		acessory = {};
-	};
+		acessory = {},
+	},
 	[56] = {
 		name = "Defuse Kit",
 		alt_name = "Defuse Kit",
@@ -1280,8 +1310,8 @@ enum.itemlist = {
 		kill_image = "",
 		display_image = "defusekit_d.bmp",
 		player_stance = "idle",
-		acessory = {};
-	};
+		acessory = {},
+	},
 	[57] = {
 		name = "Kevlar",
 		alt_name = "Kevlar Vest",
@@ -1294,15 +1324,15 @@ enum.itemlist = {
 		frame_delay = 0,
 		range = 0,
 		weight = 0,
-		accuracy = 0, 
+		accuracy = 0,
 		common_path = "gfx/weapons/",
 		dropped_image = "kevlar_d.bmp",
 		held_image = "",
 		kill_image = "",
 		display_image = "kevlar_d.bmp",
 		player_stance = "idle",
-		acessory = {};
-	};
+		acessory = {},
+	},
 	[58] = {
 		name = "Kevlar + Helm",
 		alt_name = "Kevlar + Helmet",
@@ -1322,8 +1352,8 @@ enum.itemlist = {
 		kill_image = "",
 		display_image = "kevlar+helm_d.bmp",
 		player_stance = "idle",
-		acessory = {};
-	};
+		acessory = {},
+	},
 	[59] = {
 		name = "Night Vision",
 		alt_name = "Night Vision Goggles",
@@ -1337,15 +1367,15 @@ enum.itemlist = {
 		frame_delay = 0,
 		range = 0,
 		weight = 0,
-		accuracy = 0, 
+		accuracy = 0,
 		common_path = "gfx/weapons/",
 		dropped_image = "nightvision.bmp",
 		held_image = "nightvision.bmp",
 		kill_image = "",
 		display_image = "nightvision.bmp",
 		player_stance = "idle",
-		acessory = {};
-	};
+		acessory = {},
+	},
 	[60] = {
 		name = "Gas Mask",
 		alt_name = "Gas Mask",
@@ -1359,15 +1389,15 @@ enum.itemlist = {
 		frame_delay = 0,
 		range = 0,
 		weight = 0,
-		accuracy = 0, 
+		accuracy = 0,
 		common_path = "gfx/weapons/",
 		dropped_image = "gasmask.bmp",
 		held_image = "gasmask.bmp",
 		kill_image = "",
 		display_image = "",
 		player_stance = "idle",
-		acessory = {};
-	};
+		acessory = {},
+	},
 	[61] = {
 		name = "Primary Ammo",
 		alt_name = "Primary Ammo",
@@ -1388,8 +1418,8 @@ enum.itemlist = {
 		kill_image = "",
 		display_image = "primaryammo.bmp",
 		player_stance = "idle",
-		acessory = {};
-	};
+		acessory = {},
+	},
 	[62] = {
 		name = "Secondary Ammo",
 		alt_name = "Secondary Ammo",
@@ -1403,15 +1433,15 @@ enum.itemlist = {
 		frame_delay = 0,
 		range = 0,
 		weight = 0,
-		accuracy = 0, 
+		accuracy = 0,
 		common_path = "gfx/weapons/",
 		dropped_image = "secondaryammo.bmp",
 		held_image = "secondaryammo.bmp",
 		kill_image = "",
 		display_image = "secondaryammo.bmp",
 		player_stance = "idle",
-		acessory = {};
-	};
+		acessory = {},
+	},
 	[63] = {
 		name = "Planted Bomb",
 		alt_name = "Planted Bomb",
@@ -1425,15 +1455,15 @@ enum.itemlist = {
 		frame_delay = 0,
 		range = 0,
 		weight = 0,
-		accuracy = 0, 
+		accuracy = 0,
 		common_path = "gfx/weapons/",
 		dropped_image = "bomb_d.bmp",
 		held_image = "bomb.bmp",
 		kill_image = "",
 		display_image = "bomb.bmp",
 		player_stance = "idle",
-		acessory = {};
-	};
+		acessory = {},
+	},
 	[64] = {
 		name = "Medikit",
 		alt_name = "First-Aid Medic Kit",
@@ -1447,15 +1477,15 @@ enum.itemlist = {
 		frame_delay = 0,
 		range = 0,
 		weight = 0,
-		accuracy = 0, 
+		accuracy = 0,
 		common_path = "gfx/weapons/",
 		dropped_image = "medikit.bmp",
 		held_image = "medikit.bmp",
 		kill_image = "",
-		display_image = "medikit.bmp", 
+		display_image = "medikit.bmp",
 		player_stance = "idle",
-		acessory = {};
-	};
+		acessory = {},
+	},
 	[65] = {
 		name = "Bandage",
 		alt_name = "Bandage",
@@ -1470,15 +1500,15 @@ enum.itemlist = {
 		frame_delay = 0,
 		range = 0,
 		weight = 0,
-		accuracy = 0, 
+		accuracy = 0,
 		common_path = "gfx/weapons/",
 		dropped_image = "bandage.bmp",
 		held_image = "bandage.bmp",
 		kill_image = "",
-		display_image = "bandage.bmp", 
+		display_image = "bandage.bmp",
 		player_stance = "idle",
-		acessory = {};
-	};
+		acessory = {},
+	},
 	[66] = {
 		name = "Coins",
 		alt_name = "Coins",
@@ -1492,15 +1522,15 @@ enum.itemlist = {
 		frame_delay = 0,
 		range = 0,
 		weight = 0,
-		accuracy = 0, 
+		accuracy = 0,
 		common_path = "gfx/weapons/",
 		dropped_image = "coins.bmp",
 		held_image = "coins.bmp",
 		kill_image = "coins.bmp",
-		display_image = "coins.bmp", 
+		display_image = "coins.bmp",
 		player_stance = "idle",
-		acessory = {};
-	};
+		acessory = {},
+	},
 	[67] = {
 		name = "Money",
 		alt_name = "Money",
@@ -1514,15 +1544,15 @@ enum.itemlist = {
 		frame_delay = 0,
 		range = 0,
 		weight = 0,
-		accuracy = 0, 
+		accuracy = 0,
 		common_path = "gfx/weapons/",
 		dropped_image = "money_d.bmp",
 		held_image = "money.bmp",
 		kill_image = "money_k.bmp",
-		display_image = "money_m.bmp", 
+		display_image = "money_m.bmp",
 		player_stance = "idle",
-		acessory = {};
-	};
+		acessory = {},
+	},
 	[68] = {
 		name = "Gold",
 		alt_name = "Gold",
@@ -1536,15 +1566,15 @@ enum.itemlist = {
 		frame_delay = 0,
 		range = 0,
 		weight = 0,
-		accuracy = 0, 
+		accuracy = 0,
 		common_path = "gfx/weapons/",
 		dropped_image = "gold.bmp",
 		held_image = "gold.bmp",
 		kill_image = "",
-		display_image = "gold.bmp", 
+		display_image = "gold.bmp",
 		player_stance = "idle",
-		acessory = {};
-	};
+		acessory = {},
+	},
 	[69] = {
 		name = "Machete",
 		alt_name = "Machete",
@@ -1559,15 +1589,16 @@ enum.itemlist = {
 		frame_delay = 33,
 		range = 12,
 		weight = 300,
-		accuracy = 0, 
+		accuracy = 0,
 		common_path = "gfx/weapons/",
 		dropped_image = "machete.bmp",
 		held_image = "machete.bmp",
 		kill_image = "machete_k.bmp",
-		display_image = "machete.bmp", 
+		display_image = "machete.bmp",
 		player_stance = "melee",
-		acessory = {};
-	};
+		acessory = {},
+		sound = "sfx/weapons/machete_slash.wav";
+	},
 	[70] = {
 		name = "Red Flag",
 		alt_name = "Red Flag",
@@ -1588,11 +1619,11 @@ enum.itemlist = {
 		kill_image = "redflag.bmp",
 		display_image = "redflag.bmp",
 		player_stance = "idle",
-		acessory = {};
-		flip = true;
-		scale = 0.8;
-		offset = -10;
-	};
+		acessory = {},
+		flip = true,
+		scale = 0.8,
+		offset = -10,
+	},
 	[71] = {
 		name = "Blue Flag",
 		alt_name = "Blue Flag",
@@ -1606,18 +1637,18 @@ enum.itemlist = {
 		frame_delay = 0,
 		range = 0,
 		weight = 0,
-		accuracy = 0, 
+		accuracy = 0,
 		common_path = "gfx/weapons/",
 		dropped_image = "blueflag.bmp",
 		held_image = "blueflag.bmp",
 		kill_image = "blueflag.bmp",
-		display_image = "blueflag.bmp", 
+		display_image = "blueflag.bmp",
 		player_stance = "idle",
-		acessory = {};
-		flip = true;
-		scale = 0.8;
-		offset = -10;
-	};
+		acessory = {},
+		flip = true,
+		scale = 0.8,
+		offset = -10,
+	},
 	[72] = {
 		name = "Gas Grenade",
 		alt_name = "Gas Grenade",
@@ -1632,15 +1663,15 @@ enum.itemlist = {
 		frame_delay = 24,
 		range = 320,
 		weight = 400,
-		accuracy = 0, 
+		accuracy = 0,
 		common_path = "gfx/weapons/",
 		dropped_image = "gasgrenade.bmp",
 		held_image = "gasgrenade.bmp",
 		kill_image = "gasgrenade_k.bmp",
 		display_image = "gasgrenade.bmp",
 		player_stance = "object",
-		acessory = {};
-	};
+		acessory = {},
+	},
 	[73] = {
 		name = "Molotov Cocktail",
 		alt_name = "Molotov Cocktail",
@@ -1656,15 +1687,15 @@ enum.itemlist = {
 		frame_delay = 24,
 		range = 320,
 		weight = 400,
-		accuracy = 0, 
+		accuracy = 0,
 		common_path = "gfx/weapons/",
 		dropped_image = "molotovcocktail.bmp",
 		held_image = "molotovcocktail.bmp",
 		kill_image = "molotovcocktail_k.bmp",
-		display_image = "molotovcocktail.bmp", 
+		display_image = "molotovcocktail.bmp",
 		player_stance = "object",
-		acessory = {};
-	};
+		acessory = {},
+	},
 	[74] = {
 		name = "Wrench",
 		alt_name = "Wrench",
@@ -1680,15 +1711,16 @@ enum.itemlist = {
 		frame_delay = 24,
 		range = 7,
 		weight = 150,
-		accuracy = 0, 
+		accuracy = 0,
 		common_path = "gfx/weapons/",
 		dropped_image = "wrench.bmp",
 		held_image = "wrench.bmp",
 		kill_image = "wrench_k.bmp",
-		display_image = "wrench.bmp", 
+		display_image = "wrench.bmp",
 		player_stance = "melee",
-		acessory = {};
-	};
+		acessory = {},
+		sound = "sfx/weapons/knife_slash.wav";
+	},
 	[75] = {
 		name = "Snowball",
 		alt_name = "Snowball",
@@ -1703,15 +1735,15 @@ enum.itemlist = {
 		frame_delay = 24,
 		range = 320,
 		weight = 400,
-		accuracy = 0, 
+		accuracy = 0,
 		common_path = "gfx/weapons/",
 		dropped_image = "snowball.bmp",
 		held_image = "snowball.bmp",
 		kill_image = "snowball_k.bmp",
 		display_image = "snowball.bmp",
 		player_stance = "object",
-		acessory = {};
-	};
+		acessory = {},
+	},
 	[76] = {
 		name = "Air Strike",
 		alt_name = "Air Strike",
@@ -1726,15 +1758,15 @@ enum.itemlist = {
 		frame_delay = 24,
 		range = 320,
 		weight = 400,
-		accuracy = 0, 
+		accuracy = 0,
 		common_path = "gfx/weapons/",
 		dropped_image = "airstrike.bmp",
 		held_image = "airstrike.bmp",
 		kill_image = "airstrike_k.bmp",
 		display_image = "airstrike.bmp",
 		player_stance = "object",
-		acessory = {};
-	};
+		acessory = {},
+	},
 	[77] = {
 		name = "Mine",
 		alt_name = "Mine",
@@ -1749,15 +1781,15 @@ enum.itemlist = {
 		frame_delay = 24,
 		range = 120,
 		weight = 400,
-		accuracy = 0, 
+		accuracy = 0,
 		common_path = "gfx/weapons/",
 		dropped_image = "mine.bmp",
 		held_image = "mine.bmp",
 		kill_image = "mine_k.bmp",
-		display_image = "mine.bmp", 
+		display_image = "mine.bmp",
 		player_stance = "melee",
-		acessory = {};
-	};
+		acessory = {},
+	},
 	[78] = {
 		name = "Claw",
 		alt_name = "Claw",
@@ -1773,15 +1805,15 @@ enum.itemlist = {
 		frame_delay = 29,
 		range = 9,
 		weight = 300,
-		accuracy = 0, 
+		accuracy = 0,
 		common_path = "gfx/weapons/",
 		dropped_image = "claw_d.bmp",
 		held_image = "",
 		kill_image = "claw_k.bmp",
 		display_image = "",
 		player_stance = "zombie",
-		acessory = {};
-	};
+		acessory = {},
+	},
 	[79] = {
 		name = "Light Armor",
 		alt_name = "Light Armor 25%",
@@ -1794,15 +1826,15 @@ enum.itemlist = {
 		frame_delay = 0,
 		range = 0,
 		weight = 0,
-		accuracy = 0, 
+		accuracy = 0,
 		common_path = "gfx/weapons/",
 		dropped_image = "lightarmor_d.bmp",
 		held_image = "lightarmor.bmp",
 		kill_image = "lightarmor_k.bmp",
-		display_image = "lightarmor_m.bmp", 
+		display_image = "lightarmor_m.bmp",
 		player_stance = "idle",
-		acessory = {};
-	};
+		acessory = {},
+	},
 	[80] = {
 		name = "Armor",
 		alt_name = "Armor",
@@ -1815,15 +1847,15 @@ enum.itemlist = {
 		frame_delay = 0,
 		range = 0,
 		weight = 0,
-		accuracy = 0, 
+		accuracy = 0,
 		common_path = "gfx/weapons/",
 		dropped_image = "armor_d.bmp",
 		held_image = "armor.bmp",
 		kill_image = "armor_k.bmp",
-		display_image = "armor_m.bmp", 
+		display_image = "armor_m.bmp",
 		player_stance = "idle",
-		acessory = {};
-	};
+		acessory = {},
+	},
 	[81] = {
 		name = "Heavy Armor",
 		alt_name = "Heavy Armor",
@@ -1836,15 +1868,15 @@ enum.itemlist = {
 		frame_delay = 0,
 		range = 0,
 		weight = 0,
-		accuracy = 0, 
+		accuracy = 0,
 		common_path = "gfx/weapons/",
 		dropped_image = "heavyarmor_d.bmp",
 		held_image = "heavyarmor.bmp",
 		kill_image = "heavyarmor_k.bmp",
-		display_image = "heavyarmor_m.bmp", 
+		display_image = "heavyarmor_m.bmp",
 		player_stance = "idle",
-		acessory = {};
-	};
+		acessory = {},
+	},
 	[82] = {
 		name = "Medic Armor",
 		alt_name = "Medic Armor",
@@ -1858,15 +1890,15 @@ enum.itemlist = {
 		frame_delay = 0,
 		range = 0,
 		weight = 0,
-		accuracy = 0, 
+		accuracy = 0,
 		common_path = "gfx/weapons/",
 		dropped_image = "medicarmor_d.bmp",
 		held_image = "medicarmor.bmp",
 		kill_image = "medicarmor_k.bmp",
-		display_image = "medicarmor_m.bmp", 
+		display_image = "medicarmor_m.bmp",
 		player_stance = "idle",
-		acessory = {};
-	};
+		acessory = {},
+	},
 	[83] = {
 		name = "Super Armor",
 		alt_name = "Super Armor",
@@ -1879,15 +1911,15 @@ enum.itemlist = {
 		frame_delay = 0,
 		range = 0,
 		weight = 0,
-		accuracy = 0, 
+		accuracy = 0,
 		common_path = "gfx/weapons/",
 		dropped_image = "superarmor_d.bmp",
 		held_image = "superarmor.bmp",
 		kill_image = "",
-		display_image = "superarmor_d.bmp", 
+		display_image = "superarmor_d.bmp",
 		player_stance = "idle",
-		acessory = {};
-	};
+		acessory = {},
+	},
 	[84] = {
 		name = "Stealth Suit",
 		alt_name = "Stealth Suit",
@@ -1900,7 +1932,7 @@ enum.itemlist = {
 		frame_delay = 0,
 		range = 0,
 		weight = 0,
-		accuracy = 0, 
+		accuracy = 0,
 		common_path = "gfx/weapons/",
 		dropped_image = "stealthsuit_d.bmp",
 		held_image = "",
@@ -1908,8 +1940,8 @@ enum.itemlist = {
 		display_image = "stealthsuit_d.bmp",
 		player_stance = "idle",
 		opacity = 0.2,
-		acessory = {};
-	};
+		acessory = {},
+	},
 	[85] = {
 		name = "Chainsaw",
 		alt_name = "Chainsaw",
@@ -1924,15 +1956,16 @@ enum.itemlist = {
 		frame_delay = 8,
 		range = 12,
 		weight = 2000,
-		accuracy = 0, 
+		accuracy = 0,
 		common_path = "gfx/weapons/",
 		dropped_image = "chainsaw_d.bmp",
 		held_image = "chainsaw.bmp",
 		kill_image = "chainsaw_k.bmp",
 		display_image = "chainsaw_m.bmp",
 		player_stance = "melee",
-		acessory = {};
-	};
+		acessory = {},
+		sound = "sfx/weapons/chainsaw.wav";
+	},
 	[86] = {
 		name = "Gut Bomb",
 		alt_name = "Gut Bomb",
@@ -1947,15 +1980,15 @@ enum.itemlist = {
 		frame_delay = 24,
 		range = 320,
 		weight = 400,
-		accuracy = 0, 
+		accuracy = 0,
 		common_path = "gfx/weapons/",
 		dropped_image = "gutbomb.bmp",
 		held_image = "gutbomb.bmp",
 		kill_image = "gutbomb_k.bmp",
-		display_image = "gutbomb.bmp", 
+		display_image = "gutbomb.bmp",
 		player_stance = "object",
-		acessory = {};
-	};
+		acessory = {},
+	},
 	[87] = {
 		name = "Laser Mine",
 		alt_name = "Laser Mine",
@@ -1970,15 +2003,15 @@ enum.itemlist = {
 		frame_delay = 24,
 		range = 200,
 		weight = 400,
-		accuracy = 0, 
+		accuracy = 0,
 		common_path = "gfx/weapons/",
 		dropped_image = "lasermine.bmp",
 		held_image = "lasermine.bmp",
 		kill_image = "lasermine_k.bmp",
 		display_image = "lasermine.bmp",
 		player_stance = "object",
-		acessory = {};
-	};
+		acessory = {},
+	},
 	[88] = {
 		name = "Portal Gun",
 		alt_name = "Portal Gun",
@@ -1986,7 +2019,7 @@ enum.itemlist = {
 		category = "primary",
 		attack = "portal:1",
 		attack2 = "portal:2",
-		reload = "portalreset",
+		reload = 1,
 		slot = 1,
 		price = 10000,
 		damage = 0,
@@ -1995,15 +2028,16 @@ enum.itemlist = {
 		frame_delay = 12,
 		range = 300,
 		weight = 3000,
-		accuracy = 0, 
+		accuracy = 0,
 		common_path = "gfx/weapons/",
 		dropped_image = "portalgun_d.bmp",
 		held_image = "portalgun.bmp",
 		kill_image = "portalgun_k.bmp",
-		display_image = "portalgun_m.bmp", 
+		display_image = "portalgun_m.bmp",
 		player_stance = "rifle",
-		acessory = {};
-	};
+		acessory = {},
+
+	},
 	[89] = {
 		name = "Satchel Charge",
 		alt_name = "Satchel Charge",
@@ -2018,22 +2052,22 @@ enum.itemlist = {
 		frame_delay = 24,
 		range = 320,
 		weight = 400,
-		accuracy = 0, 
+		accuracy = 0,
 		common_path = "gfx/weapons/",
 		dropped_image = "satchelcharge.bmp",
 		held_image = "satchelcharge.bmp",
 		kill_image = "satchelcharge_k.bmp",
-		display_image = "satchelcharge.bmp", 
+		display_image = "satchelcharge.bmp",
 		player_stance = "object",
-		acessory = {};
-	};
+		acessory = {},
+	},
 	[90] = {
 		name = "M134",
 		alt_name = "M134",
 		internal_name = "m134",
 		category = "primary",
 		attack = "bullet",
-		reload = "reload",
+		reload = 140,
 		slot = 1,
 		price = 8100,
 		damage = 13,
@@ -2047,17 +2081,18 @@ enum.itemlist = {
 		dropped_image = "m134_d.bmp",
 		held_image = "m134.bmp",
 		kill_image = "m134_k.bmp",
-		display_image = "m134_m.bmp", 
+		display_image = "m134_m.bmp",
 		player_stance = "rifle",
-		acessory = {};
-	};
+		acessory = {},
+		sound = "sfx/weapons/m134.wav";
+	},
 	[91] = {
 		name = "FN F2000",
 		alt_name = "FN Herstal F2000",
 		internal_name = "fnf2000",
 		category = "primary",
 		attack = "bullet",
-		reload = "reload",
+		reload = 70,
 		slot = 1,
 		price = 3500,
 		damage = 26,
@@ -2066,15 +2101,16 @@ enum.itemlist = {
 		frame_delay = 8,
 		range = 300,
 		weight = 3600,
-		accuracy = 80, 
+		accuracy = 80,
 		common_path = "gfx/weapons/",
 		dropped_image = "fnf2000_d.bmp",
 		held_image = "fnf2000.bmp",
 		kill_image = "fnf2000_k.bmp",
-		display_image = "fnf2000_m.bmp", 
+		display_image = "fnf2000_m.bmp",
 		player_stance = "rifle",
-		acessory = {};
-	};
+		acessory = {},
+		sound = "sfx/weapons/fnf2000.wav";
+	},
 }
 
 enum.itemdata_default = {
@@ -2089,14 +2125,14 @@ enum.itemdata_default = {
 	frame_delay = 0,
 	range = 0,
 	weight = 0,
-	accuracy = 0, 
+	accuracy = 0,
 	common_path = "gfx/weapons/",
 	dropped_image = "",
 	held_image = "",
 	display_image = "",
 	kill_image = "",
 	player_stance = "object",
-	acessory = {};
+	acessory = {},
 }
 
 enum.itemlist_meta = {
@@ -2115,11 +2151,11 @@ enum.itemlist_slots = {
 }
 
 enum.npc = {
-	[1] = {"Zombie", 150}, -- Zombie
-	[2] = {"Headcrab", 30},  -- Headcrab
-	[3] = {"Snark", 20},  -- Snark
-	[4] = {"Vortigaunt", 200}, -- Vortigaunt
-	[5] = {"Soldier", 100}, -- Soldier
+	[1] = { "Zombie", 150 },  -- Zombie
+	[2] = { "Headcrab", 30 }, -- Headcrab
+	[3] = { "Snark", 20 },    -- Snark
+	[4] = { "Vortigaunt", 200 }, -- Vortigaunt
+	[5] = { "Soldier", 100 }, -- Soldier
 }
 
 enum.player = {
