@@ -36,8 +36,8 @@ effect.register("core/particle/smoke_inst.lua", "blacksmoke")
 effect.register("core/particle/smoke_white.lua", "whitesmoke")
 effect.register("core/particle/spawn.lua", "spawn")
 effect.register("core/particle/bloodpile.lua", "bloodpile")
+effect.register("core/particle/blood.lua", "blood")
 effect.register("core/particle/slash.lua", "slash")
-
 
 --effect.register(LF.load "core/particle/fire.lua" (), "fire")
 --effect.register(dofile "core/particle/snow.lua", "snow")
@@ -1184,6 +1184,10 @@ function MapObject:draw_effects()
 	-- Reset render
 	love.graphics.setBlendMode("alpha")
 	love.graphics.setColor(1, 1, 1, 1)
+end
+
+function MapObject:spawn_polygon(polygon, ...)
+	effect.new_polygon(polygon, ...)
 end
 
 function MapObject:draw_bullets(share, home, client)

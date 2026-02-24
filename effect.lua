@@ -5,6 +5,7 @@ local serpent = require "lib.serpent"
 effect.queue = {}
 effect.list = {}
 effect.imagequeue = {}
+effect.polygons = {}
 
 local function lerp(a, b, t)
 	return a + (b - a) * t
@@ -146,6 +147,24 @@ function effect.new_image(name, x, y, args)
 	return image_id, new_instance
 end
 
+function effect.new_polygon(polygon, ...)
+	local r, g, b, a = ...
+	local color
+	if type(r) == "number" then
+		color = {
+			r or 1.0,
+			g or 1.0,
+			b or 1.0,
+			a or 1.0,
+		}
+	elseif type(r) == "table" then
+		color = r
+	elseif type(r) == "nil" then
+		color = {1.0, 1.0, 1.0, 1.0}
+	end
+	table.insert(effect.polygons, {vertices=polygon, color=color, life=5})
+end
+
 function effect.dispose(effect_id)
 	local effect_instance = effect.queue[effect_id]
 	for _, particle in ipairs(effect_instance) do
@@ -180,6 +199,13 @@ function effect.update(dt)
 			if stopped_instances >= #image_instance then
 				effect.imagequeue[image_id] = nil
 			end
+		end
+	end
+
+	for index, polygon in pairs(effect.polygons) do
+		polygon.life = polygon.life - love.timer.getDelta()
+		if polygon.life < 0 then
+			table.remove(effect.polygons, index)
 		end
 	end
 end
@@ -227,6 +253,12 @@ function effect.draw()
 			love.graphics.setBlendMode(i.blendMode)
 			love.graphics.draw(i.texture, i.x, i.y, i.angle, i.scaleX, i.scaleY, i.offsetX, i.offsetY)
 		end
+	end
+
+		-- Temporary.
+	for index, polygon in pairs(effect.polygons) do
+		love.graphics.setColor(polygon.color)
+		love.graphics.polygon("line", polygon.vertices)
 	end
 end
 

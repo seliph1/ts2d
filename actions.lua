@@ -39,6 +39,22 @@ local actions = {
         end
     };
 
+    toast = {
+		action = function(...)
+			local message = table.concat({...}," ")
+			local LF = require "lib.loveframes"
+            local ui = require "core.interface.ui"
+
+			LF.PushMessage(message, {
+                spacing=1,
+                padding=1,
+                outline=false,
+                time=6,
+                font=ui.font_big,
+            })
+		end,
+	};
+
 	print = {
 		action = function(...)
 			print(...)

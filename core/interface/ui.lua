@@ -6,10 +6,6 @@ local client 	= require "client"
 local ui 		= {}
 ui.font_fallbacks = {
 	--"gfx/fonts/NotoSansCJK-Regular.ttc",
-	"gfx/fonts/NotoSansArabic-Regular.ttf",
-	"gfx/fonts/NotoSansThai-Regular.ttf",
-	"gfx/fonts/NotoSansHebrew-Regular.ttf",
-	"gfx/fonts/NotoSansHindi-Regular.ttf",
 }
 
 --ui.sounds = {}
@@ -40,6 +36,9 @@ ui.setFontFallbacks(ui.font_small, 13)
 
 ui.font_chat = LG.newFont("gfx/fonts/liberationsans.ttf", 18)
 ui.setFontFallbacks(ui.font_chat, 18)
+
+ui.font_big = LG.newFont("gfx/fonts/liberationsans.ttf", 24)
+ui.setFontFallbacks(ui.font_chat, 24)
 
 ui.setCursor = function(cursorType, cursorImageData, scale)
 	local ow, oh = cursorImageData:getWidth(), cursorImageData:getHeight()
@@ -149,7 +148,7 @@ end
 function ui.getcolortable(color_tag)
 	local r,g,b = color_tag:match("(%d%d%d)(%d%d%d)(%d%d%d)")
 	if r and g and b then
-		return { 
+		return {
 			tonumber(r)/255,
 			tonumber(g)/255,
 			tonumber(b)/255,
@@ -158,6 +157,15 @@ function ui.getcolortable(color_tag)
 	end
 	return {1,1,1,1}
 end
+
+--------------------------------------------------------------------------------------------------
+--Toast config------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------
+LF.toast
+:SetBoxAlign("center", "center")
+:SetOutline(false)
+:SetRelativeBoxWidth(1.0)
+:SetMessageOrder("descending")
 
 --------------------------------------------------------------------------------------------------
 --Local function helpers--------------------------------------------------------------------------
@@ -1910,17 +1918,15 @@ function ui.buymenu_display()
 				local itemdata = client.get_item_data(item_type)
 				if itemdata.display_image then
 					local path = itemdata.common_path .. itemdata.display_image
-					if client.gfx.itemlist[path] then
-						local gfx = client.gfx.itemlist[path]
-						local width = gfx:getWidth()/2
-						local scale = 4
-						local timer = love.timer.getTime()
-						local oscillator = math.sin(timer)
-						local floater = math.sin(timer*3)
+					local gfx = client.map:getImage(path)
+					local width = gfx:getWidth()/2
+					local scale = 4
+					local timer = love.timer.getTime()
+					local oscillator = math.sin(timer)
+					local floater = math.sin(timer*3)
 
-						gfx:setFilter("nearest", "nearest")
-						love.graphics.draw(gfx, self.width/2, 50, 0, oscillator*scale, 1*scale, width, floater*3, 0, 0)
-					end
+					gfx:setFilter("nearest", "nearest")
+					love.graphics.draw(gfx, self.width/2, 50, 0, oscillator*scale, 1*scale, width, floater*3, 0, 0)
 				end
 
 				local padding = 10
@@ -2078,7 +2084,7 @@ function ui.reload_display(seconds)
 	:SetSize(100, 19)
 	:CenterX()
 	:SetY(0.4)
-	:SetProperty("margin", 3)
+	:SetProperty("margin", 2)
 	:SetProperty("line_width", 1)
 	:SetProperty("font_height", ui.font_small:getHeight())
 	:SetProperty("font", ui.font_small)
@@ -2140,20 +2146,6 @@ function ui.reload_dispose()
 	if ui.reload_window then
 		ui.reload_window:Remove()
 		ui.reload_window = nil
-	end
-end
-
---------------------------------------------------------------------------------------------------
---middlescreen message----------------------------------------------------------------------------
---------------------------------------------------------------------------------------------------
-ui.toastMessageScreen = nil
-function ui.toastMessage(message)
-	local toast = ui.toastMessageScreen
-	if not toast then
-		toast = LF.Create("log")
-
-		function toast:Update(dt)
-		end
 	end
 end
 

@@ -73,6 +73,7 @@ end
 local ui 			= require "core.interface.ui"
 local client 		= require "client"
 --local discordRPC	= require "lib.discordRPC"
+local discordRPC
 
 local initializer = {
 	["debug"] = function()

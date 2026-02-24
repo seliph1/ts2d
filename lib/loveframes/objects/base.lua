@@ -632,7 +632,7 @@ function Base:Expand(direction, margin)
 		else
 			self.staticy = 0
 		end
-	elseif direction == "all" then
+	else
 		local offset_x = math.floor( parent.width * (1 - factor) * 0.5 )
 		local offset_y = math.floor( parent.height * (1 - factor) * 0.5 )
 		if parent == base then

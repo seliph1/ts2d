@@ -1,8 +1,9 @@
 --- Client base framework
-local Map 			= require "mapengine"
-local Bump			= require "lib.bump"
-local client 		= require "lib.cs"
-local serpent 		= require "lib.serpent"
+local Map 		= require "mapengine"
+local Bump		= require "lib.bump"
+local client 	= require "lib.cs"
+local serpent 	= require "lib.serpent"
+local mlib 		= require "lib.mlib"
 
 ---@class Home: state
 ---Home class that holds player local client data
@@ -60,8 +61,6 @@ client.shader = client.shaders.baseShader
 
 -- Global audio config
 love.audio.setDistanceModel("linearclamped")
-
-
 
 local function is_alive()
 	local player = share.players[client.id]
@@ -166,6 +165,26 @@ function client.predict_action(peer_id, dt)
 
 end
 
+
+function client.getWeaponHitbox(x, y, width, reach, angle, offset)
+    local half_w = width / 2
+    -- Retângulo na frente do player
+    local weapon = {
+        0, -half_w,
+        0 + reach, -half_w,
+        0 + reach, half_w,
+        0, half_w
+    }
+    -- Rotaciona e Translada para posição
+    mlib.rotatePolygon(weapon, 0, 0, angle)
+    mlib.translatePolygon(weapon, x, y)
+	if offset then
+    	mlib.translatePolygonPolar(weapon, angle, offset)
+	end
+    return weapon
+end
+
+
 function client.attack(peer_id, local_data)
 	if is_dead() then
 		return 1
@@ -182,6 +201,7 @@ function client.attack(peer_id, local_data)
 	-- Get player position and target
 	local player_x = player.x
 	local player_y = player.y
+	local player_size = player.size
 	local mouse_x = player.targetX
 	local mouse_y = player.targetY
 
@@ -203,9 +223,9 @@ function client.attack(peer_id, local_data)
 		-- Dont run this if server is requesting our peer_id animation in our client.
 		if peer_id == client.id then return 0 end
 	end
-
 	-- Calculate angle for all attack modes
-	local angle = math.atan2(mouse_y - client.height/2, mouse_x - client.width/2)
+	local player_angle = math.atan2(mouse_y - client.height/2, mouse_x - client.width/2)
+
 	if action == "bullet" then
 		local itemobject = player.i[itemheld]
 		local ammo_mag = itemobject.am or 0
@@ -222,32 +242,31 @@ function client.attack(peer_id, local_data)
 		local spread = tonumber( args[2] ) or 1
 		-- In CS2D the range value is multiplied by 3
 		local distance = itemdata.range * 3
-		--local rpm = itemdata.rpm or 200 -- 0.3
 		local frame_delay = itemdata.frame_delay or 22
 		-- Actions per second
 		local seconds = frame_delay / 60
 
+		-- Offset from player hand
 		local offset = 20
-		local offset_x = player_x + math.cos(angle) * offset
-		local offset_y = player_y + math.sin(angle) * offset
+		local offset_x = player_x + math.cos(player_angle) * offset
+		local offset_y = player_y + math.sin(player_angle) * offset
 
 		-- Play the weapon sound when firing
 		if itemdata.sound then
 			client.map:playSoundAt(itemdata.sound, offset_x, offset_y)
-			--client.map:playSound(itemdata.sound)
 		end
 
 		-- Simulate locally that we fired a weapon
 		if spawn == 1 then
 			-- Skip with single shot
-			client.fire(offset_x, offset_y, angle, distance, client.id)
+			client.fire(offset_x, offset_y, player_angle, distance, client.id)
 			return seconds
 		end
 
 		-- Multishot (from shotguns, etc.)
 		local half = math.floor(spawn/2)
 		for i = 1, spawn do
-			local subangle = angle + math.rad(i * spread - half * spread)
+			local subangle = player_angle + math.rad(i * spread - half * spread)
 			client.fire(offset_x, offset_y, subangle, distance, client.id)
 		end
 		return seconds
@@ -255,22 +274,68 @@ function client.attack(peer_id, local_data)
 
 	if action == "swing" then
 		player._swingTimer = 0.2
-		--local rpm = itemdata.frame_delay or 22
+		-- Frame delay (1/60)
 		local frame_delay = itemdata.frame_delay or 22
 		-- Actions per second
 		local seconds = frame_delay / 60
-		client.map:spawn_effect("slash", player_x, player_y, {setDirection = angle + math.pi/2 })
+		-- Range and width of weapon
+		local width = itemdata.width or 10
+		local range = itemdata.range or 20
 
+		local swing_x, swing_y = mlib.translatePoint(player_x, player_y, player_angle, range/2)
+
+		-- Play sound and effects
+		client.map:spawn_effect("slash", swing_x, swing_y, {
+			setDirection = player_angle + math.pi/2
+		})
 		if itemdata.sound then
-			client.map:playSoundAt(itemdata.sound, player_x, player_y)
-			--client.map:playSound(itemdata.sound)
+			client.map:playSoundAt(itemdata.sound, swing_x, swing_y)
 		end
-
+		client.swing(player_x, player_y, player_angle, width, range, 10, client.id)
 		return seconds
 	end
 
 	return 1
 end
+
+function client.swing(start_x, start_y, angle, width, range, offset, peer_id)
+	local hitbox = client.getWeaponHitbox(
+		start_x, start_y,
+		width, range,
+		angle,
+		offset
+	)
+
+	if client.debug_level > 1 then
+		client.map:spawn_polygon(hitbox, 1.0, 0.0, 0.0, 0.2)
+	end
+
+	local box_size = 100
+	local x = math.floor(start_x - box_size / 2)
+	local y = math.floor(start_y - box_size / 2)
+	local w = math.floor(box_size)
+	local h = math.floor(box_size)
+	local targets = client.world:queryRect(x, y, w, h)
+	for index, target in pairs(targets) do
+		if target.ct == 1 and target.id ~= client.id then
+			local half = target.size/2
+			local body = {
+				-half, -half,
+				half, -half,
+				half, half,
+				-half, half
+			}
+			mlib.translatePolygon(body, target.x, target.y)
+			if mlib.polygonsCollide(hitbox, body) then
+				local blood_x, blood_y = mlib.translatePoint(target.x, target.y, angle, -half)
+				client.map:spawn_effect("blood", blood_x, blood_y, {
+					setDirection = angle + math.pi,
+				})
+			end
+		end
+	end
+end
+
 
 ---@param start_x number
 ---@param start_y number
@@ -284,7 +349,7 @@ function client.fire(start_x, start_y, angle, distance, peer_id)
 
 	local target_x = start_x + math.cos(angle) * distance
 	local target_y = start_y + math.sin(angle) * distance
-	local hit_x, hit_y, hit, players = client.hitscan(start_x, start_y, target_x, target_y)
+	local hit_x, hit_y, hit, bodies = client.hitscan(start_x, start_y, target_x, target_y)
 	local hit_distance = distance
 	if hit then
 		local rand = math.random()
@@ -322,8 +387,13 @@ function client.fire(start_x, start_y, angle, distance, peer_id)
 		--offsetX = -10,
 	})
 
-	for index, victim in ipairs(players) do
-		client.map:spawn_effect("blood", victim.x, victim.y)
+	for index, body in ipairs(bodies) do
+		local object = body.item
+		if object.ct == 1 then -- Player
+			client.map:spawn_effect("blood", body.x2, body.y2, {
+				setDirection = angle,
+			})
+		end
 	end
 end
 
@@ -501,7 +571,7 @@ function client.hitscan(x1, y1, x2, y2)
 	-- If stopped into a wall, calculate until that wall point of impact
 	-- Else, go with the original point
 	local impact_x, impact_y, hit = client.map:hitscan(x1, y1, x2, y2, 1)
-	local players = {}
+	local bodies = {}
 
 	-- Now calculate bump collision
 	local item_info, len = client.world:querySegmentWithCoords(start_x, start_y, impact_x, impact_y)
@@ -511,12 +581,12 @@ function client.hitscan(x1, y1, x2, y2)
 
 		-- check if it's a player
 		if object.ct == 1 and object.h > 0 then
-			table.insert(players, object)
+			table.insert(bodies, info)
 			hit = true
 		end
 	end
 
-	return impact_x, impact_y, hit, players
+	return impact_x, impact_y, hit, bodies
 end
 
 function client.draw_splash(ox, oy)

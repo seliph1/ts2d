@@ -34,97 +34,6 @@ end)
 -- Client only commands
 local commands = {
 	-------------------------------------------------------
-	-- UI/MISC
-	-------------------------------------------------------
-	--[[
-	megasena = {
-		action = function(seednumber)
-			local seed = math.randomseed(os.time())
-			if seednumber then
-				seed = math.randomseed(tonumber(seednumber) or os.time())
-			end
-			local pool = {}
-			for i = 1, 60 do
-				pool[i] = i
-			end
-
-			local resultado = {}
-
-			for i = 1, 6 do
-				local idx = math.random(#pool)
-				resultado[i] = pool[idx]
-				table.remove(pool, idx)
-			end
-
-			table.sort(resultado)
-			print("Números :" .. table.concat(resultado, " - "))
-		end
-	};
-	--]]
-    warning = {
-        action = function(...)
-			local message = table.concat({...}," ")
-            local LF = require "lib.loveframes"
-			local width, height = 300, 150
-            local frame = LF.Create("frame"):SetSize(width, height):SetState("*"):Center()
-			local panel = LF.Create("panel", frame):SetSize(width-20, height-50):SetPos(10, 30)
-            local messagebox = LF.Create("messagebox", panel)
-            messagebox:SetMaxWidth(width-20):SetText("©255000000"..message):Center()
-        end
-    };
-
-	edit = {
-		action = function(...)
-			local client = require "client"
-			local args = {...}
-			if client.map then
-				local LF = require "lib.loveframes"
-				local status = client.map:read( "maps/"..table.concat(args," ")..".map" )
-				if status then
-					print(status)
-				end
-				client.mode = "editor"
-				LF.SetState("editor")
-			end
-		end,
-		syntax = "/edit <mapfile>",
-	};
-
-	menu = {
-		---Invokes a client-side menu
-		---@param ... string
-		action = function(...)
-			local ui = require "core.interface.ui"
-			ui.menu_constructor(table.concat({...}," "))
-		end;
-	};
-
-	scale = {
-		action = function(bool)
-			local client = require "client"
-			client.scale = (bool == "true")
-		end;
-	};
-
-	volume = {
-		action = function(level)
-			level = tonumber(level) or 0
-			level = math.min(math.max(0, level), 1)
-			love.audio.setVolume(level)
-		end,
-		alias = nil,
-		syntax = "",
-	};
-
-	mute = {
-		action = function()
-			love.audio.setVolume(0)
-		end,
-		alias = nil,
-		syntax = "",
-	};
-
-	-------------------------------------------------------
 	-- DEBUG
 	-------------------------------------------------------
 	lerp = {
@@ -179,7 +88,7 @@ local commands = {
             end
         end
     };
-	
+
 	clear = {
 		---Clear console
 		action = function()
@@ -187,7 +96,6 @@ local commands = {
 			console.window:Clear()
 		end;
 	};
-
 
 	lua = {
 		---Evaluates a lua expression
@@ -312,26 +220,9 @@ local commands = {
 		end;
 	};
 
-	vsync = {
-		---@param mode "on"|"off"|"true"|"false"
-		action = function(mode)
-			local width, height = love.graphics.getDimensions()
-			if mode == "true" or mode == "on" then
-				love.window.updateMode(width, height, {
-					vsync = true;
-				})
-				return "vsync on"
-			elseif mode == "false" or mode == "off" then
-				love.window.updateMode(width, height, {
-					vsync = false;
-				})
-				return "vsync off"
-			else
-				return "unknown value "..mode
-			end
-		end
-	};
-
+	-------------------------------------------------------
+	-- NETWORK
+	-------------------------------------------------------
 	sendrate = {
 		---@param rate number
 		action = function(rate)
@@ -370,29 +261,164 @@ local commands = {
 		end
 	};
 
-	help = {
-		action = function(property, ...)
-			local console = require "core.interface.console"
-			local commands = console.input.commands
-			local list = {}
-			table.insert(list, "List of all commands available: ")
-			for name, data in pairs(commands) do
-				local argNames = {}
-				local action = data.action
+	ping = {
+		action = function()
+			print()
+		end
+	};
 
-				for i = 1, debug.getinfo(action).nparams, 1 do
-					table.insert(argNames, debug.getlocal(action, i))
-				end
-
-				table.insert(list, "©000255255"..name.." ©255255000"..table.concat( argNames, ", " ))
+	connect = {
+		action = function(ip, port)
+			local client = require "client"
+			if not client.connected then
+				ip = ip or "127.0.0.1"
+				port = port or "36963"
+				client.load()
+				client.start(string.format("%s:%s", ip, port))
 			end
-			return table.concat(list, "\n")
+		end,
+		syntax = "connect <ip:port>",
+	};
+
+	disconnect = {
+		action = function()
+			local client = require "client"
+			local LF = require "lib.loveframes"
+			if client.connected then
+				client.kick()
+			end
+		end,
+	};
+
+	-------------------------------------------------------
+	-- UI/MISC
+	-------------------------------------------------------
+	--[[
+	megasena = {
+		action = function(seednumber)
+			local seed = math.randomseed(os.time())
+			if seednumber then
+				seed = math.randomseed(tonumber(seednumber) or os.time())
+			end
+			local pool = {}
+			for i = 1, 60 do
+				pool[i] = i
+			end
+
+			local resultado = {}
+
+			for i = 1, 6 do
+				local idx = math.random(#pool)
+				resultado[i] = pool[idx]
+				table.remove(pool, idx)
+			end
+
+			table.sort(resultado)
+			print("Números :" .. table.concat(resultado, " - "))
+		end
+	};
+	--]]
+	toast = {
+		action = function(...)
+			local message = table.concat({...}," ")
+			local LF = require "lib.loveframes"
+			local console = require "core.interface.console"
+
+			local param = {
+                spacing=8,
+                padding=6,
+                time=5,
+				font = console.font_mono
+            }
+			console.toast:PushMessage(message, param)
+		end,
+	};
+
+    warning = {
+        action = function(...)
+			local message = table.concat({...}," ")
+            local LF = require "lib.loveframes"
+			local width, height = 300, 150
+            local frame = LF.Create("frame"):SetSize(width, height):SetState("*"):Center()
+			local panel = LF.Create("panel", frame):SetSize(width-20, height-50):SetPos(10, 30)
+            local messagebox = LF.Create("messagebox", panel)
+            messagebox:SetMaxWidth(width-20):SetText("©255000000"..message):Center()
+        end
+    };
+
+	menu = {
+		---Invokes a client-side menu
+		---@param ... string
+		action = function(...)
+			local ui = require "core.interface.ui"
+			ui.menu_constructor(table.concat({...}," "))
+		end;
+	};
+
+	scale = {
+		action = function(bool)
+			local client = require "client"
+			client.scale = (bool == "true")
+		end;
+	};
+
+	volume = {
+		action = function(level)
+			level = tonumber(level) or 0
+			level = math.min(math.max(0, level), 1)
+			love.audio.setVolume(level)
+		end,
+		alias = nil,
+		syntax = "",
+	};
+
+	mute = {
+		action = function()
+			love.audio.setVolume(0)
+		end,
+		alias = nil,
+		syntax = "",
+	};
+
+	vsync = {
+		---@param mode "on"|"off"|"true"|"false"
+		action = function(mode)
+			local width, height = love.graphics.getDimensions()
+			if mode == "true" or mode == "on" then
+				love.window.updateMode(width, height, {
+					vsync = true;
+				})
+				return "vsync on"
+			elseif mode == "false" or mode == "off" then
+				love.window.updateMode(width, height, {
+					vsync = false;
+				})
+				return "vsync off"
+			else
+				return "unknown value "..mode
+			end
 		end
 	};
 
 	-------------------------------------------------------
 	-- REMOTE ACTIONS
 	-------------------------------------------------------
+	edit = {
+		action = function(...)
+			local client = require "client"
+			local args = {...}
+			if client.map then
+				local LF = require "lib.loveframes"
+				local status = client.map:read( "maps/"..table.concat(args," ")..".map" )
+				if status then
+					print(status)
+				end
+				client.mode = "editor"
+				LF.SetState("editor")
+			end
+		end,
+		syntax = "/edit <mapfile>",
+	};
 
 	map = {
 		action = function(...)
@@ -420,7 +446,7 @@ local commands = {
 		end,
 		syntax = "/clearmap",
 	};
-	
+
 	cleareffect = {
 		action = function ()
 			local client = require "client"
@@ -456,35 +482,6 @@ local commands = {
 			local message = table.concat({...}," ")
 			ui.server_log_push(message)
 		end
-	};
-
-	ping = {
-		action = function()
-			print()
-		end
-	};
-
-	connect = {
-		action = function(ip, port)
-			local client = require "client"
-			if not client.connected then
-				ip = ip or "127.0.0.1"
-				port = port or "36963"
-				client.load()
-				client.start(string.format("%s:%s", ip, port))
-			end
-		end,
-		syntax = "connect <ip:port>",
-	};
-
-	disconnect = {
-		action = function()
-			local client = require "client"
-			local LF = require "lib.loveframes"
-			if client.connected then
-				client.kick()
-			end
-		end,
 	};
 
 	setname = {
@@ -578,7 +575,28 @@ local commands = {
 			client.send(string.format("rcon %s", command))
 		end,
 		syntax = "",
-	}
+	},
+
+	help = {
+		action = function(property, ...)
+			local console = require "core.interface.console"
+			local commands = console.input.commands
+			local list = {}
+			table.insert(list, "List of all commands available: ")
+			for name, data in pairs(commands) do
+				local argNames = {}
+				local action = data.action
+
+				for i = 1, debug.getinfo(action).nparams, 1 do
+					table.insert(argNames, debug.getlocal(action, i))
+				end
+
+				table.insert(list, "©000255255"..name.." ©255255000"..table.concat( argNames, ", " ))
+			end
+			return table.concat(list, "\n")
+		end
+	};
+
 }
 
 return commands

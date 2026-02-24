@@ -4,7 +4,6 @@
 --]]------------------------------------------------
 
 local path = ...
-
 local loveframes = {}
 
 -- special require for loveframes specific modules
@@ -97,6 +96,7 @@ love.keyboard.setKeyRepeat(true)
 --]]---------------------------------------------------------
 function loveframes.update(dt)
 	local base = loveframes.base
+	local toast = loveframes.toast
 
 	loveframes.collisioncount = 0
 	loveframes.objectcount = 0
@@ -144,6 +144,7 @@ function loveframes.update(dt)
 
 	loveframes.collisions = nil
 	base:update(dt)
+	toast:update(dt)
 end
 
 --[[---------------------------------------------------------
@@ -152,14 +153,15 @@ end
 --]]---------------------------------------------------------
 function loveframes.draw()
 	-- Store previous graphic settings
-	local base = loveframes.base
 	local r, g, b, a = love.graphics.getColor()
 	local font = love.graphics.getFont()
 
 	-- Start the draw counter fot debug window
 	loveframes.drawcount = 0
+
 	--// ---------------------------------//--
-	base:draw() -- D R A W 
+	local base = loveframes.base
+	base:draw() -- D R A W   E V E R Y T H I N G
 	--//----------------------------------//--
 
 	-- Tooltip ( should be drawn above other objects)
@@ -168,6 +170,12 @@ function loveframes.draw()
 		local skin = hoverobject:GetSkin()
 		skin.tooltip(hoverobject)
 	end
+
+	-- Toast (new) should be drawn above other objects	
+	--//----------------------------------//--
+	local toast = loveframes.toast
+	toast:draw()
+	--//----------------------------------//--
 
 	-- Debug draw
 	if loveframes.config["DEBUG"] then
@@ -303,5 +311,9 @@ loveframes.LoadSkins(dir .. "/skins")
 -- create the base gui object
 local base = loveframes.objects["base"]
 loveframes.base = base:new()
+
+-- Create the toast gui object
+local toast = loveframes.objects["toast"]
+loveframes.toast = toast:new()
 
 return loveframes

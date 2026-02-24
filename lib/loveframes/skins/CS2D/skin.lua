@@ -1874,7 +1874,7 @@ end
 function skin.droplist_over(object)
 end
 --[[---------------------------------------------------------
-	- func: skin.DrawDropList(object)
+	- func: skin.DrawLog(object)
 	- desc: draws the drop list object
 --]]---------------------------------------------------------
 function skin.log(object)
@@ -1892,6 +1892,94 @@ function skin.log(object)
 	love.graphics.setColor(1,1,1,1)
 	love.graphics.draw(text, fx, fy)
 end
+
+--[[---------------------------------------------------------
+	- func: skin.DrawToast(object)
+	- desc: draws the toast object
+--]]---------------------------------------------------------
+function skin:toast()
+	local x, y = self:GetPos()
+    local width, height = self:GetDimensions()
+	local shadow = self.shadow
+
+	love.graphics.push()
+	-- Draw some toast on the screen (or container subset)
+	love.graphics.translate(x, y)
+
+    -- Calculate total height
+    local total_height = 0
+    for _, msg in ipairs(self.messages) do
+        total_height = total_height + msg.height + msg.spacing
+    end
+
+    local start_y = 0
+	if self.box_halign == "center" then
+		start_y = math.floor((height - total_height) / 2)
+	elseif self.box_halign == "up" then
+		start_y = self.box_margin
+	elseif self.box_halign == "down" then
+		start_y = (height - total_height) - self.box_margin
+	else
+		start_y = math.floor((height - total_height) / 2)
+	end
+    local current_y = start_y
+
+    local box_width = math.floor(width * self.relative_box_width)
+    local box_x = 0
+	if self.box_valign == "center" then
+		box_x = math.floor((width - box_width) / 2)
+	elseif self.box_valign == "right" then
+		box_x = math.floor(width * ( 1 - self.relative_box_width) ) - self.box_margin
+	elseif self.box_valign == "left" then
+		box_x = self.box_margin
+	end
+
+	for i = 1, #self.messages do
+		local msg
+		if self.message_order == "ascending" then
+			msg = self.messages[ (#self.messages - i) + 1 ]
+		elseif self.message_order == "descending" then
+			msg = self.messages[i]
+		end
+		if msg.outline then
+			-- Background
+			love.graphics.setColor(
+				self.backgroundcolor[1],
+				self.backgroundcolor[2],
+				self.backgroundcolor[3],
+				self.backgroundcolor[4] * msg.alpha
+			)
+
+			love.graphics.rectangle(
+				"fill",
+				box_x,
+				current_y,
+				box_width,
+				msg.height,
+				6,
+				6
+			)
+		end
+
+		local msg_x = box_x + msg.margin
+
+		-- shadow
+		if shadow then
+			love.graphics.setColor(0, 0, 0, msg.alpha)
+			love.graphics.draw(msg.batch, msg_x + 1, current_y + msg.padding+1)
+		end
+
+        -- Text
+        love.graphics.setColor(1, 1, 1, msg.alpha)
+		love.graphics.draw(msg.batch, msg_x, current_y + msg.padding)
+
+        current_y = current_y + msg.height + msg.spacing
+    end
+
+	love.graphics.pop()
+    love.graphics.setColor(1, 1, 1, 1)
+end
+
 
 --[[---------------------------------------------------------
 	- func: skin.DrawColumnList(object)

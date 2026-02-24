@@ -8,10 +8,6 @@ local console_out = love.thread.getChannel("console_out")
 
 local font_fallbacks = {
 	--"gfx/fonts/NotoSansCJK-Regular.ttc",
-	"gfx/fonts/NotoSansArabic-Regular.ttf",
-	"gfx/fonts/NotoSansThai-Regular.ttf",
-	"gfx/fonts/NotoSansHebrew-Regular.ttf",
-	"gfx/fonts/NotoSansHindi-Regular.ttf",
 }
 
 local setFontFallbacks = function(font, size)
@@ -101,6 +97,8 @@ console.frame.Update = function(object, dt)
         print(out)
     end
 end
+
+console.toast = LF.Create("toast", console.frame)
 
 console.input = LF.Create("textbox", console.frame)
 :SetY(-8)
