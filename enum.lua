@@ -93,6 +93,7 @@ enum.HOOK_LIST = {
 	"trigger",
 	"triggerentity",
 	"turretscan",
+	"update",
 	"use",
 	"usebutton",
 	"vipescape",
@@ -402,11 +403,16 @@ enum.itemlist = {
 		held_image = "usp.bmp",    -- Held (in hand or worn) image
 		display_image = "usp_m.bmp", -- Image that appears when buying
 		kill_image = "usp_k.bmp",  -- Small icon that appears on the kill log on the top right corner
-		player_stance = "handgun", -- Which player sprite should appear when holding/wearing this item (stances: handgun, rifle, melee, object, armor, zombie, nothing)
-		acessory = {
-			silencer_image = "usp_silenced.bmp",
-			silencer_sound = "sfx/weapons/usp_silenced.wav";
-		},
+		player_stance = "centerhold", -- Which player sprite should appear when holding/wearing this item (stances: handgun, rifle, melee, object, armor, zombie, nothing)
+		modes = {
+			-- Silenced
+			{
+				name = "silenced",
+				sound  = "sfx/weapons/usp_silenced.wav",
+				accessory = "gfx/weapons/usp_silenced.bmp",
+				accessory_offset = 20,
+			}
+		};
 		sound = "sfx/weapons/usp.wav";
 	},
 	[2] = {
@@ -430,8 +436,14 @@ enum.itemlist = {
 		held_image = "glock.bmp",
 		display_image = "glock_m.bmp",
 		kill_image = "glock_k.bmp",
-		player_stance = "handgun",
+		player_stance = "centerhold",
 		sound = "sfx/weapons/glock18.wav";
+		modes = {
+			-- Triple shot
+			{
+				attack = "bullet:3",
+			}
+		}
 	},
 	[3] = {
 		name = "Deagle",
@@ -454,7 +466,7 @@ enum.itemlist = {
 		held_image = "deagle.bmp",
 		display_image = "deagle_m.bmp",
 		kill_image = "deagle_k.bmp",
-		player_stance = "handgun",
+		player_stance = "centerhold",
 		sound = "sfx/weapons/deagle.wav";
 	},
 	[4] = {
@@ -478,7 +490,7 @@ enum.itemlist = {
 		held_image = "p228.bmp",
 		display_image = "p228_m.bmp",
 		kill_image = "p228_k.bmp",
-		player_stance = "handgun",
+		player_stance = "centerhold",
 		sound = "sfx/weapons/p228.wav";
 	},
 	[5] = {
@@ -502,7 +514,7 @@ enum.itemlist = {
 		held_image = "elite.bmp",
 		display_image = "elite_m.bmp",
 		kill_image = "elite_k.bmp",
-		player_stance = "handgun",
+		player_stance = "centerhold",
 		sound = "sfx/weapons/elite.wav";
 	},
 	[6] = {
@@ -526,7 +538,7 @@ enum.itemlist = {
 		held_image = "fiveseven.bmp",
 		display_image = "fiveseven_m.bmp",
 		kill_image = "fiveseven_k.bmp",
-		player_stance = "handgun",
+		player_stance = "centerhold",
 		sound = "sfx/weapons/fiveseven.wav";
 	},
 	[10] = {
@@ -550,7 +562,7 @@ enum.itemlist = {
 		held_image = "m3.bmp",
 		kill_image = "m3_k.bmp",
 		display_image = "m3_m.bmp",
-		player_stance = "rifle",
+		player_stance = "righthold",
 		sound = "sfx/weapons/m3.wav";
 	},
 	[11] = {
@@ -574,7 +586,7 @@ enum.itemlist = {
 		held_image = "xm1014.bmp",
 		kill_image = "xm1014_k.bmp",
 		display_image = "xm1014_m.bmp",
-		player_stance = "rifle",
+		player_stance = "righthold",
 		sound = "sfx/weapons/xm1014.wav";
 	},
 	[20] = {
@@ -598,7 +610,7 @@ enum.itemlist = {
 		held_image = "mp5.bmp",
 		kill_image = "mp5_k.bmp",
 		display_image = "mp5_m.bmp",
-		player_stance = "rifle",
+		player_stance = "righthold",
 		acessory = {},
 		sound = "sfx/weapons/mp5.wav";
 	},
@@ -623,7 +635,7 @@ enum.itemlist = {
 		held_image = "tmp.bmp",
 		kill_image = "tmp_k.bmp",
 		display_image = "tmp_m.bmp",
-		player_stance = "rifle",
+		player_stance = "righthold",
 		acessory = {},
 		sound = "sfx/weapons/tmp.wav";
 	},
@@ -648,7 +660,7 @@ enum.itemlist = {
 		held_image = "p90.bmp",
 		kill_image = "p90_k.bmp",
 		display_image = "p90_m.bmp",
-		player_stance = "rifle",
+		player_stance = "righthold",
 		acessory = {},
 		sound = "sfx/weapons/p90.wav";
 	},
@@ -673,7 +685,7 @@ enum.itemlist = {
 		held_image = "mac10.bmp",
 		kill_image = "mac10_k.bmp",
 		display_image = "mac10_m.bmp",
-		player_stance = "rifle",
+		player_stance = "righthold",
 		acessory = {},
 		sound = "sfx/weapons/mac10.wav";
 	},
@@ -698,7 +710,7 @@ enum.itemlist = {
 		held_image = "ump45.bmp",
 		kill_image = "ump45_k.bmp",
 		display_image = "ump45_m.bmp",
-		player_stance = "rifle",
+		player_stance = "righthold",
 		acessory = {},
 		sound = "sfx/weapons/ump45.wav";
 	},
@@ -723,7 +735,7 @@ enum.itemlist = {
 		held_image = "ak47.bmp",
 		kill_image = "ak47_k.bmp",
 		display_image = "ak47_m.bmp",
-		player_stance = "rifle",
+		player_stance = "righthold",
 		acessory = {},
 		sound = "sfx/weapons/ak47.wav";
 	},
@@ -749,7 +761,7 @@ enum.itemlist = {
 		held_image = "sg552.bmp",
 		kill_image = "sg552_k.bmp",
 		display_image = "sg552_m.bmp",
-		player_stance = "rifle",
+		player_stance = "righthold",
 		acessory = {},
 		sound = "sfx/weapons/sg552.wav";
 	},
@@ -774,7 +786,7 @@ enum.itemlist = {
 		held_image = "m4a1.bmp",
 		display_image = "m4a1_m.bmp",
 		kill_image = "m4a1_k.bmp",
-		player_stance = "rifle",
+		player_stance = "righthold",
 		acessory = {
 			silencer_image = "m4a1_silenced.bmp",
 			silencer_sound = "sfx/weapons/m4a1_silenced.wav";
@@ -803,7 +815,7 @@ enum.itemlist = {
 		held_image = "aug.bmp",
 		kill_image = "aug_k.bmp",
 		display_image = "aug_m.bmp",
-		player_stance = "rifle",
+		player_stance = "righthold",
 		acessory = {},
 		sound = "sfx/weapons/aug.wav";
 	},
@@ -830,7 +842,7 @@ enum.itemlist = {
 		held_image = "scout.bmp",
 		kill_image = "scout_k.bmp",
 		display_image = "scout_m.bmp",
-		player_stance = "rifle",
+		player_stance = "righthold",
 		acessory = {},
 		sound = "sfx/weapons/scout.wav";
 	},
@@ -857,9 +869,14 @@ enum.itemlist = {
 		held_image = "awp.bmp",
 		kill_image = "awp_k.bmp",
 		display_image = "awp_m.bmp",
-		player_stance = "rifle",
-		acessory = {},
+		player_stance = "righthold",
 		sound = "sfx/weapons/awp.wav";
+		modes = {
+			-- Zoom 1
+			{},
+			-- Zoom 2
+			{},
+		}
 	},
 	[36] = {
 		name = "G3SG1",
@@ -884,7 +901,7 @@ enum.itemlist = {
 		held_image = "g3sg1.bmp",
 		kill_image = "g3sg1_k.bmp",
 		display_image = "g3sg1_m.bmp",
-		player_stance = "rifle",
+		player_stance = "righthold",
 		acessory = {},
 		sound = "sfx/weapons/g3sg1.wav";
 	},
@@ -911,7 +928,7 @@ enum.itemlist = {
 		held_image = "sg550.bmp",
 		kill_image = "sg550_k.bmp",
 		display_image = "sg550_m.bmp",
-		player_stance = "rifle",
+		player_stance = "righthold",
 		acessory = {},
 		sound = "sfx/weapons/sg550.wav";
 	},
@@ -936,7 +953,7 @@ enum.itemlist = {
 		held_image = "galil.bmp",
 		kill_image = "galil_k.bmp",
 		display_image = "galil_m.bmp",
-		player_stance = "rifle",
+		player_stance = "righthold",
 		acessory = {},
 		sound = "sfx/weapons/galil.wav";
 	},
@@ -961,7 +978,7 @@ enum.itemlist = {
 		held_image = "famas.bmp",
 		kill_image = "famas_k.bmp",
 		display_image = "famas_m.bmp",
-		player_stance = "rifle",
+		player_stance = "righthold",
 		acessory = {},
 		sound = "sfx/weapons/famas.wav";
 	},
@@ -986,7 +1003,7 @@ enum.itemlist = {
 		held_image = "m249.bmp",
 		kill_image = "m249_k.bmp",
 		display_image = "m249_m.bmp",
-		player_stance = "rifle",
+		player_stance = "righthold",
 		acessory = {},
 		sound = "sfx/weapons/m249.wav";
 	},
@@ -1012,7 +1029,7 @@ enum.itemlist = {
 		held_image = "tacticalshield.bmp",
 		kill_image = "",
 		display_image = "",
-		player_stance = "rifle",
+		player_stance = "righthold",
 		acessory = {},
 	},
 	[45] = {
@@ -1038,7 +1055,7 @@ enum.itemlist = {
 		held_image = "laser.bmp",
 		kill_image = "laser_k.bmp",
 		display_image = "laser_m.bmp",
-		player_stance = "rifle",
+		player_stance = "righthold",
 		acessory = {},
 		sound = "sfx/weapons/laser.ogg";
 	},
@@ -1066,7 +1083,7 @@ enum.itemlist = {
 		held_image = "flamethrower.bmp",
 		kill_image = "flamethrower_k.bmp",
 		display_image = "flamethrower_m.bmp",
-		player_stance = "rifle",
+		player_stance = "righthold",
 		acessory = {},
 		sound = {"sfx/weapons/flamethrower.ogg", "sfx/weapons/flamethrower2.ogg";};
 	},
@@ -1092,7 +1109,7 @@ enum.itemlist = {
 		held_image = "rpglauncher.bmp",
 		kill_image = "rpglauncher_k.bmp",
 		display_image = "rpglauncher_m.bmp",
-		player_stance = "rifle",
+		player_stance = "righthold",
 		acessory = {},
 		sound = "sfx/weapons/rocket.ogg";
 	},
@@ -1119,7 +1136,7 @@ enum.itemlist = {
 		held_image = "rocketlauncher.bmp",
 		kill_image = "rocketlauncher_k.bmp",
 		display_image = "rocketlauncher_m.bmp",
-		player_stance = "rifle",
+		player_stance = "righthold",
 		acessory = {},
 		sound = "sfx/weapons/rocket.ogg";
 	},
@@ -1146,7 +1163,7 @@ enum.itemlist = {
 		held_image = "grenadelauncher.bmp",
 		kill_image = "grenadelauncher_k.bmp",
 		display_image = "grenadelauncher_m.bmp",
-		player_stance = "rifle",
+		player_stance = "righthold",
 		acessory = {},
 		sound = "sfx/weapons/glaunch.ogg";
 	},
@@ -1172,7 +1189,7 @@ enum.itemlist = {
 		held_image = "knife.bmp",
 		kill_image = "knife_k.bmp",
 		display_image = "knife.bmp",
-		player_stance = "melee",
+		player_stance = "righthand",
 		acessory = {},
 		sound = "sfx/weapons/knife_slash.wav";
 	},
@@ -1197,7 +1214,7 @@ enum.itemlist = {
 		held_image = "he.bmp",
 		kill_image = "he_k.bmp",
 		display_image = "he_m.bmp",
-		player_stance = "object",
+		player_stance = "righthand",
 		acessory = {},
 	},
 	[52] = {
@@ -1220,7 +1237,7 @@ enum.itemlist = {
 		held_image = "flashbang.bmp",
 		kill_image = "flashbang.bmp",
 		display_image = "flashbang_m.bmp",
-		player_stance = "object",
+		player_stance = "righthand",
 		acessory = {},
 	},
 	[53] = {
@@ -1243,7 +1260,7 @@ enum.itemlist = {
 		held_image = "smokegrenade.bmp",
 		kill_image = "smokegrenade.bmp",
 		display_image = "smokegrenade.bmp",
-		player_stance = "object",
+		player_stance = "righthand",
 		acessory = {},
 	},
 	[54] = {
@@ -1266,7 +1283,7 @@ enum.itemlist = {
 		held_image = "flare.bmp",
 		kill_image = "flare.bmp",
 		display_image = "flare.bmp",
-		player_stance = "object",
+		player_stance = "righthand",
 		acessory = {},
 	},
 	[55] = {
@@ -1288,7 +1305,7 @@ enum.itemlist = {
 		held_image = "bomb.bmp",
 		kill_image = "bomb.bmp",
 		display_image = "bomb.bmp",
-		player_stance = "melee",
+		player_stance = "righthand",
 		acessory = {},
 	},
 	[56] = {
@@ -1597,7 +1614,7 @@ enum.itemlist = {
 		held_image = "machete.bmp",
 		kill_image = "machete_k.bmp",
 		display_image = "machete.bmp",
-		player_stance = "melee",
+		player_stance = "righthand",
 		acessory = {},
 		sound = "sfx/weapons/machete_slash.wav";
 	},
@@ -1671,7 +1688,7 @@ enum.itemlist = {
 		held_image = "gasgrenade.bmp",
 		kill_image = "gasgrenade_k.bmp",
 		display_image = "gasgrenade.bmp",
-		player_stance = "object",
+		player_stance = "righthand",
 		acessory = {},
 	},
 	[73] = {
@@ -1695,7 +1712,7 @@ enum.itemlist = {
 		held_image = "molotovcocktail.bmp",
 		kill_image = "molotovcocktail_k.bmp",
 		display_image = "molotovcocktail.bmp",
-		player_stance = "object",
+		player_stance = "righthand",
 		acessory = {},
 	},
 	[74] = {
@@ -1719,7 +1736,7 @@ enum.itemlist = {
 		held_image = "wrench.bmp",
 		kill_image = "wrench_k.bmp",
 		display_image = "wrench.bmp",
-		player_stance = "melee",
+		player_stance = "righthand",
 		acessory = {},
 		sound = "sfx/weapons/knife_slash.wav";
 	},
@@ -1743,7 +1760,7 @@ enum.itemlist = {
 		held_image = "snowball.bmp",
 		kill_image = "snowball_k.bmp",
 		display_image = "snowball.bmp",
-		player_stance = "object",
+		player_stance = "righthand",
 		acessory = {},
 	},
 	[76] = {
@@ -1766,7 +1783,7 @@ enum.itemlist = {
 		held_image = "airstrike.bmp",
 		kill_image = "airstrike_k.bmp",
 		display_image = "airstrike.bmp",
-		player_stance = "object",
+		player_stance = "righthand",
 		acessory = {},
 	},
 	[77] = {
@@ -1789,7 +1806,7 @@ enum.itemlist = {
 		held_image = "mine.bmp",
 		kill_image = "mine_k.bmp",
 		display_image = "mine.bmp",
-		player_stance = "melee",
+		player_stance = "righthand",
 		acessory = {},
 	},
 	[78] = {
@@ -1964,7 +1981,7 @@ enum.itemlist = {
 		held_image = "chainsaw.bmp",
 		kill_image = "chainsaw_k.bmp",
 		display_image = "chainsaw_m.bmp",
-		player_stance = "melee",
+		player_stance = "righthand",
 		acessory = {},
 		sound = "sfx/weapons/chainsaw.wav";
 	},
@@ -1988,7 +2005,7 @@ enum.itemlist = {
 		held_image = "gutbomb.bmp",
 		kill_image = "gutbomb_k.bmp",
 		display_image = "gutbomb.bmp",
-		player_stance = "object",
+		player_stance = "righthand",
 		acessory = {},
 	},
 	[87] = {
@@ -2011,7 +2028,7 @@ enum.itemlist = {
 		held_image = "lasermine.bmp",
 		kill_image = "lasermine_k.bmp",
 		display_image = "lasermine.bmp",
-		player_stance = "object",
+		player_stance = "righthand",
 		acessory = {},
 	},
 	[88] = {
@@ -2036,7 +2053,7 @@ enum.itemlist = {
 		held_image = "portalgun.bmp",
 		kill_image = "portalgun_k.bmp",
 		display_image = "portalgun_m.bmp",
-		player_stance = "rifle",
+		player_stance = "righthold",
 		acessory = {},
 
 	},
@@ -2060,7 +2077,7 @@ enum.itemlist = {
 		held_image = "satchelcharge.bmp",
 		kill_image = "satchelcharge_k.bmp",
 		display_image = "satchelcharge.bmp",
-		player_stance = "object",
+		player_stance = "righthand",
 		acessory = {},
 	},
 	[90] = {
@@ -2084,7 +2101,7 @@ enum.itemlist = {
 		held_image = "m134.bmp",
 		kill_image = "m134_k.bmp",
 		display_image = "m134_m.bmp",
-		player_stance = "rifle",
+		player_stance = "righthold",
 		acessory = {},
 		sound = "sfx/weapons/m134.wav";
 	},
@@ -2109,7 +2126,7 @@ enum.itemlist = {
 		held_image = "fnf2000.bmp",
 		kill_image = "fnf2000_k.bmp",
 		display_image = "fnf2000_m.bmp",
-		player_stance = "rifle",
+		player_stance = "righthold",
 		acessory = {},
 		sound = "sfx/weapons/fnf2000.wav";
 	},
@@ -2133,7 +2150,7 @@ enum.itemdata_default = {
 	held_image = "",
 	display_image = "",
 	kill_image = "",
-	player_stance = "object",
+	player_stance = "righthand",
 	acessory = {},
 }
 

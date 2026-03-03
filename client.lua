@@ -107,10 +107,11 @@ end
 --- Move player in smooth intervals
 ---@param peer_id number
 function client.predict_player(peer_id, dt) -- `home` is used to apply controls if given
-	if is_dead() then return end
-
 	-- Check if its own player id, and is connected
 	if not( client.id == peer_id and client.joined ) then return end
+
+	-- Check if player is alive
+	if is_dead() then return end
 
 	-- Store player object
 	local player_local = share_local.players[peer_id]
@@ -138,15 +139,9 @@ function client.predict_action(peer_id, dt)
 	-- Check if the player object exists
 	if not (player and player_local) then return end
 
-	--home._attack1Timer = math.max(0, home._attack1Timer - dt)
 	if home._attack1Timer > 0 then
 		home._attack1Timer = home._attack1Timer - dt
 	end
-
-	if player._swingTimer and player._swingTimer > 0 then
-		player._swingTimer = player._swingTimer - dt
-	end
-
 	if client.attribute("attack") == true then
 		-- Increment timer if player is pressing attack
 		-- Dont go below 0
@@ -162,9 +157,18 @@ function client.predict_action(peer_id, dt)
 			end
 		end
 	end
-
 end
 
+function client.run_player_timers(dt)
+	for peer_id, player in pairs(client.share.players) do
+		if player._swingTimer and player._swingTimer > 0 then
+			player._swingTimer = player._swingTimer - dt
+		end
+		if player._reloadTimer and player._reloadTimer > 0 then
+			player._reloadTimer = player._reloadTimer - dt
+		end
+	end
+end
 
 function client.getWeaponHitbox(x, y, width, reach, angle, offset)
     local half_w = width / 2
@@ -330,6 +334,8 @@ function client.swing(start_x, start_y, angle, width, range, offset, peer_id)
 				local blood_x, blood_y = mlib.translatePoint(target.x, target.y, angle, -half)
 				client.map:spawn_effect("blood", blood_x, blood_y, {
 					setDirection = angle + math.pi,
+					setSpeed = {0, 100},
+					setSpread = math.rad(180),
 				})
 			end
 		end
@@ -528,7 +534,11 @@ function client.player_collision_filter(item, other)
 		if other.ct == 2 then
 			return "cross" -- Ignore physics and register the collision
 		elseif other.ct == 1 then
-			return "slide" -- Apply physics to other players
+			if other.h > 0 then
+				return "slide" -- Apply physics to other players
+			else
+				return "cross"
+			end
 		end
 	end
 end

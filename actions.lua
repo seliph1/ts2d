@@ -224,15 +224,20 @@ local actions = {
             seconds = tonumber(seconds)
 
             local player = client.share.players[peer_id]
+            if reload_step == 1 then -- We are reloading
+                player._reloadTimer = seconds
+                client.map:playSoundAt("sfx/weapons/w_clipout.wav", player.x, player.y)
+            elseif reload_step == 2 then -- We finished reloading
+                player._reloadTimer = 0
+                client.map:playSoundAt("sfx/weapons/w_clipin.wav", player.x, player.y)
+            elseif reload_step == 0 then -- We cancelled reloading
+                player._reloadTimer = 0
+            end
 
             if peer_id == client.id then
-                if reload_step == 1 then -- We are reloading
+                if reload_step == 1 then
                     ui.reload_display(seconds)
-                    client.map:playSoundAt("sfx/weapons/w_clipout.wav", player.x, player.y)
-                elseif reload_step == 2 then -- We finished reloading
-                    ui.reload_dispose()
-                    client.map:playSoundAt("sfx/weapons/w_clipin.wav", player.x, player.y)
-                elseif reload_step == 0 then -- We cancelled reloading
+                else
                     ui.reload_dispose()
                 end
             end

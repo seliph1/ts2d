@@ -2,6 +2,7 @@
 local bump = require "lib.bump"
 local effect = require "effect"
 local enum = require "enum"
+local serpent = require "lib.serpent"
 local LF = love.filesystem
 
 -- Localise some important functions to constantly call during execution
@@ -118,12 +119,13 @@ end
 
 local PLAYER_SIZE = 32
 local PLAYER_QUAD =  {
-	handgun = {PLAYER_SIZE, PLAYER_SIZE  , PLAYER_SIZE, PLAYER_SIZE};
-	rifle 	= {PLAYER_SIZE, PLAYER_SIZE*2, PLAYER_SIZE, PLAYER_SIZE};
-	melee 	= {PLAYER_SIZE, 0            , PLAYER_SIZE, PLAYER_SIZE};
-	object 	= {PLAYER_SIZE, 0            , PLAYER_SIZE, PLAYER_SIZE};
-	zombie 	= {0          , PLAYER_SIZE  , PLAYER_SIZE, PLAYER_SIZE};
-	idle    = {0          , 0            , PLAYER_SIZE, PLAYER_SIZE};
+	idle 	    = {0          , 0            , PLAYER_SIZE, PLAYER_SIZE};
+	lefthand    = {0          , 0            , PLAYER_SIZE, PLAYER_SIZE};
+	righthand	= {PLAYER_SIZE, 0            , PLAYER_SIZE, PLAYER_SIZE};
+	zombie 		= {0          , PLAYER_SIZE  , PLAYER_SIZE, PLAYER_SIZE};
+	centerhold	= {PLAYER_SIZE, PLAYER_SIZE  , PLAYER_SIZE, PLAYER_SIZE};
+	lefthold 	= {0          , PLAYER_SIZE*2, PLAYER_SIZE, PLAYER_SIZE};
+	righthold 	= {PLAYER_SIZE, PLAYER_SIZE*2, PLAYER_SIZE, PLAYER_SIZE};
 }
 
 local PLAYER_STANCE = {}
@@ -1248,7 +1250,7 @@ function MapObject:draw_player(client, peer_id)
 		return -- Player HP is depleted, don't render.
 	end
 
-	love.graphics.push()
+	
 	-- Direction
 	local targetX, targetY = 0,0
 	if peer_id == client.id then
@@ -1269,10 +1271,8 @@ function MapObject:draw_player(client, peer_id)
 	local armor = player.a
 	-- Get the player's equipment
 	local equipment = player.e
-
 	-- Get the player appearance
 	local player_texture_path = string.format("gfx/player/%s", player.p)
-
 	-- Gets the weapon texture
 	local player_texture = self:getImage(player_texture_path)
 
@@ -1284,28 +1284,39 @@ function MapObject:draw_player(client, peer_id)
 		stance = PLAYER_STANCE.idle
 	else
 		-- Check if that weapon ID exists in available list
-		local itemdata = client.content.itemlist[holding]
+		local itemdata = client.get_item_data(holding)
 		-- Get the weapon texture from weapon ID
 		local weapon_gfx_path = itemdata.common_path .. itemdata.held_image
 		weapon_texture = self:getImage(weapon_gfx_path)
 		weapon_offset = itemdata.offset
 
-		-- Set what stance should player hold that weapon
-		stance = PLAYER_STANCE[ itemdata.player_stance ]
+		-- Get the stance data from item
 		stance_name = itemdata.player_stance
+
+		-- Check if player is reloading
+		local reload_timer = player._reloadTimer or 0
+		if reload_timer > 0 then
+			if stance_name == "righthold" then
+				stance_name = "centerhold"
+			elseif stance_name == "centerhold" then
+				stance_name = "righthold"
+			end
+		end
+		-- Set what stance should player hold that weapon
+		stance = PLAYER_STANCE[ stance_name ]
 	end
 
 	local armor_texture
 	local armor_opacity
 	if armor ~= 0 then
 		-- Check if that weapon ID exists in available list
-		local itemdata = client.content.itemlist[armor]
+		local itemdata = client.get_item_data(armor)
 		local armor_gfx_path = itemdata.common_path .. itemdata.held_image
 		armor_texture = self:getImage(armor_gfx_path)
 		armor_opacity = itemdata.opacity
 	end
 
-	-- Draw the debug square
+	-- Draw the delayed player
 	if client.debug_level >= 2 and peer_id == client.id then
 		local __player = client.share_local.players[client.id]
 		love.graphics.push()
@@ -1316,17 +1327,14 @@ function MapObject:draw_player(client, peer_id)
 	end
 
 	-- Translate to player
+	love.graphics.push()
 	love.graphics.translate(player.x, player.y)
 
+	-- Draw the hitbox
 	if client.debug_level >= 2 then
-		-- Set to blue color
 		love.graphics.setColor(0, 0, 1, 1)
-		-- Draw the hitbox
 		love.graphics.rectangle("line", -player.size/2, -player.size/2, player.size, player.size)
 	end
-
-	--love.graphics.setColor(0.00, 0.00, 0.00, 0.10)
-	--love.graphics.circle("fill", 0, 0, 14)
 
 	local alpha = armor_opacity or 1
 	love.graphics.setColor(1, 1, 1, alpha)
@@ -1343,7 +1351,7 @@ function MapObject:draw_player(client, peer_id)
 	end
 
 	for item_type in pairs(equipment) do
-		local itemdata = client.content.itemlist[item_type]
+		local itemdata = client.get_item_data(item_type)
 		if itemdata then
 			local equipment_gfx_path = 	itemdata.common_path .. itemdata.held_image
 			local equipment_texture = self:getImage(equipment_gfx_path)
@@ -1365,10 +1373,10 @@ function MapObject:draw_player(client, peer_id)
 		local offset = weapon_offset or 0
 		local flipH = 1
 		local flipV = 1
-		if stance_name == "melee" then
-			flipV = -1
+		if stance_name == "righthand" then
+			flipH = -1
 		end
-		love.graphics.draw(weapon_texture, 0, 0, angle, flipV, flipH, width/2, height + offset)
+		love.graphics.draw(weapon_texture, 0, 0, angle, flipH, flipV, width/2, height + offset)
 	end
 
 	-- Pop for the next player

@@ -49,8 +49,7 @@ function client.join(peer_id)
 
 	local player = share.players[peer_id]
 	if player then
-		--client.camera_lock("players", peer_id)
-		--client.camera_follow(player)
+		-- void
 	end
 end
 
@@ -165,9 +164,6 @@ function client.peer_disconnected(peer_id)
 	if player and client.world:hasItem(player) then
 		client.world:remove(player)
 	end
-
-	player = nil
-	player_s = nil
 end
 
 function client.peer_joined(peer_id)
@@ -177,8 +173,7 @@ end
 -- Callback for inputs being pressed
 function client.input_response(peer_id, input)
 	if input["use"] then
-		-- Run it locally
-		--client.actions.fire.action(peer_id, home)
+		-- void
 	end
 end
 
@@ -191,14 +186,14 @@ end
 function client.receive(message)
 	-- Send the message to the action parser
     client.parse(message)
-	--print(string.format("©236118000Parse: %s", message))
 end
 
 
 function client.tick(dt)
-	--print(serpent.line(client.key, client.stateDumpOpts))
 	if client.joined then
 		client.predict_player(client.id, dt)
+
+		client.run_player_timers(dt)
     end
 end
 
