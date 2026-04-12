@@ -39,6 +39,7 @@ effect.register("core/particle/spawn.lua", "spawn")
 effect.register("core/particle/bloodpile.lua", "bloodpile")
 effect.register("core/particle/blood.lua", "blood")
 effect.register("core/particle/slash.lua", "slash")
+effect.register("core/particle/muzzle.lua", "muzzle")
 
 --effect.register(LF.load "core/particle/fire.lua" (), "fire")
 --effect.register(dofile "core/particle/snow.lua", "snow")
@@ -980,8 +981,9 @@ end
 
 function MapObject:scroll(x, y)
 	x, y = floor(x), floor(y)
-	local cx = floor(x / (32 * 8))
-	local cy = floor(y / (32 * 8))
+	local tile_size = self._mapdata.tile_size
+	local cx = floor(x / (tile_size * 8))
+	local cy = floor(y / (tile_size * 8))
 	if self._camera.chunk_x ~= cx or self._camera.chunk_y ~= cy then
 		self:shiftRender()
 	end
@@ -1250,7 +1252,6 @@ function MapObject:draw_player(client, peer_id)
 		return -- Player HP is depleted, don't render.
 	end
 
-	
 	-- Direction
 	local targetX, targetY = 0,0
 	if peer_id == client.id then
@@ -1262,7 +1263,7 @@ function MapObject:draw_player(client, peer_id)
 	end
 	-- Calculate drawing angle
 	local angle = atan2(targetY - client.height/2, targetX - client.width/2) + PI/2
-	if player._swingTimer then
+	if player._swingTimer and player._swingTimer > 0 then
 		angle = angle - player._swingTimer*5
 	end
 	-- Get the player's held weapon
@@ -1572,14 +1573,18 @@ function MapObject:playSound(soundfile, volume)
 	return sound
 end
 
-function MapObject:playSoundAt(soundfile, x, y, volume)
+function MapObject:playSoundAt(soundfile, x, y, volume, rolloff, range, deadrange)
 	local sound = self:getSound(soundfile)
 	if not sound then return end
 	volume = volume or 1.0
+	rolloff = rolloff or 1.2
+	range = range or 400
+	deadrange = deadrange or 1200
+	
 	sound:stop()
 	sound:setVolume(volume)
-	sound:setAttenuationDistances(400, 1200)
-	sound:setRolloff(1.2)
+	sound:setAttenuationDistances(range, deadrange)
+	sound:setRolloff(rolloff)
 	sound:setRelative(false)
 	sound:setPosition(x, y, 0)
 	sound:play()

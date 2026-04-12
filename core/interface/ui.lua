@@ -166,6 +166,7 @@ LF.toast
 :SetOutline(false)
 :SetRelativeBoxWidth(1.0)
 :SetMessageOrder("descending")
+:SetFont(ui.font_big)
 
 --------------------------------------------------------------------------------------------------
 --Local function helpers--------------------------------------------------------------------------
@@ -835,7 +836,18 @@ ui.chat_frame_message = function(player, message)
 end
 
 ui.chat_frame_server_message = function(message)
-	ui.chat_log:AddElement(message)
+	if message:find("@C$") then
+		message = message:match("(.+)@C$")
+		LF.PushMessage(message, {
+            spacing=1,
+            padding=1,
+            outline=false,
+            time=6,
+			font=ui.font_big,
+        })
+	else
+		ui.chat_log:AddElement(message)
+	end
 	return message
 end
 
@@ -900,7 +912,7 @@ ui.chat_input.OnControlKeyPressed = function (object, key)
 					local console = require "core.interface.console"
 					local status = console.parse(text:sub(2))
 					if status then
-						ui.chat_frame_server_message(status)
+						ui.chat_log:AddElement(status)
 					end
 				else
 					if client.joined then
@@ -1343,8 +1355,7 @@ function ui.hud:Draw()
 	if game.paused == true then
 		timer_now = game.pause_start - game.timer_start
 	end
-	local timer = game.timer - timer_now
-
+	local timer = math.max(0, game.timer - timer_now)
 	local time = os.date("%M:%S", math.floor( timer ) ) or ""
 
 	local player = client.share.players[client.id]
@@ -1389,10 +1400,16 @@ function ui.hud:Draw()
 	love.graphics.print(health, padding, height*0.5, 0, scale, scale)
 
 	love.graphics.draw(hud_symbols[2], width*0.3, height*0.5, 0, scale, scale)
-	love.graphics.print(time, width*0.3 + padding, height*0.5, 0, scale, scale)
-
+	if timer < 30 then
+		love.graphics.setColor(1.0, 0.0, 0.0, 0.3)
+		love.graphics.print(time, width*0.3 + padding, height*0.5, 0, scale, scale)
+		love.graphics.setColor(1.0, 1.0, 0.0, 0.3)
+	else
+		love.graphics.print(time, width*0.3 + padding, height*0.5, 0, scale, scale)
+	end
 	love.graphics.draw(hud_symbols[7], width - money_width*scale - padding, height*0, 0, scale, scale)
 	love.graphics.printf(money, (1 - scale)*width, height*0, width, "right", 0, scale, scale)
+	
 
 	love.graphics.printf(ammo, (1 - scale)*width, height*0.5, width, "right", 0, scale, scale)
 
@@ -1762,22 +1779,27 @@ end
 --tabscreen ui------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------
 ---@param team_id number
----@return string, string, number
+---@return string, string, number, number
 function ui.tabscreen_getplayerlist(team_id)
 	local share = client.share
-	if not (share or share.players) then return "", "", 0 end
+	if not (share or share.players) then return "", "", 0, 0 end
 
 	local str_names = ""
 	local str_ids = ""
 	local count = 0
+	local index = 0
 	for peer_id, player in pairs(share.players) do
 		if player.t == team_id then
 			str_names = str_names .. player.n.. "\n"
 			str_ids = str_ids .. peer_id.. "\n"
 			count = count + 1
 		end
+
+		if player.id == client.id then
+			index = count
+		end
 	end
-	return str_names, str_ids, count
+	return str_names, str_ids, count, index
 end
 
 function ui.tabscreen_display()
@@ -1834,7 +1856,6 @@ function ui.tabscreen_display()
 		love.graphics.push("all")
 		love.graphics.translate(self.x, self.y)
 
-
         love.graphics.setColor(0.0, 0.0, 0.0, 0.5)
         love.graphics.rectangle("fill", 0, 0, self.width, self.height, 5, 5)
 
@@ -1842,8 +1863,8 @@ function ui.tabscreen_display()
         love.graphics.setFont(ui.font_chat)
 
 		local height = 0
-		for index, team_row in ipairs(team_columns) do
-			local str_names, str_ids, count = ui.tabscreen_getplayerlist(team_row.id)
+		for _, team_row in ipairs(team_columns) do
+			local str_names, str_ids, count, index = ui.tabscreen_getplayerlist(team_row.id)
 			team_row.players[2] = str_names
 
 			love.graphics.setColor(1.0, 1.0, 1.0, 1.0)
@@ -1857,8 +1878,12 @@ function ui.tabscreen_display()
 
 			love.graphics.setColor(1.0, 1.0, 1.0, 1.0)
 			love.graphics.print(team_row.players, margin, height)
-
 			love.graphics.print(str_ids, 0, height)
+
+			if index > 0 then
+				love.graphics.setColor(0.2, 0.2, 0.2, 0.5)
+				love.graphics.rectangle("line", margin, height + font_height*(index-1), self.width - margin, font_height)
+			end
 			height = height + font_height * (count) + 10
 		end
 
@@ -2220,6 +2245,32 @@ ui.editor = require "core.interface.editor"
 ui.new_game_frame:SetVisible(false)
 ui.menu_frame:SetVisible(false)
 ui.options_frame:SetVisible(false)
+--------------------------------------------------------------------------------------------------
+--debug-------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------
+--[[
+local debug = LF.Create("frame")
+debug:SetState("*")
+
+function debug:DrawOver()
+	love.graphics.push()
+	love.graphics.translate(self.x, self.y)
+	love.graphics.setColor(1,1,1,1)
+	local camera = client.camera
+
+	love.graphics.print(camera.x, 0, 20)
+	love.graphics.print(camera.y, 0, 40)
+
+	local map = client.map
+
+	if map then
+		love.graphics.print(map._camera.chunk_x, 0, 60)
+		love.graphics.print(map._camera.chunk_y, 0, 80)
+	end
+
+	love.graphics.pop()
+end
+]]
 
 --------------------------------------------------------------------------------------------------
 --end of module-----------------------------------------------------------------------------------

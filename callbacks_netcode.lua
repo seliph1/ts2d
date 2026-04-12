@@ -9,8 +9,14 @@ local share_lerp = client.share_lerp
 --client callbacks--------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------
 function client.connect_attempt()
+	local ui = require "core.interface.ui"
+
+	-- Reset map/physics worlds
 	client.map:clear()
 	client.world:clear()
+	
+	-- Reset chat
+	ui.chat_log:Clear()
 
 	-- Set up initial values for client
 	home.screenh = love.graphics.getWidth()

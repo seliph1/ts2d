@@ -388,7 +388,7 @@ enum.itemlist = {
 		internal_name = "usp",     -- Name used internally by code
 		category = "secondary",    -- Category (primary, secondary, melee, armor, throwable, other [example of other: flag, bomb, medikit] )
 		attack = "bullet:1:1",     -- Type of attack (bullet, projectile, throwable)
-		reload = 70,       		   -- Reload timer (in frames)
+		reload = 70,               -- Reload timer (in frames)
 		slot = 2,                  -- Which slot this weapon will be on the HUD
 		price = 500,               -- Value in shop menu
 		damage = 24,               -- Damage
@@ -404,16 +404,11 @@ enum.itemlist = {
 		display_image = "usp_m.bmp", -- Image that appears when buying
 		kill_image = "usp_k.bmp",  -- Small icon that appears on the kill log on the top right corner
 		player_stance = "centerhold", -- Which player sprite should appear when holding/wearing this item (stances: handgun, rifle, melee, object, armor, zombie, nothing)
-		modes = {
-			-- Silenced
-			{
-				name = "silenced",
-				sound  = "sfx/weapons/usp_silenced.wav",
-				accessory = "gfx/weapons/usp_silenced.bmp",
-				accessory_offset = 20,
-			}
-		};
-		sound = "sfx/weapons/usp.wav";
+		acessory = {
+			silencer_image = "usp_silenced.bmp",
+			silencer_sound = "sfx/weapons/usp_silenced.wav",
+		},
+		sound = "sfx/weapons/usp.wav",
 	},
 	[2] = {
 		name = "Glock",
@@ -437,13 +432,7 @@ enum.itemlist = {
 		display_image = "glock_m.bmp",
 		kill_image = "glock_k.bmp",
 		player_stance = "centerhold",
-		sound = "sfx/weapons/glock18.wav";
-		modes = {
-			-- Triple shot
-			{
-				attack = "bullet:3",
-			}
-		}
+		sound = "sfx/weapons/glock18.wav",
 	},
 	[3] = {
 		name = "Deagle",
@@ -467,7 +456,7 @@ enum.itemlist = {
 		display_image = "deagle_m.bmp",
 		kill_image = "deagle_k.bmp",
 		player_stance = "centerhold",
-		sound = "sfx/weapons/deagle.wav";
+		sound = "sfx/weapons/deagle.wav",
 	},
 	[4] = {
 		name = "P228",
@@ -491,7 +480,7 @@ enum.itemlist = {
 		display_image = "p228_m.bmp",
 		kill_image = "p228_k.bmp",
 		player_stance = "centerhold",
-		sound = "sfx/weapons/p228.wav";
+		sound = "sfx/weapons/p228.wav",
 	},
 	[5] = {
 		name = "Elite",
@@ -515,7 +504,7 @@ enum.itemlist = {
 		display_image = "elite_m.bmp",
 		kill_image = "elite_k.bmp",
 		player_stance = "centerhold",
-		sound = "sfx/weapons/elite.wav";
+		sound = "sfx/weapons/elite.wav",
 	},
 	[6] = {
 		name = "Five-Seven",
@@ -539,7 +528,7 @@ enum.itemlist = {
 		display_image = "fiveseven_m.bmp",
 		kill_image = "fiveseven_k.bmp",
 		player_stance = "centerhold",
-		sound = "sfx/weapons/fiveseven.wav";
+		sound = "sfx/weapons/fiveseven.wav",
 	},
 	[10] = {
 		name = "M3",
@@ -563,7 +552,7 @@ enum.itemlist = {
 		kill_image = "m3_k.bmp",
 		display_image = "m3_m.bmp",
 		player_stance = "righthold",
-		sound = "sfx/weapons/m3.wav";
+		sound = "sfx/weapons/m3.wav",
 	},
 	[11] = {
 		name = "XM1014",
@@ -587,7 +576,7 @@ enum.itemlist = {
 		kill_image = "xm1014_k.bmp",
 		display_image = "xm1014_m.bmp",
 		player_stance = "righthold",
-		sound = "sfx/weapons/xm1014.wav";
+		sound = "sfx/weapons/xm1014.wav",
 	},
 	[20] = {
 		name = "MP5",
@@ -612,7 +601,7 @@ enum.itemlist = {
 		display_image = "mp5_m.bmp",
 		player_stance = "righthold",
 		acessory = {},
-		sound = "sfx/weapons/mp5.wav";
+		sound = "sfx/weapons/mp5.wav",
 	},
 	[21] = {
 		name = "TMP",
@@ -637,7 +626,7 @@ enum.itemlist = {
 		display_image = "tmp_m.bmp",
 		player_stance = "righthold",
 		acessory = {},
-		sound = "sfx/weapons/tmp.wav";
+		sound = "sfx/weapons/tmp.wav",
 	},
 	[22] = {
 		name = "P90",
@@ -662,7 +651,7 @@ enum.itemlist = {
 		display_image = "p90_m.bmp",
 		player_stance = "righthold",
 		acessory = {},
-		sound = "sfx/weapons/p90.wav";
+		sound = "sfx/weapons/p90.wav",
 	},
 	[23] = {
 		name = "Mac 10",
@@ -687,7 +676,7 @@ enum.itemlist = {
 		display_image = "mac10_m.bmp",
 		player_stance = "righthold",
 		acessory = {},
-		sound = "sfx/weapons/mac10.wav";
+		sound = "sfx/weapons/mac10.wav",
 	},
 	[24] = {
 		name = "UMP45",
@@ -712,7 +701,7 @@ enum.itemlist = {
 		display_image = "ump45_m.bmp",
 		player_stance = "righthold",
 		acessory = {},
-		sound = "sfx/weapons/ump45.wav";
+		sound = "sfx/weapons/ump45.wav",
 	},
 	[30] = {
 		name = "AK-47",
@@ -737,7 +726,7 @@ enum.itemlist = {
 		display_image = "ak47_m.bmp",
 		player_stance = "righthold",
 		acessory = {},
-		sound = "sfx/weapons/ak47.wav";
+		sound = "sfx/weapons/ak47.wav",
 	},
 	[31] = {
 		name = "SG552",
@@ -745,9 +734,9 @@ enum.itemlist = {
 		internal_name = "sg552",
 		category = "primary",
 		attack = "bullet",
-		reload = 3500,
+		reload = 78,
 		slot = 1,
-		price = 78,
+		price = 3500,
 		damage = 24,
 		damage_z1 = 35,
 		ammo_cap = 90,
@@ -763,7 +752,7 @@ enum.itemlist = {
 		display_image = "sg552_m.bmp",
 		player_stance = "righthold",
 		acessory = {},
-		sound = "sfx/weapons/sg552.wav";
+		sound = "sfx/weapons/sg552.wav",
 	},
 	[32] = {
 		name = "M4A1",
@@ -771,9 +760,9 @@ enum.itemlist = {
 		internal_name = "m4a1",
 		category = "primary",
 		attack = "bullet",
-		reload = 3500,
+		reload = 70,
 		slot = 1,
-		price = 70,
+		price = 3500,
 		damage = 22,
 		ammo_cap = 90,
 		ammo_mag = 30,
@@ -789,9 +778,9 @@ enum.itemlist = {
 		player_stance = "righthold",
 		acessory = {
 			silencer_image = "m4a1_silenced.bmp",
-			silencer_sound = "sfx/weapons/m4a1_silenced.wav";
+			silencer_sound = "sfx/weapons/m4a1_silenced.wav",
 		},
-		sound = "sfx/weapons/m4a1.wav";
+		sound = "sfx/weapons/m4a1.wav",
 	},
 	[33] = {
 		name = "AUG",
@@ -817,7 +806,7 @@ enum.itemlist = {
 		display_image = "aug_m.bmp",
 		player_stance = "righthold",
 		acessory = {},
-		sound = "sfx/weapons/aug.wav";
+		sound = "sfx/weapons/aug.wav",
 	},
 	[34] = {
 		name = "Scout",
@@ -844,7 +833,7 @@ enum.itemlist = {
 		display_image = "scout_m.bmp",
 		player_stance = "righthold",
 		acessory = {},
-		sound = "sfx/weapons/scout.wav";
+		sound = "sfx/weapons/scout.wav",
 	},
 	[35] = {
 		name = "AWP",
@@ -870,13 +859,8 @@ enum.itemlist = {
 		kill_image = "awp_k.bmp",
 		display_image = "awp_m.bmp",
 		player_stance = "righthold",
-		sound = "sfx/weapons/awp.wav";
-		modes = {
-			-- Zoom 1
-			{},
-			-- Zoom 2
-			{},
-		}
+		acessory = {},
+		sound = "sfx/weapons/awp.wav",
 	},
 	[36] = {
 		name = "G3SG1",
@@ -903,7 +887,7 @@ enum.itemlist = {
 		display_image = "g3sg1_m.bmp",
 		player_stance = "righthold",
 		acessory = {},
-		sound = "sfx/weapons/g3sg1.wav";
+		sound = "sfx/weapons/g3sg1.wav",
 	},
 	[37] = {
 		name = "SG550",
@@ -930,7 +914,7 @@ enum.itemlist = {
 		display_image = "sg550_m.bmp",
 		player_stance = "righthold",
 		acessory = {},
-		sound = "sfx/weapons/sg550.wav";
+		sound = "sfx/weapons/sg550.wav",
 	},
 	[38] = {
 		name = "Galil",
@@ -955,7 +939,7 @@ enum.itemlist = {
 		display_image = "galil_m.bmp",
 		player_stance = "righthold",
 		acessory = {},
-		sound = "sfx/weapons/galil.wav";
+		sound = "sfx/weapons/galil.wav",
 	},
 	[39] = {
 		name = "FAMAS",
@@ -980,7 +964,7 @@ enum.itemlist = {
 		display_image = "famas_m.bmp",
 		player_stance = "righthold",
 		acessory = {},
-		sound = "sfx/weapons/famas.wav";
+		sound = "sfx/weapons/famas.wav",
 	},
 	[40] = {
 		name = "M249",
@@ -1005,7 +989,7 @@ enum.itemlist = {
 		display_image = "m249_m.bmp",
 		player_stance = "righthold",
 		acessory = {},
-		sound = "sfx/weapons/m249.wav";
+		sound = "sfx/weapons/m249.wav",
 	},
 	[41] = {
 		name = "Tactical Shield",
@@ -1057,7 +1041,7 @@ enum.itemlist = {
 		display_image = "laser_m.bmp",
 		player_stance = "righthold",
 		acessory = {},
-		sound = "sfx/weapons/laser.ogg";
+		sound = "sfx/weapons/laser.ogg",
 	},
 	[46] = {
 		name = "Flamethrower",
@@ -1085,7 +1069,7 @@ enum.itemlist = {
 		display_image = "flamethrower_m.bmp",
 		player_stance = "righthold",
 		acessory = {},
-		sound = {"sfx/weapons/flamethrower.ogg", "sfx/weapons/flamethrower2.ogg";};
+		sound = { "sfx/weapons/flamethrower.ogg", "sfx/weapons/flamethrower2.ogg", },
 	},
 	[47] = {
 		name = "RPG Launcher",
@@ -1111,7 +1095,7 @@ enum.itemlist = {
 		display_image = "rpglauncher_m.bmp",
 		player_stance = "righthold",
 		acessory = {},
-		sound = "sfx/weapons/rocket.ogg";
+		sound = "sfx/weapons/rocket.ogg",
 	},
 	[48] = {
 		name = "Rocket Launcher",
@@ -1138,7 +1122,7 @@ enum.itemlist = {
 		display_image = "rocketlauncher_m.bmp",
 		player_stance = "righthold",
 		acessory = {},
-		sound = "sfx/weapons/rocket.ogg";
+		sound = "sfx/weapons/rocket.ogg",
 	},
 	[49] = {
 		name = "Grenade Launcher",
@@ -1165,7 +1149,7 @@ enum.itemlist = {
 		display_image = "grenadelauncher_m.bmp",
 		player_stance = "righthold",
 		acessory = {},
-		sound = "sfx/weapons/glaunch.ogg";
+		sound = "sfx/weapons/glaunch.ogg",
 	},
 	[50] = {
 		name = "Knife",
@@ -1191,7 +1175,7 @@ enum.itemlist = {
 		display_image = "knife.bmp",
 		player_stance = "righthand",
 		acessory = {},
-		sound = "sfx/weapons/knife_slash.wav";
+		sound = "sfx/weapons/knife_slash.wav",
 	},
 	[51] = {
 		name = "HE",
@@ -1616,7 +1600,7 @@ enum.itemlist = {
 		display_image = "machete.bmp",
 		player_stance = "righthand",
 		acessory = {},
-		sound = "sfx/weapons/machete_slash.wav";
+		sound = "sfx/weapons/machete_slash.wav",
 	},
 	[70] = {
 		name = "Red Flag",
@@ -1738,7 +1722,7 @@ enum.itemlist = {
 		display_image = "wrench.bmp",
 		player_stance = "righthand",
 		acessory = {},
-		sound = "sfx/weapons/knife_slash.wav";
+		sound = "sfx/weapons/knife_slash.wav",
 	},
 	[75] = {
 		name = "Snowball",
@@ -1983,7 +1967,7 @@ enum.itemlist = {
 		display_image = "chainsaw_m.bmp",
 		player_stance = "righthand",
 		acessory = {},
-		sound = "sfx/weapons/chainsaw.wav";
+		sound = "sfx/weapons/chainsaw.wav",
 	},
 	[86] = {
 		name = "Gut Bomb",
@@ -2103,7 +2087,7 @@ enum.itemlist = {
 		display_image = "m134_m.bmp",
 		player_stance = "righthold",
 		acessory = {},
-		sound = "sfx/weapons/m134.wav";
+		sound = "sfx/weapons/m134.wav",
 	},
 	[91] = {
 		name = "FN F2000",
@@ -2128,7 +2112,7 @@ enum.itemlist = {
 		display_image = "fnf2000_m.bmp",
 		player_stance = "righthold",
 		acessory = {},
-		sound = "sfx/weapons/fnf2000.wav";
+		sound = "sfx/weapons/fnf2000.wav",
 	},
 }
 

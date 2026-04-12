@@ -197,6 +197,11 @@ function Toast:SetParent(parent)
     self:SetSize(parent:GetSize())
 end
 -----------------------------------------------------------
+function Toast:SetFont(font)
+    self.font = font
+    return self
+end
+
 
 function Toast:SetBoxAlign(valign, halign)
     self.box_valign = valign

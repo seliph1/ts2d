@@ -48,7 +48,10 @@ local commands = {
         action = function(mode, ...)
 			local args = {...}
 			local client = require "client"
-            if mode == "self" then
+
+			if mode == "update" then
+				client.map:shiftRender()
+			elseif mode == "self" then
                 local player = client.share.players[client.id]
                 if player then
                     client.camera_follow(player)
@@ -321,16 +324,15 @@ local commands = {
 	toast = {
 		action = function(...)
 			local message = table.concat({...}," ")
-			local LF = require "lib.loveframes"
 			local console = require "core.interface.console"
 
-			local param = {
+			local options = {
                 spacing=8,
                 padding=6,
                 time=5,
 				font = console.font_mono
             }
-			console.toast:PushMessage(message, param)
+			console.toast:PushMessage(message, options)
 		end,
 	};
 

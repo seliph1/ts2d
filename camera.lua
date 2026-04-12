@@ -3,6 +3,7 @@ return function(client)
 local function tween(a, b, t)
 	return a + (b - a) * t
 end
+local abs = math.abs
 
 client.camera = {
 	x = 0,
@@ -10,10 +11,10 @@ client.camera = {
 	tx = 0,
 	ty = 0,
 	snap_pointer = {category = nil, id = nil},
-	snap_enabled = false,
 	speed = 500, -- pixel/frame
 	tween_speed = 10, -- pixel/frame
-	pointer = nil
+	pointer = nil,
+	tween_distance = 256,
 }
 
 --- Camera movement vector function
@@ -88,9 +89,20 @@ end
 ---Camera interpolated movement function
 ---@param dt number Delta time
 function client.camera_tween(dt)
-	client.camera.x = tween(client.camera.x, client.camera.tx, client.camera.tween_speed * dt)
-	client.camera.y = tween(client.camera.y, client.camera.ty, client.camera.tween_speed * dt)
-	love.audio.setPosition(client.camera.x, client.camera.y, 0)
+	local camera = client.camera
+	if abs(camera.x - camera.tx) > camera.tween_distance
+	or abs(camera.y - camera.ty) > camera.tween_distance
+	then
+		-- Trigger client camera abrupt movement
+		client.camera_abrupt(camera.x, camera.y, camera.tx, camera.ty)
+
+		camera.x = camera.tx
+		camera.y = camera.ty
+	end
+
+	camera.x = tween(camera.x, camera.tx, camera.tween_speed * dt)
+	camera.y = tween(camera.y, camera.ty, camera.tween_speed * dt)
+	love.audio.setPosition(camera.x, camera.y, 0)
 end
 ---------- module end ------------
 end

@@ -62,18 +62,26 @@ client.shader = client.shaders.baseShader
 -- Global audio config
 love.audio.setDistanceModel("linearclamped")
 
-local function is_alive()
-	local player = share.players[client.id]
+local function is_alive(peer_id)
+	peer_id = peer_id or client.id
+	local player = share.players[peer_id]
 	if player then
 		return player.h > 0
 	end
 end
 
-local function is_dead()
-	local player = share.players[client.id]
+local function is_dead(peer_id)
+	peer_id = peer_id or client.id
+	local player = share.players[peer_id]
 	if player then
 		return player.h <= 0
 	end
+end
+
+
+function client.camera_abrupt(x, y, tx, ty)
+	client.map:scroll(tx, ty)
+	client.map:shiftRender(tx, ty)
 end
 
 function client.snapshot_lerp(dt)
@@ -190,13 +198,9 @@ end
 
 
 function client.attack(peer_id, local_data)
-	if is_dead() then
-		return 1
-	end
-
 	--local player = client.share_lerp.players[peer_id]
 	local player = client.share.players[peer_id]
-	if not player then return 1 end -- Return 1 second cooldown
+	if is_dead(peer_id) then return 1 end -- Return 1 second cooldown
 
 	-- Get player held item
 	local itemheld, itemdata = client.get_item_held(peer_id)
@@ -251,7 +255,7 @@ function client.attack(peer_id, local_data)
 		local seconds = frame_delay / 60
 
 		-- Offset from player hand
-		local offset = 20
+		local offset = itemdata.length or 20
 		local offset_x = player_x + math.cos(player_angle) * offset
 		local offset_y = player_y + math.sin(player_angle) * offset
 
@@ -260,10 +264,14 @@ function client.attack(peer_id, local_data)
 			client.map:playSoundAt(itemdata.sound, offset_x, offset_y)
 		end
 
+		client.map:spawn_effect("muzzle", offset_x, offset_y, {
+			setDirection = player_angle,
+		})
+
 		-- Simulate locally that we fired a weapon
 		if spawn == 1 then
 			-- Skip with single shot
-			client.fire(offset_x, offset_y, player_angle, distance, client.id)
+			client.fire(offset_x, offset_y, player_angle, distance, peer_id)
 			return seconds
 		end
 
@@ -271,7 +279,7 @@ function client.attack(peer_id, local_data)
 		local half = math.floor(spawn/2)
 		for i = 1, spawn do
 			local subangle = player_angle + math.rad(i * spread - half * spread)
-			client.fire(offset_x, offset_y, subangle, distance, client.id)
+			client.fire(offset_x, offset_y, subangle, distance, peer_id)
 		end
 		return seconds
 	end
@@ -293,14 +301,16 @@ function client.attack(peer_id, local_data)
 			setDirection = player_angle + math.pi/2
 		})
 		if itemdata.sound then
-			client.map:playSoundAt(itemdata.sound, swing_x, swing_y)
+			client.map:playSoundAt(itemdata.sound, swing_x, swing_y, 1, 1.2, 400, 500)
 		end
-		client.swing(player_x, player_y, player_angle, width, range, 10, client.id)
+
+		client.swing(player_x, player_y, player_angle, width, range, 10, peer_id)
 		return seconds
 	end
 
 	return 1
 end
+
 
 function client.swing(start_x, start_y, angle, width, range, offset, peer_id)
 	local hitbox = client.getWeaponHitbox(
@@ -321,7 +331,7 @@ function client.swing(start_x, start_y, angle, width, range, offset, peer_id)
 	local h = math.floor(box_size)
 	local targets = client.world:queryRect(x, y, w, h)
 	for index, target in pairs(targets) do
-		if target.ct == 1 and target.id ~= client.id then
+		if target.ct == 1 and target.h > 0 and target.id ~= peer_id  then
 			local half = target.size/2
 			local body = {
 				-half, -half,
@@ -395,7 +405,7 @@ function client.fire(start_x, start_y, angle, distance, peer_id)
 
 	for index, body in ipairs(bodies) do
 		local object = body.item
-		if object.ct == 1 then -- Player
+		if object.ct == 1 and object.id ~= peer_id then -- Player
 			client.map:spawn_effect("blood", body.x2, body.y2, {
 				setDirection = angle,
 			})
@@ -421,8 +431,8 @@ function client.collect(peer_id, item_type)
 		local ui = require "core.interface.ui"
 		ui.weaponselect:queryItems(player.i)
 	end
-	--print("collected:", peer_id, item_type)
 end
+
 function client.select(peer_id, item_type)
 	if peer_id == client.id then
 		local player = share.players[peer_id]
@@ -431,12 +441,10 @@ function client.select(peer_id, item_type)
 		local ui = require "core.interface.ui"
 		ui.weaponselect:queryItemheld(item_type)
 	end
-
-	--print("selected:", peer_id, item_type)
 end
 
 function client.setmoney(peer_id, oldvalue, newvalue)
-	print(string.format("Player [ID: %s] money changed from %s to %s.", peer_id, oldvalue, newvalue))
+	--print(string.format("Player [ID: %s] money changed from %s to %s.", peer_id, oldvalue, newvalue))
 end
 
 function client.spawn(peer_id, health)

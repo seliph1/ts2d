@@ -108,14 +108,6 @@ local actions = {
             end
         end
     };
-    scroll = {
-        --- Scroll camera to a set position
-        ---@param x number
-        ---@param y number
-        action = function(x,y)
-
-        end
-    };
 
     menu = {
         ---Invokes a server-side menu
@@ -286,7 +278,6 @@ local actions = {
 			    if entity and entity.x and entity.y then
 				    client.camera_follow(entity)
                 end
-
             elseif mode == "translate" then
                 local x = tonumber(arg[1] ) or 0
                 local y = tonumber(arg[2] ) or 0
@@ -298,6 +289,7 @@ local actions = {
             elseif mode == "unbind" then
                 client.camera_unbind()
             end
+            client.map:shiftRender()
         end
     };
 

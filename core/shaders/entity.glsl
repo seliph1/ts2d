@@ -1,7 +1,6 @@
-uniform int mask = 0;
-uniform int blend = 0;
-//uniform float entity_alpha = 1.0;
-uniform float epsilon = 0.1;
+uniform int mask = 0; // value(0, 1, 10)
+uniform int blend = 0; // value[0, 1, 2, 3, 4, 5, 6]
+uniform float epsilon = 0.1; // value(0.1, 0, 1)
 
 vec4 color_mask(vec4 sub_color, vec4 tex_color, float threshold){
 	if (
