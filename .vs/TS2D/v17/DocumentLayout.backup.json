@@ -1,0 +1,172 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\Se7en\\source\\repos\\TS2D\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{953D3A50-D35B-4A3B-AB5D-60B8509CB8B2}|TS2D\\TS2D_Client.csproj|c:\\users\\se7en\\source\\repos\\ts2d\\ts2d\\maphandler\\mapparser.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{953D3A50-D35B-4A3B-AB5D-60B8509CB8B2}|TS2D\\TS2D_Client.csproj|solutionrelative:ts2d\\maphandler\\mapparser.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{953D3A50-D35B-4A3B-AB5D-60B8509CB8B2}|TS2D\\TS2D.csproj|c:\\users\\se7en\\source\\repos\\ts2d\\ts2d\\gameclient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{953D3A50-D35B-4A3B-AB5D-60B8509CB8B2}|TS2D\\TS2D.csproj|solutionrelative:ts2d\\gameclient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{03EC9C6E-E021-42D8-9DAC-007D2CC98CEB}|TS2D_Game\\TS2D_Game.csproj|c:\\users\\se7en\\source\\repos\\ts2d\\ts2d_game\\cs2d\\cs2dbinaryreader.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{03EC9C6E-E021-42D8-9DAC-007D2CC98CEB}|TS2D_Game\\TS2D_Game.csproj|solutionrelative:ts2d_game\\cs2d\\cs2dbinaryreader.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{953D3A50-D35B-4A3B-AB5D-60B8509CB8B2}|TS2D\\TS2D.csproj|c:\\users\\se7en\\source\\repos\\ts2d\\ts2d\\maphandler\\maprenderer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{953D3A50-D35B-4A3B-AB5D-60B8509CB8B2}|TS2D\\TS2D.csproj|solutionrelative:ts2d\\maphandler\\maprenderer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{953D3A50-D35B-4A3B-AB5D-60B8509CB8B2}|TS2D\\TS2D_Client.csproj|c:\\users\\se7en\\source\\repos\\ts2d\\ts2d\\ts2d_client.csproj||{04B8AB82-A572-4FEF-95CE-5222444B6B64}|",
+      "RelativeMoniker": "D:0:0:{953D3A50-D35B-4A3B-AB5D-60B8509CB8B2}|TS2D\\TS2D_Client.csproj|solutionrelative:ts2d\\ts2d_client.csproj||{04B8AB82-A572-4FEF-95CE-5222444B6B64}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{953D3A50-D35B-4A3B-AB5D-60B8509CB8B2}|TS2D\\TS2D_Client.csproj|c:\\users\\se7en\\source\\repos\\ts2d\\ts2d\\ts2d_client.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{953D3A50-D35B-4A3B-AB5D-60B8509CB8B2}|TS2D\\TS2D_Client.csproj|solutionrelative:ts2d\\ts2d_client.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{953D3A50-D35B-4A3B-AB5D-60B8509CB8B2}|TS2D\\TS2D.csproj|c:\\users\\se7en\\source\\repos\\ts2d\\ts2d\\gamememory.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{953D3A50-D35B-4A3B-AB5D-60B8509CB8B2}|TS2D\\TS2D.csproj|solutionrelative:ts2d\\gamememory.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{953D3A50-D35B-4A3B-AB5D-60B8509CB8B2}|TS2D\\TS2D.csproj|c:\\users\\se7en\\source\\repos\\ts2d\\ts2d\\maphandler\\tileset.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{953D3A50-D35B-4A3B-AB5D-60B8509CB8B2}|TS2D\\TS2D.csproj|solutionrelative:ts2d\\maphandler\\tileset.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{953D3A50-D35B-4A3B-AB5D-60B8509CB8B2}|TS2D\\TS2D.csproj|c:\\users\\se7en\\source\\repos\\ts2d\\ts2d\\gameconstants.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{953D3A50-D35B-4A3B-AB5D-60B8509CB8B2}|TS2D\\TS2D.csproj|solutionrelative:ts2d\\gameconstants.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 1,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "CS2DBinaryReader.cs",
+              "DocumentMoniker": "C:\\Users\\Se7en\\source\\repos\\TS2D\\TS2D_Game\\CS2D\\CS2DBinaryReader.cs",
+              "RelativeDocumentMoniker": "TS2D_Game\\CS2D\\CS2DBinaryReader.cs",
+              "ToolTip": "C:\\Users\\Se7en\\source\\repos\\TS2D\\TS2D_Game\\CS2D\\CS2DBinaryReader.cs",
+              "RelativeToolTip": "TS2D_Game\\CS2D\\CS2DBinaryReader.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-16T20:41:10.57Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "MapParser.cs",
+              "DocumentMoniker": "C:\\Users\\Se7en\\source\\repos\\TS2D\\TS2D\\MapHandler\\MapParser.cs",
+              "RelativeDocumentMoniker": "TS2D\\MapHandler\\MapParser.cs",
+              "ToolTip": "C:\\Users\\Se7en\\source\\repos\\TS2D\\TS2D\\MapHandler\\MapParser.cs",
+              "RelativeToolTip": "TS2D\\MapHandler\\MapParser.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAPAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-16T20:41:07.29Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "TS2D_Client",
+              "DocumentMoniker": "C:\\Users\\Se7en\\source\\repos\\TS2D\\TS2D\\TS2D_Client.csproj",
+              "RelativeDocumentMoniker": "TS2D\\TS2D_Client.csproj",
+              "ToolTip": "C:\\Users\\Se7en\\source\\repos\\TS2D\\TS2D\\TS2D_Client.csproj*",
+              "RelativeToolTip": "TS2D\\TS2D_Client.csproj*",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2026-05-16T20:39:34.362Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "TS2D_Client",
+              "DocumentMoniker": "C:\\Users\\Se7en\\source\\repos\\TS2D\\TS2D\\TS2D_Client.csproj",
+              "RelativeDocumentMoniker": "TS2D\\TS2D_Client.csproj",
+              "ToolTip": "C:\\Users\\Se7en\\source\\repos\\TS2D\\TS2D\\TS2D_Client.csproj",
+              "RelativeToolTip": "TS2D\\TS2D_Client.csproj",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2026-05-16T20:39:39.045Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "GameMemory.cs",
+              "DocumentMoniker": "C:\\Users\\Se7en\\source\\repos\\TS2D\\TS2D\\GameMemory.cs",
+              "RelativeDocumentMoniker": "TS2D\\GameMemory.cs",
+              "ToolTip": "C:\\Users\\Se7en\\source\\repos\\TS2D\\TS2D\\GameMemory.cs",
+              "RelativeToolTip": "TS2D\\GameMemory.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAVAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-15T15:12:59.288Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "Tileset.cs",
+              "DocumentMoniker": "C:\\Users\\Se7en\\source\\repos\\TS2D\\TS2D\\MapHandler\\Tileset.cs",
+              "RelativeDocumentMoniker": "TS2D\\MapHandler\\Tileset.cs",
+              "ToolTip": "C:\\Users\\Se7en\\source\\repos\\TS2D\\TS2D\\MapHandler\\Tileset.cs",
+              "RelativeToolTip": "TS2D\\MapHandler\\Tileset.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-15T14:34:38.871Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "GameConstants.cs",
+              "DocumentMoniker": "C:\\Users\\Se7en\\source\\repos\\TS2D\\TS2D\\GameConstants.cs",
+              "RelativeDocumentMoniker": "TS2D\\GameConstants.cs",
+              "ToolTip": "C:\\Users\\Se7en\\source\\repos\\TS2D\\TS2D\\GameConstants.cs",
+              "RelativeToolTip": "TS2D\\GameConstants.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAoAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-15T14:17:47.899Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "GameClient.cs",
+              "DocumentMoniker": "C:\\Users\\Se7en\\source\\repos\\TS2D\\TS2D\\GameClient.cs",
+              "RelativeDocumentMoniker": "TS2D\\GameClient.cs",
+              "ToolTip": "C:\\Users\\Se7en\\source\\repos\\TS2D\\TS2D\\GameClient.cs",
+              "RelativeToolTip": "TS2D\\GameClient.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAA5AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-15T08:28:37.462Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "MapRenderer.cs",
+              "DocumentMoniker": "C:\\Users\\Se7en\\source\\repos\\TS2D\\TS2D\\MapHandler\\MapRenderer.cs",
+              "RelativeDocumentMoniker": "TS2D\\MapHandler\\MapRenderer.cs",
+              "ToolTip": "C:\\Users\\Se7en\\source\\repos\\TS2D\\TS2D\\MapHandler\\MapRenderer.cs",
+              "RelativeToolTip": "TS2D\\MapHandler\\MapRenderer.cs",
+              "ViewState": "AgIAAAsAAAAAAAAAAAAtwBkAAAACAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-15T15:03:32.253Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

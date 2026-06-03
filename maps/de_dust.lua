@@ -1,1 +1,0 @@
-parse('sv_gamemode 2') parse('mp_roundtime 15') parse('mp_antispeeder 0') LOCK_TEAM_CHANGE = false ZM_BOT_T = false WRENCH_ONLY = true
