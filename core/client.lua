@@ -1,5 +1,5 @@
 --- Client base framework
-local Map 		= require "mapengine"
+local Map 		= require "core.game.mapengine"
 local Bump		= require "lib.bump"
 local client 	= require "lib.cs"
 local serpent 	= require "lib.serpent"
@@ -41,15 +41,16 @@ client.mode 			= "lobby"
 client.canvas 			= love.graphics.newCanvas()
 client.map 				= Map.new(50, 50)
 client.world			= Bump.new(64)
-client.content 			= require "enum"
+client.content 			= require "core.enum"
 
 local modules = {
-	"actions";
-	"binds";
-	"camera";
-	"loader";
-	"callbacks";
-	"callbacks_netcode";
+	"core.scene";
+	"core.net.actions";
+	"core.input.binds";
+	"core.game.camera";
+	"core.loader";
+	"core.game.callbacks";
+	"core.game.callbacks_netcode";
 }
 for index, module in pairs(modules) do
 	require(module)(client)

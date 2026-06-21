@@ -1,7 +1,7 @@
 -- Loading some libs
 local bump = require "lib.bump"
-local effect = require "effect"
-local enum = require "enum"
+local effect = require "core.game.effect"
+local enum = require "core.enum"
 local serpent = require "lib.serpent"
 local LF = love.filesystem
 

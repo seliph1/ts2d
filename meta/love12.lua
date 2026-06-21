@@ -1,0 +1,33 @@
+---@meta
+-- =============================================================================
+-- Stubs de APIs exclusivas do LÖVE 12.0
+-- =============================================================================
+-- O addon do LuaLS (sumneko/LuaCATS-love2d) ainda descreve a API do LÖVE 11.x,
+-- então funções introduzidas/renomeadas no 12.0 aparecem como "undefined field".
+-- Este arquivo (carregado como *library*, nunca em runtime — ver ---@meta) declara
+-- essas funções só para o editor parar de acusá-las.
+--
+-- Regras:
+--   * Só inclua o que o projeto realmente usa E o LuaLS realmente sublinha.
+--   * NÃO inclua APIs que já existem no 11.x (ex.: love.data.* existe desde 11.0).
+--   * Ao reaproveitar tipos (ex.: love.Text), use os já definidos pelo addon 11.x
+--     para evitar aviso de "classe duplicada".
+--
+-- Para adicionar mais: rode o jogo no editor, veja o que fica sublinhado e
+-- declare aqui. Candidatos comuns do 12.0:
+--   love.graphics.newGpuBuffer / readback / setStencilState
+--   love.filesystem.openFile / getFullCommonPath
+-- =============================================================================
+
+---Cria um objeto de texto desenhável (renomeado de `love.graphics.newText` no 12.0).
+---@param font love.Font          # fonte usada para o texto
+---@param text? string|table      # texto inicial; tabela = trechos coloridos
+---@return love.Text              # reaproveita o tipo Text já definido pelo addon 11.x
+function love.graphics.newTextBatch(font, text) end
+
+---Monta um caminho completo do sistema de arquivos do SO no filesystem virtual (12.0).
+---@param path string                          # caminho absoluto no SO
+---@param mountpoint string                    # ponto de montagem virtual ("" = raiz)
+---@param permissions? "read"|"readwrite"      # permissão de acesso (padrão "read")
+---@return boolean success
+function love.filesystem.mountFullPath(path, mountpoint, permissions) end

@@ -39,7 +39,7 @@ function client.disconnect(reason)
 	local LF = require "lib.loveframes"
 	LF.SetState()
 	client.map:clear()
-	client.mode = "lobby"
+	client.scene.switch("lobby")
 
 	if reason then
 		client.parse("warning "..reason)
@@ -51,7 +51,7 @@ function client.join(peer_id)
 	-- Only start the engine on join
 	local LF = require "lib.loveframes"
 	LF.SetState("game")
-	client.mode = "game"
+	client.scene.switch("game")
 
 	local player = share.players[peer_id]
 	if player then

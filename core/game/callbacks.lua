@@ -18,6 +18,9 @@ function client.load()
 	home.attack = false
 	home.attack2 = false
 	home.attack3 = false
+
+	-- Inicia na cena de menu (dispara o enter() da cena "lobby").
+	client.scene.switch("lobby")
 end
 
 --- Callback for mouse movement on screen
@@ -112,6 +115,7 @@ function client.update(dt)
 		client.map:update(dt)
 	end
 
+	client.scene.update(dt)
 	client.frame(dt)
 	client.postupdate(dt)
 end
@@ -185,6 +189,8 @@ function client.draw()
 	else
 		-- void
 	end
+
+	client.scene.draw()
 end
 
 

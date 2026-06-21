@@ -1,5 +1,5 @@
 local loveframes = require "lib.loveframes"
-local client = require "client"
+local client = require "core.client"
 local editor = {}
 
 local ENTITY_TYPE={};
@@ -223,7 +223,7 @@ editor.tool_option = {
 		editor.exitbutton:SetWidth(40)
 		editor.exitbutton:SetPos(5, 85)
 		function editor.exitbutton:OnClick()
-			client.mode = "lobby"
+			client.scene.switch("lobby")
 			loveframes.SetState()
 		end
 

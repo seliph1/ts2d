@@ -40,7 +40,7 @@ local commands = {
 		---Sets the client interpolation (lerp) speed.
 		---@param speed number|string Interpolation speed (default: 30)
 		action = function(speed)
-			local client = require "client"
+			local client = require "core.client"
 			speed = tonumber(speed) or 30
 			client.lerp_speed = speed
 		end,
@@ -53,7 +53,7 @@ local commands = {
 		---@return string? help Help message when the mode is invalid
         action = function(mode, ...)
 			local args = {...}
-			local client = require "client"
+			local client = require "core.client"
 
 			if mode == "update" then
 				client.map:shiftRender()
@@ -113,7 +113,7 @@ local commands = {
 			local block = table.concat({...}, " ")
 			local expression, error_message = loadstring( block, "")
 			local ui = require "core.interface.ui"
-			local client = require "client"
+			local client = require "core.client"
 			CONSOLE_ENV.print = print
 			CONSOLE_ENV.client = client
 			CONSOLE_ENV.ui = ui
@@ -140,7 +140,7 @@ local commands = {
 			local expression, error_message = loadstring( "return ".. block)
 			local ui = require "core.interface.ui"
 			local console = require "core.interface.console"
-			local client = require "client"
+			local client = require "core.client"
 
 			CONSOLE_ENV.client = client
 			CONSOLE_ENV.ui = ui
@@ -171,7 +171,7 @@ local commands = {
 			local expression, error_message = loadstring( "return ".. block)
 			local ui = require "core.interface.ui"
 			local console = require "core.interface.console"
-			local client = require "client"
+			local client = require "core.client"
 
 			CONSOLE_ENV.client = client
 			CONSOLE_ENV.ui = ui
@@ -203,7 +203,7 @@ local commands = {
 		---Sets the debug level reported by the client.
 		---@param level number|string Debug level (default: 0)
 		action = function(level)
-			local client = require "client"
+			local client = require "core.client"
 			client.debug_level = tonumber(level) or 0
 		end;
 	};
@@ -244,7 +244,7 @@ local commands = {
 		---@param rate number|string New send rate (default: 35)
 		---@return string message Message confirming the rate change
 		action = function(rate)
-			local client = require "client"
+			local client = require "core.client"
 			local old_rate = client.sendRate
 			local new_rate = tonumber(rate) or 35
 
@@ -262,7 +262,7 @@ local commands = {
 		---@param url string Target URL of the request
 		---@param options? string Additional options passed to the thread
 		action = function(url, options)
-			local thread = love.thread.newThread("http_thread.lua")
+			local thread = love.thread.newThread("core/thread/http_thread.lua")
 			if thread then
 				thread:start(url, options)
 			end
@@ -298,7 +298,7 @@ local commands = {
 		---@param ip? string Server IP address (default: "127.0.0.1")
 		---@param port? string Server port (default: "36963")
 		action = function(ip, port)
-			local client = require "client"
+			local client = require "core.client"
 			if not client.connected then
 				ip = ip or "127.0.0.1"
 				port = port or "36963"
@@ -312,7 +312,7 @@ local commands = {
 	disconnect = {
 		---Disconnects the client from the current server, if connected.
 		action = function()
-			local client = require "client"
+			local client = require "core.client"
 			local LF = require "lib.loveframes"
 			if client.connected then
 				client.kick()
@@ -392,7 +392,7 @@ local commands = {
 		---Enables or disables client render scaling.
 		---@param bool "true"|"false" "true" to enable scaling
 		action = function(bool)
-			local client = require "client"
+			local client = require "core.client"
 			client.scale = (bool == "true")
 		end;
 	};
@@ -447,7 +447,7 @@ local commands = {
 		---Loads a map and enters edit mode (editor).
 		---@param ... string Map file name (without the .map extension)
 		action = function(...)
-			local client = require "client"
+			local client = require "core.client"
 			local args = {...}
 			if client.map then
 				local LF = require "lib.loveframes"
@@ -455,7 +455,7 @@ local commands = {
 				if status then
 					print(status)
 				end
-				client.mode = "editor"
+				client.scene.switch("editor")
 				LF.SetState("editor")
 			end
 		end,
@@ -466,7 +466,7 @@ local commands = {
 		---Loads a map and enters game mode.
 		---@param ... string Map file name (without the .map extension)
 		action = function(...)
-			local client = require "client"
+			local client = require "core.client"
 			local args = {...}
 			if client.map then
 				local status = client.map:read( "maps/"..table.concat(args," ")..".map" )
@@ -474,7 +474,7 @@ local commands = {
 					print(status)
 				end
 			end
-			client.mode = "game"
+			client.scene.switch("game")
 		end,
 		syntax = "/map <mapfile>",
 	};
@@ -484,7 +484,7 @@ local commands = {
 		---@param ... string Ignored arguments
 		action = function(...)
 			local args = {...}
-			local client = require "client"
+			local client = require "core.client"
 			if client.map then
 				print("map clear request")
 				client.map:clear()
@@ -496,7 +496,7 @@ local commands = {
 	cleareffect = {
 		---Removes all active visual effects from the current map.
 		action = function ()
-			local client = require "client"
+			local client = require "core.client"
 			if client.map then
 				client.map:clearEffects()
 			end
@@ -509,7 +509,7 @@ local commands = {
 		---@param x number|string X coordinate (default: 0)
 		---@param y number|string Y coordinate (default: 0)
 		action = function(effect_id, x, y)
-			local client = require "client"
+			local client = require "core.client"
 		    x = tonumber(x) or 0
             y = tonumber(y) or 0
             client.map:spawn_effect(effect_id, x, y)
@@ -521,7 +521,7 @@ local commands = {
 		---@param x number X scroll offset (default: 0)
 		---@param y number Y scroll offset (default: 0)
 		action = function(x,y)
-			local client = require "client"
+			local client = require "core.client"
 			if client.map then
 				x = x or 0
 				y = y or 0
@@ -544,7 +544,7 @@ local commands = {
 		---Sends a request to change the player name (when connected).
 		---@param ... string New player name
 		action = function(...)
-			local client = require "client"
+			local client = require "core.client"
 			if client.connected then
 				local name = table.concat({...}," ")
 				client.send("setname "..name)
@@ -556,7 +556,7 @@ local commands = {
 		---Sends a chat message to the server.
 		---@param ... string Message text
 		action = function(...)
-			local client = require "client"
+			local client = require "core.client"
 			local message = table.concat({...}, " ")
 			client.send(string.format("say %s", message))
 		end;
@@ -567,7 +567,7 @@ local commands = {
 		---@param target_id string|number Identifier of the target entity
 		---@param item_type string|number Type of item to equip
 		action = function(target_id, item_type)
-			local client = require "client"
+			local client = require "core.client"
 			client.send( string.format("equip %s %s", target_id, item_type) )
 		end
 	};
@@ -575,7 +575,7 @@ local commands = {
 	tp = {
 		---Teleports the player to the current cursor/target position.
 		action = function()
-			local client = require "client"
+			local client = require "core.client"
 			local targetX = client.attribute "targetX"
 			local targetY = client.attribute "targetY"
 
@@ -595,7 +595,7 @@ local commands = {
 		---@param id number|string Entity id, or 0 to unbind the camera
 		---@return string? error Error message when the entity cannot be found
 		action = function(category, id)
-			local client = require "client"
+			local client = require "core.client"
 			if not client.joined then return "Client isn't connected. Cannot follow anything." end
 			id = tonumber(id) or 0
 			if id == 0 then
@@ -620,7 +620,7 @@ local commands = {
 		---@param look string Look/appearance selection
 		---@return string? error Error message when the client is not connected
 		action = function(team, look)
-			local client = require "client"
+			local client = require "core.client"
 			if not client.joined then
 				return "You're not connected!"
 			end
@@ -634,7 +634,7 @@ local commands = {
 	kill = {
 		---Sends a request to kill (suicide) the current player.
 		action = function()
-			local client = require "client"
+			local client = require "core.client"
 			client.send("kill")
 		end,
 		alias = {"suicide"},
@@ -646,7 +646,7 @@ local commands = {
 		---@param ... string Command and arguments to run remotely
 		action = function(...)
 			local command = table.concat({...}, " ")
-			local client = require "client"
+			local client = require "core.client"
 			client.send(string.format("rcon %s", command))
 		end,
 		syntax = "",

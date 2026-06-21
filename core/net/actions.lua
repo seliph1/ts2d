@@ -91,7 +91,7 @@ local actions = {
             if status then
                 print(status)
             end
-            client.mode = "game"
+            client.scene.switch("game")
         end,
     };
 

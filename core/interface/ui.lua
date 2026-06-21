@@ -1,7 +1,7 @@
 local LG 		= love.graphics
 local LF 		= require "lib.loveframes"
 local serpent	= require "lib.serpent"
-local client 	= require "client"
+local client 	= require "core.client"
 
 local ui 		= {}
 ui.font_fallbacks = {
