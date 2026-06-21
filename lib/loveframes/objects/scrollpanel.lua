@@ -29,7 +29,7 @@ function ScrollPanel:initialize()
 	self.extrawidth = 0
 	self.extraheight = 0
 	self.buttonscrollamount = 1
-	self.mousewheelscrollamount = 1
+	self.mousewheelscrollamount = 20
 	self.internal = false
 	self.hbar = false
 	self.vbar = false
@@ -54,8 +54,6 @@ function ScrollPanel:update(dt)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
 
-	local x = self.x
-	local y = self.y
 	local width = self.width
 	local height = self.height
 	local offsetx = self.offsetx
@@ -87,13 +85,23 @@ function ScrollPanel:update(dt)
 		)
 	end
 
+	-- shift the panel's own position by the scroll offset while updating its
+	-- items, so each item AND its descendants are positioned relative to the
+	-- scrolled origin (their update does x = parent.x + staticx, which then
+	-- cascades the offset down the whole subtree). restore it afterwards so
+	-- drawing, click bounds and the scroll bars use the real position
+	local realx, realy = self.x, self.y
+	self.x = math.floor(realx - self.last_offsetx)
+	self.y = math.floor(realy - self.last_offsety)
+
 	for i = 1, self.itemlength do
 		local child = self.itemcache[i]
 		child:update(dt)
-		child:SetClickBounds(x, y, width, height)
-		child.x = math.floor( child.x - self.last_offsetx )
-		child.y = math.floor( child.y - self.last_offsety )
+		child:SetClickBounds(realx, realy, width, height)
 	end
+
+	self.x = realx
+	self.y = realy
 
 	for _, internal in pairs(internals) do
 		internal:update(dt)
@@ -271,7 +279,6 @@ function ScrollPanel:RedoLayout()
 
 	if self.itemheight > self.height then
 		self.extraheight = self.itemheight - height
-		--self.extraheight = self.extraheight + 16
 		if not vbar then
 			local verticalbar = loveframes.objects["scrollbody"]:new(self, "vertical")
 			table.insert(self.internals, verticalbar)
@@ -290,7 +297,6 @@ function ScrollPanel:RedoLayout()
 
 	if self.itemwidth > self.width then
 		self.extrawidth = self.itemwidth - width
-		--self.extrawidth = self.extrawidth + 16
 		if not hbar then
 			local horizontalbar = loveframes.objects["scrollbody"]:new(self, "horizontal")
 			table.insert(self.internals, horizontalbar)
@@ -331,9 +337,6 @@ end
 	- desc: removes all of the object's children
 --]]---------------------------------------------------------
 function ScrollPanel:Clear()
-	for index ,child in pairs(self.children) do
-		--child:Remove()
-	end
 	self.itemhash:clear()
 	self.children = {}
 	self.itemcache = {}

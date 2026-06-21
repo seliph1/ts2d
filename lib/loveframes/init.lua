@@ -4,6 +4,7 @@
 --]]------------------------------------------------
 
 local path = ...
+
 local loveframes = {}
 
 -- special require for loveframes specific modules
@@ -39,7 +40,7 @@ loveframes.config["DEFAULTSKIN"] = "CS2D"
 loveframes.config["ACTIVESKIN"] = "CS2D"
 loveframes.config["INDEXSKINIMAGES"] = true
 loveframes.config["DEBUG"] = false
-loveframes.config["ENABLE_SYSTEM_CURSORS"] = false
+loveframes.config["ENABLE_SYSTEM_CURSORS"] = true
 
 -- misc library vars
 loveframes.state = "none"
@@ -153,15 +154,14 @@ end
 --]]---------------------------------------------------------
 function loveframes.draw()
 	-- Store previous graphic settings
+	local base = loveframes.base
 	local r, g, b, a = love.graphics.getColor()
 	local font = love.graphics.getFont()
 
 	-- Start the draw counter fot debug window
 	loveframes.drawcount = 0
-
 	--// ---------------------------------//--
-	local base = loveframes.base
-	base:draw() -- D R A W   E V E R Y T H I N G
+	base:draw() -- D R A W 
 	--//----------------------------------//--
 
 	-- Tooltip ( should be drawn above other objects)
@@ -175,7 +175,6 @@ function loveframes.draw()
 	--//----------------------------------//--
 	local toast = loveframes.toast
 	toast:draw()
-	--//----------------------------------//--
 
 	-- Debug draw
 	if loveframes.config["DEBUG"] then

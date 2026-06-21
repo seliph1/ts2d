@@ -34,6 +34,9 @@ function loveframes.Create(data, parent)
 		else
 			newobject:SetParent(loveframes.base)
 		end
+		-- position the object right away so it is not drawn once at (0, 0)
+		-- before its first update places it relative to its parent
+		newobject:UpdateZero()
 		-- return the object for further manipulation
 		return newobject
 	elseif type(data) == "table" then

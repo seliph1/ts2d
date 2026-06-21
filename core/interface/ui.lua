@@ -241,8 +241,8 @@ ui.quickplay_button = LF.Create("textbutton", ui.main_menu)
 :SetText("©192192192Quick Play")
 :SetHoverText("©255255255Quick Play")
 ui.quickplay_button.OnClick = function(self)
-	local console = require "core.interface.console"
-	console.parse("map as_snow")
+	--local console = require "core.interface.console"
+	--console.parse("map as_snow")
 end
 
 ui.newgame_button = LF.Create("textbutton", ui.main_menu)
@@ -250,8 +250,8 @@ ui.newgame_button = LF.Create("textbutton", ui.main_menu)
 :SetHoverText("©255255255New Game")
 :SetPos(0, 60):SetCursor(LF.cursors.hand)
 ui.newgame_button.OnClick = function(self)
-	local bool = ui.new_game_frame:GetVisible()
-	ui.new_game_frame:SetVisible(not bool):Center():MoveToTop()
+	--local bool = ui.new_game_frame:GetVisible()
+	--ui.new_game_frame:SetVisible(not bool):Center():MoveToTop()
 end
 
 ui.findservers_button = LF.Create("textbutton", ui.main_menu)
@@ -259,6 +259,12 @@ ui.findservers_button = LF.Create("textbutton", ui.main_menu)
 :SetHoverText("©255255255Find Servers")
 :SetPos(0, 80):SetCursor(LF.cursors.hand)
 ui.findservers_button.OnClick = function(self)
+	local console = require "core.interface.console"
+	console.frame
+		:SetVisible(true)
+		:Center()
+		:MoveToTop()
+
 	local console = require "core.interface.console"
 	console.parse("connect 127.0.0.1 36963")
 end
@@ -268,8 +274,8 @@ ui.options_button = LF.Create("textbutton", ui.main_menu)
 :SetHoverText("©255255255Options")
 :SetPos(0, 120):SetCursor(LF.cursors.hand)
 ui.options_button.OnClick = function(self)
-	local bool = ui.options_frame:GetVisible()
-	ui.options_frame:SetVisible(not bool):Center():MoveToTop()
+	--local bool = ui.options_frame:GetVisible()
+	--ui.options_frame:SetVisible(not bool):Center():MoveToTop()
 end
 
 ui.friends_button = LF.Create("textbutton", ui.main_menu)
@@ -277,7 +283,7 @@ ui.friends_button = LF.Create("textbutton", ui.main_menu)
 :SetHoverText("©255255255Friends")
 :SetPos(0, 140):SetCursor(LF.cursors.hand)
 ui.friends_button.OnClick = function(self)
-	local testframe = LF.Create("frame"):SetResizable(true)
+	--local testframe = LF.Create("frame"):SetResizable(true)
 end
 
 ui.mods_button = LF.Create("textbutton", ui.main_menu)
@@ -290,6 +296,7 @@ ui.editor_button = LF.Create("textbutton", ui.main_menu)
 :SetHoverText("©255255255Editor")
 :SetPos(0, 180):SetCursor(LF.cursors.hand)
 ui.editor_button.OnClick = function(self)
+	--[[
     if client.map then
         local status = client.map:read( "maps/de_dust.map" )
         if status then
@@ -297,7 +304,7 @@ ui.editor_button.OnClick = function(self)
         end
     end
     client.mode = "editor"
-	LF.SetState("editor")
+	LF.SetState("editor")]]
 end
 
 ui.help_button = LF.Create("textbutton", ui.main_menu)

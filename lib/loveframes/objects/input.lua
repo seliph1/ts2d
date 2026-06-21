@@ -7,13 +7,13 @@ return function(loveframes)
 ---------- module start ----------
 
 -- textinput object
-local newobject = loveframes.NewObject("input", "loveframes_object_input", true)
+local Input = loveframes.NewObject("input", "loveframes_object_input", true)
 
 --[[---------------------------------------------------------
 	- func: initialize()
 	- desc: initializes the object
 --]]---------------------------------------------------------
-function newobject:initialize()
+function Input:initialize()
 	self.type = "input"
 	self.width = 200
 	self.height = 25
@@ -41,16 +41,18 @@ function newobject:initialize()
 
 	-- Font properties
 	local skin = loveframes.GetActiveSkin()
-	local font = skin.directives.text_default_font
+	local default_font = skin.directives.text_default_font
+	local default_color = skin.directives.text_default_color
 
-	self.font = font or loveframes.basicfont
+	self.font = default_font or loveframes.basicfont
+	self.defaultcolor = default_color or {1,1,1,1}
 	self.verticalpadding = 4
 	self.horizontalpadding = 4
 
 	-- Initialize the text input object
 	self.field = loveframes.input()
 	self.field:setType("normal")
-	self.field:setFont(font)
+	self.field:setFont(self.font)
 	self.field:setDimensions(self.width, self.height)
     self.field:setCharacterLimit(30)
 end
@@ -59,7 +61,7 @@ end
 	- func: update(deltatime)
 	- desc: updates the object
 --]]---------------------------------------------------------
-function newobject:update(dt)
+function Input:update(dt)
 	if loveframes.inputobject == self and not self.visible then
 		loveframes.inputobject = false
 	end
@@ -87,7 +89,7 @@ end
 	- func: draw()
 	- desc: draws the object
 --]]---------------------------------------------------------
-function newobject:draw()
+function Input:draw()
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
 	local x = math.floor(self.x)
@@ -170,7 +172,7 @@ end
 	- func: wheelmoved(x, y)
 	- desc: called when the player moves a mouse wheel
 --]]---------------------------------------------------------
-function newobject:wheelmoved(x, y)
+function Input:wheelmoved(x, y)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
 	if loveframes.inputobject ~= self then return end
@@ -181,7 +183,7 @@ end
 	- func: mousemoved(x, y, button)
 	- desc: called when the player moves mouse
 --]]---------------------------------------------------------
-function newobject:mousemoved(x, y)
+function Input:mousemoved(x, y)
     if not self:OnState() then return end
 	if not self:isUpdating() then return end
 	if loveframes.inputobject ~= self then return end
@@ -193,7 +195,7 @@ end
 	- func: mousepressed(x, y, button) mousereleased(x, y, button)
 	- desc: called when the player presses a mouse button
 --]]---------------------------------------------------------
-function newobject:mousepressed(x, y, button, istouch, presses)
+function Input:mousepressed(x, y, button, istouch, presses)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
 	if loveframes.hoverobject == self then
@@ -203,7 +205,7 @@ function newobject:mousepressed(x, y, button, istouch, presses)
     self.field:mousepressed(x - self.x, y - self.y, button, presses)
 end
 
-function newobject:mousereleased(x, y, button)
+function Input:mousereleased(x, y, button)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
 	if loveframes.inputobject ~= self then return end
@@ -215,7 +217,7 @@ end
 	- func: keypressed(key, isrepeat) keyreleased(key, isrepeat)
 	- desc: called when the player presses a key
 --]]---------------------------------------------------------
-function newobject:keypressed(key, isrepeat)
+function Input:keypressed(key, isrepeat)
 	if not self:OnState() then return end
 	if self.OnControlKeyPressed then
 		self.OnControlKeyPressed(self, key)
@@ -247,11 +249,9 @@ function newobject:keypressed(key, isrepeat)
 			end
 		end
 	end
-
-
 end
 
-function newobject:keyreleased(key, isrepeat)
+function Input:keyreleased(key, isrepeat)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
 	if loveframes.inputobject ~= self then return end
@@ -261,7 +261,7 @@ end
 	- func: textinput(text)
 	- desc: called when the user inputs text
 --]]---------------------------------------------------------
-function newobject:textinput(text)
+function Input:textinput(text)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
 	if loveframes.inputobject ~= self then return end
@@ -278,21 +278,32 @@ end
 	- func: SetFont(font)GetFont()
 	- desc: sets/gets the object's font
 --]]---------------------------------------------------------
-function newobject:SetFont(font)
+function Input:SetFont(font)
 	self.font = font
 	self.field:setFont(font)
 	return self
 end
 
-function newobject:GetFont()
+function Input:GetFont()
 	return self.font
 end
 
+function Input:SetDefaultColor(r,g,b,a)
+	if not self.defaultcolor then
+		self.defaultcolor = {r,g,b,a}
+		return self
+	end
+	self.defaultcolor[1] = r or self.defaultcolor[1]
+	self.defaultcolor[2] = g or self.defaultcolor[2]
+	self.defaultcolor[3] = b or self.defaultcolor[3]
+	self.defaultcolor[4] = a or self.defaultcolor[4]
+	return self
+end
 --[[---------------------------------------------------------
 	- func: RedoLayout
 	- desc: refresh the object layout
 --]]---------------------------------------------------------
-function newobject:RedoLayout()
+function Input:RedoLayout()
 	local x = self.width
 	local y = self.height
 	local hpadding = self.horizontalpadding
@@ -305,7 +316,7 @@ end
 	- func: SetPadding() SetHorizontalPadding() SetVerticalPadding()
 	- desc: sets the object's padding
 --]]---------------------------------------------------------
-function newobject:SetPadding(padding)
+function Input:SetPadding(padding)
 	self.verticalpadding = padding
 	self.horizontalpadding = padding
 
@@ -313,13 +324,13 @@ function newobject:SetPadding(padding)
 	return self
 end
 
-function newobject:SetVerticalPadding(padding)
+function Input:SetVerticalPadding(padding)
 	self.verticalpadding = padding
 	self.field:setHeight(self.height - math.max(padding*2, 0))
 	return self
 end
 
-function newobject:SetHorizontalPadding(padding)
+function Input:SetHorizontalPadding(padding)
 	self.horizontalpadding = padding
 	self.field:setWidth(self.width - math.max(padding*2, 0))
 	return self
@@ -328,15 +339,15 @@ end
 	- func: GetPadding() GetVerticalPadding() GetHorizontalPadding()
 	- desc: gets the object's padding
 --]]---------------------------------------------------------
-function newobject:GetPadding()
+function Input:GetPadding()
 	return self.verticalpadding, self.horizontalpadding
 end
 
-function newobject:GetVerticalPadding()
+function Input:GetVerticalPadding()
 	return self.verticalpadding
 end
 
-function newobject:GetHorizontalPadding()
+function Input:GetHorizontalPadding()
 	return self.horizontalpadding
 end
 
@@ -344,7 +355,7 @@ end
 	- func: Clear()
 	- desc: clears the object's text
 --]]---------------------------------------------------------
-function newobject:Clear()
+function Input:Clear()
 	self.field:reset()
 end
 
@@ -352,7 +363,7 @@ end
 	- func: SetText(text)
 	- desc: sets the object's text
 --]]---------------------------------------------------------
-function newobject:SetText(text)
+function Input:SetText(text)
 	self.field:setText(text)
 	return self
 end
@@ -361,7 +372,7 @@ end
 	- func: SetMultiline(text)
 	- desc: sets the object's multiline functionality
 --]]---------------------------------------------------------
-function newobject:SetMultiline(bool)
+function Input:SetMultiline(bool)
 	--self.field:setText(bool)
 	self.multiline = bool
 	if self.multiline then
@@ -376,7 +387,7 @@ end
 	- desc: sets the object's input type property
 --]]---------------------------------------------------------
 ---@param mode "multiwrap"|"multinowrap"|"password"|"normal"
-function newobject:SetType(mode)
+function Input:SetType(mode)
 	if mode == "multiwrap" or mode == "multinowrap" then
 		self.multiline = true
 		self.field:setType(mode)
@@ -391,7 +402,7 @@ end
 	- func: SetPasswordCharacter(text)
 	- desc: sets the object's password character to display
 --]]---------------------------------------------------------
-function newobject:SetPasswordCharacter(character)
+function Input:SetPasswordCharacter(character)
 	self.field:setPasswordCharacter(character)
 	return self
 end
@@ -400,7 +411,7 @@ end
 	- func: SetUsable(table)
 	- desc: sets the object's allowed characters
 --]]---------------------------------------------------------
-function newobject:SetUsable(tbl)
+function Input:SetUsable(tbl)
 	local filterFunction = function(input)
 		--print(input, type(input))
 		local filter = tbl
@@ -420,7 +431,7 @@ end
 	- func: SetUnusable(table)
 	- desc: sets the object's forbidden characters
 --]]---------------------------------------------------------
-function newobject:SetUnusable(tbl)
+function Input:SetUnusable(tbl)
 	local filterFunction = function(input)
 		--print(input, type(input))
 		local filter = tbl
@@ -441,7 +452,7 @@ end
 	- func: SetCharacterLimit(table)
 	- desc: sets the object's forbidden characters
 --]]---------------------------------------------------------
-function newobject:SetCharacterLimit(limit)
+function Input:SetCharacterLimit(limit)
 	self.field:setCharacterLimit(limit)
 	return self
 end
@@ -450,12 +461,12 @@ end
 	- func: SetPlaceholderText(text) GetPLaceholderText()
 	- desc: sets the object's default text to display
 --]]---------------------------------------------------------
-function newobject:SetPlaceholderText(text)
+function Input:SetPlaceholderText(text)
 	self.field:setPlaceholderText(text)
 	return self
 end
 
-function newobject:GetPlaceholderText()
+function Input:GetPlaceholderText()
 	return self.field:GetPlaceholderText()
 end
 
@@ -463,7 +474,7 @@ end
 	- func: EnableInput, GetInputStatus
 	- desc: sets/gets the object's input status
 --]]---------------------------------------------------------
-function newobject:EnableInput(bool)
+function Input:EnableInput(bool)
 	if bool then
 		loveframes.inputobject = self
 		self.field:resetBlinking()
@@ -475,7 +486,7 @@ end
 	- func: GetText()
 	- desc: gets the object's text
 --]]---------------------------------------------------------
-function newobject:GetText()
+function Input:GetText()
 	return self.field:getText()
 end
 
@@ -483,11 +494,11 @@ end
 	- func: GetColor() SetColor()
 	- desc: gets the object's color
 --]]---------------------------------------------------------
-function newobject:GetColor()
+function Input:GetColor()
 	return self.color
 end
 
-function newobject:SetColor(r,g,b,a)
+function Input:SetColor(r,g,b,a)
     self.color[1] = r or self.color[1]
     self.color[2] = g or self.color[2]
     self.color[3] = b or self.color[3]
@@ -495,11 +506,11 @@ function newobject:SetColor(r,g,b,a)
 	return self
 end
 
-function newobject:GetHighlightColor()
+function Input:GetHighlightColor()
 	return self.highlightcolor
 end
 
-function newobject:SetHighlightColor(r,g,b,a)
+function Input:SetHighlightColor(r,g,b,a)
     self.highlightcolor[1] = r or self.highlightcolor[1]
     self.highlightcolor[2] = g or self.highlightcolor[2]
     self.highlightcolor[3] = b or self.highlightcolor[3]
@@ -507,11 +518,11 @@ function newobject:SetHighlightColor(r,g,b,a)
 	return self
 end
 
-function newobject:GetCursorColor()
+function Input:GetCursorColor()
 	return self.cursorcolor
 end
 
-function newobject:SetCursorColor(r,g,b,a)
+function Input:SetCursorColor(r,g,b,a)
     self.cursorcolor[1] = r or self.cursorcolor[1]
     self.cursorcolor[2] = g or self.cursorcolor[2]
     self.cursorcolor[3] = b or self.cursorcolor[3]
@@ -522,24 +533,24 @@ end
 	- func: SetShadow(bool) GetShadow(bool)
 	- desc: sets the object's shadow
 --]]---------------------------------------------------------
-function newobject:SetShadow(bool)
+function Input:SetShadow(bool)
     self.shadow = bool
 	return self
 end
-function newobject:GetShadow(bool)
+function Input:GetShadow(bool)
     return self.shadow
 end
 --[[---------------------------------------------------------
 	- func: SetVisible(bool)
 	- desc: sets the object's visibility
 --]]---------------------------------------------------------
-function newobject:SetVisible(bool)
+function Input:SetVisible(bool)
 	self.visible = bool
 	self.field:resetBlinking()
 	return self
 end
 
-function newobject:SetMaxHistory(size)
+function Input:SetMaxHistory(size)
 	self.field:setMaxHistory(size)
 	return self
 end

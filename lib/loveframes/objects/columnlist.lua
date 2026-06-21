@@ -14,16 +14,21 @@ local newobject = loveframes.NewObject("columnlist", "loveframes_object_columnli
 	- desc: intializes the element
 --]]---------------------------------------------------------
 function newobject:initialize()
-	
+
+	local skin = loveframes.GetActiveSkin()
+	local font = skin.directives.text_default_font or loveframes.basicfontsmall
+
 	self.type = "columnlist"
+	self.font = font
 	self.width = 300
 	self.height = 100
 	self.defaultcolumnwidth = 100
 	self.columnheight = 16
-	self.buttonscrollamount = 200
-	self.mousewheelscrollamount = 1500
+	-- mouse wheel scrolls a fixed number of content pixels per notch
+	self.buttonscrollamount = 1
+	self.mousewheelscrollamount = 20
 	self.autoscroll = false
-	self.dtscrolling = true
+	self.dtscrolling = false
 	self.internal = false
 	self.selectionenabled = true
 	self.multiselect = false
@@ -89,54 +94,45 @@ end
 function newobject:draw()
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
-	
-	local vbody = self.internals[1]:GetVerticalScrollBody()
-	local hbody = self.internals[1]:GetHorizontalScrollBody()
-	local width = self.width
-	local height = self.height
-	
-	if vbody then
-		width = width - vbody.width
-	end
-	
-	if hbody then
-		height = height - hbody.height
-	end
-	
-	local stencilfunc = function()
-		love.graphics.rectangle("fill", self.x, self.y, width, height)
-	end
-	
+
 	-- set the object's draw order
 	self:SetDrawOrder()
-		
+
 	local drawfunc = self.Draw or self.drawfunc
 	if drawfunc then
 		drawfunc(self)
 	end
-	
+
+	-- list area (internals[1])
 	local internals = self.internals
 	if internals then
 		for k, v in ipairs(internals) do
 			v:draw()
 		end
 	end
-	
-	love.graphics.stencil(stencilfunc)
-	love.graphics.setStencilTest("greater", 0)
-	
+
+	-- column headers (fixed at the top, clipped horizontally so they
+	-- do not spill out of the list when scrolled sideways)
 	local children = self.children
 	if children then
+		local list = self.internals[1]
+		local vbody = list:GetVerticalScrollBody()
+		local headerwidth = self.width
+		if vbody then
+			headerwidth = headerwidth - vbody.width
+		end
+		local ox, oy, ow, oh = love.graphics.getScissor()
+		love.graphics.intersectScissor(self.x, self.y, headerwidth, self.height)
 		for k, v in ipairs(children) do
 			v:draw()
 		end
+		love.graphics.setScissor(ox, oy, ow, oh)
 	end
-	
-	local drawfunc = self.DrawOver or self.drawoverfunc
+
+	drawfunc = self.DrawOver or self.drawoverfunc
 	if drawfunc then
 		drawfunc(self)
 	end
-	love.graphics.setStencilTest()
 
 end
 
@@ -385,20 +381,18 @@ end
 --]]---------------------------------------------------------
 function newobject:SetAutoScroll(bool)
 
-	local internals = self.internals
-	local list = internals[1]
+	local list = self.internals[1]
 	local scrollbar = list:GetScrollBar()
-	
+
 	self.autoscroll = bool
-	
-	if list then
-		if scrollbar then
-			scrollbar.autoscroll = bool
-		end
+	list.autoscroll = bool
+
+	if scrollbar then
+		scrollbar.autoscroll = bool
 	end
-	
+
 	return self
-	
+
 end
 
 --[[---------------------------------------------------------
@@ -507,11 +501,11 @@ function newobject:SelectRow(row, ctrl)
 	end
 	
 	local list = self.internals[1]
-	local children = list.children
+	local rows = list.rows
 	local multiselect = self.multiselect
 	local onrowselected = self.OnRowSelected
-	
-	for k, v in ipairs(children) do
+
+	for k, v in ipairs(rows) do
 		if v == row then
 			if v.selected and ctrl then
 				v.selected = false
@@ -550,18 +544,17 @@ end
 --]]---------------------------------------------------------
 function newobject:GetSelectedRows()
 	
-	local rows = {}
+	local selected = {}
 	local list = self.internals[1]
-	local children = list.children
-	
-	for k, v in ipairs(children) do
+
+	for k, v in ipairs(list.rows) do
 		if v.selected then
-			table.insert(rows, v)
+			table.insert(selected, v)
 		end
 	end
-	
-	return rows
-	
+
+	return selected
+
 end
 
 --[[---------------------------------------------------------
@@ -676,12 +669,12 @@ function newobject:SizeToChildren(max)
 	
 	local oldheight = self.height
 	local list = self.internals[1]
-	local listchildren = list.children
+	local rows = list.rows
 	local children = self.children
 	local width = self.width
 	local buf = children[1].height
-	local h = listchildren[1].height
-	local c = #listchildren
+	local h = rows[1].height
+	local c = #rows
 	local height = buf + h*c
 	
 	if max then
@@ -701,15 +694,8 @@ end
 function newobject:RemoveRow(id)
 
 	local list = self.internals[1]
-	local listchildren = list.children
-	local row = listchildren[id]
-	
-	if row then
-		row:Remove()
-	end
-	
-	list:CalculateSize()
-	list:RedoLayout()
+
+	list:RemoveRow(id)
 	return self
 
 end
@@ -721,15 +707,14 @@ end
 function newobject:SetCellText(text, rowid, columnid)
 	
 	local list = self.internals[1]
-	local listchildren = list.children
-	local row = listchildren[rowid]
-	
-	if row and row.columndata[columnid]then
+	local row = list.rows[rowid]
+
+	if row and row.columndata[columnid] then
 		row.columndata[columnid] = text
 	end
-	
+
 	return self
-	
+
 end
 
 --[[---------------------------------------------------------
@@ -738,8 +723,8 @@ end
 --]]---------------------------------------------------------
 function newobject:GetCellText(rowid, columnid)
 	
-	local row = self.internals[1].children[rowid]
-	
+	local row = self.internals[1].rows[rowid]
+
 	if row and row.columndata[columnid] then
 		return row.columndata[columnid]
 	else
@@ -755,9 +740,8 @@ end
 function newobject:SetRowColumnData(rowid, columndata)
 
 	local list = self.internals[1]
-	local listchildren = list.children
-	local row = listchildren[rowid]
-	
+	local row = list.rows[rowid]
+
 	if row then
 		for k, v in ipairs(columndata) do
 			row.columndata[k] = tostring(v)
@@ -829,15 +813,8 @@ end
 function newobject:ResizeColumns()
 
 	local children = self.children
-	local width = 0
-	local vbody = self.internals[1]:GetVerticalScrollBody()
-	
-	if vbody then
-		width = (self:GetWidth() - vbody:GetWidth())/#children
-	else
-		width = self:GetWidth()/#children
-	end
-	
+	local width = self:GetWidth()/#children
+
 	for k, v in ipairs(children) do
 		v:SetWidth(width)
 		self:PositionColumns()
@@ -867,7 +844,34 @@ end
 function newobject:GetDefaultColumnWidth()
 
 	return self.defaultcolumnwidth
-	
+
+end
+
+--[[---------------------------------------------------------
+	- func: SetFont(font)
+	- desc: sets the font used to draw the list's rows
+--]]---------------------------------------------------------
+function newobject:SetFont(font)
+
+	local list = self.internals[1]
+
+	self.font = font
+	list:SetFont(font)
+	list:CalculateSize()
+	list:RedoLayout()
+
+	return self
+
+end
+
+--[[---------------------------------------------------------
+	- func: GetFont()
+	- desc: gets the font used to draw the list's rows
+--]]---------------------------------------------------------
+function newobject:GetFont()
+
+	return self.font
+
 end
 
 --[[---------------------------------------------------------
@@ -903,8 +907,8 @@ function newobject:SizeColumnToData(columnid)
 	local column = self.children[columnid]
 	local list = self.internals[1]
 	local largest = 0
-	
-	for k, v in ipairs(list.children) do
+
+	for k, v in ipairs(list.rows) do
 		local width = v:GetFont():getWidth(self:GetCellText(k, columnid))
 		if width > largest then
 			largest = width + v.textx

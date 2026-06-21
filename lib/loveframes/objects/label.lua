@@ -26,7 +26,7 @@ function newobject:initialize()
 
 	self.type = "label"
 	self.text = ""
-	self.defaultcolor = default_color or {1,1,1,1}
+	--self.color = default_color or {1,1,1,1}
 	self.font = default_font or loveframes.basicfont
 	self.textmesh = love.graphics.newTextBatch(self.font, "")
 
@@ -157,10 +157,14 @@ function newobject:SetFont(font)
 end
 
 function newobject:SetColor(r,g,b,a)
-	self.defaultcolor[1] = r or self.defaultcolor[1]
-	self.defaultcolor[2] = g or self.defaultcolor[2]
-	self.defaultcolor[3] = b or self.defaultcolor[3]
-	self.defaultcolor[4] = a or self.defaultcolor[4]
+	if not self.color then
+		self.color = {r,g,b,a}
+		return self
+	end
+	self.color[1] = r or self.color[1]
+	self.color[2] = g or self.color[2]
+	self.color[3] = b or self.color[3]
+	self.color[4] = a or self.color[4]
 	return self
 end
 

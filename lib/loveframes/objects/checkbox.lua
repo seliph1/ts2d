@@ -28,7 +28,7 @@ function newobject:initialize()
 	self.internals = {}
 	self.OnChanged = nil
 	self.groupIndex = 0
-	
+	self.grayable = true
 	self:SetDrawFunc()
 end
 
@@ -46,7 +46,6 @@ function newobject:update(dt)
 		end
 	end
 	self:CheckHover()
-	
 	local hover = self.hover
 	local internals = self.internals
 	local boxwidth = self.boxwidth
@@ -54,7 +53,6 @@ function newobject:update(dt)
 	local parent = self.parent
 	local base = loveframes.base
 	local update = self.Update
-	
 	if not hover then
 		self.down = false
 	else
@@ -62,17 +60,14 @@ function newobject:update(dt)
 			self.down = true
 		end
 	end
-	
 	if not self.down and loveframes.downobject == self then
 		self.hover = true
 	end
-	
 	-- move to parent if there is a parent
 	if parent ~= base  then
 		self.x = self.parent.x + self.staticx
 		self.y = self.parent.y + self.staticy
 	end
-	
 	if internals[1] then
 		self.width = boxwidth + 5 + internals[1].width
 		if internals[1].height == boxheight then
@@ -88,15 +83,12 @@ function newobject:update(dt)
 		self.width = boxwidth
 		self.height = boxheight
 	end
-	
 	for k, v in ipairs(internals) do
 		v:update(dt)
 	end
-	
 	if update then
 		update(self, dt)
 	end
-
 end
 
 

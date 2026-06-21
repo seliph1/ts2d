@@ -239,7 +239,6 @@ function Menu:AddSubMenu(text, icon, menu)
 		menu.parent = self.parent
 	end
 	table.insert(self.internals, menuoption)
-	
 	self:RedoLayout()
 	return self
 end
@@ -289,8 +288,6 @@ function Menu:Open(x, y)
 			end
 		end
 	end
-
-	
 end
 
 function Menu:Close()

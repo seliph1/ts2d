@@ -81,11 +81,12 @@ function loveframes.RegisterSkin(skin)
 	
 	newskin.dir = dir
 	local images = {}
+	local fonts = {}
 	
 	local indeximages = loveframes.config["INDEXSKINIMAGES"]
 	if indeximages then
 		local imagelist = loveframes.GetDirectoryContents(imagedir)
-		local filename, extension, image
+		local filename, extension, image, font
 		for k, v in ipairs(imagelist) do
 			extension = v.extension
 			filename = v.name .. "." .. extension
@@ -94,9 +95,15 @@ function loveframes.RegisterSkin(skin)
 				image:setFilter("nearest", "nearest")
 				images[filename] = image
 			end
+
+			if extension == "ttf" or extension == "otf" then
+				font = love.graphics.newFont(v.fullpath)
+				fonts[filename] = font
+			end
 		end
 	end
 	newskin.images = images
+	newskin.fonts = fonts
 	skins[name] = newskin
 end
 
@@ -107,6 +114,7 @@ function loveframes.LoadSkins(dir)
 	for k, v in ipairs(skinlist) do
 		if v.extension == "lua" then
 			skin = loveframes.require(v.requirepath)
+			--loveframes.RegisterSkin(skin)
 		end
 	end
 end

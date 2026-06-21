@@ -27,6 +27,7 @@ function newobject:initialize()
 	self.clickable = true
 	self.enabled = true
 	self.toggleable = false
+	self.grayable = true
 	self.toggle = false
 	self.OnClick = nil
 	self.groupIndex = 0

@@ -24,6 +24,7 @@ function newobject:initialize()
 	self.checked = false
 	self.lastvalue = false
 	self.internal = false
+	self.grayable = true
 	self.down = true
 	self.enabled = true
 	self.internals = {}

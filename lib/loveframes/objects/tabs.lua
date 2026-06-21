@@ -259,6 +259,62 @@ function newobject:AddTab(name, object, tip, image, onopened, onclosed)
 end
 
 --[[---------------------------------------------------------
+	- func: InsertTab(pos, name, object, tip, image, onopened, onclosed)
+	- desc: adds a new tab at the given 1-based index instead of the end,
+	        renumbering the tab buttons so they match the page order
+--]]---------------------------------------------------------
+function newobject:InsertTab(pos, name, object, tip, image, onopened, onclosed)
+	-- Reuse AddTab (appends the content child and inserts the tab button before
+	-- the scroll buttons), then move both into place and renumber.
+	local tab = self:AddTab(name, object, tip, image, onopened, onclosed)
+	local children = self.children
+	local internals = self.internals
+	local count = #children
+	pos = math.max(1, math.min(pos or count, count))
+	if pos >= count then
+		return tab
+	end
+
+	-- Move the content child from the end to `pos`.
+	table.insert(children, pos, table.remove(children, count))
+
+	-- Pull the freshly-added tab button out of internals...
+	for k = #internals, 1, -1 do
+		if internals[k] == tab then
+			table.remove(internals, k)
+			break
+		end
+	end
+	-- ...and reinsert it before the current pos-th tab button.
+	local seen = 0
+	local inserted = false
+	for k = 1, #internals do
+		if internals[k].type == "tabbutton" then
+			seen = seen + 1
+			if seen == pos then
+				table.insert(internals, k, tab)
+				inserted = true
+				break
+			end
+		end
+	end
+	if not inserted then
+		table.insert(internals, tab)
+	end
+
+	-- Renumber tab buttons to match the (now reordered) children.
+	local n = 1
+	for _, v in ipairs(internals) do
+		if v.type == "tabbutton" then
+			v.tabnumber = n
+			n = n + 1
+		end
+	end
+	self.tabnumber = n
+	return tab
+end
+
+--[[---------------------------------------------------------
 	- func: AddScrollButtons()
 	- desc: creates scroll buttons fot the tab panel
 	- note: for internal use only
@@ -372,7 +428,14 @@ function newobject:SwitchToTab(tabnumber)
 		v.visible = false
 	end
 	self.tab = tabnumber
-	self.children[tabnumber].visible = true
+	local tab = self.children[tabnumber]
+	if tab then
+		tab.visible = true
+		-- the tab's contents were not updated while hidden, so position them
+		-- right away (like a freshly created object) instead of letting them
+		-- be drawn at a stale position for one frame after switching
+		tab:UpdateZero()
+	end
 	return self
 end
 

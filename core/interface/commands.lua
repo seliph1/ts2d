@@ -37,6 +37,8 @@ local commands = {
 	-- DEBUG
 	-------------------------------------------------------
 	lerp = {
+		---Sets the client interpolation (lerp) speed.
+		---@param speed number|string Interpolation speed (default: 30)
 		action = function(speed)
 			local client = require "client"
 			speed = tonumber(speed) or 30
@@ -45,6 +47,10 @@ local commands = {
 	};
 
     camera = {
+		---Controls the client camera according to the given mode.
+		---@param mode "update"|"self"|"follow"|"translate"|"snap"|"unbind"|"lerp" Camera operation mode
+		---@param ... string Mode arguments (e.g. category/id, x/y or speed)
+		---@return string? help Help message when the mode is invalid
         action = function(mode, ...)
 			local args = {...}
 			local client = require "client"
@@ -127,6 +133,8 @@ local commands = {
 	};
 
 	print = {
+		---Evaluates a lua expression and prints the result to the console.
+		---@param ... string Lua expression to evaluate
 		action = function(...)
 			local block = table.concat({...}, " ")
 			local expression, error_message = loadstring( "return ".. block)
@@ -156,6 +164,8 @@ local commands = {
 	};
 
 	dump = {
+		---Evaluates a lua expression and dumps the value structure (serpent) to the console.
+		---@param ... string Lua expression to evaluate
 		action = function(...)
 			local block = table.concat({...}, " ")
 			local expression, error_message = loadstring( "return ".. block)
@@ -190,7 +200,8 @@ local commands = {
 	};
 
 	debug = {
-		---Clear console
+		---Sets the debug level reported by the client.
+		---@param level number|string Debug level (default: 0)
 		action = function(level)
 			local client = require "client"
 			client.debug_level = tonumber(level) or 0
@@ -198,6 +209,8 @@ local commands = {
 	};
 
 	utf8 = {
+		---Prints test sentences in several languages to validate UTF-8 rendering.
+		---@return string sentences List of formatted sentences per language
 		action = function()
 			local frases = {
 				{ idioma = "Português", frase = "Você já viu o avião de João?" },
@@ -227,7 +240,9 @@ local commands = {
 	-- NETWORK
 	-------------------------------------------------------
 	sendrate = {
-		---@param rate number
+		---Changes the client global packet send rate.
+		---@param rate number|string New send rate (default: 35)
+		---@return string message Message confirming the rate change
 		action = function(rate)
 			local client = require "client"
 			local old_rate = client.sendRate
@@ -243,6 +258,9 @@ local commands = {
 	};
 
 	get = {
+		---Fires an asynchronous HTTP request on a separate thread.
+		---@param url string Target URL of the request
+		---@param options? string Additional options passed to the thread
 		action = function(url, options)
 			local thread = love.thread.newThread("http_thread.lua")
 			if thread then
@@ -252,6 +270,10 @@ local commands = {
 	};
 
 	discordrpc = {
+		---Sets a Discord Rich Presence property.
+		---@param property string Name of the property to change
+		---@param ... string Value to assign to the property
+		---@return string? status Status returned by the discordRPC library
 		action = function(property, ...)
 			local value = table.concat({...}," ")
 			local discordRPC = require "lib.discordRPC"
@@ -265,12 +287,16 @@ local commands = {
 	};
 
 	ping = {
+		---Prints a blank line to the console (response test).
 		action = function()
 			print()
 		end
 	};
 
 	connect = {
+		---Connects the client to a server if not already connected.
+		---@param ip? string Server IP address (default: "127.0.0.1")
+		---@param port? string Server port (default: "36963")
 		action = function(ip, port)
 			local client = require "client"
 			if not client.connected then
@@ -284,6 +310,7 @@ local commands = {
 	};
 
 	disconnect = {
+		---Disconnects the client from the current server, if connected.
 		action = function()
 			local client = require "client"
 			local LF = require "lib.loveframes"
@@ -322,6 +349,8 @@ local commands = {
 	};
 	--]]
 	toast = {
+		---Displays a temporary message (toast) on the console.
+		---@param ... string Text of the message to display
 		action = function(...)
 			local message = table.concat({...}," ")
 			local console = require "core.interface.console"
@@ -337,6 +366,8 @@ local commands = {
 	};
 
     warning = {
+		---Opens a modal warning window with the given message.
+		---@param ... string Text of the warning message
         action = function(...)
 			local message = table.concat({...}," ")
             local LF = require "lib.loveframes"
@@ -358,6 +389,8 @@ local commands = {
 	};
 
 	scale = {
+		---Enables or disables client render scaling.
+		---@param bool "true"|"false" "true" to enable scaling
 		action = function(bool)
 			local client = require "client"
 			client.scale = (bool == "true")
@@ -365,6 +398,8 @@ local commands = {
 	};
 
 	volume = {
+		---Adjusts the global audio volume (clamped between 0 and 1).
+		---@param level number|string Volume level between 0 and 1
 		action = function(level)
 			level = tonumber(level) or 0
 			level = math.min(math.max(0, level), 1)
@@ -375,6 +410,7 @@ local commands = {
 	};
 
 	mute = {
+		---Fully mutes the audio (volume = 0).
 		action = function()
 			love.audio.setVolume(0)
 		end,
@@ -383,7 +419,9 @@ local commands = {
 	};
 
 	vsync = {
-		---@param mode "on"|"off"|"true"|"false"
+		---Enables or disables the window vertical sync (vsync).
+		---@param mode "on"|"off"|"true"|"false" Desired vsync state
+		---@return string message Message reporting the new vsync state
 		action = function(mode)
 			local width, height = love.graphics.getDimensions()
 			if mode == "true" or mode == "on" then
@@ -406,6 +444,8 @@ local commands = {
 	-- REMOTE ACTIONS
 	-------------------------------------------------------
 	edit = {
+		---Loads a map and enters edit mode (editor).
+		---@param ... string Map file name (without the .map extension)
 		action = function(...)
 			local client = require "client"
 			local args = {...}
@@ -423,6 +463,8 @@ local commands = {
 	};
 
 	map = {
+		---Loads a map and enters game mode.
+		---@param ... string Map file name (without the .map extension)
 		action = function(...)
 			local client = require "client"
 			local args = {...}
@@ -438,6 +480,8 @@ local commands = {
 	};
 
 	clearmap = {
+		---Removes all elements from the current map.
+		---@param ... string Ignored arguments
 		action = function(...)
 			local args = {...}
 			local client = require "client"
@@ -450,6 +494,7 @@ local commands = {
 	};
 
 	cleareffect = {
+		---Removes all active visual effects from the current map.
 		action = function ()
 			local client = require "client"
 			if client.map then
@@ -459,6 +504,10 @@ local commands = {
 	};
 
 	effect = {
+		---Spawns a visual effect at the given map coordinates.
+		---@param effect_id string|number Identifier of the effect to spawn
+		---@param x number|string X coordinate (default: 0)
+		---@param y number|string Y coordinate (default: 0)
 		action = function(effect_id, x, y)
 			local client = require "client"
 		    x = tonumber(x) or 0
@@ -468,6 +517,9 @@ local commands = {
 	};
 
 	scroll = {
+		---Scrolls the current map by the given offset.
+		---@param x number X scroll offset (default: 0)
+		---@param y number Y scroll offset (default: 0)
 		action = function(x,y)
 			local client = require "client"
 			if client.map then
@@ -479,6 +531,8 @@ local commands = {
 	};
 
 	log = {
+		---Pushes a message into the server log panel.
+		---@param ... string Text of the log message
 		action = function (...)
 			local ui = require "core.interface.ui"
 			local message = table.concat({...}," ")
@@ -487,6 +541,8 @@ local commands = {
 	};
 
 	setname = {
+		---Sends a request to change the player name (when connected).
+		---@param ... string New player name
 		action = function(...)
 			local client = require "client"
 			if client.connected then
@@ -497,6 +553,8 @@ local commands = {
 	};
 
 	say = {
+		---Sends a chat message to the server.
+		---@param ... string Message text
 		action = function(...)
 			local client = require "client"
 			local message = table.concat({...}, " ")
@@ -505,6 +563,9 @@ local commands = {
 	};
 
 	equip = {
+		---Sends a request to equip an item on a target entity.
+		---@param target_id string|number Identifier of the target entity
+		---@param item_type string|number Type of item to equip
 		action = function(target_id, item_type)
 			local client = require "client"
 			client.send( string.format("equip %s %s", target_id, item_type) )
@@ -512,6 +573,7 @@ local commands = {
 	};
 
 	tp = {
+		---Teleports the player to the current cursor/target position.
 		action = function()
 			local client = require "client"
 			local targetX = client.attribute "targetX"
@@ -528,6 +590,10 @@ local commands = {
 	};
 
 	follow = {
+		---Makes the camera follow an entity, or unbinds it when id is 0.
+		---@param category string Share category of the entity (e.g. "players")
+		---@param id number|string Entity id, or 0 to unbind the camera
+		---@return string? error Error message when the entity cannot be found
 		action = function(category, id)
 			local client = require "client"
 			if not client.joined then return "Client isn't connected. Cannot follow anything." end
@@ -549,6 +615,10 @@ local commands = {
 	};
 
 	team = {
+		---Requests a team and look change for the player.
+		---@param team string Team to join
+		---@param look string Look/appearance selection
+		---@return string? error Error message when the client is not connected
 		action = function(team, look)
 			local client = require "client"
 			if not client.joined then
@@ -562,6 +632,7 @@ local commands = {
 	};
 
 	kill = {
+		---Sends a request to kill (suicide) the current player.
 		action = function()
 			local client = require "client"
 			client.send("kill")
@@ -571,6 +642,8 @@ local commands = {
 	};
 
 	rcon = {
+		---Sends a remote console (rcon) command to the server.
+		---@param ... string Command and arguments to run remotely
 		action = function(...)
 			local command = table.concat({...}, " ")
 			local client = require "client"
@@ -580,6 +653,10 @@ local commands = {
 	},
 
 	help = {
+		---Lists all available commands along with their parameter names.
+		---@param property string Unused (reserved for filtering a specific command)
+		---@param ... string Unused extra arguments
+		---@return string list Newline-separated list of commands and their parameters
 		action = function(property, ...)
 			local console = require "core.interface.console"
 			local commands = console.input.commands

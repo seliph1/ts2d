@@ -32,7 +32,7 @@ function TextBox:initialize()
 	self.extrawidth = 0
 	self.extraheight = 0
 	self.buttonscrollamount = 1
-	self.mousewheelscrollamount = 1
+	self.mousewheelscrollamount = 20
 	self.autoscroll = true
 
 	self.OnEnter = nil
@@ -47,16 +47,18 @@ function TextBox:initialize()
 
 	-- Font properties
 	local skin = loveframes.GetActiveSkin()
-	local font = skin.directives.text_default_font
+	local default_font = skin.directives.text_default_font
+	local default_color = skin.directives.text_default_color
 
-	self.font = font or loveframes.basicfont
+	self.font = default_font or loveframes.basicfont
+	self.color = nil
 	self.verticalpadding = 4
 	self.horizontalpadding = 4
 
 	-- Initialize the text input object
 	self.field = loveframes.input()
 	self.field:setType("normal")
-	self.field:setFont(font)
+	self.field:setFont(self.font)
 	self.field:setDimensions(self.width, self.height)
 end
 
@@ -352,6 +354,19 @@ end
 function TextBox:GetFont()
 	return self.font
 end
+
+function TextBox:SetColor(r,g,b,a)
+	if not self.color then
+		self.color = {r,g,b,a}
+		return self
+	end
+	self.color[1] = r or self.color[1]
+	self.color[2] = g or self.color[2]
+	self.color[3] = b or self.color[3]
+	self.color[4] = a or self.color[4]
+	return self
+end
+
 
 --[[---------------------------------------------------------
 	- func: RedoLayout

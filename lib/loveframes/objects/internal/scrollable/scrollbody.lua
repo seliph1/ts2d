@@ -9,6 +9,33 @@ return function(loveframes)
 -- scrollbar class
 local newobject = loveframes.NewObject("scrollbody", "loveframes_object_scrollbody", true)
 
+-- an object is "scrollable" if it owns a scroll body
+local function isScrollHost(obj)
+	local internals = obj.internals
+	if not internals then
+		return false
+	end
+	for i = 1, #internals do
+		if internals[i].type == "scrollbody" then
+			return true
+		end
+	end
+	return false
+end
+
+-- walks up from the hovered object to the first scrollable ancestor, so that
+-- only the innermost scrollable under the mouse reacts to the wheel
+local function innermostScrollHost()
+	local obj = loveframes.GetHoverObject()
+	while obj do
+		if isScrollHost(obj) then
+			return obj
+		end
+		obj = obj.parent
+	end
+	return nil
+end
+
 --[[---------------------------------------------------------
 	- func: initialize()
 	- desc: initializes the object
@@ -169,12 +196,28 @@ function newobject:wheelmoved(x, y)
 	if not self:OnState() then return end
 	if not self:isUpdating() then return end
 
-	local scroll = self.parent.buttonscrollamount * 5
-	if self.parent.hover then
-		if self.bartype == "vertical" then
-			self:Scroll(-y * scroll)
-		elseif self.bartype == "horizontal"	then
-			self:Scroll(-x * scroll)
+	local parent = self.parent
+	if not parent.hover then return end
+
+	-- when scrollables are nested (e.g. a log inside a scrollpanel), hover is
+	-- propagated to the container parents, so several hosts would scroll at
+	-- once. only let the innermost scrollable under the mouse react
+	if innermostScrollHost() ~= parent then return end
+
+	-- scroll a fixed number of *content* pixels per wheel notch. Scroll()
+	-- moves the bar, and one bar pixel maps to (itemsize / viewsize) content
+	-- pixels, so divide by that ratio to keep the speed independent of the
+	-- content/scrollbar size
+	local step = parent.mousewheelscrollamount
+	if self.bartype == "vertical" then
+		local itemheight = parent.itemheight
+		if itemheight and itemheight > 0 then
+			self:Scroll(-y * step * (parent.height / itemheight))
+		end
+	elseif self.bartype == "horizontal" then
+		local itemwidth = parent.itemwidth
+		if itemwidth and itemwidth > 0 then
+			self:Scroll(-x * step * (parent.width / itemwidth))
 		end
 	end
 end

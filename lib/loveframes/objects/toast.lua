@@ -21,11 +21,11 @@ function Toast:initialize()
     self.default_time = 5
     self.collide = false
     self.margin = 2
-    self.backgroundcolor = {0, 0, 0, 0.8}
+    --self.backgroundcolor = {0, 0, 0, 0.8}
     self.textcolor = {1, 1, 1, 1}
     self.outline = true
     self.message_order = "ascending"
-    self.shadow = true
+    self.shadow = false
     self.relative_box_width = 0.6
     self:SetDrawFunc()
 end

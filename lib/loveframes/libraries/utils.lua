@@ -279,10 +279,11 @@ end
 --]]---------------------------------------------------------
 function loveframes.Round(num, idp)
 	local mult = 10^(idp or 0)
-    if num >= 0 then
+	
+    if num >= 0 then 
 		return math.floor(num * mult + 0.5) / mult
-    else
-		return math.ceil(num * mult - 0.5) / mult
+    else 
+		return math.ceil(num * mult - 0.5) / mult 
 	end
 end
 
@@ -311,7 +312,7 @@ end
 --]]---------------------------------------------------------
 function loveframes.SplitString(str, pat)
 	local t = {}  -- NOTE: use {n = 0} in Lua-5.0
-
+	
 	if pat == " " then
 		local fpat = "(.-)" .. pat
 		local last_end = 1
@@ -346,7 +347,7 @@ function loveframes.SplitString(str, pat)
 			table.insert(t, cap)
 		end
 	end
-
+	
 	return t
 end
 
@@ -357,6 +358,7 @@ end
 function loveframes.RemoveAll()
 	loveframes.base.children = {}
 	loveframes.base.internals = {}
+	
 	loveframes.hoverobject = false
 	loveframes.downobject = false
 	loveframes.modalobject = false
@@ -372,6 +374,7 @@ function loveframes.AnchorReset()
 	loveframes.hoverobject = false
 	loveframes.downobject = false
 	loveframes.draggingobject = false
+
 	loveframes.anchor_x = 0
 	loveframes.anchor_y = 0
 	loveframes.drag_width = 0
@@ -388,6 +391,36 @@ function loveframes.GetAnchors()
 		loveframes.drag_y,
 		loveframes.drag_width,
 		loveframes.drag_height
+end
+--[[---------------------------------------------------------
+	- func: TableHasValue(table, value)
+	- desc: checks to see if a table has a specific value
+--]]---------------------------------------------------------
+function loveframes.TableHasValue(table, value)
+	for k, v in pairs(table) do
+		if v == value then
+			return true
+		end
+	end
+	
+	return false
+end
+
+--[[---------------------------------------------------------
+	- func: TableHasKey(table, key)
+	- desc: checks to see if a table has a specific key
+--]]---------------------------------------------------------
+function loveframes.TableHasKey(table, key)
+	return table[key] ~= nil
+	
+end
+
+--[[---------------------------------------------------------
+	- func: Error(message)
+	- desc: displays a formatted error message
+--]]---------------------------------------------------------
+function loveframes.Error(message)
+	error("[Love Frames] " ..message)
 end
 
 --[[---------------------------------------------------------
@@ -470,15 +503,12 @@ end
 --]]---------------------------------------------------------
 function loveframes.IsCtrlDown()
 	if love.system.getOS() == "OS X" then
-		---@diagnostic disable-next-line: param-type-mismatch
+---@diagnostic disable-next-line: param-type-mismatch
 		return love.keyboard.isDown("lgui") or love.keyboard.isDown("rgui")
 	end
 	return love.keyboard.isDown("lctrl") or love.keyboard.isDown("rctrl")
 end
---[[---------------------------------------------------------
-	- func: Color()
-	- desc: extract the color code from given string
---]]---------------------------------------------------------
+
 function loveframes.Color(s, a)
 	local r, g, b = string.match(s, '#?(%x%x)(%x%x)(%x%x)')
 	if r == nil then return end
@@ -494,8 +524,9 @@ function loveframes.PushMessage(message, options)
 	toast:PushMessage(message, options)
 end
 
+
 --[[---------------------------------------------------------
-	- func: DebugDraw()
+	- func: draw()
 	- desc: draws debug information
 --]]---------------------------------------------------------
 loveframes.debugwindow = {type = "None", children = nil, parent = nil, x = 0, y = 0, width = 0, height = 0}
@@ -596,9 +627,10 @@ function loveframes.DebugDraw()
 			love.graphics.print(tostring(k)..": ".. str, ex_info_x, ex_info_y + height)
 			height = height + 10
 		end
-	end
+	end	
 end
 
+--return util
 
 ---------- module end ----------
 end

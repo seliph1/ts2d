@@ -632,7 +632,7 @@ function Base:Expand(direction, margin)
 		else
 			self.staticy = 0
 		end
-	else
+	elseif direction == "all" then
 		local offset_x = math.floor( parent.width * (1 - factor) * 0.5 )
 		local offset_y = math.floor( parent.height * (1 - factor) * 0.5 )
 		if parent == base then
@@ -779,12 +779,84 @@ function Base:Wrap(margin)
 end
 
 --[[---------------------------------------------------------
-	- func: Centralize(align, elements..)
-	- desc: Centralizes children evenly along the container's length
+	- func: Stack(align, distance, element, snap)
+	- desc: positions this object next to another element, on the
+			given side ("up"/"down"/"left"/"right", default "down"),
+			leaving a gap of "distance" pixels (default 0) between
+			their nearest edges. "snap" controls the cross-axis
+			alignment: "center" (default), "start" (snap to the
+			left/top edge) or "end" (snap to the right/bottom edge)
 --]]---------------------------------------------------------
-function Base:Centralize(align, ...)
+function Base:Stack(distance, element, align, snap)
+	if not element then return self end
+	align = align or "down"
+	distance = distance or 0
+	snap = snap or "start"
+
+	local base = loveframes.base
+	local parent = self.parent
+
+	-- The element's position, expressed in *this object's* parent frame. We
+	-- read from staticx/staticy (what SetPos writes) instead of x/y, because
+	-- x/y is only refreshed during update() and would be stale right after a
+	-- SetPos call. When both share a parent this is exact; otherwise we fall
+	-- back to translating absolute coordinates.
+	local ex, ey
+	if element.parent == parent then
+		if parent == base then
+			ex, ey = element.x, element.y
+		else
+			ex, ey = element.staticx, element.staticy
+		end
+	else
+		ex, ey = element.x, element.y
+		if parent ~= base then
+			ex, ey = ex - parent.x, ey - parent.y
+		end
+	end
+
+	local ew, eh = element.width, element.height
+	local w, h = self.width, self.height
+
+	-- cross-axis offset against the element of size "esize", for this object of
+	-- size "size": "start" snaps to the element's near edge, "end" to the far
+	-- edge, anything else centers it
+	local function crossoffset(esize, size)
+		if snap == "start" then
+			return 0
+		elseif snap == "end" then
+			return esize - size
+		end
+		return (esize - size) / 2
+	end
+
+	-- target position (in self.parent's frame): a "distance" gap between the
+	-- touching edges, aligned on the perpendicular axis per "snap"
+	local tx, ty
+	if align == "up" then
+		tx, ty = ex + crossoffset(ew, w), ey - h - distance
+	elseif align == "left" then
+		tx, ty = ex - w - distance, ey + crossoffset(eh, h)
+	elseif align == "right" then
+		tx, ty = ex + ew + distance, ey + crossoffset(eh, h)
+	else -- "down"
+		tx, ty = ex + crossoffset(ew, w), ey + eh + distance
+	end
+
+	tx, ty = math.floor(tx), math.floor(ty)
+	if parent == base then
+		self.x, self.y = tx, ty
+	else
+		self.staticx, self.staticy = tx, ty
+		self.x, self.y = parent.x + tx, parent.y + ty
+	end
+
+	if parent.container and parent.RedoLayout then
+		parent:RedoLayout()
+	end
 	return self
 end
+
 
 --[[---------------------------------------------------------
 	- func: SetSize(width, height, r1, r2)
@@ -1475,6 +1547,16 @@ function Base:SetDrawFunc()
 	self.drawfunc = activeskin[funcname] -- or defaultskin[funcname]
 	funcname = self.type .. "_over"
 	self.drawoverfunc = activeskin[funcname] -- or defaultskin[funcname]
+	-- SetDrawFunc() is the last call of every object's initialize(), so it
+	-- doubles as a "just created" hook. Objects created dynamically (e.g. a
+	-- scrollbar spawned after its parent's update pass) would otherwise be
+	-- drawn once at (0, 0) before their first update positions them. If the
+	-- parent is already known (internal objects set it in initialize), run a
+	-- single update so the object is placed before it can be drawn. Objects
+	-- made through loveframes.Create get this in Create, once parented.
+	if self.parent and self.parent ~= loveframes.base then
+		self:UpdateZero()
+	end
 end
 
 --[[---------------------------------------------------------

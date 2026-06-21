@@ -65,6 +65,13 @@ function newobject:update(dt)
 	local parent = self.parent
 	local scrollable = parent.parent.parent
 
+	-- some objects create their scroll bar before setting their scroll
+	-- metrics (e.g. during construction); bail until they exist so the
+	-- bar only positions/sizes itself once the host is ready
+	if scrollable.itemheight == nil or scrollable.itemwidth == nil then
+		return
+	end
+
 	if bartype == "vertical" then
 		self.width 	= parent.width
 	elseif bartype == "horizontal" then

@@ -31,6 +31,8 @@ function Frame:initialize()
 	self.candrag = true
 	self.canresize = false
 	self.resizemargin = 6
+	self.cursor = nil
+	self.resizezone = nil
 	self.minwidth = 100
 	self.minheight = 30
 	self.maxwidth = 500
@@ -76,25 +78,35 @@ function Frame:update(dt)
 	local update = self.Update
 	self:CheckHover()
 
-	--[[
-	if self.canresize then
-		local zone = self.resizeanchor
-		if not self.resizing then
-			zone = self:GetResizeZone()
+	-- cursor feedback: directional arrows over/while resizing the edges,
+	-- the move cursor over/while dragging the title bar (the cursor is
+	-- applied by loveframes via hoverobject.cursor / draggingobject.cursor)
+	if self.hover or self:IsDragging() then
+		local cursors = loveframes.cursors
+		local zone
+		if self.canresize then
+			if self:IsResizing() then
+				zone = self.resizezone
+			elseif self.hover then
+				zone = self:GetResizeZone(mx, my)
+			end
 		end
-
 		if zone == "top" or zone == "bottom" then
-			self.cursor = loveframes.cursors.sizens
+			self.cursor = cursors.sizens
 		elseif zone == "left" or zone == "right" then
-			self.cursor = loveframes.cursors.sizewe
-		elseif zone == "bottom_right" or zone == "top_left" then
-			self.cursor = loveframes.cursors.sizenwse
+			self.cursor = cursors.sizewe
+		elseif zone == "top_left" or zone == "bottom_right" then
+			self.cursor = cursors.sizenwse
 		elseif zone == "top_right" or zone == "bottom_left" then
-			self.cursor = loveframes.cursors.sizenesw
+			self.cursor = cursors.sizenesw
+		elseif self.candrag and self:IsInTitleArea(mx, my) then
+			self.cursor = cursors.sizeall
 		else
 			self.cursor = nil
 		end
-	end]]
+	else
+		self.cursor = nil
+	end
 
 	-- Resize check
 	if self.canresize and self:IsResizing() then
@@ -224,6 +236,11 @@ function Frame:mousepressed(x, y, button)
 
 	if self.hover and button == 1 then
 		self:MakeTop()
+		-- remember which edge/corner the resize started on, so the cursor
+		-- keeps its shape while dragging even if the mouse drifts off it
+		if self.canresize then
+			self.resizezone = self:GetResizeZone(x, y)
+		end
 	end
 
 	for k, v in pairs(children) do
@@ -232,6 +249,20 @@ function Frame:mousepressed(x, y, button)
 	for k, v in pairs(internals) do
 		v:mousepressed(x, y, button)
 	end
+end
+
+--[[---------------------------------------------------------
+- func: IsInTitleArea(mx, my)
+- desc: returns whether the given point is within the frame's
+		draggable title bar
+--]] ---------------------------------------------------------
+function Frame:IsInTitleArea(mx, my)
+	local rx = mx - self.x
+	local ry = my - self.y
+	local padding = self.canresize and (self.resizemargin + 1) or 0
+	local titleheight = 20
+	return rx >= padding and rx <= self.width - padding
+		and ry >= padding and ry <= titleheight
 end
 
 --[[---------------------------------------------------------
@@ -245,6 +276,7 @@ function Frame:mousereleased(x, y, button)
 	local internals = self.internals
 
 	self.cursor = nil
+	self.resizezone = nil
 
 	for k, v in pairs(internals) do
 		v:mousereleased(x, y, button)
