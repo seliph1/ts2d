@@ -40,7 +40,7 @@ if love.getVersion() < 12 then
 	love.graphics.newTextBatch = love.graphics.newText
 end
 
---[[
+
 local fps_cap = 1/120
 --fps_cap = 0.001
 
@@ -82,7 +82,7 @@ function love.run()
 
 		if love.timer then love.timer.sleep(fps_cap) end
 	end
-end]]
+end
 
 local loveframes 	= require "lib.loveframes"
 local console 		= require "core.interface.console"
