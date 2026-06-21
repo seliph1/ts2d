@@ -46,6 +46,7 @@ client.content 			= require "core.enum"
 local modules = {
 	"core.scene";
 	"core.net.actions";
+	"core.net.listenserver";
 	"core.input.binds";
 	"core.game.camera";
 	"core.loader";

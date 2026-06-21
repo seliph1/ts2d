@@ -36,6 +36,7 @@ end
 
 --- Callback for when client disconnects from server
 function client.disconnect(reason)
+	client.stopListenServer()   -- se estávamos hospedando, derruba o listen server
 	local LF = require "lib.loveframes"
 	LF.SetState()
 	client.map:clear()

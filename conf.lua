@@ -1,6 +1,23 @@
 
 function love.conf(t)
+    -- Modo servidor dedicado headless: `love . --server` (ver branch em main.lua).
+    local is_server = false
+    for _, a in ipairs(arg or {}) do
+        if a == "--server" or a == "server" then is_server = true break end
+    end
+
     t.identity = "TS2D"                 -- The name of the save directory (string)
+    if is_server then
+        -- Espelha o conf headless do ts2d_ag (sem janela/gráficos/áudio).
+        t.console = true
+        t.modules.graphics = false
+        t.modules.window = false
+        t.modules.audio = false
+        t.modules.sound = false
+        t.modules.video = false
+        t.physics = false
+        return
+    end
     t.appendidentity = false            -- Search files in source directory before save directory (boolean)
     --t.version = "11.5"                  -- The LÖVE version this game was made for (string)
     t.console = false                   -- Attach a console (boolean, Windows only)

@@ -250,8 +250,7 @@ ui.newgame_button = LF.Create("textbutton", ui.main_menu)
 :SetHoverText("©255255255New Game")
 :SetPos(0, 60):SetCursor(LF.cursors.hand)
 ui.newgame_button.OnClick = function(self)
-	--local bool = ui.new_game_frame:GetVisible()
-	--ui.new_game_frame:SetVisible(not bool):Center():MoveToTop()
+	ui.new_game_frame:SetVisible(true):Center():MoveToTop()
 end
 
 ui.findservers_button = LF.Create("textbutton", ui.main_menu)
@@ -330,6 +329,17 @@ ui.new_game_frame = LF.Create("frame"):SetName("Create Server"):SetSize(428, 460
 ui.newgame_button_help = LF.Create("button", ui.new_game_frame):SetText("Help"):SetPos(0+10, 430):SetWidth(50)
 ui.newgame_button_start = LF.Create("button", ui.new_game_frame):SetText("Start"):SetPos(195+10, 430):SetWidth(100)
 ui.newgame_button_cancel = LF.Create("button", ui.new_game_frame):SetText("Cancel"):SetPos(300+10, 430):SetWidth(100)
+
+-- Sobe um listen server (host local numa thread) e conecta no loopback.
+ui.newgame_button_start.OnClick = function()
+	client.startListenServer()
+	ui.new_game_frame:SetVisible(false)
+	local console = require "core.interface.console"
+	console.parse("connect 127.0.0.1 36963")
+end
+ui.newgame_button_cancel.OnClick = function()
+	ui.new_game_frame:SetVisible(false)
+end
 
 ui.new_game_tabs = LF.Create("tabs", ui.new_game_frame):SetSize(418, 400):SetPos(10, 30)
 --Tabs--------------------------------------------------------------------------------------------

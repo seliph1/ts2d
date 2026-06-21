@@ -108,6 +108,7 @@ end
 ---@param dt number
 function client.update(dt)
 	client.preupdate(dt)
+	client.pollListenServer()
 	if (client.mode == "game" or client.mode == "editor") and client.map then
 		client.camera_move(dt)
 		client.camera_tween(dt)

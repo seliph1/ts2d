@@ -15,6 +15,27 @@
 ---@diagnostic disable: duplicate-set-field, undefined-field, redundant-parameter
 
 ---------------------------------------------------------------------------------------
+-- =============================================================================
+-- Modo servidor dedicado headless: `love . --server`  (ou `lovec . --server`).
+-- Roda o servidor vendorizado em core/server/ e encerra o chunk antes de
+-- carregar qualquer coisa do cliente.
+-- =============================================================================
+do
+	local is_server = false
+	for _, a in ipairs(arg or {}) do
+		if a == "--server" or a == "server" then is_server = true break end
+	end
+	if is_server then
+		local base = "core/server/"
+		love.filesystem.setRequirePath(base.."?.lua;"..base.."?/init.lua;"..love.filesystem.getRequirePath())
+		local server = require "server"
+		function love.load()     server.load()     end
+		function love.update(dt) server.update(dt) end
+		function love.quit()     if server.shutdown then server.shutdown() end end
+		return
+	end
+end
+
 if love.getVersion() < 12 then
 	love.graphics.newTextBatch = love.graphics.newText
 end
@@ -196,6 +217,7 @@ function love.textinput(text)
 end
 
 function love.quit()
+    if client.stopListenServer then client.stopListenServer() end
     if discordRPC then
     	discordRPC.shutdown()
     end
