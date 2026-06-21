@@ -12,7 +12,7 @@ end
 local ffi = require "ffi"
 local List = require "lib.list"
 local bump = require "lib.bump"
-local enum = require "enum"
+local enum = require "core.enum"
 
 -- Localise some important functions to constantly call during execution
 local max = math.max

@@ -4,7 +4,7 @@ local bump           = require "lib.bump"
 local battery        = require "lib.battery"
 local serpent        = require "lib.serpent"
 local mlib           = require "lib.mlib"
-local enum           = require "enum"
+local enum           = require "core.enum"
 
 local server         = cs.server
 
