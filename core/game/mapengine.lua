@@ -29,6 +29,13 @@ local TILE_MODE_HEIGHT = enum.TILE_MODE_HEIGHT
 local ENTITY_TYPE = enum.ENTITY_TYPE
 local SOLID_THRESHOLD = 0.3
 local WALL_THRESHOLD = 1.0
+-- Memoised "gfx/player/<name>" paths so the per-frame draw loops don't
+-- allocate a new string per player per frame via string.format.
+local PLAYER_GFX_PATH = setmetatable({}, { __index = function(t, k)
+	local v = "gfx/player/" .. tostring(k)
+	rawset(t, k, v)
+	return v
+end })
 
 effect.register("core/particle/sparkle.lua", "sparkle")
 effect.register("core/particle/hitscan.lua", "hitscan")
@@ -43,7 +50,7 @@ effect.register("core/particle/muzzle.lua", "muzzle")
 
 --effect.register(LF.load "core/particle/fire.lua" (), "fire")
 --effect.register(dofile "core/particle/snow.lua", "snow")
---effect.register(dofile "cor'e/particle/rain.lua", "rain")
+--effect.register(dofile "core/particle/rain.lua", "rain")
 --[[---------------------------------------------------------
 	Lib
 --]]---------------------------------------------------------
@@ -82,8 +89,8 @@ local function entityInCamera(e, camx, camy)
 	local x1size, y1size = size_x, size_y
 	local x2, y2 = 0, 0
 	local x2size, y2size = sw, sh
-	if x1 <= x2 + x2size and x1 + x1size >= x2 
-	and y1 <= y2 + y2size and y1 + y1size >= y2 
+	if x1 <= x2 + x2size and x1 + x1size >= x2
+	and y1 <= y2 + y2size and y1 + y1size >= y2
 	then
 		return true
 	else
@@ -187,10 +194,7 @@ function MapObject.new(width, height)
 		};
 		_entity_cache = {};
 		_entity_length = 0;
-		_shadow_map = love.graphics.newShader("core/shaders/shadow_map.glsl"),
-		_shadow_silhouette = love.graphics.newShader("core/shaders/silhouette.glsl"),
 		_entity_shader = love.graphics.newShader("core/shaders/entity.glsl"),
-		_shadow_overlay = love.graphics.newCanvas()
 	}
 
 	object._placeholder = love.image.newImageData(32, 32)
@@ -227,7 +231,6 @@ function MapObject.new(width, height)
 		tile = {};
 		map = {};
 		map_mod = {};
-		shadow = love.image.newImageData(width+1, height+1);
 		entity_count = 0;
 		entity_table = {};
 		gfx = {
@@ -249,7 +252,6 @@ function MapObject.new(width, height)
 		local id = 0
 		mapdata.map[x] = mapdata.map[x] or {}
 		mapdata.map[x][y] = id
-		mapdata.shadow:setPixel(x, y, 0.0, 0.0, 0.0)
 		mapdata.map_mod[x] = mapdata.map_mod[x] or {}
 		mapdata.map_mod[x][y] = {
 			object_type = "tile",
@@ -269,8 +271,6 @@ function MapObject.new(width, height)
 		}
 	end
 	end
-	mapdata.shadow_render = love.graphics.newImage(mapdata.shadow)
-	mapdata.shadow_render:setFilter("nearest", "nearest")
 	local tileset_atlas = love.image.newImageData("gfx/tiles/"..mapdata.tileset)--fs:loadImageData("gfx/tiles/"..mapdata.tileset)
 	local w, h = tileset_atlas:getDimensions()
 	local s = mapdata.tile_size
@@ -360,7 +360,6 @@ function MapObject:clear()
 		tile = {};
 		map = {};
 		map_mod = {};
-		shadow = love.image.newImageData(50, 50);
 		entity_count = 0;
 		entity_table = {};
 		gfx = {
@@ -382,7 +381,6 @@ function MapObject:clear()
 		local id = 0
 		mapdata.map[x] = mapdata.map[x] or {}
 		mapdata.map[x][y] = id
-		mapdata.shadow:setPixel(x, y, 0.0, 0.0, 0.0)
 		mapdata.map_mod[x] = mapdata.map_mod[x] or {}
 		mapdata.map_mod[x][y] = {
 			object_type = "tile",
@@ -404,8 +402,6 @@ function MapObject:clear()
 		--object._world:add( mapdata.map_mod[x][y], x*32, y*32, 32, 32 )
 	end
 	end
-	mapdata.shadow_render = love.graphics.newImage(mapdata.shadow)
-	mapdata.shadow_render:setFilter("nearest", "nearest")
 	local tileset_atlas = love.image.newImageData("gfx/tiles/"..mapdata.tileset)--fs:loadImageData("gfx/tiles/"..mapdata.tileset)
 	local w, h = tileset_atlas:getDimensions()
 	local s = mapdata.tile_size
@@ -607,7 +603,6 @@ function MapObject:read(path, noindexing)
 	-- MAP (4)
 	-----------------------------------------------------------------------------------------------------------
 	mapdata.map = {}
-	mapdata.shadow = love.image.newImageData(mapdata.width+1, mapdata.height+1)
 	for x = 0, mapdata.width do
 	for y = 0, mapdata.height do
 		local id = read_byte()
@@ -615,11 +610,8 @@ function MapObject:read(path, noindexing)
 		mapdata.map[x][y] = id
 		local property = mapdata.tile[id].property
 		local height = TILE_MODE_HEIGHT[property]
-		mapdata.shadow:setPixel(x, y, height, height, height)
 	end
 	end
-	mapdata.shadow_render = love.graphics.newImage(mapdata.shadow)
-	mapdata.shadow_render:setFilter("nearest", "nearest")
 	----------------------------------------------------------------------------------------------
 	-- Tile id mod table.
 	mapdata.map_mod = {}
@@ -872,7 +864,6 @@ function MapObject:random()
 		self._mapdata.map[x][y] = r
 		local property = self._mapdata.tile[r].property
 		local height = TILE_MODE_HEIGHT[property]
-		self._mapdata.shadow:setPixel(x, y, height, height, height)
 	end
 	end
 end
@@ -883,7 +874,6 @@ function MapObject:settile(x, y, tile_id)
 	end
 	local property = self._mapdata.tile[tile_id].property
 	local height = TILE_MODE_HEIGHT[property]
-	self._mapdata.shadow:setPixel(x, y, height, height, height)
 end
 
 function MapObject:gettile(x, y) -- coords in tiles
@@ -1124,57 +1114,6 @@ function MapObject:draw_ceiling()
 	love.graphics.setColor(1, 1, 1, 1)
 end
 
-function MapObject:draw_shadow(share, client)
-	local camera = self._camera
-	local mapdata = self._mapdata
-	local sw, sh = love.graphics.getDimensions()
-	local width, height = self:getDimensions()
-
-	local heightmap = self._mapdata.shadow_render
-	local shader = self._shadow_map
-	local overlay =  self._shadow_overlay
-
-	-- Enable shadow shader and send the heightmap to it.
-	if shader:hasUniform "heightmap" then
-		shader:send("heightmap", heightmap)
-	end
-	if shader:hasUniform "camera" then
-		shader:send("camera", camera)
-	end
-	if shader:hasUniform "mouse" then
-		self._mouse = self._mouse or {}
-		self._mouse[1] = love.mouse.getX()
-		self._mouse[2] = love.mouse.getY()
-		self._mouse[3] = love.mouse.isDown(1) and 1 or 0
-		self._mouse[4] = love.mouse.isDown(2) and 1 or 0
-		shader:send("mouse", self._mouse)
-	end
-
-	--[[
-	local prev_canvas = love.graphics.getCanvas()
-	love.graphics.setCanvas ( overlay )
-	love.graphics.clear(0.0, 0.0, 0.0, 1)
-
-	love.graphics.push()
-	love.graphics.translate(-camera.x + sw/2, -camera.y + sh/2)
-
-	for peer_id, player in pairs(share.players) do
-		love.graphics.setColor(1.0, 1.0, 1.0, 1.0)
-		love.graphics.circle("fill", player.x, player.y, 15)
-	end
-	love.graphics.pop()
-	love.graphics.setCanvas( prev_canvas )
-
-	shader:send("overlay", overlay)
-	]]
-	
-	-- Activate shadow shader
-	love.graphics.setShader(shader)
-	love.graphics.setColor(0.0, 0.0, 0.0, 1.0)
-	love.graphics.rectangle("fill", 0, 0, sw, sh)
-	love.graphics.setShader()
-end
-
 function MapObject:draw_effects()
 	local camera = self._camera
 	local sw, sh = love.graphics.getWidth(), love.graphics.getHeight()
@@ -1241,6 +1180,63 @@ function MapObject:draw_players(client) -- get info from server!
 	love.graphics.setColor(1, 1, 1, 1)
 end
 
+--- Computes a player's drawing pose for this frame: facing angle, body stance
+--- and held-weapon textures.
+--- @return number angle
+--- @return love.Quad stance
+--- @return string stance_name
+--- @return love.Image|nil weapon_texture
+--- @return number|nil weapon_offset
+function MapObject:get_player_pose(client, peer_id, player)
+	-- Facing direction
+	local targetX, targetY
+	if peer_id == client.id then
+		local home = client.home
+		targetX, targetY = home.targetX, home.targetY
+	else
+		targetX, targetY = player.targetX, player.targetY
+	end
+	local angle = atan2(targetY - client.height/2, targetX - client.width/2) + PI/2
+	if player._swingTimer and player._swingTimer > 0 then
+		angle = angle - player._swingTimer*5
+	end
+
+	-- Body stance + held weapon
+	local holding = player.ih
+	local stance, stance_name = PLAYER_STANCE.idle, "idle"
+	local weapon_texture, weapon_offset
+	if holding ~= 0 then
+		-- Check if that weapon ID exists in available list
+		local itemdata = client.get_item_data(holding)
+		-- Get the weapon texture from weapon ID. Cache the joined path on the
+		-- item definition so this doesn't
+		-- allocate a string every frame.
+		local weapon_gfx_path = itemdata._held_path
+		if not weapon_gfx_path then
+			weapon_gfx_path = itemdata.common_path .. itemdata.held_image
+			itemdata._held_path = weapon_gfx_path
+		end
+		weapon_texture = self:getImage(weapon_gfx_path)
+		weapon_offset = itemdata.offset
+
+		-- Get the stance data from item
+		stance_name = itemdata.player_stance
+
+		-- Swap hold stance while reloading
+		local reload_timer = player._reloadTimer or 0
+		if reload_timer > 0 then
+			if stance_name == "righthold" then
+				stance_name = "centerhold"
+			elseif stance_name == "centerhold" then
+				stance_name = "righthold"
+			end
+		end
+		stance = PLAYER_STANCE[ stance_name ]
+	end
+
+	return angle, stance, stance_name, weapon_texture, weapon_offset
+end
+
 function MapObject:draw_player(client, peer_id)
 	-- Player data
 	local players = client.share_lerp.players
@@ -1252,60 +1248,14 @@ function MapObject:draw_player(client, peer_id)
 		return -- Player HP is depleted, don't render.
 	end
 
-	-- Direction
-	local targetX, targetY = 0,0
-	if peer_id == client.id then
-		-- Get inputs
-		local home = client.home
-		targetX, targetY = home.targetX, home.targetY
-	else
-		targetX, targetY = player.targetX, player.targetY
-	end
-	-- Calculate drawing angle
-	local angle = atan2(targetY - client.height/2, targetX - client.width/2) + PI/2
-	if player._swingTimer and player._swingTimer > 0 then
-		angle = angle - player._swingTimer*5
-	end
-	-- Get the player's held weapon
-	local holding = player.ih
-	-- Get the player's worn armor
+	-- Worn armor / equipment / appearance
 	local armor = player.a
-	-- Get the player's equipment
 	local equipment = player.e
-	-- Get the player appearance
-	local player_texture_path = string.format("gfx/player/%s", player.p)
-	-- Gets the weapon texture
-	local player_texture = self:getImage(player_texture_path)
+	local player_texture = self:getImage(PLAYER_GFX_PATH[player.p])
 
-	local stance
-	local weapon_texture, weapon_offset
-	local stance_name = "idle"
-	if holding == 0 then
-		-- Set player stance to idle since it isn't wearing anything
-		stance = PLAYER_STANCE.idle
-	else
-		-- Check if that weapon ID exists in available list
-		local itemdata = client.get_item_data(holding)
-		-- Get the weapon texture from weapon ID
-		local weapon_gfx_path = itemdata.common_path .. itemdata.held_image
-		weapon_texture = self:getImage(weapon_gfx_path)
-		weapon_offset = itemdata.offset
-
-		-- Get the stance data from item
-		stance_name = itemdata.player_stance
-
-		-- Check if player is reloading
-		local reload_timer = player._reloadTimer or 0
-		if reload_timer > 0 then
-			if stance_name == "righthold" then
-				stance_name = "centerhold"
-			elseif stance_name == "centerhold" then
-				stance_name = "righthold"
-			end
-		end
-		-- Set what stance should player hold that weapon
-		stance = PLAYER_STANCE[ stance_name ]
-	end
+	-- Facing + stance + held-weapon textures
+	local angle, stance, stance_name, weapon_texture, weapon_offset =
+		self:get_player_pose(client, peer_id, player)
 
 	local armor_texture
 	local armor_opacity

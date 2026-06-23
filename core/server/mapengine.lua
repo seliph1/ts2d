@@ -259,7 +259,6 @@ function MapObject.new(width, height)
 		tile = {},
 		map = {},
 		map_mod = {},
-		--shadow_mask = love.image.newImageData(width+1, height+1);
 		entity_count = 0,
 		entity_table = {},
 		entity_cache = {},
@@ -513,7 +512,6 @@ function MapObject:read(path, noindexing)
 	-- MAP (4)
 	-----------------------------------------------------------------------------------------------------------
 	mapdata.map = {}
-	--mapdata.shadow_mask = love.image.newImageData(mapdata.width+1, mapdata.height+1)
 	for x = 0, mapdata.width do
 		for y = 0, mapdata.height do
 			local id = read_byte()
@@ -521,12 +519,8 @@ function MapObject:read(path, noindexing)
 			mapdata.map[x][y] = id
 			local property = mapdata.tile[id].property
 			local height = TILE_MODE_HEIGHT[property]
-			--mapdata.shadow_mask:setPixel(x, y, height, height, height)
 		end
 	end
-	--mapdata.shadow_render = love.graphics.newImage(mapdata.shadow_mask)
-	--mapdata.shadow_render:setFilter("nearest", "nearest")
-	--mapdata.world:add(player, player.x, player.y, player.w, player.h)
 	----------------------------------------------------------------------------------------------
 	-- Tile id mod table.
 	mapdata.map_mod = {}

@@ -214,11 +214,11 @@ function standard.spawn(peer_id)
 	end
 
 	if currentState == STATE_WAITING then
-		unfreeze(uid)
+		unfreeze(peer_id)
 	elseif currentState == STATE_FREEZE then
-		freeze(uid)
+		freeze(peer_id)
 	elseif currentState == STATE_RUNNING then
-		unfreeze(uid)
+		unfreeze(peer_id)
 	end
 
 	return table.concat(items, ",")

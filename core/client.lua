@@ -86,17 +86,18 @@ function client.camera_abrupt(x, y, tx, ty)
 	client.map:shiftRender(tx, ty)
 end
 
-function client.snapshot_lerp(dt)
-	local lerp_flags = {
-		x = true,
-		y = true,
-		targetX = true,
-		targetY = true,
-	}
+-- Which player properties get interpolated (vs. copied as-is). Module-level so
+-- snapshot_lerp doesn't allocate a fresh table every frame (it runs each frame
+-- while joined; per-frame table churn is a steady GC/sawtooth source).
+local LERP_FLAGS = {
+	x = true,
+	y = true,
+	targetX = true,
+	targetY = true,
+}
 
-	local lerp_fields = {
-		players = true
-	}
+function client.snapshot_lerp(dt)
+	local lerp_flags = LERP_FLAGS
 
 	for player_id, player in pairs(share.players) do
 		share_lerp.players[player_id] = share_lerp.players[player_id] or {}
@@ -633,7 +634,7 @@ function client.render()
 		client.map:draw_entities(client)
 	end
 
-	--love.graphics.setCanvas(client.canvas, client.shadow_map)
+	--love.graphics.setCanvas(client.canvas)
     if client.joined then
 		-- Draw items on the ground
 		client.map:draw_items(client)
@@ -645,9 +646,6 @@ function client.render()
 		client.map:draw_ceiling()
 		client.map:draw_effects()
 	end
-
-	-- Draw shadows.
-	client.map:draw_shadow(share_lerp, client)
 
 	-- Resets scissoring and canvas
 	love.graphics.setCanvas()

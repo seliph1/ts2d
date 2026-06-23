@@ -29,6 +29,8 @@ local pairs = pairs;
 local ipairs = ipairs;
 local tostring = tostring;
 local s_char = string.char;
+local s_byte = string.byte;
+local s_sub = string.sub;
 local t_concat = table.concat;
 local t_sort = table.sort;
 local m_floor = math.floor;
@@ -239,21 +241,37 @@ function encoder.table(t, opts)
 	-- usually observe.  See the Lua manual regarding the # (length)
 	-- operator.  In the case that this does not happen, we will fall
 	-- back to a map with integer keys, which becomes a bit larger.
-	local array, map, i, p = { integer(#t, 128) }, { "\191" }, 1, 2;
+	-- Values are encoded as we iterate. The map representation is built lazily,
+	-- and only once a non-sequential key proves the table is not an array, so
+	-- the common array case never allocates a map table nor encodes its keys.
+	local array, i = { integer(#t, 128) }, 1;
 	local is_array = true;
+	local map, p; -- created lazily on the first non-array key
 	for k, v in pairs(t) do
-		is_array = is_array and i == k;
+		if is_array and k ~= i then
+			is_array = false;
+			-- switch to map mode: seed the map with the sequential prefix
+			-- (keys 1..i-1) whose values are already encoded in `array`
+			map, p = { "" }, 2; -- map[1] is overwritten with the header below
+			for j = 1, i - 1 do
+				map[p], p = encode(j, opts), p + 1;
+				map[p], p = array[j + 1], p + 1;
+			end
+		end
 		i = i + 1;
-
 		local encoded_v = encode(v, opts);
-		array[i] = encoded_v;
-
-		map[p], p = encode(k, opts), p + 1;
-		map[p], p = encoded_v, p + 1;
+		if is_array then
+			array[i] = encoded_v;
+		else
+			map[p], p = encode(k, opts), p + 1;
+			map[p], p = encoded_v, p + 1;
+		end
 	end
-	-- map[p] = "\255";
+	if is_array then
+		return t_concat(array);
+	end
 	map[1] = integer(i - 1, 160);
-	return t_concat(is_array and array or map);
+	return t_concat(map);
 end
 
 -- Array or dict-only encoders, which can be set as __tocbor metamethod
@@ -299,13 +317,37 @@ encoder["function"] = function ()
 end
 
 -- Decoder
--- Reads from a file-handle like object
+-- Reads from a string with an integer cursor (`fh.s`, `fh.pos`). `fh.more`, if
+-- set, is a streaming callback that supplies more bytes when the buffer runs
+-- short (used only by the streaming `decode` path). Single-byte reads go
+-- through string.byte so the common case allocates no per-byte substrings.
+local function ensure(fh, need)
+	local s = fh.s;
+	if #s - fh.pos + 1 >= need then return; end
+	local more = fh.more;
+	if not more then error "input too short"; end
+	repeat
+		local missing = need - (#s - fh.pos + 1);
+		local chunk = more(missing, fh, fh.opts);
+		if not chunk then error "input too short"; end
+		s = s .. chunk;
+		fh.s = s;
+	until #s - fh.pos + 1 >= need;
+end
+
 local function read_bytes(fh, len)
-	return fh:read(len);
+	if len == 0 then return ""; end
+	ensure(fh, len);
+	local pos = fh.pos;
+	fh.pos = pos + len;
+	return s_sub(fh.s, pos, pos + len - 1);
 end
 
 local function read_byte(fh)
-	return fh:read(1):byte();
+	ensure(fh, 1);
+	local pos = fh.pos;
+	fh.pos = pos + 1;
+	return s_byte(fh.s, pos);
 end
 
 local function read_length(fh, mintyp)
@@ -525,9 +567,8 @@ decoder[7] = read_simple;
 -- opts.simple -> decode simple value
 -- opts[int] -> tagged decoder
 local function decode(s, opts)
-	local fh = {};
-	local pos = 1;
-
+	-- A plain `{ s, pos }` cursor instead of per-call `read`/`write` closures.
+	-- `more` (streaming partial input) is still honoured via `ensure`.
 	local more;
 	if type(opts) == "function" then
 		more = opts;
@@ -536,32 +577,7 @@ local function decode(s, opts)
 	elseif opts ~= nil then
 		error(("bad argument #2 to 'decode' (function or table expected, got %s)"):format(type(opts)));
 	end
-	if type(more) ~= "function" then
-		function more()
-			error "input too short";
-		end
-	end
-
-	function fh:read(bytes)
-		local ret = s:sub(pos, pos + bytes - 1);
-		if #ret < bytes then
-			ret = more(bytes - #ret, fh, opts);
-			if ret then self:write(ret); end
-			return self:read(bytes);
-		end
-		pos = pos + bytes;
-		return ret;
-	end
-
-	function fh:write(bytes) -- luacheck: no self
-		s = s .. bytes;
-		if pos > 256 then
-			s = s:sub(pos + 1);
-			pos = 1;
-		end
-		return #bytes;
-	end
-
+	local fh = { s = s, pos = 1, more = more, opts = opts };
 	return read_object(fh, opts);
 end
 

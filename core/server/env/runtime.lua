@@ -131,7 +131,7 @@ return function(cs2dAPI, BASE_ENV, server)
 	end
 	SERVER_ENV._G = SERVER_ENV
 
-	local mp_luaserver = "core/server/sys/lua/server.lua"
+	local mp_luaserver = "sys/lua/server.lua"
 	-- server.lua entrypoint
 	server.log(7, "lua", string.format("Lua: Parsing Lua server script (mp_luaserver = '%s')", mp_luaserver))
 	local status, entrypoint = pcall(love.filesystem.load, mp_luaserver)

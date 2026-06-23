@@ -2,6 +2,7 @@ return function(client)
 ---------- module start ----------
 
 local home = client.home
+
 --------------------------------------------------------------------------------------------------
 --love callbacks----------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------
@@ -176,7 +177,9 @@ function client.draw()
 		local memory = (collectgarbage "count" / 1024) or 0
 		local pendingInputs = client.inputCache:count() or 0
 
-		local label = string.format("Camera: %dpx|%dpx  Ping: %s  FPS: %s  Target: %d|%d   Memory: %.2f MB  Pending Inputs: %s",
+		local label = string.format(
+			"Camera: %dpx|%dpx  Ping: %s  FPS: %s  Target: %d|%d   Memory: %.2f MB"
+			.. " Pending Inputs: %s",
 			x, y, ping, fps, targetX, targetY, memory, pendingInputs
 		)
 

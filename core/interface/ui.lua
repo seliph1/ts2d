@@ -952,7 +952,7 @@ end
 
 ui.weaponselect = LF.Create("container"):SetState("game")
 ui.weaponselect:SetPos( love.graphics.getWidth()/2 - ui.weaponselect:GetWidth(), (love.graphics.getHeight() - client.height)/2 )
-ui.weaponselect:SetProperty("cursor", 0)
+ui.weaponselect:SetProperty("selindex", 0)
 ui.weaponselect:SetProperty("itemheld", 0)
 ui.weaponselect:SetProperty("slots", {})
 ui.weaponselect:SetProperty("slot_active", 0)
@@ -980,7 +980,7 @@ end
 
 function ui.weaponselect:queryItemheld(itemheld)
 	if itemheld == nil or itemheld == 0 then
-		self.cursor = 0
+		self.selindex = 0
 		self.slot_active = 0
 		self.active = false
 		return
@@ -994,7 +994,7 @@ function ui.weaponselect:queryItemheld(itemheld)
 
 	for index, item_type in ipairs(self.slots[self.slot_active]) do
 		if item_type == itemheld then
-			self.cursor = index
+			self.selindex = index
 		end
 	end
 end
@@ -1017,7 +1017,7 @@ function ui.weaponselect:Display(slot, x, y)
 
 	love.graphics.setBlendMode("add")
 	for index in ipairs(slot) do
-		if self.slots[self.slot_active] == slot and self.cursor == index then
+		if self.slots[self.slot_active] == slot and self.selindex == index then
 			love.graphics.setColor(1, 1, 0, 0.6)
 		else
 			love.graphics.setColor(1, 0.6, 0, 0.3)
@@ -1103,9 +1103,9 @@ function ui.weaponselect:selectSlot(slot)
 	if #self.slots[slot] == 1 then
 		-- Single item on slot
 		self.slot_active = slot
-		self.cursor = 1
+		self.selindex = 1
 
-		local item_type = self.slots[self.slot_active][self.cursor]
+		local item_type = self.slots[self.slot_active][self.selindex]
 		client.send("weapon "..item_type)
 
 		-- Deactivate
@@ -1119,13 +1119,13 @@ function ui.weaponselect:selectSlot(slot)
 
 		-- If we're on a different slot than selected, then 
 		if self.slot_active ~= slot then
-			self.cursor = 1
+			self.selindex = 1
 			self.slot_active = slot
 		else
-			if self.slots[self.slot_active][self.cursor + cursor_offset] then
-				self.cursor = self.cursor + cursor_offset
+			if self.slots[self.slot_active][self.selindex + cursor_offset] then
+				self.selindex = self.selindex + cursor_offset
 			else
-				self.cursor = 1
+				self.selindex = 1
 			end
 		end
 	end
@@ -1141,25 +1141,25 @@ function ui.weaponselect:selectNext()
 	end
 	if c == 0 then return end -- There is nothing to do with empty inventory
 
-	if self.cursor == 0 or self.slot_active == 0 then
+	if self.selindex == 0 or self.slot_active == 0 then
 		for i = 1, 9 do
 			for order, item_type in ipairs(self.slots[i]) do
 				if item_type then
-					self.cursor = order
+					self.selindex = order
 					self.slot_active = i
 				end
 			end
 		end
-	end -- self.cursor
+	end -- self.selindex
 
 	if self.slots[self.slot_active] then
-		if self.slots[self.slot_active][self.cursor+1] then
-			self.cursor = self.cursor + 1
+		if self.slots[self.slot_active][self.selindex+1] then
+			self.selindex = self.selindex + 1
 		else -- Check if the next slot has items
 			for i = self.slot_active + 1, self.slot_active + 8 do
 				local next_slot =  (i - 1) % 9 + 1
 				if #self.slots[next_slot] > 0 then
-					self.cursor = 1
+					self.selindex = 1
 					self.slot_active = next_slot
 					break
 				end
@@ -1180,25 +1180,25 @@ function ui.weaponselect:selectPrevious()
 	if c == 0 then return end -- There is nothing to do with empty inventory
 
 
-	if self.cursor == 0 or self.slot_active == 0 then
+	if self.selindex == 0 or self.slot_active == 0 then
 		for i = 1, 9 do
 			for order, item_type in ipairs(self.slots[i]) do
 				if item_type then
-					self.cursor = order
+					self.selindex = order
 					self.slot_active = i
 				end
 			end
 		end
-	end -- self.cursor
+	end -- self.selindex
 
 	if self.slots[self.slot_active] then
-		if self.slots[self.slot_active][self.cursor-1] then
-			self.cursor = self.cursor - 1
+		if self.slots[self.slot_active][self.selindex-1] then
+			self.selindex = self.selindex - 1
 		else -- Check if the next slot has items
 			for i = self.slot_active + 8, self.slot_active + 1, - 1 do
 				local previous_slot =  (i - 1) % 9 + 1
 				if #self.slots[previous_slot] > 0 then
-					self.cursor = #self.slots[previous_slot]
+					self.selindex = #self.slots[previous_slot]
 					self.slot_active = previous_slot
 					break
 				end
@@ -1221,7 +1221,7 @@ function ui.weaponselect:Scroll(x, y)
 		self:selectPrevious()
 	end
 
-	if self.cursor == 0 and self.slot_active == 0 then
+	if self.selindex == 0 and self.slot_active == 0 then
 		self.active = false
 	end
 end
@@ -1239,8 +1239,8 @@ function ui.weaponselect:OnMousePressed(x, y, button)
 	end
 
 	if button == 1 then
-		if self.slots[self.slot_active]	and self.slots[self.slot_active][self.cursor] then
-			local item_type = self.slots[self.slot_active][self.cursor]
+		if self.slots[self.slot_active]	and self.slots[self.slot_active][self.selindex] then
+			local item_type = self.slots[self.slot_active][self.selindex]
 			client.send("weapon "..item_type)
 
 			self.active = false
@@ -1476,6 +1476,11 @@ function ui.shader_controls(shader, fields, name)
 				v = math.floor(v)
 			end
 
+			-- Custom setter: route the value somewhere other than a raw uniform
+			if fields[i].apply then
+				fields[i].apply( tonumber(v) )
+				return
+			end
 
 			if component then
 				fields.storage[uniform] = fields.storage[uniform] or {0.0, 0.0, 0.0, 0.0}
@@ -1505,7 +1510,6 @@ function ui.shader_controls(shader, fields, name)
 		end
 	end
 end
-
 --[[
 ui.shader_controls(client.shaders.lcd, {
 	{name="boundBrightness", hint = {0.0, 1.0}, init_value = 0.2};
@@ -1523,22 +1527,6 @@ ui.shader_controls(client.shaders.scanlines_ex, {
 ui.shader_controls(client.shaders.pixelate, {
 	{name="amount", hint = {0.0, 1000.0}, init_value = 1.0};
 }, "pixelate")
-]]
-
---[[
-ui.shader_controls(client.map._shadow_map, {
-	{name="steps", hint = {1.0, 64.0}, init_value = 32.0};
-	{name="maxSteps", hint = {1.0, 64.0}, init_value = 32.0};
-	{name="shadowStrength", hint = {0.0, 1.0}, init_value = 0.7};
-	{name="shadowLength", hint = {0.0, 64.0}, init_value = 22.0};
-	{name="direction", hint = {0, 360}, init_value = 45.0};
-	{name="mode", hint = {0.0, 1.0}, init_value = 1.0};
-	{name="distanceFactor", hint = {0.0, 1.0}, init_value = 0.8};
-	{name="blur", hint = {0.0, 1.0}, init_value = 1.0};
-
-	{name="v1", hint = {0.0, 1.0}, init_value = 0.011};
-	{name="v2", hint = {0.0, 1.0}, init_value = 0.01};
-}, "shadow")
 ]]
 
 --[[

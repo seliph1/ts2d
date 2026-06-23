@@ -2,7 +2,7 @@
 /other/
 /assets/
 /.vscode/
-/uidebug/
+/.claude/
 
 *.bak
 *.bat
