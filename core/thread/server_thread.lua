@@ -58,7 +58,6 @@ while running do
 		evt:push({ type = "error", msg = "server.update: " .. tostring(uerr) })
 		running = false
 	end
-
 	timer.sleep(1 / 60)
 end
 

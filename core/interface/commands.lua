@@ -46,6 +46,148 @@ local commands = {
 		end,
 	};
 
+	shadows = {
+		action = function()
+			local client = require "core.client"
+			local ui = require "core.interface.ui"
+
+			local shadows = client.map._shadows
+			ui.shader_controls(shadows, {
+				{name="steps", hint = {1.0, 500.0}, init_value = 32.0};
+				{name="shadowBrightness", hint = {0.0, 1.0}, init_value = 0.5};
+				{name="shadowLength", hint = {0.0, 96.0}, init_value = 32};
+				--{name="direction", hint = {-180, 180}, init_value = 45.0};
+				{name="direction", hint = {0, 360}, init_value = 45.0};
+				{name="mode", hint = {0.0, 1.0}, init_value = 1.0};
+				--{name="stepFactor", hint = {0.0, 1.0}, init_value = 0.05};
+				{name="distanceFactor", hint = {0.0, 32.0}, init_value = 0.05};
+			})
+		end,
+	};
+
+
+	light = {
+		action = function(mode, ...)
+			local args = {...}
+			local client = require "core.client"
+			local map = client.map
+			if not map then return "No map loaded" end
+
+			if mode == "channel" then
+				local c = tonumber(args[1])
+				client.map._hrc:setChannel(c)
+			end
+		end
+	},
+
+	--[[
+	light = {
+		---Controls the Radiance Cascades light system (separate from `shadows`).
+		---@param mode string on|off|reload|debug|add|remove|set|list|controls
+		---@param ... string mode arguments
+		---@return string? message
+		action = function(mode, ...)
+			local args = {...}
+			local client = require "core.client"
+			local map = client.map
+			if not map then return "No map loaded" end
+
+			if mode == "on" then
+				map:initRadiance()
+				map._radiance_enabled = true
+				return "Radiance light: ON"
+			elseif mode == "off" then
+				map._radiance_enabled = false
+				return "Radiance light: OFF"
+			elseif mode == "reload" then
+				map:initRadiance()
+				local n = map:loadEnvLights()
+				return string.format("Reloaded %d Env_Light(s)", n)
+			elseif mode == "debug" then
+				map:initRadiance()
+				local m = tonumber(args[1]) or 0
+				local c = tonumber(args[2])
+				map:getRadiance():setDebug(m, c)
+				local names = {[0]="off", [1]="emission", [2]="occlusion", [3]="cascade", [4]="radiance"}
+				return "Radiance debug: " .. (names[m] or tostring(m))
+			elseif mode == "add" then
+				map:initRadiance()
+				local range = tonumber(args[1]) or 256
+				local r = (tonumber(args[2]) or 255) / 255
+				local g = (tonumber(args[3]) or 255) / 255
+				local b = (tonumber(args[4]) or 255) / 255
+				local a0 = tonumber(args[5]) or 0
+				local a1 = tonumber(args[6]) or 0
+				local cam = map._camera
+				local id = map:addLight{
+					x = cam.x, y = cam.y, range = range,
+					color = { r, g, b }, startAngle = a0, endAngle = a1,
+				}
+				map._radiance_enabled = true
+				return string.format("Added light #%d at %d,%d", id, cam.x, cam.y)
+			elseif mode == "remove" then
+				local id = tonumber(args[1])
+				if not id then return "Usage: light remove <id>" end
+				map:removeLight(id)
+				return "Removed light #" .. id
+			elseif mode == "set" then
+				local id = tonumber(args[1])
+				local param = args[2]
+				local value = tonumber(args[3])
+				if not (id and param) then return "Usage: light set <id> <r|g|b|range|intensity|a0|a1> <value>" end
+				local L = map:getLights()[id]
+				if not L then return "No light #" .. id end
+				if     param == "r"         then L.color[1] = (value or 0) / 255
+				elseif param == "g"         then L.color[2] = (value or 0) / 255
+				elseif param == "b"         then L.color[3] = (value or 0) / 255
+				elseif param == "range"     then L.range = value
+				elseif param == "intensity" then L.intensity = value
+				elseif param == "a0"        then L.startAngle = value
+				elseif param == "a1"        then L.endAngle = value
+				else return "Unknown param: " .. param end
+				return string.format("light #%d %s = %s", id, param, tostring(value))
+			elseif mode == "list" then
+				local rc = map:getRadiance()
+				if not rc then return "Radiance not initialised (run: light on)" end
+				local s = "Lights:"
+				for id, L in pairs(rc:getLights()) do
+					s = s .. string.format("\n  #%d pos %d,%d range %d rgb %.2f,%.2f,%.2f ang %d-%d",
+						id, L.x, L.y, L.range, L.color[1], L.color[2], L.color[3], L.startAngle, L.endAngle)
+				end
+				return s
+			elseif mode == "blend" then
+				map:initRadiance()
+				local b = args[1]
+				if b ~= "add" and b ~= "multiply" then return "Usage: light blend <add|multiply>" end
+				map:getRadiance():set("blend", b)
+				return "Radiance blend: " .. b
+			elseif mode == "ambient" then
+				map:initRadiance()
+				local v = tonumber(args[1])
+				if not v then return "Usage: light ambient <0..1>" end
+				map:getRadiance():set("ambient", v)
+				return "Radiance ambient: " .. v
+			elseif mode == "controls" then
+				map:initRadiance()
+				local ui = require "core.interface.ui"
+				local rc = map:getRadiance()
+				ui.shader_controls(nil, {
+					{name="intensity",         hint = {0.0, 4.0},  init_value = rc.intensity,         apply = function(v) rc:set("intensity", v) end};
+					{name="ambient",           hint = {0.0, 1.0},  init_value = rc.ambient,           apply = function(v) rc:set("ambient", v) end};
+					{name="occlusionStrength", hint = {0.0, 4.0},  init_value = rc.occlusionStrength, apply = function(v) rc:set("occlusionStrength", v) end};
+					{name="cascades",          hint = {1, 7}, integer = true, init_value = rc.cascades, apply = function(v) rc:set("cascades", v) end};
+					{name="baseInterval",      hint = {1.0, 64.0}, init_value = rc.baseInterval,      apply = function(v) rc:set("baseInterval", v) end};
+					{name="steps",             hint = {2, 32}, integer = true, init_value = rc.steps,  apply = function(v) rc:set("steps", v) end};
+					{name="scale",             hint = {0.25, 1.0}, init_value = rc.scale,             apply = function(v) rc:set("scale", v) end};
+				}, "Radiance")
+				return "Opened Radiance controls"
+			else
+				return "light modes: ©255255000on off reload debug add remove set list blend ambient controls"
+			end
+		end,
+		alias = {"radiance"},
+	};]]
+
     camera = {
 		---Controls the client camera according to the given mode.
 		---@param mode "update"|"self"|"follow"|"translate"|"snap"|"unbind"|"lerp" Camera operation mode

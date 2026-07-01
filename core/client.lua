@@ -1,57 +1,57 @@
 --- Client base framework
-local Map 		= require "core.game.mapengine"
-local Bump		= require "lib.bump"
-local client 	= require "lib.cs"
-local serpent 	= require "lib.serpent"
-local mlib 		= require "lib.mlib"
+local Map             = require "core.game.mapengine"
+local Bump            = require "lib.bump"
+local client          = require "lib.cs"
+local serpent         = require "lib.serpent"
+local mlib            = require "lib.mlib"
 
 ---@class Home: state
 ---Home class that holds player local client data
-local home = client.home
+local home            = client.home
 ---@class Share: state
 --- @field bullets table
 --- @field players table
 --- @field items table
 --- @field game table
 --- Table that gets info from server
-local share = client.share
+local share           = client.share
 
 ---@class ShareLocal: Share
 ---Table that holds similar data from server, gets updated after server tick
-local share_local = client.share_local
+local share_local     = client.share_local
 
 ---@class ShareLerp: Share
 ---Table that holds interpolated data
-local share_lerp = client.share_lerp
-share_lerp.players 	= {}
-share_lerp.entities = {}
-share_lerp.items 	= {}
-share_lerp.game 	= {}
+local share_lerp      = client.share_lerp
+share_lerp.players    = {}
+share_lerp.entities   = {}
+share_lerp.items      = {}
+share_lerp.game       = {}
 
-client.version 			= "v1.0.1"
-client.enabled 			= true
-client.width 			= 800 -- pixels
-client.height 			= 600 -- pixels
-client.lerp_speed 		= 30 -- frames
-client.lerp_threshold 	= 32 -- pixels
-client.debug_level		= 0
-client.sendRate 		= 35
-client.scale 			= false
-client.mode 			= "lobby"
-client.canvas 			= love.graphics.newCanvas()
-client.map 				= Map.new(50, 50)
-client.world			= Bump.new(64)
-client.content 			= require "core.enum"
+client.version        = "v1.0.1"
+client.enabled        = true
+client.width          = 800 -- pixels
+client.height         = 600 -- pixels
+client.lerp_speed     = 30  -- frames
+client.lerp_threshold = 32  -- pixels
+client.debug_level    = 0
+client.sendRate       = 35
+client.scale          = false
+client.mode           = "lobby"
+client.canvas         = love.graphics.newCanvas()
+client.map            = Map.new(50, 50)
+client.world          = Bump.new(64)
+client.content        = require "core.enum"
 
-local modules = {
-	"core.scene";
-	"core.net.actions";
-	"core.net.listenserver";
-	"core.input.binds";
-	"core.game.camera";
-	"core.loader";
-	"core.game.callbacks";
-	"core.game.callbacks_netcode";
+local modules         = {
+	"core.scene",
+	"core.net.actions",
+	"core.net.listenserver",
+	"core.input.binds",
+	"core.game.camera",
+	"core.loader",
+	"core.game.callbacks",
+	"core.game.callbacks_netcode",
 }
 for index, module in pairs(modules) do
 	require(module)(client)
@@ -119,7 +119,7 @@ end
 ---@param peer_id number
 function client.predict_player(peer_id, dt) -- `home` is used to apply controls if given
 	-- Check if its own player id, and is connected
-	if not( client.id == peer_id and client.joined ) then return end
+	if not (client.id == peer_id and client.joined) then return end
 
 	-- Check if player is alive
 	if is_dead() then return end
@@ -141,7 +141,7 @@ end
 
 function client.predict_action(peer_id, dt)
 	-- Check if its own player id, and is connected
-	if not( client.id == peer_id and client.joined ) then return end
+	if not (client.id == peer_id and client.joined) then return end
 
 	-- Store player object
 	local player_local = share_local.players[peer_id]
@@ -182,23 +182,22 @@ function client.run_player_timers(dt)
 end
 
 function client.getWeaponHitbox(x, y, width, reach, angle, offset)
-    local half_w = width / 2
-    -- Retângulo na frente do player
-    local weapon = {
-        0, -half_w,
-        0 + reach, -half_w,
-        0 + reach, half_w,
-        0, half_w
-    }
-    -- Rotaciona e Translada para posição
-    mlib.rotatePolygon(weapon, 0, 0, angle)
-    mlib.translatePolygon(weapon, x, y)
+	local half_w = width / 2
+	-- Retângulo na frente do player
+	local weapon = {
+		0, -half_w,
+		0 + reach, -half_w,
+		0 + reach, half_w,
+		0, half_w
+	}
+	-- Rotaciona e Translada para posição
+	mlib.rotatePolygon(weapon, 0, 0, angle)
+	mlib.translatePolygon(weapon, x, y)
 	if offset then
-    	mlib.translatePolygonPolar(weapon, angle, offset)
+		mlib.translatePolygonPolar(weapon, angle, offset)
 	end
-    return weapon
+	return weapon
 end
-
 
 function client.attack(peer_id, local_data)
 	--local player = client.share_lerp.players[peer_id]
@@ -235,7 +234,7 @@ function client.attack(peer_id, local_data)
 		if peer_id == client.id then return 0 end
 	end
 	-- Calculate angle for all attack modes
-	local player_angle = math.atan2(mouse_y - client.height/2, mouse_x - client.width/2)
+	local player_angle = math.atan2(mouse_y - client.height / 2, mouse_x - client.width / 2)
 
 	if action == "bullet" then
 		local itemobject = player.i[itemheld]
@@ -249,8 +248,8 @@ function client.attack(peer_id, local_data)
 			end
 		end
 
-		local spawn = tonumber( args[1] ) or 1
-		local spread = tonumber( args[2] ) or 1
+		local spawn = tonumber(args[1]) or 1
+		local spread = tonumber(args[2]) or 1
 		-- In CS2D the range value is multiplied by 3
 		local distance = itemdata.range * 3
 		local frame_delay = itemdata.frame_delay or 22
@@ -279,7 +278,7 @@ function client.attack(peer_id, local_data)
 		end
 
 		-- Multishot (from shotguns, etc.)
-		local half = math.floor(spawn/2)
+		local half = math.floor(spawn / 2)
 		for i = 1, spawn do
 			local subangle = player_angle + math.rad(i * spread - half * spread)
 			client.fire(offset_x, offset_y, subangle, distance, peer_id)
@@ -297,11 +296,11 @@ function client.attack(peer_id, local_data)
 		local width = itemdata.width or 10
 		local range = itemdata.range or 20
 
-		local swing_x, swing_y = mlib.translatePoint(player_x, player_y, player_angle, range/2)
+		local swing_x, swing_y = mlib.translatePoint(player_x, player_y, player_angle, range / 2)
 
 		-- Play sound and effects
 		client.map:spawn_effect("slash", swing_x, swing_y, {
-			setDirection = player_angle + math.pi/2
+			setDirection = player_angle + math.pi / 2
 		})
 		if itemdata.sound then
 			client.map:playSoundAt(itemdata.sound, swing_x, swing_y, 1, 1.2, 400, 500)
@@ -313,7 +312,6 @@ function client.attack(peer_id, local_data)
 
 	return 1
 end
-
 
 function client.swing(start_x, start_y, angle, width, range, offset, peer_id)
 	local hitbox = client.getWeaponHitbox(
@@ -334,8 +332,8 @@ function client.swing(start_x, start_y, angle, width, range, offset, peer_id)
 	local h = math.floor(box_size)
 	local targets = client.world:queryRect(x, y, w, h)
 	for index, target in pairs(targets) do
-		if target.ct == 1 and target.h > 0 and target.id ~= peer_id  then
-			local half = target.size/2
+		if target.ct == 1 and target.h > 0 and target.id ~= peer_id then
+			local half = target.size / 2
 			local body = {
 				-half, -half,
 				half, -half,
@@ -347,14 +345,13 @@ function client.swing(start_x, start_y, angle, width, range, offset, peer_id)
 				local blood_x, blood_y = mlib.translatePoint(target.x, target.y, angle, -half)
 				client.map:spawn_effect("blood", blood_x, blood_y, {
 					setDirection = angle + math.pi,
-					setSpeed = {0, 100},
+					setSpeed = { 0, 100 },
 					setSpread = math.rad(180),
 				})
 			end
 		end
 	end
 end
-
 
 ---@param start_x number
 ---@param start_y number
@@ -363,7 +360,7 @@ end
 ---@param peer_id number
 function client.fire(start_x, start_y, angle, distance, peer_id)
 	peer_id = peer_id or 0
-    angle = angle or 0
+	angle = angle or 0
 	distance = distance or (32 * 10)
 
 	local target_x = start_x + math.cos(angle) * distance
@@ -386,23 +383,22 @@ function client.fire(start_x, start_y, angle, distance, peer_id)
 
 		local dx = hit_x - start_x
 		local dy = hit_y - start_y
-		hit_distance = math.sqrt( dx*dx + dy*dy )
-
+		hit_distance = math.sqrt(dx * dx + dy * dy)
 	end
-	local half = hit_distance/2
-	local half_x = start_x + math.cos(angle)*half
-	local half_y = start_y + math.sin(angle)*half
+	local half = hit_distance / 2
+	local half_x = start_x + math.cos(angle) * half
+	local half_y = start_y + math.sin(angle) * half
 
 	-- Create less particle as vector goes shorter
 	client.map:spawn_effect("hitscan", half_x, half_y, {
 		setDirection = angle,
-		setEmissionArea = {"uniform", half, 1, angle, false},
-		emitAtStart = math.ceil( hit_distance/distance * 10),
+		setEmissionArea = { "uniform", half, 1, angle, false },
+		emitAtStart = math.ceil(hit_distance / distance * 10),
 	})
 
 	client.map:spawn_effect("trail", start_x, start_y, {
 		angle = angle,
-		scaleX = (hit_distance)/32,
+		scaleX = (hit_distance) / 32,
 		--offsetX = -10,
 	})
 
@@ -479,20 +475,20 @@ function client.apply_input_to_player(input, peer_id)
 
 	-- Initialize forces
 	local h, v, w = 0, 0, 1
-	if input["forward"] then v = -1 	end
-	if input["back"] 	then v =  1 	end
-	if input["left"] 	then h = -1 	end
-	if input["right"] 	then h =  1 	end
-	if input["walk"] 	then w =  0.5 	end
+	if input["forward"] then v = -1 end
+	if input["back"] then v = 1 end
+	if input["left"] then h = -1 end
+	if input["right"] then h = 1 end
+	if input["walk"] then w = 0.5 end
 
 	if v ~= 0 or h ~= 0 then
 		-- Calculate magnitude
-		local mag = math.sqrt(v*v + h*h)
+		local mag = math.sqrt(v * v + h * h)
 		local scale
 		if mag == 0 then
 			v, h = 0, 0
 		else
-			scale = 1/mag
+			scale = 1 / mag
 			v, h = v * scale, h * scale
 		end
 		client.apply_forces_to_player(peer_id, v, h, w)
@@ -515,7 +511,7 @@ function client.apply_forces_to_player(peer_id, v, h, w)
 	local future_x, future_y = map:moveWithSliding(player.size, player.x, player.y, dx, dy)
 
 	-- Get the player half size
-	local half = math.floor(player.size/2)
+	local half = math.floor(player.size / 2)
 
 	-- Calculate player colliding with other objects
 	client.world:update(player, player.x - half, player.y - half, player.size, player.size)
@@ -529,14 +525,14 @@ function client.apply_forces_to_player(peer_id, v, h, w)
 	-- Collision handler
 	for i = 1, length do
 		local collision = collisions[i]
-		local _type 	= collision.type
-		local object 	= collision.other
-		local itemRect 	= collision.itemRect
+		local _type     = collision.type
+		local object    = collision.other
+		local itemRect  = collision.itemRect
 		local otherRect = collision.otherRect
-		local move 		= collision.move
-		local normal 	= collision.normal
-		local ti 		= collision.ti
-		local overlaps 	= collision.overlaps
+		local move      = collision.move
+		local normal    = collision.normal
+		local ti        = collision.ti
+		local overlaps  = collision.overlaps
 	end
 end
 
@@ -563,7 +559,7 @@ function client.raycast(x1, y1, x2, y2)
 	local impact_x, impact_y, hit = client.map:hitscan(x1, y1, x2, y2, 1)
 
 	local item_info, len = client.world:querySegmentWithCoords(start_x, start_y, impact_x, impact_y)
-	for i=1, len do
+	for i = 1, len do
 		local info = item_info[i]
 		local object = info.item
 
@@ -596,7 +592,7 @@ function client.hitscan(x1, y1, x2, y2)
 
 	-- Now calculate bump collision
 	local item_info, len = client.world:querySegmentWithCoords(start_x, start_y, impact_x, impact_y)
-	for i=1, len do
+	for i = 1, len do
 		local info = item_info[i]
 		local object = info.item
 
@@ -622,12 +618,12 @@ function client.render()
 	love.graphics.setCanvas(client.canvas)
 	love.graphics.clear()
 
-    -- Center display
-    local ox = 0.5 * (love.graphics.getWidth() - client.width)
+	-- Center display
+	local ox = 0.5 * (love.graphics.getWidth() - client.width)
 	local oy = 0.5 * (love.graphics.getHeight() - client.height)
 
 	-- Set the boundaries to render engine
-	love.graphics.setScissor(ox, oy, client.width, client.height)
+	--love.graphics.setScissor(ox, oy, client.width, client.height)
 
 	if (client.mode == "game" or client.mode == "editor") and client.map then
 		client.map:draw_floor()
@@ -635,23 +631,23 @@ function client.render()
 	end
 
 	--love.graphics.setCanvas(client.canvas)
-    if client.joined then
+	if client.joined then
 		-- Draw items on the ground
 		client.map:draw_items(client)
 		-- Player render
 		client.map:draw_players(client)
-    end
+	end
 
 	if (client.mode == "game" or client.mode == "editor") and client.map then
 		client.map:draw_ceiling()
 		client.map:draw_effects()
+		client.map:draw_hrc(ox, oy, client.width, client.height)
 	end
 
 	-- Resets scissoring and canvas
 	love.graphics.setCanvas()
 	love.graphics.pop()
 end
-
 
 --- Returns the client object to the main code block
 return client

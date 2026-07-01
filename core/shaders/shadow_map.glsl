@@ -4,17 +4,6 @@ uniform vec2 camera = vec2(0.0);
 uniform vec4 mouse = vec4(0.0);
 uniform Image heightmap;
 uniform Image overlay;
-// Screen-space texture holding dynamic occluders (players, placeable objects),
-// rendered at native resolution. Combined with the terrain heightmap via max().
-uniform Image occluder;
-// Map size in TILES. Decoupled from the heightmap texture resolution so the
-// heightmap can be rendered at a higher resolution (sub-tile detail for dynamic
-// occluders) without breaking the tile<->world<->screen coordinate mapping.
-uniform vec2 mapSizeTiles = vec2(0.0);
-// Full-resolution render-target size the shadow ultimately covers. The raymarch
-// may be drawn into a smaller (downscaled) buffer for performance, so SCREEN_UV
-// is scaled by fullScreenSize/love_ScreenSize to keep world mapping correct.
-uniform vec2 fullScreenSize = vec2(0.0);
 
 //////////////////////////////////////
 // Uniforms                         //
@@ -54,38 +43,26 @@ float getHeight(vec2 mapPos) {
     if ( any(lessThan(mapPos, vec2(0.0))) || any(greaterThan(mapPos, vec2(1.0))) ) {
         color.r = 0.0;
     }
-    // Static terrain height (on red channel)
+    // Return current height (on red channel)
     // TODO:
     //    add other kind of info on the remaining channels.
-    float terrain = min(color.r, 1.0);
-
-    // Dynamic occluders live in a full-res screen-space texture. Convert this
-    // map-space sample back to a screen UV (inverse of getOcclusion's mapping).
-    vec2 worldPos  = mapPos * (mapSizeTiles * TILE_SIZE);
-    vec2 screenUV  = (worldPos - camera + fullScreenSize * 0.5) / fullScreenSize;
-    float occ = 0.0;
-    if ( all(greaterThanEqual(screenUV, vec2(0.0))) && all(lessThanEqual(screenUV, vec2(1.0))) ) {
-        occ = Texel(occluder, screenUV).r;
-    }
-
-    // Final height is whichever is taller: terrain or a dynamic occluder.
-    return max(terrain, occ);
+    return min(color.r, 1.0);
 }
 
 vec3 getOcclusion(vec2 UV, vec2 SCREEN_UV) {
-    // Get the map size, in tiles (NOT heightmap texels — see uniform above).
-    vec2 mapSize = mapSizeTiles;
+    // Get the map size
+    vec2 mapSize = vec2( textureSize(heightmap, 0) );
+
+    // Get the viewport size
+    vec2 screenSize = love_ScreenSize.xy;
 
     // Conversion factor: screen pixels > map space
     vec2 pixelsToMap = (mapSize * TILE_SIZE);
 
-    // SCREEN_UV is in the (possibly downscaled) buffer's pixels. Rescale it to
-    // full-res screen pixels so the world mapping is resolution-independent.
-    vec2 fullUV = SCREEN_UV * (fullScreenSize / love_ScreenSize.xy);
-
     // Screen space position
-    vec2 screenCenter = fullScreenSize * 0.5;
-    vec2 mapPos = (fullUV + camera - screenCenter) / pixelsToMap;
+    vec2 screenCenter = screenSize * 0.5;
+    vec2 screenPos = (SCREEN_UV + camera - screenCenter);
+    vec2 mapPos = (SCREEN_UV + camera - screenCenter) / pixelsToMap;
 
     // Transform degrees to radians
     float direction = radians(direction);

@@ -60,6 +60,7 @@ function server.load()
 	server.map = MapObject.new() -- 50x50 tile map
 	server.map:read("maps/de_dust.map", true)
 	--server.map:read("maps/room34.map", true)
+	--server.map:read("maps/fun_roleplay.map", true)
 
 	server.log(1, "game", tostring(server.map))
 
@@ -193,7 +194,7 @@ function server.load()
 	share.playerscores = {}
 	share.game         = {
 		-- Values here expressed in seconds
-		timer = 300,
+		timer = 3000,
 		timer_start = os.time(),
 		bombtime = 20,
 		buytime = 10,
@@ -319,6 +320,7 @@ function server.parse(peer_id, str)
 
 	local action_id = args[1]
 	local actions = server.actions
+	if not actions then return end
 	if actions[action_id] then
 		local action_object = actions[action_id]
 		local source = action_object.source or "remote"
@@ -1329,6 +1331,7 @@ function server.apply_forces_to_player(peer_id, v, h, w)
 
 	local player = share.players[peer_id]
 	local map = server.map
+	if not map then return end
 
 	-- Store old valuies
 	local old_x = player.x

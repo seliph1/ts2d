@@ -295,7 +295,6 @@ ui.editor_button = LF.Create("textbutton", ui.main_menu)
 :SetHoverText("©255255255Editor")
 :SetPos(0, 180):SetCursor(LF.cursors.hand)
 ui.editor_button.OnClick = function(self)
-	--[[
     if client.map then
         local status = client.map:read( "maps/de_dust.map" )
         if status then
@@ -303,7 +302,7 @@ ui.editor_button.OnClick = function(self)
         end
     end
     client.mode = "editor"
-	LF.SetState("editor")]]
+	LF.SetState("editor")
 end
 
 ui.help_button = LF.Create("textbutton", ui.main_menu)
@@ -332,9 +331,12 @@ ui.newgame_button_cancel = LF.Create("button", ui.new_game_frame):SetText("Cance
 
 -- Sobe um listen server (host local numa thread) e conecta no loopback.
 ui.newgame_button_start.OnClick = function()
-	client.startListenServer()
-	ui.new_game_frame:SetVisible(false)
 	local console = require "core.interface.console"
+	local selected_id = ui.map_display_list.selected
+	local selected = ui.map_display_list.elements[selected_id]
+	client.startListenServer(selected)
+
+	ui.new_game_frame:SetVisible(false)
 	console.parse("connect 127.0.0.1 36963")
 end
 ui.newgame_button_cancel.OnClick = function()
@@ -1539,19 +1541,6 @@ ui.shader_controls(client.shaders.shockwave, {
 	{name="speed", hint = {0.0, 20.0}, init_value = 1.0};
 	{name="shading", hint = {0.0, 20.0}, init_value = 1.0};
 }, "Shockwave")
-]]
-
---[[
-ui.shader_controls(client.map._shadow_map, {
-	{name="steps", hint = {1.0, 500.0}, init_value = 32.0};
-	{name="shadowBrightness", hint = {0.0, 1.0}, init_value = 0.5};
-	{name="shadowLength", hint = {0.0, 96.0}, init_value = 32};
-	--{name="direction", hint = {-180, 180}, init_value = 45.0};
-	{name="direction", hint = {0, 360}, init_value = 45.0};
-	{name="mode", hint = {0.0, 1.0}, init_value = 1.0};
-	--{name="stepFactor", hint = {0.0, 1.0}, init_value = 0.05};
-	{name="distanceFactor", hint = {0.0, 32.0}, init_value = 0.05};
-})
 ]]
 
 --[[
