@@ -406,10 +406,30 @@ return function(loveframes)
 		parent = parent or loveframes.base
 		list = list or {}
 
-		if parent.visible == false then return list end
+		if not parent:OnState() or not parent:IsVisible() then
+			return list
+		end
 
-		if parent.navigable then
+		local enabled = true
+		if parent.GetEnabled then
+			enabled = parent:GetEnabled()
+		end
+
+		if parent.navigable and enabled then
 			table.insert(list, parent)
+		end
+
+		if parent.type == "tabs" then
+			local active_tab = parent.children and parent.children[parent.tab]
+			if active_tab then
+				loveframes.GetNavigableObjects(active_tab, list)
+			end
+			if parent.internals then
+				for _, internal in pairs(parent.internals) do
+					loveframes.GetNavigableObjects(internal, list)
+				end
+			end
+			return list
 		end
 
 		if parent.children then
@@ -435,7 +455,7 @@ return function(loveframes)
 		if #navs == 0 then return end
 
 		local current = loveframes.focusedobject
-		if current and (not current.visible or not current.navigable) then
+		if current and (not current:OnState() or not current:IsVisible() or not current.navigable) then
 			current = nil
 		end
 
@@ -507,6 +527,97 @@ return function(loveframes)
 			local mx, my = cx + cw / 2, cy + ch / 2
 			love.mouse.setPosition(mx, my)
 			loveframes.mousemoved(mx, my, 0, 0)
+		end
+	end
+
+	--[[---------------------------------------------------------
+	- func: HandleNavKeyPressed(key)
+	- desc: handles key press events for spatial navigation and activation keys
+--]] ---------------------------------------------------------
+	function loveframes.HandleNavKeyPressed(key)
+		local focus = loveframes.focusedobject
+		local navKeyMap = { up = true, down = true, left = true, right = true }
+
+		if navKeyMap[key] then
+			loveframes.SpatialNavigation(key)
+		elseif key == "return" or key == "space" then
+			if focus and focus:IsVisible() and focus:OnState() then
+				local cx, cy = focus:GetPos()
+				local cw, ch = focus:GetSize()
+				local mx, my = cx + cw / 2, cy + ch / 2
+				love.mouse.setPosition(mx, my)
+				loveframes.mousemoved(mx, my, 0, 0)
+
+				local old_hover = focus.hover
+				focus.hover = true
+				if focus.mousepressed then
+					focus:mousepressed(mx, my, 1)
+				end
+				focus.hover = old_hover
+			end
+		else
+			local navs = loveframes.GetNavigableObjects()
+			for _, object in ipairs(navs) do
+				if object.navActivationKey == key then
+					loveframes.focusedobject = object
+					local cx, cy = object:GetPos()
+					local cw, ch = object:GetSize()
+					local mx, my = cx + cw / 2, cy + ch / 2
+
+					love.mouse.setPosition(mx, my)
+					loveframes.mousemoved(mx, my, 0, 0)
+
+					local old_hover = object.hover
+					object.hover = true
+					if object.mousepressed then
+						object:mousepressed(mx, my, 1)
+					end
+					object.hover = old_hover
+					break
+				end
+			end
+		end
+	end
+
+	--[[---------------------------------------------------------
+	- func: HandleNavKeyReleased(key)
+	- desc: handles key release events for spatial navigation and activation keys
+--]] ---------------------------------------------------------
+	function loveframes.HandleNavKeyReleased(key)
+		local focus = loveframes.focusedobject
+
+		if key == "return" or key == "space" then
+			if focus and focus:IsVisible() and focus:OnState() then
+				local cx, cy = focus:GetPos()
+				local cw, ch = focus:GetSize()
+				local mx, my = cx + cw / 2, cy + ch / 2
+
+				local old_hover = focus.hover
+				focus.hover = true
+				if focus.mousereleased then
+					focus:mousereleased(mx, my, 1)
+				end
+				focus.hover = old_hover
+				loveframes.downobject = false
+			end
+		else
+			local navs = loveframes.GetNavigableObjects()
+			for _, object in ipairs(navs) do
+				if object.navActivationKey == key then
+					local cx, cy = object:GetPos()
+					local cw, ch = object:GetSize()
+					local mx, my = cx + cw / 2, cy + ch / 2
+
+					local old_hover = object.hover
+					object.hover = true
+					if object.mousereleased then
+						object:mousereleased(mx, my, 1)
+					end
+					object.hover = old_hover
+					loveframes.downobject = false
+					break
+				end
+			end
 		end
 	end
 
@@ -761,6 +872,7 @@ return function(loveframes)
 		local topcol = loveframes.debugwindow
 		local hoverobject = loveframes.GetHoverObject()
 		local inputobject = loveframes.inputobject
+		local focusedobject = loveframes.focusedobject
 		local objects = loveframes.GetObjectCount()
 		local collisions = loveframes.collisioncount
 		local drawcount = loveframes.drawcount
@@ -793,7 +905,7 @@ return function(loveframes)
 		-- draw main debug box
 		love.graphics.setFont(font)
 		love.graphics.setColor(0, 0, 0, 0.8)
-		love.graphics.rectangle("fill", infox, infoy, 200, 130)
+		love.graphics.rectangle("fill", infox, infoy, 200, 140)
 		love.graphics.setColor(1, 0, 0, 1)
 		love.graphics.print("Love Frames - Debug (" .. version .. " - " .. stage .. ")", infox + 5, infoy + 5)
 		love.graphics.setColor(1, 1, 1, 1)
@@ -805,8 +917,9 @@ return function(loveframes)
 		love.graphics.print("Draw Operations: " .. drawcount, infox + 10, infoy + 70)
 		love.graphics.print("Hover Object: " .. tostring(loveframes.hoverobject), infox + 10, infoy + 80)
 		love.graphics.print("Dragging Object: " .. tostring(loveframes.draggingobject), infox + 10, infoy + 90)
-		love.graphics.print("Down Object: " .. tostring(loveframes.downobject), infox + 10, infoy + 100)
-		love.graphics.print("Input Object: " .. tostring(loveframes.inputobject), infox + 10, infoy + 110)
+		love.graphics.print("Focused Object: " .. tostring(loveframes.focusedobject), infox + 10, infoy + 100)
+		love.graphics.print("Down Object: " .. tostring(loveframes.downobject), infox + 10, infoy + 110)
+		love.graphics.print("Input Object: " .. tostring(loveframes.inputobject), infox + 10, infoy + 120)
 
 		if love.keyboard.isDown "lshift" then
 			local ex_info_x = love.mouse.getX() + 30

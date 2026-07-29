@@ -44,15 +44,15 @@ return function(loveframes)
 	end
 
 	function Base:UpdateZero()
+		if self._updating_zero then return end
+		self._updating_zero = true
 		local state = self.state
-		local visible = self.visible
 		self.state = "*"
-		self.visible = true
 		--//------------------
 		self:update(0)
 		--//------------------
 		self.state = state
-		self.visible = visible
+		self._updating_zero = nil
 	end
 
 	--[[---------------------------------------------------------
@@ -1065,6 +1065,7 @@ return function(loveframes)
 	- desc: sets the object's visibility
 --]] ---------------------------------------------------------
 	function Base:SetVisible(bool)
+		if self.visible == bool then return self end
 		local children = self.children
 		local internals = self.internals
 		self.visible = bool
@@ -1973,7 +1974,7 @@ return function(loveframes)
 	- desc: compares the object's visibility
 --]] ---------------------------------------------------------
 	function Base:isUpdating()
-		return self.visible or self.alwaysupdate
+		return self.visible or self.alwaysupdate or self._updating_zero
 	end
 
 	function Base:isRoot()

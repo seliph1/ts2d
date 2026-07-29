@@ -1147,10 +1147,10 @@ function MapObject:draw_ceiling()
 	-- Reset render
 	love.graphics.setBlendMode("alpha")
 	love.graphics.setColor(1, 1, 1, 1)
-	--self:draw_shadow()
 end
 
 function MapObject:draw_shadow()
+	--[[
 	local heightmap = self:getHeightMap()
 	local camera = self._camera
 	local shadows = self._shadows
@@ -1164,7 +1164,7 @@ function MapObject:draw_shadow()
 	love.graphics.setColor(0, 0, 0.01, 1)
 	love.graphics.setShader(shadows)
 	love.graphics.rectangle("fill", 0, 0, love.graphics.getDimensions())
-	love.graphics.setShader()
+	love.graphics.setShader()]]
 end
 
 function MapObject:draw_effects()
@@ -1183,6 +1183,7 @@ function MapObject:draw_effects()
 end
 
 function MapObject:draw_hrc(x, y, w, h)
+	--[[
 	local heightmap = self:getHeightMap()
 	local tile_size = self:getTileSize()
 	local mx, my = love.mouse.getPosition()
@@ -1208,6 +1209,7 @@ function MapObject:draw_hrc(x, y, w, h)
 
 	love.graphics.setColor(1, 1, 1, 0.6)
 	gi:draw(x, y, 0, rx, ry)
+	]]
 end
 
 function MapObject:spawn_polygon(polygon, ...)

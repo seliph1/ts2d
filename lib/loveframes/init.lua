@@ -41,7 +41,7 @@ loveframes.stage   = "Alpha"
 loveframes.config                          = {}
 loveframes.config["DIRECTORY"]             = nil
 loveframes.config["DEFAULTSKIN"]           = "CS2D"
-loveframes.config["ACTIVESKIN"]            = "lufia"
+loveframes.config["ACTIVESKIN"]            = "CS2D"
 loveframes.config["INDEXSKINIMAGES"]       = true
 loveframes.config["DEBUG"]                 = false
 loveframes.config["ENABLE_SYSTEM_CURSORS"] = true
@@ -186,7 +186,7 @@ function loveframes.draw()
 	toast:draw()
 	menu:draw()
 
-	if loveframes.focusedobject and loveframes.focusedobject.visible and loveframes.focusedobject.navigable then
+	if loveframes.focusedobject and loveframes.focusedobject:OnState() and loveframes.focusedobject:IsVisible() and loveframes.focusedobject.navigable then
 		local skin = loveframes.GetActiveSkin()
 		if skin and skin.navigable then
 			skin.navigable(loveframes.focusedobject)
@@ -228,10 +228,6 @@ function loveframes.mousemoved(x, y, dx, dy, istouch)
 
 	loveframes.mx = x
 	loveframes.my = y
-
-	--if loveframes.focusedobject then
-	--loveframes.focusedobject = false
-	--end
 
 	if loveframes.config["DEBUG"] then
 		local ctrl
@@ -334,45 +330,7 @@ function loveframes.keypressed(key, isrepeat)
 
 	-- Run keys if we aren't stuck in an input
 	if not loveframes.inputobject then
-		local focus = loveframes.focusedobject
-		local navKeyMap = { up = true, down = true, left = true, right = true }
-		if navKeyMap[key] then
-			loveframes.SpatialNavigation(key)
-		elseif key == "return" or key == "space" then
-			if focus and focus.visible then
-				local cx, cy = focus:GetPos()
-				local cw, ch = focus:GetSize()
-				local mx, my = cx + cw / 2, cy + ch / 2
-				love.mouse.setPosition(mx, my)
-				loveframes.mousemoved(mx, my, 0, 0)
-
-				local old_hover = focus.hover
-				focus.hover = true
-				if focus.mousepressed then
-					focus:mousepressed(mx, my, 1)
-				end
-				focus.hover = old_hover
-			end
-		else
-			local navs = loveframes.GetNavigableObjects()
-			for _, obj in ipairs(navs) do
-				if obj.navActivationKey == key then
-					loveframes.focusedobject = obj
-					local cx, cy = obj:GetPos()
-					local cw, ch = obj:GetSize()
-					local mx, my = cx + cw / 2, cy + ch / 2
-
-					love.mouse.setPosition(mx, my)
-					loveframes.mousemoved(mx, my, 0, 0)
-
-					local old_hover = obj.hover
-					obj.hover = true
-					if obj.mousepressed then obj:mousepressed(mx, my, 1) end
-					obj.hover = old_hover
-					break
-				end
-			end
-		end
+		loveframes.HandleNavKeyPressed(key)
 
 		local keyhandler = loveframes.keyhandlers[loveframes.getModKeys()][key]
 		if keyhandler then
@@ -394,38 +352,7 @@ function loveframes.keyreleased(key)
 	menu:keyreleased(key)
 
 	if not loveframes.inputobject then
-		local focus = loveframes.focusedobject
-		if key == "return" or key == "space" then
-			if focus and focus.visible then
-				local cx, cy = focus:GetPos()
-				local cw, ch = focus:GetSize()
-				local mx, my = cx + cw / 2, cy + ch / 2
-
-				local old_hover = focus.hover
-				focus.hover = true
-				if focus.mousereleased then
-					focus:mousereleased(mx, my, 1)
-				end
-				focus.hover = old_hover
-				loveframes.downobject = false
-			end
-		else
-			local navs = loveframes.GetNavigableObjects()
-			for _, obj in ipairs(navs) do
-				if obj.navActivationKey == key then
-					local cx, cy = obj:GetPos()
-					local cw, ch = obj:GetSize()
-					local mx, my = cx + cw / 2, cy + ch / 2
-
-					local old_hover = obj.hover
-					obj.hover = true
-					if obj.mousereleased then obj:mousereleased(mx, my, 1) end
-					obj.hover = old_hover
-					loveframes.downobject = false
-					break
-				end
-			end
-		end
+		loveframes.HandleNavKeyReleased(key)
 	end
 end
 

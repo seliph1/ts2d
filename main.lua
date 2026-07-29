@@ -2,7 +2,7 @@
 --		⠀⣞⢽⢪⢣⢣⢣⢫⡺⡵⣝⡮⣗⢷⢽⢽⢽⣮⡷⡽⣜⣜⢮⢺⣜⢷⢽⢝⡽⣝
 --		⠸⡸⠜⠕⠕⠁⢁⢇⢏⢽⢺⣪⡳⡝⣎⣏⢯⢞⡿⣟⣷⣳⢯⡷⣽⢽⢯⣳⣫⠇
 --		⠀⠀⢀⢀⢄⢬⢪⡪⡎⣆⡈⠚⠜⠕⠇⠗⠝⢕⢯⢫⣞⣯⣿⣻⡽⣏⢗⣗⠏
---		⠀ ⠀⠪⡪⡪⣪⢪⢺⢸⢢⢓⢆⢤⢀⠀⠀⠀⠀⠈⢊⢞⡾⣿⡯⣏⢮⠷⠁⠀⠀ 
+--		⠀ ⠀⠪⡪⡪⣪⢪⢺⢸⢢⢓⢆⢤⢀⠀⠀⠀⠀⠈⢊⢞⡾⣿⡯⣏⢮⠷⠁⠀⠀
 --		⠀⠀⠀⠈⠊⠆⡃⠕⢕⢇⢇⢇⢇⢇⢏⢎⢎⢆⢄⠀⢑⣽⣿⢝⠲⠉⠀⠀⠀⠀ ⠀
 --		⠀⠀⠀⠀⡿⠂⠠⠀⡇⢇⠕⢈⣀⠀⠁⠡⠣⡣⡫⣂⣿⠯⢪⠰⠂⠀⠀⠀⠀ ⠀
 --		⠀⠀⠀⡦⡙⡂⢀⢤⢣⠣⡈⣾⡃⠠⠄⠀⡄⢱⣌⣶⢏⢊⠂⠀⠀⠀⠀⠀⠀ ⠀
@@ -23,71 +23,29 @@
 do
 	local is_server = false
 	for _, a in ipairs(arg or {}) do
-		if a == "--server" or a == "server" then is_server = true break end
+		if a == "--server" or a == "server" then
+			is_server = true
+			break
+		end
 	end
 	if is_server then
 		local base = "core/server/"
-		love.filesystem.setRequirePath(base.."?.lua;"..base.."?/init.lua;"..love.filesystem.getRequirePath())
+		love.filesystem.setRequirePath(base .. "?.lua;" .. base .. "?/init.lua;" .. love.filesystem.getRequirePath())
 		local server = require "server"
-		function love.load()     server.load()     end
+		function love.load() server.load() end
+
 		function love.update(dt) server.update(dt) end
-		function love.quit()     if server.shutdown then server.shutdown() end end
+
+		function love.quit() if server.shutdown then server.shutdown() end end
+
 		return
 	end
 end
 
-if love.getVersion() < 12 then
-	love.graphics.newTextBatch = love.graphics.newText
-end
-
---[[
-local fps_cap = 1/120
---fps_cap = 0.001
-
-function love.run()
-	if love.load then love.load(love.parsedGameArguments, love.rawGameArguments) end
-
-	-- We don't want the first frame's dt to include time taken by love.load.
-	if love.timer then love.timer.step() end
-
-	-- Main loop time.
-	return function()
-		-- Process events.
-		if love.event then
-			love.event.pump()
-			for name, a,b,c,d,e,f,g,h in love.event.poll() do
-				if name == "quit" then
-					if c or not love.quit or not love.quit() then
-						return a or 0, b
-					end
-				end
-				love.handlers[name](a,b,c,d,e,f,g,h)
-			end
-		end
-
-		-- Update dt, as we'll be passing it to update
-		local dt = love.timer and love.timer.step() or 0
-
-		-- Call update and draw
-		if love.update then love.update(dt) end -- will pass 0 if love.timer is disabled
-
-		if love.graphics and love.graphics.isActive() then
-			love.graphics.origin()
-			love.graphics.clear(love.graphics.getBackgroundColor())
-
-			if love.draw then love.draw() end
-
-			love.graphics.present()
-		end
-
-		if love.timer then love.timer.sleep(fps_cap) end
-	end
-end]]
-
-local loveframes 	= require "lib.loveframes"
-local console 		= require "core.interface.console"
-local ui 			= require "core.interface.ui"
-local client 		= require "core.client"
+local loveframes  = require "lib.loveframes"
+local console     = require "core.interface.console"
+local ui          = require "core.interface.ui"
+local client      = require "core.client"
 --local discordRPC	= require "lib.discordRPC"
 local discordRPC
 
@@ -110,36 +68,35 @@ local initializer = {
 	end,
 
 	["discord"] = function()
-        if discordRPC then
-		    discordRPC.initialize(require "core.applicationId", true)
-		    function discordRPC.ready(userId, username, discriminator, avatar)
-			    print(string.format("Discord: ready (%s, %s, %s, %s)", userId, username, discriminator, avatar))
-		    end
+		if discordRPC then
+			discordRPC.initialize(require "core.applicationId", true)
+			function discordRPC.ready(userId, username, discriminator, avatar)
+				print(string.format("Discord: ready (%s, %s, %s, %s)", userId, username, discriminator, avatar))
+			end
 
-		    function discordRPC.disconnected(errorCode, message)
-			    print(string.format("Discord: disconnected (%d: %s)", errorCode, message))
-		    end
+			function discordRPC.disconnected(errorCode, message)
+				print(string.format("Discord: disconnected (%d: %s)", errorCode, message))
+			end
 
-		    function discordRPC.errored(errorCode, message)
-			    print(string.format("Discord: error (%d: %s)", errorCode, message))
-		    end
+			function discordRPC.errored(errorCode, message)
+				print(string.format("Discord: error (%d: %s)", errorCode, message))
+			end
 
-		    function discordRPC.joinGame(joinSecret)
-			    print(string.format("Discord: join (%s)", joinSecret))
-		    end
+			function discordRPC.joinGame(joinSecret)
+				print(string.format("Discord: join (%s)", joinSecret))
+			end
 
-		    function discordRPC.spectateGame(spectateSecret)
-			    print(string.format("Discord: spectate (%s)", spectateSecret))
-		    end
+			function discordRPC.spectateGame(spectateSecret)
+				print(string.format("Discord: spectate (%s)", spectateSecret))
+			end
 
-		    function discordRPC.joinRequest(userId, username, discriminator, avatar)
-			    print(string.format("Discord: join request (%s, %s, %s, %s)", userId, username, discriminator, avatar))
-			    discordRPC.respond(userId, "yes")
-		    end
-        end
+			function discordRPC.joinRequest(userId, username, discriminator, avatar)
+				print(string.format("Discord: join request (%s, %s, %s, %s)", userId, username, discriminator, avatar))
+				discordRPC.respond(userId, "yes")
+			end
+		end
 	end,
 }
-
 
 
 function love.load(arguments)
@@ -158,15 +115,13 @@ function love.load(arguments)
 	client.load()
 end
 
-function love.update( dt )
-    if discordRPC then
-    	discordRPC.update( dt )
-    end
+function love.update(dt)
+	if discordRPC then
+		discordRPC.update(dt)
+	end
 
 	loveframes.update(dt)
 	client.update(dt)
-
-	love.window.setTitle( tostring( love.timer.getFPS() ) )
 end
 
 function love.draw()
@@ -213,10 +168,10 @@ function love.textinput(text)
 end
 
 function love.quit()
-    if client.stopListenServer then client.stopListenServer() end
-    if discordRPC then
-    	discordRPC.shutdown()
-    end
+	if client.stopListenServer then client.stopListenServer() end
+	if discordRPC then
+		discordRPC.shutdown()
+	end
 end
 
 function love.resize(w, h)

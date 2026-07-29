@@ -1311,16 +1311,10 @@ function ui.spec_control:Update()
 	if not client.share.players[client.id] then return end
 	local player = client.share.players[client.id]
 
-	if player.h <= 0 then
-		if not self:IsVisible() then
-			self:SetVisible(true)
-			client.parse("camera unbind")
-		end
-	else -- ded
-		if self:IsVisible() then
-			self:SetVisible(false)
-			client.parse("camera self")
-		end
+	local should_show = (player.h <= 0)
+	if self.visible ~= should_show then
+		self:SetVisible(should_show)
+		client.parse(should_show and "camera unbind" or "camera self")
 	end
 end
 
