@@ -87,9 +87,9 @@ local function buildButtonsTab(tabs)
 	local page = newTabPage(tabs, "Botoes")
 
 	-- textbutton -----------------------------------------------------------
-	caption(page, 10, 10, "textbutton")
+	caption(page, 20, 20, "textbutton")
 	local tbtn = loveframes.Create("textbutton", page)
-	tbtn:SetPos(10, 30)
+	tbtn:SetPos(20, 50)
 	tbtn:SetSize(150, 30)
 	tbtn:SetText("Click-me"):SetHoverText("Click-me/Hovered")
 	tbtn.OnClick = function(obj)
@@ -97,19 +97,20 @@ local function buildButtonsTab(tabs)
 	end
 
 	-- button (botao basico) -----------------------------------------------
-	caption(page, 10, 75, "button")
+	caption(page, 20, 100, "button")
 	local btn = loveframes.Create("button", page)
-	btn:SetPos(10, 95)
+	btn:SetPos(20, 130)
 	btn:SetSize(150, 30)
 	btn:SetText("Botao basico")
 	btn.OnClick = function(obj)
 		widgets.status:SetText("button clicado!")
 	end
+	btn:SetTooltip("Hello, i'm a tooltip!")
 
 	-- button toggle --------------------------------------------------------
-	caption(page, 10, 140, "button (toggle)")
+	caption(page, 20, 180, "button (toggle)")
 	local toggle = loveframes.Create("button", page)
-	toggle:SetPos(10, 160)
+	toggle:SetPos(20, 210)
 	toggle:SetSize(150, 30)
 	toggle:SetText("Toggle: OFF")
 	toggle:SetToggleable(true)
@@ -118,52 +119,82 @@ local function buildButtonsTab(tabs)
 	end
 
 	-- button disabled ------------------------------------------------------
-	caption(page, 10, 200, "button (disabled)")
+	caption(page, 20, 260, "button (disabled)")
 	local disablebtn = loveframes.Create("button", page)
-	disablebtn:SetPos(10, 220)
+	disablebtn:SetPos(20, 290)
 	disablebtn:SetSize(150, 30)
 	disablebtn:SetEnabled(false)
 	disablebtn:SetText("Disabled")
 
 	-- textbutton disabled ------------------------------------------------------
-	caption(page, 10, 260, "textbutton (disabled)")
+	caption(page, 20, 340, "textbutton (disabled)")
 	local textdisablebtn = loveframes.Create("textbutton", page)
-	textdisablebtn:SetPos(10, 280)
+	textdisablebtn:SetPos(20, 370)
 	textdisablebtn:SetSize(150, 30)
 	textdisablebtn:SetEnabled(false)
 	textdisablebtn:SetText("Disabled"):SetHoverText("Disabled/Hovered")
 
 	-- imagebutton ----------------------------------------------------------
-	caption(page, 200, 10, "imagebutton")
+	caption(page, 240, 20, "imagebutton")
 	local ibtn = loveframes.Create("imagebutton", page)
-	ibtn:SetPos(200, 30)
+	ibtn:SetPos(240, 50)
 	ibtn:SetImage(img.blue)
 	ibtn:SizeToImage()
-	ibtn:SetText("img")
 	ibtn.OnClick = function()
 		widgets.status:SetText("imagebutton clicado!")
 	end
 
+	-- imagelink ------------------------------------------------------------
+	caption(page, 340, 20, "imagelink")
+	local ilink = loveframes.Create("imagelink", page)
+	ilink:SetPos(340, 50)
+	ilink:SetImage(img.green)
+	ilink.OnClick = function()
+		widgets.status:SetText("imagelink clicado!")
+	end
+
 	-- checkbox -------------------------------------------------------------
-	caption(page, 200, 110, "checkbox")
+	caption(page, 240, 140, "checkbox")
 	local chk = loveframes.Create("checkbox", page)
-	chk:SetPos(200, 130)
+	chk:SetPos(240, 170)
 	chk:SetText("Habilitar algo")
 	chk.OnChanged = function(obj, checked)
 		widgets.status:SetText("checkbox: " .. tostring(checked))
 	end
 
 	local chk_disabled = loveframes.Create("checkbox", page)
-	chk_disabled:SetPos(200, 150)
+	chk_disabled:SetPos(240, 200)
 	chk_disabled:SetText("Desativado")
 	chk_disabled:SetEnabled(false)
 
+	-- toggle ---------------------------------------------------------------
+	caption(page, 240, 250, "toggle")
+
+	local sw = loveframes.Create("toggle", page)
+	sw:SetPos(240, 280)
+	sw:SetText("Modo alternativo")
+	local sw_disabled = loveframes.Create("toggle", page)
+	sw_disabled:SetPos(240, 315)
+	sw_disabled:SetText("Desativado")
+	sw_disabled:SetEnabled(false)
+
+	local sw_vertical = loveframes.Create("toggle", page)
+	sw_vertical:SetPos(240, 350)
+	sw_vertical:SetText("Vertical")
+	function sw:OnChanged(checked)
+		widgets.status:SetText("toggle: " .. tostring(checked))
+		if checked then
+			sw_vertical:SetDirection("vertical")
+		else
+			sw_vertical:SetDirection("horizontal")
+		end
+	end
 
 	-- radiobutton (grupo) --------------------------------------------------
-	caption(page, 200, 180, "radiobutton (grupo)")
+	caption(page, 460, 340, "radiobutton (grupo)")
 	for i = 1, 4 do
 		local radio = loveframes.Create("radiobutton", page)
-		radio:SetPos(200, 180 + i * 22)
+		radio:SetPos(460, 340 + i * 30)
 		radio:SetText("Opcao " .. i)
 		radio:SetGroup(debug_radios)
 		if i == 1 then radio:SetChecked(true) end
@@ -173,7 +204,7 @@ local function buildButtonsTab(tabs)
 			end
 		end
 
-		if i==4 then
+		if i == 4 then
 			radio:SetText("Desativado")
 			radio:SetEnabled(false)
 		end
@@ -181,11 +212,11 @@ local function buildButtonsTab(tabs)
 
 
 	-- multichoice ----------------------------------------------------------
-	caption(page, 400, 10, "multichoice"):SetTooltip("Test")
+	caption(page, 460, 20, "multichoice"):SetTooltip("Test")
 	local mc = loveframes.Create("multichoice", page)
-	mc:SetPos(400, 30)
+	mc:SetPos(460, 50)
 	mc:SetWidth(180)
-	for _, choice in ipairs({"Vermelho", "Verde", "Azul", "Amarelo"}) do
+	for _, choice in ipairs({ "Vermelho", "Verde", "Azul", "Amarelo" }) do
 		mc:AddChoice(choice)
 	end
 	mc:SetChoice("Escolha uma cor")
@@ -194,11 +225,19 @@ local function buildButtonsTab(tabs)
 	end
 
 	-- droplist -------------------------------------------------------------
-	caption(page, 400, 80, "droplist")
+	caption(page, 460, 100, "droplist")
 	local dl = loveframes.Create("droplist", page)
-	dl:SetPos(400, 100)
+	dl:SetPos(460, 130)
 	dl:SetSize(180, 110)
-	dl:AddElementsFromTable({"Item A", "Item B", "Item C", "Item D", "Item E"})
+	dl:AddElementsFromTable({ "Item A", "Item B", "Item C", "Item D", "Item E" })
+
+	-- multichoice disabled -------------------------------------------------
+	caption(page, 460, 260, "multichoice (disabled)")
+	local mc_dis = loveframes.Create("multichoice", page)
+	mc_dis:SetPos(460, 290)
+	mc_dis:SetWidth(180)
+	mc_dis:SetChoice("Indisponivel")
+	mc_dis:SetEnabled(false)
 end
 
 --[[--------------------------------------------------------------------------
@@ -208,49 +247,107 @@ local function buildInputsTab(tabs)
 	local page = newTabPage(tabs, "Entradas")
 
 	-- input de linha unica -------------------------------------------------
-	caption(page, 10, 10, "textbox (linha unica)")
+	caption(page, 20, 20, "textbox (linha unica)")
 	local input = loveframes.Create("textbox", page)
-	input:SetPos(10, 30)
+	input:SetPos(20, 50)
 	input:SetWidth(250)
 	input:SetPlaceholderText("Digite seu nome...")
 
 	-- input de senha -------------------------------------------------------
-	caption(page, 10, 70, "textbox (senha)")
+	caption(page, 20, 100, "textbox (senha)")
 	local pass = loveframes.Create("textbox", page)
-	pass:SetPos(10, 90)
+	pass:SetPos(20, 130)
 	pass:SetWidth(250)
 	pass:SetType("password")
 	pass:SetPasswordCharacter("*")
 
 	-- input multilinha -----------------------------------------------------
-	caption(page, 10, 130, "textbox (multilinha)")
+	caption(page, 20, 180, "textbox (multilinha)")
 	local multi = loveframes.Create("textbox", page)
-	multi:SetPos(10, 150)
+	multi:SetPos(20, 210)
 	multi:SetSize(250, 120)
-	multi:SetMultiline(true)
+	multi:SetType("multiwrap")
 	multi:SetText("Texto de varias linhas.\nEdite a vontade!")
 
+	local btn_left = loveframes.Create("button", page)
+	btn_left:SetPos(20, 350)
+	btn_left:SetSize(60, 20)
+	btn_left:SetText("Esq")
+	btn_left.OnClick = function() multi:SetAlignment("left") end
+
+	local btn_center = loveframes.Create("button", page)
+	btn_center:SetPos(100, 350)
+	btn_center:SetSize(60, 20)
+	btn_center:SetText("Centro")
+	btn_center.OnClick = function() multi:SetAlignment("center") end
+
+	local btn_right = loveframes.Create("button", page)
+	btn_right:SetPos(180, 350)
+	btn_right:SetSize(60, 20)
+	btn_right:SetText("Dir")
+	btn_right.OnClick = function() multi:SetAlignment("right") end
+
+	local btn_top = loveframes.Create("button", page)
+	btn_top:SetPos(20, 380)
+	btn_top:SetSize(60, 20)
+	btn_top:SetText("Topo")
+	btn_top.OnClick = function() multi:SetVerticalAlignment("top") end
+
+	local btn_vcenter = loveframes.Create("button", page)
+	btn_vcenter:SetPos(100, 380)
+	btn_vcenter:SetSize(60, 20)
+	btn_vcenter:SetText("Meio")
+	btn_vcenter.OnClick = function() multi:SetVerticalAlignment("center") end
+
+	local btn_bottom = loveframes.Create("button", page)
+	btn_bottom:SetPos(180, 380)
+	btn_bottom:SetSize(60, 20)
+	btn_bottom:SetText("Fundo")
+	btn_bottom.OnClick = function() multi:SetVerticalAlignment("bottom") end
+
 	-- numberbox ------------------------------------------------------------
-	caption(page, 300, 10, "numberbox")
+	caption(page, 330, 20, "numberbox")
 	local nb = loveframes.Create("numberbox", page)
-	nb:SetPos(300, 30)
-	nb:SetSize(120, 30)
+	nb:SetPos(330, 50)
+	nb:SetSize(120, 25)
 	nb:SetMinMax(0, 100)
 	nb:SetValue(42)
 	nb.OnValueChanged = function(obj, value)
 		widgets.status:SetText("numberbox: " .. value)
 	end
 
-	-- textbox (rich/somente leitura tipico) --------------------------------
-	caption(page, 300, 80, "textbox")
-	local tbox = loveframes.Create("textbox", page)
-	tbox:SetPos(300, 100)
-	tbox:SetSize(280, 170)
-	tbox:SetText(
-		"O textbox exibe blocos de texto com quebra automatica de linha. " ..
-		"Util para descricoes longas, caixas de dialogo e ajuda contextual " ..
-		"dentro da interface."
-	)
+	-- numberbox disabled ---------------------------------------------------
+	caption(page, 330, 100, "numberbox (disabled)")
+	local nb_dis = loveframes.Create("numberbox", page)
+	nb_dis:SetPos(330, 130)
+	nb_dis:SetSize(120, 25)
+	nb_dis:SetValue(42)
+	nb_dis:SetEnabled(false)
+
+	-- stepper (horizontal) -------------------------------------------------
+	caption(page, 510, 20, "stepper")
+	local stp1 = loveframes.Create("stepper", page)
+	stp1:SetPos(510, 50)
+	stp1:SetSize(80, 25)
+	stp1:SetMinMax(0, 100)
+	stp1:SetValue(15)
+
+	-- stepper (vertical) ---------------------------------------------------
+	caption(page, 640, 20, "stepper (v)")
+	local stp2 = loveframes.Create("stepper", page)
+	stp2:SetPos(640, 50)
+	stp2:SetSize(25, 80)
+	stp2:SetVertical(true)
+	stp2:SetMinMax(0, 100)
+	stp2:SetValue(15)
+
+	-- codebox --------------------------------------------------------------
+	caption(page, 330, 180, "codebox (editor de lua)")
+	local cbox = loveframes.Create("codebox", page)
+	cbox:SetPos(330, 210)
+	cbox:SetSize(340, 200)
+	cbox:SetText(
+		"local function sum(a, b)\n\t-- soma de valores\n\treturn a + b\nend\n\nlocal num = 50\nprint(\"Total: \", sum(10, num))")
 end
 
 --[[--------------------------------------------------------------------------
@@ -259,16 +356,39 @@ end
 local function buildSlidersTab(tabs)
 	local page = newTabPage(tabs, "Sliders")
 
+	local toast = loveframes.Create("toast", page)
+	local joystick = loveframes.Create("joystick", page)
+		:SetPos(20, 250)
+
+	local joystickPos = loveframes.Create("label", page)
+		:Stack(10, joystick)
+		:SetText("Posição: []")
+
+	local joystickDir = loveframes.Create("label", page)
+		:Stack(10, joystickPos)
+		:SetText("Direção []")
+
+	function joystick:OnValueChanged(vx, vy)
+		local dir4 = self:GetDirection4()
+		local dir8 = self:GetDirection8()
+		joystickPos:SetText(string.format("Posição: [%s %s]", vx, vy))
+		joystickDir:SetText(string.format("Direção: [%s %s]", dir4, dir8))
+	end
+
+	function joystick:OnRelease(vx, vy)
+		toast:PushMessage("Solto!")
+	end
+
 	-- slider horizontal + progressbar acoplada -----------------------------
-	caption(page, 10, 10, "slider (horizontal) -> progressbar")
+	caption(page, 20, 20, "slider (horizontal) -> progressbar")
 	local hslider = loveframes.Create("slider", page)
-	hslider:SetPos(10, 35)
+	hslider:SetPos(20, 50)
 	hslider:SetWidth(300)
 	hslider:SetMinMax(0, 100)
 	hslider:SetValue(50)
 
 	local pbar = loveframes.Create("progressbar", page)
-	pbar:SetPos(10, 70)
+	pbar:SetPos(20, 90)
 	pbar:SetSize(300, 25)
 	pbar:SetMinMax(0, 100)
 	pbar:SetValue(50)
@@ -283,45 +403,59 @@ local function buildSlidersTab(tabs)
 	end
 
 	-- slider vertical ------------------------------------------------------
-	caption(page, 10, 110, "slider (vertical)")
+	caption(page, 350, 20, "slider (vertical)")
 	local vslider = loveframes.Create("slider", page)
 	vslider:SetSlideType("vertical")
-	vslider:SetPos(10, 130)
-	vslider:SetSize(25,150)
-	vslider:SetMinMax(0, 10)
+	vslider:SetPos(350, 50)
+	vslider:SetSize(25, 150)
+	vslider:SetMinMax(0, 20)
 	vslider:SetValue(5)
 
 	-- progressbar animada --------------------------------------------------
-	caption(page, 100, 130, "progressbar (animada)")
+	caption(page, 20, 140, "progressbar (animada)")
 	local autobar = loveframes.Create("progressbar", page)
-	autobar:SetPos(100, 150)
-	autobar:SetSize(280, 25)
+	autobar:SetPos(20, 160)
+	autobar:SetSize(300, 25)
 	autobar:SetMinMax(0, 100)
 	autobar:SetValue(0)
 	function autobar:Update(dt)
 		local v = self.value
 		local max = self.max
-		v = v + dt * 20
+		v = v + dt * vslider:GetValue()
 		if v > 100 then v = 0 end
 		self:SetValue(v)
-		self:SetText(v.."|"..max)
+		self:SetText(string.format(" %.2f%% | %s", v, max))
 	end
 
-	-- label ----------------------------------------------------------------
-	caption(page, 100, 200, "label (com objeto interno)")
-	local lbl = loveframes.Create("label", page)
-	lbl:SetPos(100, 220)
-	lbl:SetText("Um label pode formatar texto e ainda conter outros objetos.")
+	local lerpbox = loveframes.Create("checkbox", page)
+	lerpbox:SetPos(20, 195)
+	lerpbox:SetText("Usar Lerp")
+	lerpbox:SetChecked(true)
+	autobar:SetLerp(true)
+	lerpbox.OnChanged = function(obj, checked)
+		pbar:SetLerp(checked)
+		autobar:SetLerp(checked)
+	end
 
 	-- dial -----------------------------------------------------------------
-	caption(page, 420, 10, "dial (clique e arraste)")
+	caption(page, 500, 20, "dial (clique e arraste)")
 	local dial = loveframes.Create("dial", page)
-	dial:SetPos(420, 35)
-	dial:SetSize(40, 40)
-	--dial:SetSnap(15)
+	dial:SetPos(500, 50)
+	dial:SetSize(100, 100)
 	dial:SetAngle(45)
 	dial.OnValueChanged = function(obj, angle)
 		widgets.status:SetText("dial: " .. math.floor(angle) .. " graus")
+	end
+	local snap = loveframes.Create("checkbox", page)
+		:SetPos(460, 170)
+		:SetText("Enable snap")
+	function snap:OnChanged(toggle)
+		print(toggle)
+		if toggle then
+			dial:SetSnap(15)
+		else
+			dial:SetSnap(1)
+		end
 	end
 end
 
@@ -331,11 +465,27 @@ end
 local function buildListsTab(tabs)
 	local page = newTabPage(tabs, "Listas")
 
+	-- radialmenu test ----------------------------------------------------------
+	caption(page, 380, 420, "radialmenu")
+	local rmbtn = loveframes.Create("button", page)
+	rmbtn:SetPos(380, 440)
+	rmbtn:SetSize(150, 30)
+	rmbtn:SetText("Abrir Menu Radial")
+	rmbtn.OnClick = function(obj)
+		local rmenu = loveframes.Create("radialmenu")
+		rmenu:AddOption("Inventario", nil, function() widgets.status:SetText("Inventario!") end)
+		rmenu:AddOption("Magias", nil, function() widgets.status:SetText("Magias!") end)
+		rmenu:AddOption("Social", nil, function() widgets.status:SetText("Social!") end)
+		rmenu:AddOption("Mapa", nil, function() widgets.status:SetText("Mapa!") end)
+		rmenu:AddOption("Opcoes", nil, function() widgets.status:SetText("Opcoes!") end)
+		rmenu:Open()
+	end
+
 	-- columnlist -----------------------------------------------------------
-	caption(page, 10, 10, "columnlist")
+	caption(page, 20, 20, "columnlist")
 	local clist = loveframes.Create("columnlist", page)
-	clist:SetPos(10, 30)
-	clist:SetSize(330, 200)
+	clist:SetPos(20, 50)
+	clist:SetSize(330, 120)
 	clist:AddColumn("Nome")
 	clist:AddColumn("Funcao")
 	clist:AddColumn("Nivel")
@@ -344,17 +494,19 @@ local function buildListsTab(tabs)
 	clist:AddRow("Guy", "Lutador", "13")
 	clist:AddRow("Artea", "Arqueiro", "10")
 	clist:AddRow("Tia", "Mercadora", "9")
-	for i=1,1000 do
-		clist:AddRow(randomString(10), randomString(10), math.random(1,10))
+	for i = 1, 1000 do
+		clist:AddRow(randomString(10), randomString(10), math.random(1, 10))
 	end
 	clist.OnRowClicked = function(obj, row, data)
 		widgets.status:SetText("Linha selecionada: " .. tostring(data[1]))
 	end
 
 	-- tree -----------------------------------------------------------------
-	caption(page, 360, 10, "tree")
-	local tree = loveframes.Create("tree", page)
-	tree:SetPos(360, 30)
+	caption(page, 380, 20, "tree")
+	local scroll = loveframes.Create("scrollpanel", page):SetSize(300, 120):SetPos(380, 50)
+	local tree = loveframes.Create("tree", scroll):SetPos(0, 0)
+
+	tree:SetPos(0, 0)
 	tree:SetSize(230, 200)
 	local n1 = tree:AddNode("Personagens")
 	n1:AddNode("Maxim")
@@ -363,20 +515,99 @@ local function buildListsTab(tabs)
 	n2:AddNode("Pocao")
 	n2:AddNode("Espada")
 	tree:AddNode("Configuracoes")
+	local n3 = tree:AddNode("Outros")
+	for i = 1, 1000 do
+		n3:AddNode(randomString(10))
+	end
+
+	local stackingCheckbox = loveframes.Create("checkbox", page)
+		:SetText("Allow Nesting"):Stack(10, scroll)
+	function stackingCheckbox:OnChanged(state)
+		tree:SetNesting(state)
+	end
+
+	-- log dinamico ---------------------------------------------------------
+	caption(page, 20, 190, "log (clique no botao para adicionar)")
+	local log = loveframes.Create("log", page)
+	log:SetPos(20, 250)
+	log:SetSize(330, 110)
+	widgets.log = log
+	local addLog = loveframes.Create("button", page)
+	addLog:SetPos(20, 210)
+	addLog:SetSize(120, 25)
+	addLog:SetText("Adicionar log")
+	local logcount = 0
+	addLog.OnClick = function()
+		logcount = logcount + 1
+		log:AddElement("Mensagem de log #" .. logcount)
+	end
 
 	-- collapsiblecategory --------------------------------------------------
-	caption(page, 10, 240, "collapsiblecategory")
+	caption(page, 20, 380, "collapsiblecategory")
 	local cat = loveframes.Create("collapsiblecategory", page)
-	cat:SetPos(10, 260)
+	cat:SetPos(20, 400)
 	cat:SetSize(330, 30)
 	local catpanel = loveframes.Create("panel")
-	catpanel:SetSize(330, 80)
-	local insideBtn = loveframes.Create("textbutton", catpanel)
+	catpanel:SetSize(320, 80)
+	local insideBtn = loveframes.Create("button", catpanel)
 	insideBtn:SetPos(10, 10)
 	insideBtn:SetSize(150, 25)
 	insideBtn:SetText("Botao interno")
 	cat:SetText("Clique para abrir/fechar")
 	cat:SetObject(catpanel)
+
+
+	caption(page, 380, 240, "menu")
+	local panel = loveframes.Create("panel", page)
+		:SetPos(380, 270)
+		:SetSize(200, 100)
+
+	local alert = loveframes.Create("messagebox", panel)
+		:SetMaxWidth(1)
+		:SetCollidable(false)
+		:SetText("Clique em qualquer lugar dentro desse retângulo")
+
+	local menu_opcoes = {
+		{
+			text = "Ver Perfil",
+			func = function()
+				widgets.status:SetText("Menu selecionado: Ver Perfil")
+			end
+		},
+		{ type = "divider" },
+		{
+			text = "Preferências",
+			sub_menu = {
+				{
+					text = "Áudio",
+					func = function()
+						widgets.status:SetText("Menu selecionado: Audio")
+					end
+				},
+				{
+					text = "Vídeo",
+					func = function()
+						widgets.status:SetText("Menu selecionado: Video")
+					end
+				}
+			}
+		},
+		{ text = "Strings Aleatórias: ", sub_menu = {} },
+		{ text = "Sair",                 func = function() os.exit() end }
+	}
+
+	local sub = {}
+	for i = 1, 20 do
+		local r = randomString(10)
+		sub[#sub + 1] = {
+			text = r,
+			func = function()
+				widgets.status:SetText("Menu selecionado: " .. r)
+			end
+		}
+	end
+	menu_opcoes[4].sub_menu = sub
+	panel:SetContextMenu(menu_opcoes)
 end
 
 --[[--------------------------------------------------------------------------
@@ -385,10 +616,54 @@ end
 local function buildLayoutTab(tabs)
 	local page = newTabPage(tabs, "Layout")
 
+	-- dockzone -------------------------------------------------------------
+	caption(page, 20, 270, "dockzones (arraste as janelas abaixo para estas areas)")
+	local framesize = 250
+	local dz1 = loveframes.Create("dockzone", page)
+	dz1:SetPos(20, 300)
+	dz1:SetSize(framesize, framesize)
+
+	local dz2 = loveframes.Create("dockzone", page)
+	dz2:SetPos(framesize + 50, 300)
+	dz2:SetSize(framesize, framesize)
+
+	local dframe1 = loveframes.Create("frame")
+	dframe1:SetPos(20, 560)
+	dframe1:SetSize(framesize, framesize)
+	dframe1:SetName("Janela Ancorável 1")
+	dframe1:SetDockable(true)
+	dframe1:SetDraggable(true)
+	dframe1:SetProperty("ticks", 0)
+	function dframe1:DrawOver()
+		love.graphics.setColor(1, 0, 0, 1)
+		love.graphics.printf(string.format("ticks: %s", self.ticks), self.x + 5, self.y + 20, self.width)
+		love.graphics.printf(tostring(self.parent), self.x + 5, self.y + 40, self.width)
+	end
+
+	function dframe1:Update(dt)
+		self.accumulator = self.accumulator or 0
+		self.accumulator = self.accumulator + dt
+		local tickStep = 1 --1 / 35
+		while self.accumulator >= tickStep do
+			self.ticks = self.ticks + 1
+			self.accumulator = self.accumulator - tickStep
+		end
+	end
+
+	local dframe2 = loveframes.Create("frame")
+	dframe2:SetPos(190, 560)
+	dframe2:SetSize(framesize, framesize)
+	dframe2:SetName("Janela Ancorável 2")
+	dframe2:SetDockable(true)
+	dframe2:SetDraggable(true)
+
+	dz1:Dock(dframe1)
+	dz2:Dock(dframe2)
+
 	-- grid -----------------------------------------------------------------
-	caption(page, 10, 10, "grid (3x3 de botoes)")
+	caption(page, 20, 20, "grid (3x3 de botoes)")
 	local grid = loveframes.Create("grid", page)
-	grid:SetPos(10, 30)
+	grid:SetPos(20, 50)
 	grid:SetRows(3)
 	grid:SetColumns(3)
 	grid:SetCellSize(70, 40)
@@ -402,154 +677,318 @@ local function buildLayoutTab(tabs)
 	end
 
 	-- skin -----------------------------------------------------------------
-	caption(page, 260, 10, "skin")
+	caption(page, 20, 200, "skin")
 	local skinpick = loveframes.Create("multichoice", page)
-	:SetPos(10, 200)
-	:AddChoice("CS2D")
-	:AddChoice("moon")
+		:SetPos(20, 230)
+		:AddChoice("CS2D")
+		:AddChoice("moon")
 	function skinpick:OnChoiceSelected(choice)
 		--loveframes.config["ACTIVESKIN"] = choice
 		loveframes.base:SetSkin(choice)
 	end
 
 	-- scrollpanel ----------------------------------------------------------
-	caption(page, 260, 10, "scrollpanel")
+	caption(page, 290, 20, "scrollpanel")
 	local sp = loveframes.Create("scrollpanel", page)
-	sp:SetPos(260, 30)
+	sp:SetPos(290, 50)
 	sp:SetSize(200, 200)
 	for i = 1, 20 do
 		local item = loveframes.Create("textbutton")
 		item:SetSize(170, 25)
 		item:SetText("Item rolavel " .. i)
-		item:SetPos(0, (i-1)*20)
+		item:SetPos(0, (i - 1) * 20)
 		sp:AddItem(item)
 	end
 
-	-- image ----------------------------------------------------------------
-	caption(page, 480, 10, "image")
-	local image = loveframes.Create("image", page)
-	image:SetPos(480, 30)
-	image:SetImage(img.green)
-
-	-- imagelink ------------------------------------------------------------
-	caption(page, 480, 110, "imagelink")
-	local ilink = loveframes.Create("imagelink", page)
-	ilink:SetPos(480, 130)
-	ilink:SetImage(img.blue)
-	ilink.OnClick = function()
-		widgets.status:SetText("imagelink clicado!")
-	end
+	-- panel ----------------------------------------------------------
+	caption(page, 520, 20, "panel")
+	local p = loveframes.Create("panel", page)
+	p:SetPos(520, 50)
+	p:SetSize(200, 200)
 end
 
 --[[--------------------------------------------------------------------------
 	Aba 6: Combinacoes / objetos compostos
 ----------------------------------------------------------------------------]]
 local function buildComboTab(tabs)
-	local page = loveframes.Create("scrollpanel")
-	tabs:AddTab("Combinacoes", page)
+	local pagef = newTabPage(tabs, "Combinações")
+	local page = loveframes.Create("scrollpanel", pagef)
+		:Expand():SetBackground(false)
 
 	-- abas aninhadas dentro da aba ----------------------------------------
-	caption(page, 10, 10, "tabs dentro de tabs")
+	caption(page, 20, 20, "tabs dentro de tabs")
 	local inner = loveframes.Create("tabs", page)
-	inner:SetPos(10, 30)
+	inner:SetPos(20, 50)
 	inner:SetSize(300, 180)
 	for i = 1, 3 do
 		local innerPage = loveframes.Create("panel")
 		local lbl = loveframes.Create("label", innerPage)
-		lbl:SetPos(10, 10)
+		lbl:SetPos(20, 20)
 		lbl:SetText("Conteudo da sub-aba " .. i)
 		local chk = loveframes.Create("checkbox", innerPage)
-		chk:SetPos(10, 40)
+		chk:SetPos(20, 60)
 		chk:SetText("Marcador da aba " .. i)
 		inner:AddTab("Aba " .. i, innerPage)
 	end
 
+	-- loading -------------------------------------------------------------
+	caption(page, 20, 270, "loading (spinner procedural)")
+	local load = loveframes.Create("loading", page)
+	load:SetPos(20, 310)
+	load:SetRadius(25)
+	load:SetSpeed(math.pi * 3)
+
 	-- botao que abre um Frame filho (janela modal opcional) ----------------
-	caption(page, 340, 10, "Frame filho + messagebox")
+	caption(page, 380, 20, "Frame filho + messagebox")
 	local openFrame = loveframes.Create("textbutton", page)
-	openFrame:SetPos(340, 30)
-	openFrame:SetSize(200, 30)
-	openFrame:SetText("Abrir Frame")
+	openFrame:SetPos(380, 50)
+	openFrame:SetSize(220, 40)
+	openFrame:SetText("> Abrir Frame")
 	openFrame.OnClick = function()
 		debug.openChildFrame()
 	end
 
 	local openMsg = loveframes.Create("textbutton", page)
-	openMsg:SetPos(340, 70)
-	openMsg:SetSize(200, 30)
-	openMsg:SetText("Abrir messagebox")
+	openMsg:SetPos(380, 80)
+	openMsg:SetSize(220, 40)
+	openMsg:SetText("> Abrir messagebox")
 	openMsg.OnClick = function()
 		debug.openMessageBox()
 	end
 
-	-- log dinamico ---------------------------------------------------------
-	caption(page, 10, 220, "log (clique no botao para adicionar)")
-	local log = loveframes.Create("log", page)
-	log:SetPos(10, 240)
-	log:SetSize(300, 100)
-	widgets.log = log
-	local addLog = loveframes.Create("textbutton", page)
-	addLog:SetPos(320, 240)
-	addLog:SetSize(120, 25)
-	addLog:SetText("Adicionar log")
-	local logcount = 0
-	addLog.OnClick = function()
-		logcount = logcount + 1
-		log:AddElement("Mensagem de log #" .. logcount)
-	end
-
-	-- dica: menu de contexto com clique direito ----------------------------
-	caption(page, 340, 120, "Clique DIREITO na area cinza = menu de contexto")
-
 	-- slideshow ------------------------------------------------------------
-	caption(page, 340, 650, "slideshow (auto 3s, clique nos circulos)")
+	caption(page, 380, 190, "slideshow (auto 3s, clique nos circulos)")
 	local slides = loveframes.Create("slideshow", page)
-	slides:SetPos(340, 450)
-	slides:SetSize(300, 170)
+	slides:SetPos(380, 220)
+	slides:SetSize(320, 180)
 	slides:SetInterval(3)
-	local slidecolors = {{0.2,0.3,0.5}, {0.5,0.25,0.3}, {0.25,0.45,0.3}}
+	local slidecolors = { { 0.2, 0.3, 0.5 }, { 0.5, 0.25, 0.3 }, { 0.25, 0.45, 0.3 } }
 	for i = 1, 3 do
 		local slide = loveframes.Create("panel")
 		local lbl = loveframes.Create("label", slide)
-		lbl:SetPos(20, 20)
-		lbl:SetText("Slide " .. i .. " de 3")
-		local c = slidecolors[i]
-		slide.Draw = function(obj)
-			love.graphics.setColor(c[1], c[2], c[3], 1)
-			love.graphics.rectangle("fill", obj.x, obj.y, obj.width, obj.height)
+		lbl:SetPos(130, 80)
+		lbl:SetText("Slide " .. i)
+		slide.Draw = function(s)
+			love.graphics.setColor(slidecolors[i])
+			love.graphics.rectangle("fill", s.x, s.y, s.width, s.height)
 		end
-		slides:AddTab(slide)
+		slides:AddSlide(slide)
+	end
+
+	-- carousel -------------------------------------------------------------
+	caption(page, 380, 440, "carousel (arraste lateralmente para navegar)")
+	local carousel = loveframes.Create("carousel", page)
+	carousel:SetPos(380, 470)
+	carousel:SetSize(320, 160)
+	local carcolors = { { 0.5, 0.2, 0.2 }, { 0.2, 0.5, 0.2 }, { 0.2, 0.2, 0.5 }, { 0.5, 0.5, 0.2 }, { 0.5, 0.2, 0.5 } }
+	for i = 1, 5 do
+		local item = loveframes.Create("panel")
+		local lbl = loveframes.Create("label", item)
+		lbl:SetPos(80, 50)
+		lbl:SetText("Item " .. i)
+		item.Draw = function(s)
+			love.graphics.setColor(carcolors[i])
+			love.graphics.rectangle("fill", s.x, s.y, s.width, s.height)
+		end
+		carousel:AddItem(item)
 	end
 	slides.OnTabChange = function(obj, n)
 		widgets.status:SetText("slideshow: slide " .. n)
 	end
 end
 
-local function buildJoystickTab(tabs)
-	local page = newTabPage(tabs, "Joystick")
-	local toast = loveframes.Create("toast", page)
-	local joystick = loveframes.Create("joystick", page)
-	:SetPos(20, 20)
 
-	local joystickPos = loveframes.Create("label", page)
-	:Stack(10, joystick)
-	:SetText("Posição: []")
+local function buildColorPickerTab(tabs)
+	local page = newTabPage(tabs, "ColorPicker")
+	caption(page, 10, 10, "colorpicker avancado")
 
-	local joystickDir = loveframes.Create("label", page)
-	:Stack(10, joystickPos)
-	:SetText("Direção []")
+	local cp = loveframes.Create("colorpicker", page)
+	cp:SetPos(10, 35)
+	cp:SetSize(330, 150)
 
-	function joystick:OnValueChanged(vx, vy)
-		local dir4 = self:GetDirection4()
-		local dir8 = self:GetDirection8()
-		joystickPos:SetText(string.format("Posição: [%s %s]", vx, vy))
-		joystickDir:SetText(string.format("Direção: [%s %s]", dir4, dir8))
+	caption(page, 360, 10, "Demonstracao de cor do callback")
+	local feedback = loveframes.Create("panel", page)
+	feedback:SetPos(360, 35)
+	feedback:SetSize(280, 135)
 
+	feedback.Draw = function(object)
+		if object.drawfunc then
+			object.drawfunc(object)
+		end
+		local x, y = object:GetPos()
+		local w, h = object:GetSize()
+		local r, g, b, a = cp:GetColor()
+		love.graphics.setColor(r, g, b, a)
+		love.graphics.rectangle("fill", x + 4, y + 4, w - 8, h - 8)
 	end
-	function joystick:OnRelease(vx, vy)
-		toast:PushMessage("Solto!")
+
+	cp.OnColorChanged = function(object, r, g, b, a)
+		widgets.status:SetText(string.format("Cor selecionada: R=%.2f, G=%.2f, B=%.2f, A=%.2f", r, g, b, a))
+	end
+
+	local randbtn = loveframes.Create("button", page)
+	randbtn:SetPos(10, 190)
+	randbtn:SetSize(160, 30)
+	randbtn:SetText("Cor Aleatoria")
+	randbtn.OnClick = function()
+		cp:SetColor(math.random(), math.random(), math.random(), math.random())
+	end
+
+	local resetbtn = loveframes.Create("button", page)
+	resetbtn:SetPos(180, 190)
+	resetbtn:SetSize(160, 30)
+	resetbtn:SetText("Resetar (Branco)")
+	resetbtn.OnClick = function()
+		cp:SetColor(1, 1, 1, 1)
 	end
 end
+
+local function buildFileBrowserTab(tabs)
+	local page = newTabPage(tabs, "FileBrowser")
+	caption(page, 10, 10, "Componente FileBrowser incorporável e Dialogs de Arquivo")
+
+	-- Button to open dialog version
+	local btn_open_dlg = loveframes.Create("button", page)
+	btn_open_dlg:SetPos(10, 35)
+	btn_open_dlg:SetSize(200, 30)
+	btn_open_dlg:SetText("Abrir File Dialog (Abrir)")
+	btn_open_dlg.OnClick = function()
+		loveframes.CreateFileDialog("Selecione um script LUA", "open", { "*.lua" },
+			function(filepath)
+				widgets.status:SetText("Arquivo selecionado para abrir: " .. filepath)
+			end,
+			function()
+				widgets.status:SetText("Cancelado diálogo de abrir arquivo")
+			end
+		)
+	end
+
+	local btn_save_dlg = loveframes.Create("button", page)
+	btn_save_dlg:SetPos(220, 35)
+	btn_save_dlg:SetSize(200, 30)
+	btn_save_dlg:SetText("Abrir File Dialog (Salvar)")
+	btn_save_dlg.OnClick = function()
+		loveframes.CreateFileDialog("Salvar como...", "save", { "*.lua", "*.png" },
+			function(filepath)
+				widgets.status:SetText("Arquivo selecionado para salvar: " .. filepath)
+			end,
+			function()
+				widgets.status:SetText("Cancelado diálogo de salvar arquivo")
+			end
+		)
+	end
+
+	-- Inline file browser demonstration inside a frame
+	caption(page, 10, 80, "Instância de FileBrowser incorporada:")
+	local fb = loveframes.Create("filebrowser", page)
+	fb:SetPos(5, 100)
+	fb:SetSize(635, 235)
+	fb:SetFilter({ "*.lua", "*.png", "*.ogg" })
+	fb:SetOnSelect(function(filepath)
+		widgets.status:SetText("Selecionado arquivo no browser incorporado: " .. filepath)
+		local parts = loveframes.SplitString(filepath, "([.])")
+		local ext = #parts > 1 and parts[#parts]:lower() or ""
+		local text_extensions = { lua = true, txt = true, json = true, xml = true, tmx = true, tsx = true, md = true }
+
+		if text_extensions[ext] then
+			local content = love.filesystem.read(filepath)
+			if content then
+				local frame = loveframes.Create("frame"):SetSize(0.8, 0.8):Center()
+				local codebox = loveframes.Create("codebox", frame)
+					:SetPos(5, 35):ExpandDown(5):ExpandRight(5)
+					:SetText(content)
+			end
+		end
+	end)
+	fb:SetOnCancel(function()
+		widgets.status:SetText("Cancelada ação no browser incorporado")
+	end)
+end
+
+local function buildGraphTab(tabs)
+	local page = newTabPage(tabs, "Nós (Graph)")
+
+	-- Create graphfield
+	local gf = loveframes.Create("graphfield", page)
+	gf:SetPos(10, 10)
+	gf:SetSize(650, 310)
+
+	-- Create Node 1: Texture Input
+	local n1 = loveframes.Create("graphnode", gf)
+	n1.name = "Texture Input"
+	n1.graphx = 30
+	n1.graphy = 40
+	n1:SetWidth(150)
+	local s_rgb = n1:AddOutput("RGB", { 1, 1, 0, 1 }, "color")
+	local s_a = n1:AddOutput("Alpha", { 0, 1, 0, 1 }, "float")
+
+	-- Create Node 2: Brightness
+	local n2 = loveframes.Create("graphnode", gf)
+	n2.name = "Brightness"
+	n2.graphx = 220
+	n2.graphy = 80
+	n2:SetWidth(160)
+	local s_in_color = n2:AddInput("Image", { 1, 1, 0, 1 }, "color")
+	local s_in_val = n2:AddInput("Factor", { 0, 1, 0, 1 }, "float")
+	local s_out_color = n2:AddOutput("Result", { 1, 1, 0, 1 }, "color")
+	local t = loveframes.Create("textbox", n2)
+	t:SetText("Opções:")
+	t:SetPos(10, 80)
+	n2:Wrap(10)
+
+
+	-- Create Node 3: Viewer Output
+	local n3 = loveframes.Create("graphnode", gf)
+	n3.name = "Viewer Output"
+	n3.graphx = 440
+	n3.graphy = 100
+	n3:SetWidth(150)
+	local s_viewer_in = n3:AddInput("Surface", { 1, 1, 0, 1 }, "color")
+
+	-- Pre-connect some sockets for demo purposes!
+	gf:Connect(s_rgb, s_in_color)
+	gf:Connect(s_out_color, s_viewer_in)
+
+	-- Register updates to status bar on drag/connections changes
+	local old_Connect = gf.Connect
+	gf.Connect = function(self, from, to)
+		old_Connect(self, from, to)
+		widgets.status:SetText(string.format("Conectado: %s (%s) -> %s (%s)",
+			from.parent.name, from.name, to.parent.name, to.name))
+	end
+
+	local old_DisconnectInput = gf.DisconnectInput
+	gf.DisconnectInput = function(self, socket)
+		local from = nil
+		for _, conn in ipairs(self.connections) do
+			if conn.to == socket then
+				from = conn.from
+				break
+			end
+		end
+		old_DisconnectInput(self, socket)
+		if from then
+			widgets.status:SetText(string.format("Desconectado: %s (%s) -> %s (%s)",
+				from.parent.name, from.name, socket.parent.name, socket.name))
+		end
+	end
+
+	local old_DisconnectOutput = gf.DisconnectOutput
+	gf.DisconnectOutput = function(self, socket)
+		local targets = {}
+		for _, conn in ipairs(self.connections) do
+			if conn.from == socket then
+				table.insert(targets, conn.to)
+			end
+		end
+		old_DisconnectOutput(self, socket)
+		if #targets > 0 then
+			widgets.status:SetText(string.format("Desconectado %d ligação(ões) de %s (%s)",
+				#targets, socket.parent.name, socket.name))
+		end
+	end
+end
+
 
 --[[--------------------------------------------------------------------------
 	Frame filho / messagebox (criados sob demanda)
@@ -573,10 +1012,11 @@ function debug.openChildFrame()
 		frame:SetModal(checked)
 	end
 
+	local numberBox = loveframes.Create("numberbox", frame)
+	numberBox:SetPos(15, 95)
 	local close = loveframes.Create("textbutton", frame)
-	close:SetPos(15, 110)
-	close:SetSize(120, 30)
 	close:SetText("Fechar")
+	close:SetPos(-10, -10)
 	close.OnClick = function()
 		frame:Remove()
 	end
@@ -584,46 +1024,24 @@ end
 
 function debug.openMessageBox()
 	-- Um messagebox simples montado dentro de um Frame centralizado.
-	local frame = loveframes.Create("frame")
-	frame:SetName("Aviso")
-	frame:SetSize(300, 150)
-	frame:Center()
-	frame:SetModal(true)
+	local f = loveframes.Create("frame")
+	f:SetName("Aviso")
+	f:SetSize(300, 150)
+	f:Center()
+	f:SetModal(true)
 
-	local mb = loveframes.Create("messagebox", frame)
+	local mb = loveframes.Create("messagebox", f)
 	mb:SetPos(15, 40)
 	mb:SetMaxWidth(270)
 	mb:SetText("Isto e um messagebox.\nUse para alertas e confirmacoes.")
 
-	local ok = loveframes.Create("textbutton", frame)
+	local ok = loveframes.Create("textbutton", f)
 	ok:SetPos(15, 105)
 	ok:SetSize(100, 30)
 	ok:SetText("OK")
 	ok.OnClick = function()
-		frame:Remove()
+		f:Remove()
 	end
-end
-
--- Menu de contexto (clique direito).
-function debug.createContextMenu()
-	local menu = loveframes.Create("menu")
-	menu:AddOption("Status: ok", nil, function()
-		widgets.status:SetText("menu -> Status")
-	end)
-	menu:AddOption("Abrir Frame", nil, function()
-		debug.openChildFrame()
-	end)
-	local sub = loveframes.Create("menu")
-	sub:AddOption("Sub-acao 1", nil, function()
-		widgets.status:SetText("menu -> sub 1")
-	end)
-	sub:AddOption("Sub-acao 2", nil, function()
-		widgets.status:SetText("menu -> sub 2")
-	end)
-	menu:AddSubMenu("Submenu", nil, sub)
-	menu:AddDivider()
-	menu:AddOption("Fechar", nil, function() end)
-	return menu
 end
 
 --[[--------------------------------------------------------------------------
@@ -635,17 +1053,148 @@ local function build()
 	img.green = makeImage(64, 64, 0.2, 0.8, 0.3)
 	img.blue = makeImage(64, 64, 0.3, 0.5, 0.95)
 
+	-- Menubar de exemplo
+	local menubar = loveframes.Create("menubar")
+
+	local file_menu = menubar:AddMenu("Arquivo")
+	file_menu:ConstructFromTable({
+		{
+			text = "Novo",
+			icon = "assets/icons/16x16/add.png",
+			func = function()
+				widgets.status:SetText(
+					"Arquivo -> Novo clicado")
+			end
+		},
+		{
+			text = "Salvar",
+			icon = "assets/icons/16x16/diskette.png",
+			func = function()
+				widgets.status:SetText(
+					"Arquivo -> Salvar clicado")
+			end
+		},
+		{
+			text = "Recentes",
+			icon = "assets/icons/16x16/folder.png",
+			submenu = {
+				{
+					text = "projeto1.lua",
+					icon = "assets/icons/16x16/page_white_code.png",
+					func = function()
+						widgets
+							.status:SetText("Abrindo projeto 1")
+					end
+				},
+				{
+					text = "projeto2.lua",
+					icon = "assets/icons/16x16/page_white_code.png",
+					func = function()
+						widgets
+							.status:SetText("Abrindo projeto 2")
+					end
+				},
+			}
+		},
+		{ type = "divider" },
+		{ text = "Sair",   icon = "assets/icons/16x16/door_out.png", func = function() love.event.quit() end },
+	})
+
+	local edit_menu = menubar:AddMenu("Editar")
+	edit_menu:ConstructFromTable({
+		{
+			text = "Desfazer",
+			icon = "assets/icons/16x16/arrow_undo.png",
+			func = function()
+				widgets.status:SetText(
+					"Editar -> Desfazer")
+			end
+		},
+		{
+			text = "Refazer",
+			icon = "assets/icons/16x16/arrow_redo.png",
+			func = function()
+				widgets.status:SetText(
+					"Editar -> Refazer")
+			end
+		},
+		{ type = "divider" },
+		{
+			text = "Recortar",
+			icon = "assets/icons/16x16/cut.png",
+			func = function()
+				widgets.status:SetText(
+					"Editar -> Recortar")
+			end
+		},
+		{
+			text = "Copiar",
+			icon = "assets/icons/16x16/page_white_copy.png",
+			enabled = false,
+			func = function()
+				widgets.status:SetText(
+					"Editar -> Copiar")
+			end
+		},
+		{
+			text = "Colar",
+			icon = "assets/icons/16x16/page_white_paste.png",
+			enabled = false,
+			func = function()
+				widgets.status:SetText(
+					"Editar -> Colar")
+			end
+		},
+		{
+			text = "Preferências",
+			icon = "assets/icons/16x16/cog.png",
+			submenu = {
+				{
+					text = "Tema Escuro",
+					icon = "assets/icons/16x16/contrast.png",
+					func = function()
+						widgets.status
+							:SetText("Ativando tema escuro")
+					end
+				},
+				{
+					text = "Tema Claro",
+					icon = "assets/icons/16x16/contrast_high.png",
+					func = function()
+						widgets.status
+							:SetText("Ativando tema claro")
+					end
+				},
+			}
+		},
+	})
+
+	local help_menu = menubar:AddMenu("Ajuda")
+	help_menu:ConstructFromTable({
+		{
+			text = "Sobre",
+			icon = "assets/icons/16x16/information.png",
+			func = function()
+				local frame_sobre = loveframes.Create("frame")
+				frame_sobre:SetName("Sobre"):SetSize(300, 150):Center():MakeTop()
+				local text_sobre = loveframes.Create("label", frame_sobre)
+				text_sobre:SetText("Lufia UI Menubar Demo\nCriado com sucesso!")
+				text_sobre:SetPos(15, 45)
+			end
+		},
+	})
+
 	-- Frame principal que hospeda todas as abas de teste.
 	local frame = loveframes.Create("frame")
 	frame:SetName("LoveFrames - Banco de testes de UI")
-	frame:SetSize(680, 460)
+	frame:SetSize(850, 650)
 	frame:Center()
 	frame:SetDraggable(true)
 	frame:SetResizable(false)
 
 	local tabs = loveframes.Create("tabs", frame)
 	tabs:SetPos(5, 30)
-	tabs:SetSize(670, 390)
+	tabs:SetSize(840, 610)
 
 	buildButtonsTab(tabs)
 	buildInputsTab(tabs)
@@ -653,12 +1202,28 @@ local function build()
 	buildListsTab(tabs)
 	buildLayoutTab(tabs)
 	buildComboTab(tabs)
-	buildJoystickTab(tabs)
+	buildColorPickerTab(tabs)
+	buildGraphTab(tabs)
+	buildFileBrowserTab(tabs)
+
+	--tabs:SwitchToTab(6)
 
 	-- Barra de status compartilhada (mostra a ultima interacao).
 	widgets.status = loveframes.Create("label")
 	widgets.status:SetPos(10, love.graphics.getHeight() - 24)
-	widgets.status:SetText("Pronto. Interaja com os elementos acima.")
+	widgets.status.defs = {
+		color = { 0.0, 0.0, 0.0, 1.0 },
+		padding = 2,
+		spacing = 4,
+	}
+	widgets.status.OldSetText = widgets.status.SetText
+	widgets.status.SetText = function(obj, message)
+		loveframes.PushMessage(message, widgets.status.defs)
+		widgets.status:OldSetText(message)
+	end
+	widgets.status:OldSetText("Pronto. Interaja com os elementos acima.")
+	loveframes.toast:SetRelativeBoxWidth(0.3)
+	loveframes.toast:SetMessageOrder("descending")
 end
 
 --[[--------------------------------------------------------------------------
@@ -679,14 +1244,6 @@ end
 function love.draw()
 	love.graphics.clear(0.12, 0.12, 0.14)
 	loveframes.draw()
-
-	-- Pequena ajuda no rodape.
-	love.graphics.setColor(0.5, 0.5, 0.5, 1)
-	love.graphics.print(
-		"F1: alterna debug interno  |  DELETE (sobre objeto): remove  |  botao direito: menu",
-		10, love.graphics.getHeight() - 44
-	)
-	love.graphics.setColor(1, 1, 1, 1)
 end
 
 function love.mousepressed(x, y, button, istouch, presses)

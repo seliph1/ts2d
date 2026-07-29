@@ -1,124 +1,141 @@
 --[[------------------------------------------------
 	-- Love Frames - A GUI library for LOVE --
 	-- Copyright (c) 2012-2014 Kenny Shields --
---]]------------------------------------------------
+--]] ------------------------------------------------
 
 return function(loveframes)
----------- module start ----------
+	---------- module start ----------
 
--- skins library
-loveframes.skins = {}
+	-- skins library
+	loveframes.skins = {}
 
---[[---------------------------------------------------------
+	--[[---------------------------------------------------------
 	- func: RegisterSkin(skin)
 	- desc: registers a skin
---]]---------------------------------------------------------
-function loveframes.RegisterSkin(skin)
-	local skins = loveframes.skins
-	local name = skin.name
-	local author = skin.author
-	local version = skin.version
-	local basename = skin.base
-	local newskin = false
-	
-	if name == "" or not name then
-		loveframes.Error("Skin registration error: Invalid or missing name data.")
-	end
-	
-	if author == "" or not author then
-		loveframes.Error("Skin registration error: Invalid or missing author data.")
-	end
-	
-	if version == "" or not version then
-		loveframes.Error("Skin registration error: Invalid or missing version data.")
-	end
-	
-	local namecheck = skins[name]
-	if namecheck then
-		loveframes.Error("Skin registration error: A skin with the name '" ..name.. "' already exists.")
-	end
-	
-	local dir = skin.directory or loveframes.config["DIRECTORY"] .. "/skins/" ..name
-	local dircheck = love.filesystem.getInfo(dir) ~= nil and love.filesystem.getInfo(dir)["type"] == "directory"
-	if not dircheck then
-		loveframes.Error("Skin registration error: Could not find a directory for skin '" ..name.. "'.")
-	end
-	
-	local imagedir = skin.imagedir or dir .. "/images"
-	local imagedircheck = love.filesystem.getInfo(imagedir) ~= nil and love.filesystem.getInfo(imagedir)["type"] == "directory"
-	if not imagedircheck then
-		loveframes.Error("Skin registration error: Could not find an image directory for skin '" ..name.. "'.")
-	end
-	
-	if basename then
-		--local basename = base
-		local base = skins[basename]
-		if not base then
-			loveframes.Error("Could not find base skin '" ..basename.. "' for skin '" ..name.. "'.")
+--]] ---------------------------------------------------------
+	function loveframes.RegisterSkin(skin)
+		local skins = loveframes.skins
+		local name = skin.name
+		local author = skin.author
+		local version = skin.version
+		local basename = skin.base
+		local newskin = false
+
+		if name == "" or not name then
+			loveframes.Error("Skin registration error: Invalid or missing name data.")
 		end
-		newskin = loveframes.DeepCopy(base)
-		newskin.name = name
-		newskin.author = author
-		newskin.version = version
-		newskin.imagedir = imagedir
-		local skincontrols = skin.controls
-		local basecontrols = base.controls
-		if skincontrols and basecontrols then
-			for k, v in pairs(skincontrols) do
-				newskin.controls[k] = v
+
+		if author == "" or not author then
+			loveframes.Error("Skin registration error: Invalid or missing author data.")
+		end
+
+		if version == "" or not version then
+			loveframes.Error("Skin registration error: Invalid or missing version data.")
+		end
+
+		local namecheck = skins[name]
+		if namecheck then
+			loveframes.Error("Skin registration error: A skin with the name '" .. name .. "' already exists.")
+		end
+
+		local dir = skin.directory or loveframes.config["DIRECTORY"] .. "/skins/" .. name
+		local dircheck = love.filesystem.getInfo(dir) ~= nil and love.filesystem.getInfo(dir)["type"] == "directory"
+		if not dircheck then
+			loveframes.Error("Skin registration error: Could not find a directory for skin '" .. name .. "'.")
+		end
+
+		local imagedir = skin.imagedir or dir .. "/images"
+		local imagedircheck = love.filesystem.getInfo(imagedir) ~= nil and
+			love.filesystem.getInfo(imagedir)["type"] == "directory"
+		if not imagedircheck then
+			loveframes.Error("Skin registration error: Could not find an image directory for skin '" .. name .. "'.")
+		end
+
+		if basename then
+			--local basename = base
+			local base = skins[basename]
+			if not base then
+				loveframes.Error("Could not find base skin '" .. basename .. "' for skin '" .. name .. "'.")
 			end
-			for k, v in pairs(skin) do
-				if type(v) == "function" then
-					newskin[k] = v
+			newskin = loveframes.DeepCopy(base)
+			newskin.name = name
+			newskin.author = author
+			newskin.version = version
+			newskin.imagedir = imagedir
+			local skincontrols = skin.controls
+			local basecontrols = base.controls
+			if skincontrols and basecontrols then
+				for k, v in pairs(skincontrols) do
+					newskin.controls[k] = v
+				end
+				for k, v in pairs(skin) do
+					if type(v) == "function" then
+						newskin[k] = v
+					end
 				end
 			end
 		end
-	end
-	
-	if not newskin then
-		newskin = skin
-	end
-	
-	newskin.dir = dir
-	local images = {}
-	local fonts = {}
-	
-	local indeximages = loveframes.config["INDEXSKINIMAGES"]
-	if indeximages then
-		local imagelist = loveframes.GetDirectoryContents(imagedir)
-		local filename, extension, image, font
-		for k, v in ipairs(imagelist) do
-			extension = v.extension
-			filename = v.name .. "." .. extension
-			if extension == "png" or extension == "bmp" then
-				image = love.graphics.newImage(v.fullpath)
-				image:setFilter("nearest", "nearest")
-				images[filename] = image
-			end
 
-			if extension == "ttf" or extension == "otf" then
-				font = love.graphics.newFont(v.fullpath)
-				fonts[filename] = font
+		if not newskin then
+			newskin = skin
+		end
+
+		newskin.dir = dir
+		local images = {}
+		local fonts = {}
+
+		local indeximages = loveframes.config["INDEXSKINIMAGES"]
+		if indeximages then
+			local imagelist = loveframes.GetDirectoryContents(imagedir)
+			local filename, extension, image, font
+			for k, v in ipairs(imagelist) do
+				extension = v.extension
+				filename = v.name .. "." .. extension
+				if extension == "png" or extension == "bmp" then
+					image = love.graphics.newImage(v.fullpath)
+					image:setFilter("nearest", "nearest")
+					images[filename] = image
+				end
+
+				if extension == "ttf" or extension == "otf" then
+					font = love.graphics.newFont(v.fullpath)
+					fonts[filename] = font
+				end
+			end
+		end
+		newskin.images = images
+		newskin.fonts = fonts
+		skins[name] = newskin
+	end
+
+	--[[---------------------------------------------------------
+	- func: GetSkinAsset(filename)
+	- desc: resolves a file path for an asset in the active skin's images folder
+--]] ---------------------------------------------------------
+	function loveframes.GetSkinAsset(filename)
+		local skin = loveframes.GetActiveSkin()
+		if not skin then return nil end
+		local dir = loveframes.config["DIRECTORY"]
+		local path = dir .. "/skins/" .. skin.name .. "/images/" .. filename
+		if love.filesystem.getInfo(path) then
+			return path
+		end
+		return nil
+	end
+
+	function loveframes.LoadSkins(dir)
+		local skinlist = loveframes.GetDirectoryContents(dir)
+		-- loop through a list of all gui skins and require them
+		local skin
+		for k, v in ipairs(skinlist) do
+			if v.extension == "lua" then
+				skin = loveframes.require(v.requirepath)
+				--loveframes.RegisterSkin(skin)
 			end
 		end
 	end
-	newskin.images = images
-	newskin.fonts = fonts
-	skins[name] = newskin
-end
 
-function loveframes.LoadSkins(dir)
-	local skinlist = loveframes.GetDirectoryContents(dir)
-	-- loop through a list of all gui skins and require them
-	local skin
-	for k, v in ipairs(skinlist) do
-		if v.extension == "lua" then
-			skin = loveframes.require(v.requirepath)
-			--loveframes.RegisterSkin(skin)
-		end
-	end
-end
---return skins
+	--return skins
 
----------- module end ----------
+	---------- module end ----------
 end

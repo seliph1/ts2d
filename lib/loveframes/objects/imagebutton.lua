@@ -16,7 +16,6 @@ local newobject = loveframes.NewObject("imagebutton", "loveframes_object_imagebu
 function newobject:initialize()
 
 	self.type = "imagebutton"
-	self.text = "Image Button"
 	self.width = 50
 	self.height = 50
 	self.internal = false
@@ -28,6 +27,7 @@ function newobject:initialize()
 	self.OnClick = nil
 	self.groupIndex	= 0
 	self.checked = false
+	self.cursor = loveframes.cursors.hand
 	
 	self:SetDrawFunc()
 end
@@ -128,27 +128,6 @@ function newobject:mousereleased(x, y, button)
 	
 	self.down = false
 
-end
-
---[[---------------------------------------------------------
-	- func: SetText(text)
-	- desc: sets the object's text
---]]---------------------------------------------------------
-function newobject:SetText(text)
-
-	self.text = text
-	return self
-	
-end
-
---[[---------------------------------------------------------
-	- func: GetText()
-	- desc: gets the object's text
---]]---------------------------------------------------------
-function newobject:GetText()
-
-	return self.text
-	
 end
 
 --[[---------------------------------------------------------

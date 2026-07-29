@@ -92,15 +92,16 @@ function newobject:draw()
 	
 	self:SetDrawOrder()
 	
-	love.graphics.stencil(stencilfunc)
-	love.graphics.setStencilTest("greater", 0)
+	love.graphics.setStencilMode("draw", 1)
+	stencilfunc()
+	love.graphics.setStencilMode("test", 1)
 	
 	local drawfunc = self.Draw or self.drawfunc
 	if drawfunc then
 		drawfunc(self)
 	end
 	
-	love.graphics.setStencilTest()
+	love.graphics.setStencilMode("off")
 	
 end
 

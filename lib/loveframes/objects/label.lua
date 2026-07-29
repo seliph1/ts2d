@@ -54,8 +54,8 @@ function newobject:update(dt)
 		self.x = self.parent.x + self.staticx
 		self.y = self.parent.y + self.staticy
 	end
-	-- Check if the parent is a checkbox/radiobutton to propagate hover status
-	if parent.type == "checkbox" or parent.type == "radiobutton" then
+	-- Check if the parent is a selectable control to propagate hover status
+	if parent.type == "checkbox" or parent.type == "radiobutton" or parent.type == "toggle" then
 		parent:CheckHover()
 	end
 

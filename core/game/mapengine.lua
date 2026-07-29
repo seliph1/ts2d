@@ -1204,10 +1204,10 @@ function MapObject:draw_hrc(x, y, w, h)
 		love.graphics.setColor(0, 0, 0, 1)
 		love.graphics.draw(heightmap, cx, cy, 0, tile_size / rx, tile_size / ry)
 	end)
-	--gi:renderPipeline()
+	gi:renderPipeline()
 
-	--love.graphics.setColor(1, 1, 1, 0.6)
-	--gi:draw(x, y, 0, rx, ry)
+	love.graphics.setColor(1, 1, 1, 0.6)
+	gi:draw(x, y, 0, rx, ry)
 end
 
 function MapObject:spawn_polygon(polygon, ...)
