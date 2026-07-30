@@ -301,8 +301,7 @@ ui.editor_button.OnClick = function(self)
             print(status)
         end
     end
-    client.mode = "editor"
-	LF.SetState("editor")
+    client.scene.switch("editor")
 end
 
 ui.help_button = LF.Create("textbutton", ui.main_menu)

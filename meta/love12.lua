@@ -31,3 +31,13 @@ function love.graphics.newTextBatch(font, text) end
 ---@param permissions? "read"|"readwrite"      # permissão de acesso (padrão "read")
 ---@return boolean success
 function love.filesystem.mountFullPath(path, mountpoint, permissions) end
+
+---@class love.WindowSettings
+---@field vsync? number|integer|boolean
+
+---Altera as dimensões e/ou configurações da janela sem recriar o contexto se possível.
+---@param width number                         # largura da janela em pixels
+---@param height number                        # altura da janela em pixels
+---@param flags? love.WindowSettings|table     # tabela de opções/flags da janela (ex.: vsync, fullscreen)
+---@return boolean success
+function love.window.updateMode(width, height, flags) end

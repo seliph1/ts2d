@@ -226,7 +226,6 @@ editor.exitbutton:SetWidth(40)
 editor.exitbutton:SetPos(5, 85)
 function editor.exitbutton:OnClick()
 	client.scene.switch("lobby")
-	loveframes.SetState()
 end
 
 editor.settings_panel = loveframes.Create("frame")

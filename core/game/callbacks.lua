@@ -110,54 +110,16 @@ end
 function client.update(dt)
 	client.preupdate(dt)
 	client.pollListenServer()
-	if (client.mode == "game" or client.mode == "editor") and client.map then
-		client.camera_move(dt)
-		client.camera_tween(dt)
-		client.map:scroll(client.camera.x, client.camera.y)
-		client.map:update(dt)
-	end
 
 	client.scene.update(dt)
+
 	client.frame(dt)
 	client.postupdate(dt)
 end
 
 ---Main game render loop
 function client.draw()
-	-- Draw background if it's in lobby mode
-	if client.mode == "lobby" then
-		client.draw_splash(0, 0)
-	end
-
-	if client.mode == "game" or client.mode == "editor" then
-		client.render()
-
-		-- Center and scale display
-		local ox = 0.5 * (love.graphics.getWidth() - client.width)
-		local oy = 0.5 * (love.graphics.getHeight() - client.height)
-		love.graphics.setShader(client.shader)
-		if client.shader:hasUniform("time") then
-			client.shader:send("time", love.timer.getTime())
-		end
-
-		if client.shader:hasUniform("mouse") then
-			client.mouse = client.mouse or {}
-			client.mouse[1], client.mouse[2] = love.mouse.getPosition()
-			client.mouse[3] = love.mouse.isDown(1) and 1 or 0
-			client.mouse[4] = love.mouse.isDown(2) and 1 or 0
-			client.shader:send("mouse", client.mouse)
-		end
-		if client.scale then
-			love.graphics.push()
-			love.graphics.setDefaultFilter("linear", "linear")
-			love.graphics.scale(love.graphics.getWidth() / client.width, love.graphics.getHeight() / client.height)
-			love.graphics.draw(client.canvas, -ox, -oy)
-			love.graphics.pop()
-		else
-			love.graphics.draw(client.canvas, 0, 0)
-		end
-		love.graphics.setShader()
-	end
+	client.scene.draw()
 
 	-- Crosshair debug
 	if client.debug_level > 0 then

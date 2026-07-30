@@ -18,6 +18,25 @@ return function(client)
 		scene.scenes[name] = def
 	end
 
+	--- Retorna a cena ativa atual.
+	---@return string?
+	function scene.get_current()
+		return scene.current
+	end
+
+	--- Verifica se a cena informada é a atual.
+	---@param name string
+	---@return boolean
+	function scene.is(name)
+		return scene.current == name
+	end
+
+	local STATE_MAP = {
+		lobby  = "none",
+		game   = "game",
+		editor = "editor",
+	}
+
 	--- Troca de cena: atualiza client.mode e dispara exit() da anterior + enter() da nova.
 	--- Idempotente: trocar para a cena já ativa não refaz os hooks.
 	---@param name string  "lobby" | "game" | "editor"
@@ -29,6 +48,13 @@ return function(client)
 
 		client.mode   = name   -- mantém o campo legado autoritativo
 		scene.current = name
+
+		-- Sincroniza o estado do LoveFrames para mostrar apenas a UI correspondente à cena
+		local loveframes = package.loaded["lib.loveframes"]
+		if loveframes and loveframes.SetState then
+			local lf_state = STATE_MAP[name] or "none"
+			loveframes.SetState(lf_state)
+		end
 
 		if client.debug_level and client.debug_level > 0 then
 			print(("scene: -> %s"):format(name))

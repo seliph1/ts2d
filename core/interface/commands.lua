@@ -22,13 +22,13 @@ string.sub  string.upper
 
 table.insert table.maxn table.remove table.sort
 ]]):gsub('%S+', function(id)
-  local module, method = id:match('([^%.]+)%.([^%.]+)')
-  if module then
-    CONSOLE_ENV[module]         = CONSOLE_ENV[module] or {}
-    CONSOLE_ENV[module][method] = _G[module][method]
-  else
-    CONSOLE_ENV[id] = _G[id]
-  end
+	local module, method = id:match('([^%.]+)%.([^%.]+)')
+	if module then
+		CONSOLE_ENV[module]         = CONSOLE_ENV[module] or {}
+		CONSOLE_ENV[module][method] = _G[module][method]
+	else
+		CONSOLE_ENV[id] = _G[id]
+	end
 end)
 
 -- Client only commands
@@ -44,7 +44,7 @@ local commands = {
 			speed = tonumber(speed) or 30
 			client.lerp_speed = speed
 		end,
-	};
+	},
 
 	shadows = {
 		action = function()
@@ -53,22 +53,22 @@ local commands = {
 
 			local shadows = client.map._shadows
 			ui.shader_controls(shadows, {
-				{name="steps", hint = {1.0, 500.0}, init_value = 32.0};
-				{name="shadowBrightness", hint = {0.0, 1.0}, init_value = 0.5};
-				{name="shadowLength", hint = {0.0, 96.0}, init_value = 32};
+				{ name = "steps",          hint = { 1.0, 500.0 }, init_value = 32.0 },
+				{ name = "shadowBrightness", hint = { 0.0, 1.0 }, init_value = 0.5 },
+				{ name = "shadowLength",   hint = { 0.0, 96.0 }, init_value = 32 },
 				--{name="direction", hint = {-180, 180}, init_value = 45.0};
-				{name="direction", hint = {0, 360}, init_value = 45.0};
-				{name="mode", hint = {0.0, 1.0}, init_value = 1.0};
+				{ name = "direction",      hint = { 0, 360 },   init_value = 45.0 },
+				{ name = "mode",           hint = { 0.0, 1.0 }, init_value = 1.0 },
 				--{name="stepFactor", hint = {0.0, 1.0}, init_value = 0.05};
-				{name="distanceFactor", hint = {0.0, 32.0}, init_value = 0.05};
+				{ name = "distanceFactor", hint = { 0.0, 32.0 }, init_value = 0.05 },
 			})
 		end,
-	};
+	},
 
 
 	light = {
 		action = function(mode, ...)
-			local args = {...}
+			local args = { ... }
 			local client = require "core.client"
 			local map = client.map
 			if not map then return "No map loaded" end
@@ -188,72 +188,72 @@ local commands = {
 		alias = {"radiance"},
 	};]]
 
-    camera = {
+	camera = {
 		---Controls the client camera according to the given mode.
 		---@param mode "update"|"self"|"follow"|"translate"|"snap"|"unbind"|"lerp" Camera operation mode
 		---@param ... string Mode arguments (e.g. category/id, x/y or speed)
 		---@return string? help Help message when the mode is invalid
-        action = function(mode, ...)
-			local args = {...}
+		action = function(mode, ...)
+			local args = { ... }
 			local client = require "core.client"
 
 			if mode == "update" then
 				client.map:shiftRender()
 			elseif mode == "self" then
-                local player = client.share.players[client.id]
-                if player then
-                    client.camera_follow(player)
-                end
-            elseif mode == "follow" then
-                local category = args[1]
-                local id = tonumber( args[2] ) or 0
+				local player = client.share.players[client.id]
+				if player then
+					client.camera_follow(player)
+				end
+			elseif mode == "follow" then
+				local category = args[1]
+				local id = tonumber(args[2]) or 0
 
-                local share = client.share
-			    if not share[category] then return "There is no category with that name" end
-			    if not share[category][id] then return "There is no entity with this ID" end
-			    local entity = share[category][id]
-			    if entity and entity.x and entity.y then
-				    client.camera_follow(entity)
-                end
-            elseif mode == "translate" then
-                local x = tonumber(args[1] ) or 0
-                local y = tonumber(args[2] ) or 0
-                client.camera_translate(x, y)
-            elseif mode == "snap" then
-                local x = tonumber(args[1] ) or 0
-                local y = tonumber(args[2] ) or 0
-                client.camera_snap(x, y)
-            elseif mode == "unbind" then
-                client.camera_unbind()
+				local share = client.share
+				if not share[category] then return "There is no category with that name" end
+				if not share[category][id] then return "There is no entity with this ID" end
+				local entity = share[category][id]
+				if entity and entity.x and entity.y then
+					client.camera_follow(entity)
+				end
+			elseif mode == "translate" then
+				local x = tonumber(args[1]) or 0
+				local y = tonumber(args[2]) or 0
+				client.camera_translate(x, y)
+			elseif mode == "snap" then
+				local x = tonumber(args[1]) or 0
+				local y = tonumber(args[2]) or 0
+				client.camera_snap(x, y)
+			elseif mode == "unbind" then
+				client.camera_unbind()
 			elseif mode == "lerp" then
 				local speed = tonumber(args[1]) or 10
 				client.camera.tween_speed = speed
-            else
-                local s = "camera mode not found. Try one of these: "
-                for index, camera_mode in
-					pairs({"self", "follow", "translate", "snap", "unbind", "lerp"})
+			else
+				local s = "camera mode not found. Try one of these: "
+				for index, camera_mode in
+				pairs({ "self", "follow", "translate", "snap", "unbind", "lerp" })
 				do
-                    s = s .. "\n©000255255camera ©255255000"..camera_mode
-                end
+					s = s .. "\n©000255255camera ©255255000" .. camera_mode
+				end
 				return s
-            end
-        end
-    };
+			end
+		end
+	},
 
 	clear = {
 		---Clear console
 		action = function()
 			local console = require "core.interface.console"
 			console.window:Clear()
-		end;
-	};
+		end,
+	},
 
 	lua = {
 		---Evaluates a lua expression
 		---@param ... string
 		action = function(...)
-			local block = table.concat({...}, " ")
-			local expression, error_message = loadstring( block, "")
+			local block = table.concat({ ... }, " ")
+			local expression, error_message = loadstring(block, "")
 			local ui = require "core.interface.ui"
 			local client = require "core.client"
 			CONSOLE_ENV.print = print
@@ -266,20 +266,20 @@ local commands = {
 				setfenv(expression, CONSOLE_ENV)
 				local status, error_message = pcall(expression)
 				if not status then
-					return "©255000000LUA ERROR: "..error_message
+					return "©255000000LUA ERROR: " .. error_message
 				end
 			else
-				return "©255000000LUA ERROR: "..error_message
+				return "©255000000LUA ERROR: " .. error_message
 			end
-		end;
-	};
+		end,
+	},
 
 	print = {
 		---Evaluates a lua expression and prints the result to the console.
 		---@param ... string Lua expression to evaluate
 		action = function(...)
-			local block = table.concat({...}, " ")
-			local expression, error_message = loadstring( "return ".. block)
+			local block = table.concat({ ... }, " ")
+			local expression, error_message = loadstring("return " .. block)
 			local ui = require "core.interface.ui"
 			local console = require "core.interface.console"
 			local client = require "core.client"
@@ -291,26 +291,26 @@ local commands = {
 				setfenv(expression, CONSOLE_ENV)
 				local output = { pcall(expression) }
 				if not output[1] then
-					console.message("©255000000LUA ERROR: "..output[2])
+					console.message("©255000000LUA ERROR: " .. output[2])
 				else
 					for i = 2, #output do
 						local value = output[i]
-						console.message( tostring(value) )
+						console.message(tostring(value))
 					end
 				end
 			else
-				console.message("©255000000LUA ERROR: "..error_message)
+				console.message("©255000000LUA ERROR: " .. error_message)
 			end
 		end,
 		syntax = "",
-	};
+	},
 
 	dump = {
 		---Evaluates a lua expression and dumps the value structure (serpent) to the console.
 		---@param ... string Lua expression to evaluate
 		action = function(...)
-			local block = table.concat({...}, " ")
-			local expression, error_message = loadstring( "return ".. block)
+			local block = table.concat({ ... }, " ")
+			local expression, error_message = loadstring("return " .. block)
 			local ui = require "core.interface.ui"
 			local console = require "core.interface.console"
 			local client = require "core.client"
@@ -322,24 +322,24 @@ local commands = {
 				setfenv(expression, CONSOLE_ENV)
 				local output = { pcall(expression) }
 				if not output[1] then
-					console.window:AddElement("©255000000LUA ERROR: "..output[2])
+					console.window:AddElement("©255000000LUA ERROR: " .. output[2])
 				else
 					for i = 2, #output do
 						local value = output[i]
 						local dump = serpent.block(value, {
-							nocode=true,
-							comment=true,
-							sortkeys=true,
+							nocode = true,
+							comment = true,
+							sortkeys = true,
 						})
 						console.window:AddElement(dump)
 					end
 				end
 			else
-				console.window:AddElement("©255000000LUA ERROR: "..error_message)
+				console.window:AddElement("©255000000LUA ERROR: " .. error_message)
 			end
 		end,
 		syntax = "",
-	};
+	},
 
 	debug = {
 		---Sets the debug level reported by the client.
@@ -347,8 +347,8 @@ local commands = {
 		action = function(level)
 			local client = require "core.client"
 			client.debug_level = tonumber(level) or 0
-		end;
-	};
+		end,
+	},
 
 	utf8 = {
 		---Prints test sentences in several languages to validate UTF-8 rendering.
@@ -371,12 +371,12 @@ local commands = {
 				{ idioma = "Tailandês", frase = "ภาษาไทยสวยงามมาก." },
 			}
 			local s = ""
-			for k,v in ipairs(frases) do
-				s = s + "\n"..v.idioma.." ".. v.frase
+			for k, v in ipairs(frases) do
+				s = s + "\n" .. v.idioma .. " " .. v.frase
 			end
 			return s
-		end;
-	};
+		end,
+	},
 
 	-------------------------------------------------------
 	-- NETWORK
@@ -397,7 +397,7 @@ local commands = {
 				new_rate
 			)
 		end
-	};
+	},
 
 	get = {
 		---Fires an asynchronous HTTP request on a separate thread.
@@ -409,7 +409,7 @@ local commands = {
 				thread:start(url, options)
 			end
 		end
-	};
+	},
 
 	discordrpc = {
 		---Sets a Discord Rich Presence property.
@@ -417,7 +417,7 @@ local commands = {
 		---@param ... string Value to assign to the property
 		---@return string? status Status returned by the discordRPC library
 		action = function(property, ...)
-			local value = table.concat({...}," ")
+			local value = table.concat({ ... }, " ")
 			local discordRPC = require "lib.discordRPC"
 			if discordRPC then
 				local status = discordRPC.setProperty(property, value)
@@ -426,14 +426,14 @@ local commands = {
 				end
 			end
 		end
-	};
+	},
 
 	ping = {
 		---Prints a blank line to the console (response test).
 		action = function()
 			print()
 		end
-	};
+	},
 
 	connect = {
 		---Connects the client to a server if not already connected.
@@ -449,7 +449,7 @@ local commands = {
 			end
 		end,
 		syntax = "connect <ip:port>",
-	};
+	},
 
 	disconnect = {
 		---Disconnects the client from the current server, if connected.
@@ -460,7 +460,7 @@ local commands = {
 				client.kick()
 			end
 		end,
-	};
+	},
 
 	-------------------------------------------------------
 	-- UI/MISC
@@ -494,41 +494,41 @@ local commands = {
 		---Displays a temporary message (toast) on the console.
 		---@param ... string Text of the message to display
 		action = function(...)
-			local message = table.concat({...}," ")
+			local message = table.concat({ ... }, " ")
 			local console = require "core.interface.console"
 
 			local options = {
-                spacing=8,
-                padding=6,
-                time=5,
+				spacing = 8,
+				padding = 6,
+				time = 5,
 				font = console.font_mono
-            }
+			}
 			console.toast:PushMessage(message, options)
 		end,
-	};
+	},
 
-    warning = {
+	warning = {
 		---Opens a modal warning window with the given message.
 		---@param ... string Text of the warning message
-        action = function(...)
-			local message = table.concat({...}," ")
-            local LF = require "lib.loveframes"
+		action = function(...)
+			local message = table.concat({ ... }, " ")
+			local LF = require "lib.loveframes"
 			local width, height = 300, 150
-            local frame = LF.Create("frame"):SetSize(width, height):SetState("*"):Center()
-			local panel = LF.Create("panel", frame):SetSize(width-20, height-50):SetPos(10, 30)
-            local messagebox = LF.Create("messagebox", panel)
-            messagebox:SetMaxWidth(width-20):SetText("©255000000"..message):Center()
-        end
-    };
+			local frame = LF.Create("frame"):SetSize(width, height):SetState("*"):Center()
+			local panel = LF.Create("panel", frame):SetSize(width - 20, height - 50):SetPos(10, 30)
+			local messagebox = LF.Create("messagebox", panel)
+			messagebox:SetMaxWidth(width - 20):SetText("©255000000" .. message):Center()
+		end
+	},
 
 	menu = {
 		---Invokes a client-side menu
 		---@param ... string
 		action = function(...)
 			local ui = require "core.interface.ui"
-			ui.menu_constructor(table.concat({...}," "))
-		end;
-	};
+			ui.menu_constructor(table.concat({ ... }, " "))
+		end,
+	},
 
 	scale = {
 		---Enables or disables client render scaling.
@@ -536,8 +536,8 @@ local commands = {
 		action = function(bool)
 			local client = require "core.client"
 			client.scale = (bool == "true")
-		end;
-	};
+		end,
+	},
 
 	volume = {
 		---Adjusts the global audio volume (clamped between 0 and 1).
@@ -549,7 +549,7 @@ local commands = {
 		end,
 		alias = nil,
 		syntax = "",
-	};
+	},
 
 	mute = {
 		---Fully mutes the audio (volume = 0).
@@ -558,29 +558,42 @@ local commands = {
 		end,
 		alias = nil,
 		syntax = "",
-	};
+	},
 
 	vsync = {
 		---Enables or disables the window vertical sync (vsync).
-		---@param mode "on"|"off"|"true"|"false" Desired vsync state
+		---@param mode "on"|"off"|"true"|"false"|"adaptive" Desired vsync state
 		---@return string message Message reporting the new vsync state
 		action = function(mode)
-			local width, height = love.graphics.getDimensions()
-			if mode == "true" or mode == "on" then
-				love.window.updateMode(width, height, {
-					vsync = true;
-				})
-				return "vsync on"
-			elseif mode == "false" or mode == "off" then
-				love.window.updateMode(width, height, {
-					vsync = false;
-				})
-				return "vsync off"
+			if mode == "true" or mode == "on" or mode == "1" then
+				if love.window.setVSync then
+					love.window.setVSync(1)
+				else
+					local width, height = love.graphics.getDimensions()
+					love.window.updateMode(width, height, { vsync = 1 })
+				end
+				return "vsync on (1)"
+			elseif mode == "adaptive" or mode == "-1" then
+				if love.window.setVSync then
+					love.window.setVSync(-1)
+				else
+					local width, height = love.graphics.getDimensions()
+					love.window.updateMode(width, height, { vsync = -1 })
+				end
+				return "vsync adaptive (-1)"
+			elseif mode == "false" or mode == "off" or mode == "0" then
+				if love.window.setVSync then
+					love.window.setVSync(0)
+				else
+					local width, height = love.graphics.getDimensions()
+					love.window.updateMode(width, height, { vsync = 0 })
+				end
+				return "vsync off (0)"
 			else
-				return "unknown value "..mode
+				return "unknown value " .. tostring(mode)
 			end
 		end
-	};
+	},
 
 	-------------------------------------------------------
 	-- REMOTE ACTIONS
@@ -590,10 +603,10 @@ local commands = {
 		---@param ... string Map file name (without the .map extension)
 		action = function(...)
 			local client = require "core.client"
-			local args = {...}
+			local args = { ... }
 			if client.map then
 				local LF = require "lib.loveframes"
-				local status = client.map:read( "maps/"..table.concat(args," ")..".map" )
+				local status = client.map:read("maps/" .. table.concat(args, " ") .. ".map")
 				if status then
 					print(status)
 				end
@@ -602,16 +615,16 @@ local commands = {
 			end
 		end,
 		syntax = "/edit <mapfile>",
-	};
+	},
 
 	map = {
 		---Loads a map and enters game mode.
 		---@param ... string Map file name (without the .map extension)
 		action = function(...)
 			local client = require "core.client"
-			local args = {...}
+			local args = { ... }
 			if client.map then
-				local status = client.map:read( "maps/"..table.concat(args," ")..".map" )
+				local status = client.map:read("maps/" .. table.concat(args, " ") .. ".map")
 				if status then
 					print(status)
 				end
@@ -619,13 +632,13 @@ local commands = {
 			client.scene.switch("game")
 		end,
 		syntax = "/map <mapfile>",
-	};
+	},
 
 	clearmap = {
 		---Removes all elements from the current map.
 		---@param ... string Ignored arguments
 		action = function(...)
-			local args = {...}
+			local args = { ... }
 			local client = require "core.client"
 			if client.map then
 				print("map clear request")
@@ -633,17 +646,17 @@ local commands = {
 			end
 		end,
 		syntax = "/clearmap",
-	};
+	},
 
 	cleareffect = {
 		---Removes all active visual effects from the current map.
-		action = function ()
+		action = function()
 			local client = require "core.client"
 			if client.map then
 				client.map:clearEffects()
 			end
 		end
-	};
+	},
 
 	effect = {
 		---Spawns a visual effect at the given map coordinates.
@@ -652,17 +665,17 @@ local commands = {
 		---@param y number|string Y coordinate (default: 0)
 		action = function(effect_id, x, y)
 			local client = require "core.client"
-		    x = tonumber(x) or 0
-            y = tonumber(y) or 0
-            client.map:spawn_effect(effect_id, x, y)
+			x = tonumber(x) or 0
+			y = tonumber(y) or 0
+			client.map:spawn_effect(effect_id, x, y)
 		end,
-	};
+	},
 
 	scroll = {
 		---Scrolls the current map by the given offset.
 		---@param x number X scroll offset (default: 0)
 		---@param y number Y scroll offset (default: 0)
-		action = function(x,y)
+		action = function(x, y)
 			local client = require "core.client"
 			if client.map then
 				x = x or 0
@@ -670,17 +683,17 @@ local commands = {
 				client.map:scroll(x, y)
 			end
 		end
-	};
+	},
 
 	log = {
 		---Pushes a message into the server log panel.
 		---@param ... string Text of the log message
-		action = function (...)
+		action = function(...)
 			local ui = require "core.interface.ui"
-			local message = table.concat({...}," ")
+			local message = table.concat({ ... }, " ")
 			ui.server_log_push(message)
 		end
-	};
+	},
 
 	setname = {
 		---Sends a request to change the player name (when connected).
@@ -688,21 +701,21 @@ local commands = {
 		action = function(...)
 			local client = require "core.client"
 			if client.connected then
-				local name = table.concat({...}," ")
-				client.send("setname "..name)
+				local name = table.concat({ ... }, " ")
+				client.send("setname " .. name)
 			end
-		end;
-	};
+		end,
+	},
 
 	say = {
 		---Sends a chat message to the server.
 		---@param ... string Message text
 		action = function(...)
 			local client = require "core.client"
-			local message = table.concat({...}, " ")
+			local message = table.concat({ ... }, " ")
 			client.send(string.format("say %s", message))
-		end;
-	};
+		end,
+	},
 
 	equip = {
 		---Sends a request to equip an item on a target entity.
@@ -710,9 +723,9 @@ local commands = {
 		---@param item_type string|number Type of item to equip
 		action = function(target_id, item_type)
 			local client = require "core.client"
-			client.send( string.format("equip %s %s", target_id, item_type) )
+			client.send(string.format("equip %s %s", target_id, item_type))
 		end
-	};
+	},
 
 	tp = {
 		---Teleports the player to the current cursor/target position.
@@ -721,15 +734,15 @@ local commands = {
 			local targetX = client.attribute "targetX"
 			local targetY = client.attribute "targetY"
 
-			local diff_x = (client.width/2 - targetX)
-			local diff_y = (client.height/2 - targetY)
+			local diff_x = (client.width / 2 - targetX)
+			local diff_y = (client.height / 2 - targetY)
 
 			local pos_x = client.camera.x - diff_x
 			local pos_y = client.camera.y - diff_y
 
 			client.send(string.format("setpos %s %s %s", client.id, pos_x, pos_y))
 		end
-	};
+	},
 
 	follow = {
 		---Makes the camera follow an entity, or unbinds it when id is 0.
@@ -752,9 +765,8 @@ local commands = {
 			if entity and entity.x and entity.y then
 				client.camera_follow(entity)
 			end
-
-		end;
-	};
+		end,
+	},
 
 	team = {
 		---Requests a team and look change for the player.
@@ -770,8 +782,8 @@ local commands = {
 			look = look or ""
 			client.send(string.format("team %s %s", team, look))
 		end,
-		alias = {"chooseteam", "pickteam"},
-	};
+		alias = { "chooseteam", "pickteam" },
+	},
 
 	kill = {
 		---Sends a request to kill (suicide) the current player.
@@ -779,15 +791,15 @@ local commands = {
 			local client = require "core.client"
 			client.send("kill")
 		end,
-		alias = {"suicide"},
+		alias = { "suicide" },
 		syntax = "",
-	};
+	},
 
 	rcon = {
 		---Sends a remote console (rcon) command to the server.
 		---@param ... string Command and arguments to run remotely
 		action = function(...)
-			local command = table.concat({...}, " ")
+			local command = table.concat({ ... }, " ")
 			local client = require "core.client"
 			client.send(string.format("rcon %s", command))
 		end,
@@ -812,11 +824,11 @@ local commands = {
 					table.insert(argNames, debug.getlocal(action, i))
 				end
 
-				table.insert(list, "©000255255"..name.." ©255255000"..table.concat( argNames, ", " ))
+				table.insert(list, "©000255255" .. name .. " ©255255000" .. table.concat(argNames, ", "))
 			end
 			return table.concat(list, "\n")
 		end
-	};
+	},
 
 }
 

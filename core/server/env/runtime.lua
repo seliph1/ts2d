@@ -10,7 +10,7 @@ return function(cs2dAPI, BASE_ENV, server)
 		["timerex"] = function()
 			return server.timerex
 		end,
-		
+
 		["serpent"] = function()
 			local serpent = require("lib.serpent")
 			return serpent

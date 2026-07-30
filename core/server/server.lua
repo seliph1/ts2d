@@ -58,7 +58,8 @@ function server.load()
 
 	-- Load map
 	server.map = MapObject.new() -- 50x50 tile map
-	server.map:read("maps/de_dust.map", true)
+	--server.map:read("maps/de_dust.map", true)
+	server.map:read("maps/fun_jason.map", true)
 	--server.map:read("maps/room34.map", true)
 	--server.map:read("maps/fun_roleplay.map", true)
 
@@ -206,8 +207,6 @@ function server.load()
 
 	-- Load the environment
 	server.env         = require "env" (server)
-	
-	
 	-- Start the first round
 	server.startround()
 end
@@ -698,11 +697,11 @@ function server.buy(player_id, ...)
 	-- Left for gamemodes:
 	local response = server.callhook("buy", player_id, ...)
 	response = response or 0
-	if response == 0 then -- Allow
+	if response == 0 then  -- Allow
 	elseif response == 1 then -- Block
 		return
 	end
-	
+
 	for index, item in pairs({ ... }) do
 		local item_type = tonumber(item)
 		if not item_type then
@@ -1489,7 +1488,7 @@ end
 function server.attack(peer_id, dt)
 	local player = share.players[peer_id]
 	if is_dead(peer_id) then return end
-	
+
 	local itemheld, itemdata = server.get_item_held(peer_id)
 	if not itemdata then return end
 
@@ -1809,7 +1808,7 @@ function server.timerex(miliseconds, count, f, ...)
 	server.timers = server.timers or {}
 	count = count or 1
 	miliseconds = miliseconds or 1000
-	
+
 	local args = { ... }
 	local timer_id = #server.timers + 1
 	local timer_seconds = miliseconds / 1000
@@ -1820,7 +1819,7 @@ function server.timerex(miliseconds, count, f, ...)
 		count = count,
 		accumulator = 0,
 	}
-	
+
 	--print(string.format("queueing %s [ID:%s] [timer: %s] [count:%s] ", f, timer_id, miliseconds, count))
 	return timer_id
 end
@@ -1838,7 +1837,7 @@ function server.free_timer(timer_id)
 	server.timers = server.timers or {}
 	local t = server.timers[timer_id]
 	--if t then
-		--print("free: ", t.lambda, t.seconds*1000, timer_id)
+	--print("free: ", t.lambda, t.seconds*1000, timer_id)
 	--end
 	server.timers[timer_id] = nil
 end
@@ -1877,14 +1876,12 @@ function server.call_timer_function(timer_id)
 
 	if timer.lambda and type(timer.lambda) == "function" then
 		--print(string.format("calling %s [ID:%s] [timer: %s] [count:%s] ", timer.lambda, timer_id, timer.seconds*1000, timer.count))
-		
+
 		local func = timer.lambda
 		func(unpack(timer.args))
 	else
 		server.env_call(timer.function_name, timer.parameter)
 	end
-	
-
 end
 
 local second_accumulator = 0

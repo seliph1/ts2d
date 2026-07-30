@@ -278,6 +278,22 @@ return function(server)
 			syntax = "rcon <command>",
 			source = "remote",
 		},
+
+		gamemode = {
+			action = function(action_id, peer_id, mode_id)
+				mode_id = tonumber(mode_id)
+				if mode_id then
+					server.gamemode_change(mode_id)
+					server.log(1, "gamemode", string.format("Gamemode changed to ID: %d", mode_id))
+					server.startround()
+				else
+					server.log(1, "gamemode", "Usage: gamemode <mode_id> (0 = Standard, 1 = Freeplay)")
+				end
+			end,
+			alias = { "sv_gamemode" },
+			syntax = "gamemode <mode_id>",
+			source = "local",
+		},
 	}
 	return actions
 	---------- module end ----------

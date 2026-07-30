@@ -125,25 +125,25 @@ function standard.second()
 		parse("endround 0")
 		currentState = STATE_ENDING
 	end
-	
-	
+
+
 	if player_count > 0 then
 		local everyone_dead = true
 		player(0, "apply", function(uid)
 			if player(uid, "team") == 0 then
 				everyone_dead = false
 				return
-			end	
-			
+			end
+
 			if player(uid, "health") > 0 then
 				everyone_dead = false
 			end
 		end)
-		
+
 		if everyone_dead then
 			parse("endround 0")
 		end
-	end	
+	end
 end
 
 function standard.init()
@@ -175,13 +175,13 @@ end
 
 function standard.startround_prespawn()
 	print("Round start!")
-	local freeze_timer = timerex(FREEZE_TIME*1000, 1, unfreeze)
+	local freeze_timer = timerex(FREEZE_TIME * 1000, 1, unfreeze)
 	if player(0, "count") >= MINIMUM_PLAYERS then
 		currentState = STATE_FREEZE
 	else
 		currentState = STATE_WAITING
 	end
-	
+
 	player(0, "apply", function(peer_id)
 		if player(peer_id, "team") > 0 then
 			local spawnpoint = getSpawnPointForPlayer(peer_id)
@@ -204,7 +204,7 @@ function standard.spawn(peer_id)
 	-- 50 = Knife
 	-- 1 = USP
 	-- 2 = Glock
-	
+
 	local team = player(peer_id, "team")
 	local items = { "50" }
 	if team == TEAM_T then
@@ -242,12 +242,12 @@ function standard.join(peer_id)
 end
 
 function standard.buy(uid, ...)
-	local items = {...}
+	local items = { ... }
 
 	-- Check if player is in buyzone
 	local x, y = player(uid, "tilepos")
-	print("[",x, y,"]")
-	if buyzones[x] and buyzones[x][y] then 
+	print("[", x, y, "]")
+	if buyzones[x] and buyzones[x][y] then
 		print("Player is in buyzone")
 		return 0
 	else
@@ -256,10 +256,9 @@ function standard.buy(uid, ...)
 	end
 end
 
-
 function standard.hit(victim_id, attacker_id, item_type, hpdamage, apdamage, rawdamage, object_id)
 	--print(victim_id, attacker_id, item_type, hpdamage, apdamage, rawdamage, object_id)
-	
+
 	local victim_team = player(victim_id, "team")
 	local attacker_team = player(attacker_id, "team")
 	print(victim_team, attacker_team)

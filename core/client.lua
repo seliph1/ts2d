@@ -606,48 +606,5 @@ function client.hitscan(x1, y1, x2, y2)
 	return impact_x, impact_y, hit, bodies
 end
 
-function client.draw_splash(ox, oy)
-	local splash_art = client.gfx.ui["gfx/splash.bmp"]
-	local splash_width = love.graphics.getWidth() / splash_art:getWidth()
-	local splash_height = love.graphics.getHeight() / splash_art:getHeight()
-	love.graphics.draw(splash_art, ox, oy, 0, splash_width, splash_height)
-end
-
-function client.render()
-	love.graphics.push('all')
-	love.graphics.setCanvas(client.canvas)
-	love.graphics.clear()
-
-	-- Center display
-	local ox = 0.5 * (love.graphics.getWidth() - client.width)
-	local oy = 0.5 * (love.graphics.getHeight() - client.height)
-
-	-- Set the boundaries to render engine
-	--love.graphics.setScissor(ox, oy, client.width, client.height)
-
-	if (client.mode == "game" or client.mode == "editor") and client.map then
-		client.map:draw_floor()
-		client.map:draw_entities(client)
-	end
-
-	--love.graphics.setCanvas(client.canvas)
-	if client.joined then
-		-- Draw items on the ground
-		client.map:draw_items(client)
-		-- Player render
-		client.map:draw_players(client)
-	end
-
-	if (client.mode == "game" or client.mode == "editor") and client.map then
-		client.map:draw_ceiling()
-		client.map:draw_effects()
-		client.map:draw_hrc(ox, oy, client.width, client.height)
-	end
-
-	-- Resets scissoring and canvas
-	love.graphics.setCanvas()
-	love.graphics.pop()
-end
-
 --- Returns the client object to the main code block
 return client
