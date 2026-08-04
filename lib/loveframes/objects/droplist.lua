@@ -27,6 +27,8 @@ return function(loveframes)
 		self.internal = false
 		self.children = {}
 		self.elements = {}
+		self.filtered_elements = self.elements
+		self.filter = nil
 		self.internals = {}
 		self.padding = 5
 		self.selected = 0
@@ -91,12 +93,13 @@ return function(loveframes)
 
 		-- Check which cell is selected
 		-- Ceil is used so it always return element id >= 1
-		local element_id = math.min(math.ceil(rel_y / cell_y), #self.elements)
+		local elements = self.filtered_elements or self.elements
+		local element_id = math.min(math.ceil(rel_y / cell_y), #elements)
 
 		if self.hovered ~= element_id then
 			local onhover = self.OnHover
-			if onhover then
-				onhover(self, self.elements[element_id], element_id)
+			if onhover and elements[element_id] then
+				onhover(self, elements[element_id], element_id)
 			end
 		end
 
@@ -121,15 +124,16 @@ return function(loveframes)
 
 		-- Chech which cell is selected
 		-- Ceil is used so it always return element id >= 1
+		local elements = self.filtered_elements or self.elements
 		local element_id = math.ceil(rel_y / cell_y)
-		if element_id < 0 or element_id > #self.elements then
+		if element_id < 0 or element_id > #elements then
 			element_id = 0
 		end
 
 		if element_id ~= 0 and button == 1 then
 			local onclick = self.OnClick
-			if onclick then
-				onclick(self, self.elements[element_id], element_id)
+			if onclick and elements[element_id] then
+				onclick(self, elements[element_id], element_id)
 			end
 		end
 		self.selected = element_id
@@ -243,8 +247,13 @@ return function(loveframes)
 		return self.elements
 	end
 
+	function newobject:GetFilteredElements()
+		return self.filtered_elements or self.elements
+	end
+
 	function newobject:Count()
-		return #self.elements
+		local elements = self.filtered_elements or self.elements
+		return #elements
 	end
 
 	newobject.ElementAmount = newobject.Count
@@ -252,6 +261,7 @@ return function(loveframes)
 
 	function newobject:Clear()
 		self.elements = {}
+		self.filtered_elements = self.elements
 		self.selected = 0
 		self.hovered = 0
 		self.odd_list = love.graphics.newMesh(1, "fan")
@@ -318,9 +328,56 @@ return function(loveframes)
 		return formattedchunks, table.concat(formattedstring)
 	end
 
+	function newobject:MatchesFilter(text, element, filter)
+		if filter == nil or filter == "" or filter == false then
+			return true
+		end
+
+		if type(filter) == "function" then
+			local success, res = pcall(filter, element, text)
+			return success and res
+		end
+
+		if type(filter) == "string" then
+			-- 1. Try regex pattern match (Lua pattern)
+			local status, match = pcall(string.find, text, filter)
+			if status and match then
+				return true
+			end
+
+			-- 2. Try case-insensitive pattern match
+			local status_lower, match_lower = pcall(string.find, text:lower(), filter:lower())
+			if status_lower and match_lower then
+				return true
+			end
+
+			-- 3. Plain text substring fallback (for strings with unescaped regex symbols like '[')
+			local status_plain, match_plain = pcall(string.find, text:lower(), filter:lower(), 1, true)
+			if status_plain and match_plain then
+				return true
+			end
+		end
+
+		return false
+	end
+
 	function newobject:ParseElements(filter)
+		if filter ~= nil then
+			self.filter = filter
+		end
+
 		self.texthash:clear()
-		local elements = self.elements
+		self.filtered_elements = {}
+		local curfilter = self.filter
+
+		for index, value in ipairs(self.elements) do
+			local text = type(value) == "table" and value.text or value
+			if self:MatchesFilter(text, value, curfilter) then
+				table.insert(self.filtered_elements, value)
+			end
+		end
+
+		local elements = self.filtered_elements
 		local maxwidth = 0
 		local fontheight = self.font:getHeight()
 		for index, value in ipairs(elements) do
@@ -490,7 +547,9 @@ return function(loveframes)
 	function newobject:Sort(f)
 		if not f then
 			f = function(a, b)
-				return a:lower() < b:lower()
+				local textA = type(a) == "table" and a.text or a
+				local textB = type(b) == "table" and b.text or b
+				return textA:lower() < textB:lower()
 			end
 		end
 		table.sort(self.elements, f)
@@ -501,6 +560,13 @@ return function(loveframes)
 		self.filter = filter
 		self:ParseElements(filter)
 		return self
+	end
+
+	newobject.Filter = newobject.SetFilter
+	newobject.FilterElements = newobject.SetFilter
+
+	function newobject:GetFilter()
+		return self.filter
 	end
 
 	---------- module end ----------

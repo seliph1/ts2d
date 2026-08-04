@@ -82,6 +82,8 @@ local WALL_THRESHOLD = 1.0
 ---@field daylight number
 ---@field version string
 ---@field tile table<number, TileData>
+---@field tile_override table
+---@field trigger_index table
 ---@field map table<number, table<number, number>>
 ---@field map_mod table<number, table<number, MapModData>>
 ---@field entity_count number
@@ -595,6 +597,8 @@ function MapObject:read(path, noindexing)
 	mapdata.entity_list = List.new()
 	mapdata.entity_table = {}
 	mapdata.entity_cache = {}
+	mapdata.trigger_index = {}
+	mapdata.tile_override = {}
 	--print("Entity count: " .. mapdata.entity_count)
 	for i = 1, mapdata.entity_count do
 		local e = {}
@@ -612,7 +616,18 @@ function MapObject:read(path, noindexing)
 		mapdata.entity_list:push(e)
 		table.insert(mapdata.entity_table, e)
 		mapdata.entity_cache[e.x] = mapdata.entity_cache[e.x] or {}
-		mapdata.entity_cache[e.x][e.y] = e
+		mapdata.entity_cache[e.x][e.y] = mapdata.entity_cache[e.x][e.y] or {}
+		table.insert(mapdata.entity_cache[e.x][e.y], e)
+
+		if e.name and e.name ~= "" then
+			mapdata.trigger_index[e.name] = mapdata.trigger_index[e.name] or {}
+			table.insert(mapdata.trigger_index[e.name], e)
+		end
+
+		-- Initialize Func_DynWall (71) state
+		if e.type == 71 then
+			e.state = 1 -- default closed
+		end
 	end
 
 	self._mapdata = mapdata
@@ -683,6 +698,59 @@ function MapObject:getEntities(entity_type)
 		end
 	end
 	return entities
+end
+
+--- Gets entities at specific tile coordinates (x, y)
+--- @param x number Tile X
+--- @param y number Tile Y
+--- @return Entity[]
+function MapObject:getEntitiesAt(x, y)
+	local mapdata = self._mapdata
+	if mapdata.entity_cache[x] and mapdata.entity_cache[x][y] then
+		return mapdata.entity_cache[x][y]
+	end
+	return {}
+end
+
+--- Gets the first entity at specific tile coordinates (x, y) matching optional entity_type
+--- @param x number Tile X
+--- @param y number Tile Y
+--- @param entity_type? number Entity type enum
+--- @return Entity|nil
+function MapObject:getEntityAt(x, y, entity_type)
+	local mapdata = self._mapdata
+	if mapdata.entity_cache[x] and mapdata.entity_cache[x][y] then
+		local list = mapdata.entity_cache[x][y]
+		for i = 1, #list do
+			local e = list[i]
+			if not entity_type or e.type == entity_type then
+				return e
+			end
+		end
+	end
+	return nil
+end
+
+--- Gets all entities registered under a given trigger name
+--- @param name string Entity name
+--- @return Entity[]
+function MapObject:getEntitiesByName(name)
+	local mapdata = self._mapdata
+	if mapdata and mapdata.trigger_index and mapdata.trigger_index[name] then
+		return mapdata.trigger_index[name]
+	end
+	return {}
+end
+
+--- Sets a tile property override at (x, y)
+--- @param x number Tile X
+--- @param y number Tile Y
+--- @param property number Tile property (e.g. 0 = passable, 1 = solid)
+function MapObject:setTileOverride(x, y, property)
+	local mapdata = self._mapdata
+	if not mapdata then return end
+	mapdata.tile_override[x] = mapdata.tile_override[x] or {}
+	mapdata.tile_override[x][y] = property
 end
 
 function MapObject:getDimensions()
@@ -810,6 +878,9 @@ function MapObject:tile(x, y) -- coords in tiles
 		local id = self._mapdata.map[x][y]
 		local mod = self._mapdata.map_mod[x][y]
 		local property = self._mapdata.tile[id].property
+		if self._mapdata.tile_override and self._mapdata.tile_override[x] and self._mapdata.tile_override[x][y] ~= nil then
+			property = self._mapdata.tile_override[x][y]
+		end
 		return id, mod, property
 	else
 		return -1, DEFAULT_MOD
@@ -1043,10 +1114,10 @@ function MapObject:getBuyZones()
 		---@cast e Entity
 		if e.type == 0 or e.type == 1 then
 			for x = -1, 1 do
-			for y = -1, 1 do
-				buyzone[e.x + x] = buyzone[e.x + x] or {}
-				buyzone[e.x + x][e.y + y] = e.type
-			end
+				for y = -1, 1 do
+					buyzone[e.x + x] = buyzone[e.x + x] or {}
+					buyzone[e.x + x][e.y + y] = e.type
+				end
 			end
 		end
 	end

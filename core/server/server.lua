@@ -59,9 +59,10 @@ function server.load()
 	-- Load map
 	server.map = MapObject.new() -- 50x50 tile map
 	--server.map:read("maps/de_dust.map", true)
-	server.map:read("maps/fun_jason.map", true)
+	--server.map:read("maps/fun_jason.map", true)
 	--server.map:read("maps/room34.map", true)
 	--server.map:read("maps/fun_roleplay.map", true)
+	server.map:read("maps/deathrun_target v8.0.map", true)
 
 	server.log(1, "game", tostring(server.map))
 
@@ -266,6 +267,21 @@ end
 
 function server.join(peer_id)
 	server.callhook("join", peer_id)
+
+	-- Sync current entity states to joining player
+	if server.map then
+		local entities = server.map:getEntities()
+		for i = 1, #entities do
+			local e = entities[i]
+			if e.type == 71 and e.state ~= nil then
+				server.send(peer_id, string.format("entitystate %d %d 71 %d", e.x, e.y, e.state))
+			elseif e.type == 70 and e.disabled ~= nil then
+				server.send(peer_id, string.format("entitystate %d %d 70 %d", e.x, e.y, e.disabled and 1 or 0))
+			elseif e.type == 95 and e._triggered then
+				server.send(peer_id, string.format("entitystate %d %d 95 1", e.x, e.y))
+			end
+		end
+	end
 
 	server.send(peer_id, "menu_team")
 end
@@ -971,6 +987,8 @@ function server.setpos(peer_id, x, y)
 	local player = share.players[peer_id]
 	player.x = x
 	player.y = y
+	player.last_tx = floor(x / 32)
+	player.last_ty = floor(y / 32)
 	server.log(1, "game",
 		string.format(
 			"player [ID: %s] setpos to [%s-%s] T:[%s-%s]",
@@ -978,6 +996,134 @@ function server.setpos(peer_id, x, y)
 
 	server.world:update(player, x - player.size / 2, y - player.size / 2)
 	return true
+end
+
+function server.trigger(target_names, source_id, x, y, active_set)
+	print(target_names, source_id)
+	if not target_names or target_names == "" or not server.map then return end
+	source_id = source_id or 0
+	active_set = active_set or {}
+
+	for sub_name in string.gmatch(target_names, "[^,]+") do
+		sub_name = sub_name:match("^%s*(.-)%s*$")
+		if sub_name ~= "" then
+			-- Prevent infinite recursion / cyclic trigger loops
+			if not active_set[sub_name] then
+				active_set[sub_name] = true
+
+				-- 1. Call global Lua "trigger" hook
+				server.callhook("trigger", sub_name, source_id)
+
+				-- 2. Find target entities registered with this name
+				local targets = server.map:getEntitiesByName(sub_name)
+				for i = 1, #targets do
+					local e = targets[i]
+					-- Call global Lua "triggerentity" hook
+					server.callhook("triggerentity", e.name, source_id)
+
+					-- Dispatch entity activation logic
+					server.activate_entity(e, source_id, x, y, active_set)
+				end
+
+				active_set[sub_name] = nil
+			end
+		end
+	end
+end
+
+function server.activate_entity(e, source_id, x, y, active_set)
+	if not e or not server.map then return end
+
+	-- Func_Teleport (70): Toggles disabled state
+	if e.type == 70 then
+		e.disabled = not e.disabled
+		server.send("all", string.format("entitystate %d %d 70 %d", e.x, e.y, e.disabled and 1 or 0))
+
+		-- Func_DynWall (71): Toggles open/closed state
+	elseif e.type == 71 then
+		e.state = (e.state == 1) and 0 or 1
+		-- Sync DynWall state to clients
+		server.send("all", string.format("entitystate %d %d 71 %d", e.x, e.y, e.state))
+
+		-- Func_Message (72): Sends message to source player or all
+	elseif e.type == 72 then
+		local msg = e.string_settings[1] or ""
+		if msg ~= "" then
+			if source_id and source_id > 0 then
+				server.send(source_id, "msg " .. msg)
+			else
+				server.send("all", "msg " .. msg)
+			end
+		end
+
+		-- Func_GameAction (73): Runs action command via parse
+	elseif e.type == 73 then
+		local action_cmd = e.string_settings[1] or ""
+		if action_cmd ~= "" then
+			server.parse(source_id or 0, action_cmd)
+		end
+
+		-- Env_Sound (23): Plays sound asset
+	elseif e.type == 23 then
+		local sound_file = e.string_settings[1] or ""
+		if sound_file ~= "" then
+			server.send("all", string.format("sound %s %d %d", sound_file, e.x * 32 + 16, e.y * 32 + 16))
+		end
+
+		-- Trigger_Start (90): Fires its target trigger
+	elseif e.type == 90 then
+		if e.trigger and e.trigger ~= "" then
+			server.trigger(e.trigger, source_id, x, y, active_set)
+		end
+
+		-- Trigger_Move (91): Fires its target trigger
+	elseif e.type == 91 then
+		if e.trigger and e.trigger ~= "" then
+			server.trigger(e.trigger, source_id, x, y, active_set)
+		end
+
+		-- Trigger_Hit (92): Fires its target trigger
+	elseif e.type == 92 then
+		if e.trigger and e.trigger ~= "" then
+			server.trigger(e.trigger, source_id, x, y, active_set)
+		end
+
+		-- Trigger_Use (93): Fires its target trigger
+	elseif e.type == 93 then
+		if e.trigger and e.trigger ~= "" then
+			server.trigger(e.trigger, source_id, x, y, active_set)
+		end
+
+		-- Trigger_Delay (94): Delays then fires its target trigger (strs[1] in seconds)
+	elseif e.type == 94 then
+		local delay_sec = tonumber(e.string_settings[1]) or tonumber(e.number_settings[1]) or 0
+		local delay_ms = math.floor(delay_sec * 1000)
+		if e.trigger and e.trigger ~= "" then
+			if delay_ms > 0 then
+				server.timerex(delay_ms, 1, function()
+					server.trigger(e.trigger, source_id, x, y)
+				end)
+			else
+				server.trigger(e.trigger, source_id, x, y, active_set)
+			end
+		end
+
+		-- Trigger_Once (95): Fires once then disables
+	elseif e.type == 95 then
+		if not e._triggered then
+			e._triggered = true
+			server.send("all", string.format("entitystate %d %d 95 1", e.x, e.y))
+			if e.trigger and e.trigger ~= "" then
+				server.trigger(e.trigger, source_id, x, y, active_set)
+			end
+		end
+
+		-- Trigger_If (96): Fires its trigger
+	elseif e.type == 96 then
+		if e.trigger and e.trigger ~= "" then
+			server.trigger(e.trigger, source_id, x, y, active_set)
+		end
+	end
 end
 
 function server.pausetime()
@@ -1087,6 +1233,17 @@ function server.startround()
 		server.message("all", "©255220000Round starting!@C")
 	else
 		server.callhook("startround")
+	end
+
+	-- Fire Trigger_Start (90) entities
+	if server.map then
+		local start_triggers = server.map:getEntities(90)
+		for i = 1, #start_triggers do
+			local st = start_triggers[i]
+			if st.trigger and st.trigger ~= "" then
+				server.trigger(st.trigger, 0)
+			end
+		end
 	end
 end
 
@@ -1218,31 +1375,38 @@ end
 
 function server.use(peer_id)
 	local player = share.players[peer_id]
-	if not player then return end
-	--[[
-	local diff_x = player.x - (server.width/2 - player.targetX)
-	local diff_y = player.y - (server.height/2 - player.targetY)
-	local status = server.setpos(peer_id, diff_x, diff_y)
-	--]]
+	if not player or not server.map then return end
+
+	local tx = math.floor(player.x / 32)
+	local ty = math.floor(player.y / 32)
+
+	-- Search for Trigger_Use (93) entity at player tile or adjacent 3x3 tiles
+	local trigger_entity = nil
+	for dx = -1, 1 do
+		for dy = -1, 1 do
+			local e = server.map:getEntityAt(tx + dx, ty + dy, 93)
+			if e then
+				trigger_entity = e
+				break
+			end
+		end
+		if trigger_entity then break end
+	end
+
 	local event = 0
 	local data = 0
 	local x, y = 0, 0
-	--[[
-	The use event can have the following values:
-    0 - no action. data, x and y will be 0 in this case.
-    1 - using a hostage and make it follow. data will be the id of the hostage. x will be 1 if the hostage has been used by another player already, otherwise 0. y will always be 0.
-    2 - using a hostage and make it stop. data will be the id of the hostage. x and y will be 0.
-    3 - defusing a bomb. data will be 1 if the player is using a defuse kit, otherwise 0.
-    100 - using a trigger use. data is 0 in this case. x and y the tile coordinates of the trigger_use entity.
-    150 - using dynamic objects (supply and super supply). data will be the selected slot (1-9) of the supply menu. x and y the tile coordinates of the supply.
-	--]]
 
-	if event == 0 then
-		x = 0
-		y = 0
+	if trigger_entity then
+		event = 100
 		data = 0
-	end
+		x = trigger_entity.x
+		y = trigger_entity.y
 
+		if trigger_entity.trigger and trigger_entity.trigger ~= "" then
+			server.trigger(trigger_entity.trigger, peer_id, x, y)
+		end
+	end
 
 	server.callhook("use", peer_id, event, data, x, y)
 end
@@ -1399,6 +1563,44 @@ function server.apply_forces_to_player(peer_id, v, h, w)
 	local new_y = player.y
 	local new_tx = floor(new_x / 32)
 	local new_ty = floor(new_y / 32)
+
+	-- Check for entity triggers when entering a new tile
+	if new_tx ~= player.last_tx or new_ty ~= player.last_ty then
+		-- Func_Teleport (70) - only if not disabled
+		local teleport_entity = server.map:getEntityAt(new_tx, new_ty, 70)
+		if teleport_entity and not teleport_entity.disabled then
+			local dest_tx = teleport_entity.number_settings[1] or 0
+			local dest_ty = teleport_entity.number_settings[2] or 0
+			local dest_x = dest_tx * 32 + 16
+			local dest_y = dest_ty * 32 + 16
+			server.setpos(peer_id, dest_x, dest_y)
+			new_x = player.x
+			new_y = player.y
+			new_tx = floor(new_x / 32)
+			new_ty = floor(new_y / 32)
+			if teleport_entity.trigger and teleport_entity.trigger ~= "" then
+				server.trigger(teleport_entity.trigger, peer_id, new_x, new_y)
+			end
+		else
+			player.last_tx = new_tx
+			player.last_ty = new_ty
+		end
+
+		-- Trigger_Move (91)
+		local move_trigger = server.map:getEntityAt(new_tx, new_ty, 91)
+		if move_trigger and move_trigger.trigger and move_trigger.trigger ~= "" then
+			server.trigger(move_trigger.trigger, peer_id, new_x, new_y)
+		end
+
+		-- Trigger_Once (95)
+		local once_trigger = server.map:getEntityAt(new_tx, new_ty, 95)
+		if once_trigger and not once_trigger._triggered then
+			once_trigger._triggered = true
+			if once_trigger.trigger and once_trigger.trigger ~= "" then
+				server.trigger(once_trigger.trigger, peer_id, new_x, new_y)
+			end
+		end
+	end
 
 	-- After collision is solved, run the callbacks
 	if new_x ~= old_x or new_y ~= old_y then

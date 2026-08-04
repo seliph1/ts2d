@@ -33,6 +33,31 @@ return function(server)
 			source = "local",
 		},
 
+		trigger = {
+			action = function(action_id, peer_id, name)
+				if name and name ~= "" then
+					server.trigger(name, tonumber(peer_id) or 0)
+				end
+			end,
+			syntax = "trigger <name>",
+			source = "local",
+		},
+
+		sound = {
+			action = function(action_id, peer_id, soundfile, ...)
+				if soundfile and soundfile ~= "" then
+					local rest = table.concat({ ... }, " ")
+					if rest ~= "" then
+						server.send("all", string.format("sound %s %s", soundfile, rest))
+					else
+						server.send("all", string.format("sound %s", soundfile))
+					end
+				end
+			end,
+			syntax = "sound <file> [x] [y] [volume]",
+			source = "local",
+		},
+
 		message2 = {
 			action = function(action_id, peer_id, target_id, ...)
 				-- We purposely ignore peer_id to send
@@ -142,6 +167,14 @@ return function(server)
 					return err
 				end
 			end,
+			source = "remote",
+		},
+
+		use = {
+			action = function(action_id, peer_id)
+				server.use(peer_id)
+			end,
+			syntax = "",
 			source = "remote",
 		},
 

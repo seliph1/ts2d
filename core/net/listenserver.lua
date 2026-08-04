@@ -44,6 +44,8 @@ return function(client)
 			if type(e) == "table" then
 				if e.type == "ready" then
 					print("listenserver: pronto na porta " .. tostring(e.port))
+				elseif e.type == "log" then
+					print("listenserver: " .. tostring(e.msg))
 				elseif e.type == "error" then
 					print("listenserver: ERRO -> " .. tostring(e.msg))
 				elseif e.type == "stopped" then

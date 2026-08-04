@@ -71,6 +71,60 @@ local actions = {
         alias = {"msg", "sv_msg"}
 	};
 
+	sound = {
+		action = function(soundfile, x, y, volume)
+			if not soundfile then return end
+			local px = tonumber(x)
+			local py = tonumber(y)
+			local vol = tonumber(volume) or 1.0
+
+			if px and py then
+				if client.map and client.map.playSoundAt then
+					client.map:playSoundAt(soundfile, px, py, vol)
+				end
+			else
+				if client.map and client.map.playSound then
+					client.map:playSound(soundfile, vol)
+				end
+			end
+		end,
+	};
+
+	entitystate = {
+		action = function(x, y, entity_type, state)
+			x = tonumber(x)
+			y = tonumber(y)
+			entity_type = tonumber(entity_type)
+			state = tonumber(state)
+			-- state==0 is valid (open/disabled), so check nil separately
+			if x == nil or y == nil or entity_type == nil or state == nil or not client.map then return end
+
+			local entities = client.map:getEntitiesAt(x, y)
+			for i = 1, #entities do
+				local e = entities[i]
+				if e.type == entity_type then
+					if entity_type == 71 then -- Func_DynWall
+						e.state = state
+					elseif entity_type == 70 then -- Func_Teleport
+						e.disabled = (state == 1)
+					elseif entity_type == 95 then -- Trigger_Once
+						e._triggered = (state == 1)
+					else
+						e.state = state
+					end
+				end
+			end
+		end,
+	};
+
+	dynwall = {
+		action = function(x, y, state)
+			if client.actions and client.actions.entitystate then
+				client.actions.entitystate.action(x, y, 71, state)
+			end
+		end,
+	};
+
     log = {
         action = function(...)
             local message = "©255220000"..table.concat({...}," ")

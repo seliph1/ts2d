@@ -41,3 +41,32 @@ function love.filesystem.mountFullPath(path, mountpoint, permissions) end
 ---@param flags? love.WindowSettings|table     # tabela de opções/flags da janela (ex.: vsync, fullscreen)
 ---@return boolean success
 function love.window.updateMode(width, height, flags) end
+
+---Configura um modo de uso comum de stencil, alterando state e color masks internamente.
+---@param mode string # "draw" (escreve no buffer) | "test" (testa se == value) | "off" (desativa).
+---@param value? number # O valor de stencil (1 a 255) usado quando mode é "draw" ou "test".
+function love.graphics.setStencilMode(mode, value) end
+
+---Configura finamente a máquina de estados do stencil para o pipeline gráfico.
+---@param action string # O que fazer com o valor ("replace", "keep", "increment", etc).
+---@param compare string # O modo de comparação ("always", "equal", "notequal", "greater", "less").
+---@param value? number # O valor (1 a 255) a ser escrito ou testado.
+function love.graphics.setStencilState(action, compare, value) end
+
+---Abre um dialogo nativo de arquivo do sistema (abrir/salvar/pasta). Assincrono.
+---@param type string # Tipo do dialogo: "openfile" | "savefile" | "openfolder" | "openshell".
+---@param callback fun(files: string[], filtername: string, err: string) # Chamado quando o dialogo fecha.
+---@param settings? table # Opcoes: title, accept, cancel, defaultname, filters, multiselect, attachtowindow.
+function love.window.showFileDialog(type, callback, settings) end
+
+---Le de volta os dados de uma textura (Canvas/Image) para a CPU como ImageData.
+---Substitui Canvas:newImageData(), que foi descontinuado no 12.0.
+---@param texture love.Texture # A textura (ex: Canvas) a ser lida.
+---@param slice? number # A camada/face do array/cubemap (1-based). Padrao 1.
+---@param mipmap? number # O nivel de mipmap a ler (1-based). Padrao 1.
+---@param x? number # Canto x da regiao a ler. Padrao 0.
+---@param y? number # Canto y da regiao a ler. Padrao 0.
+---@param width? number # Largura da regiao. Padrao = largura da textura.
+---@param height? number # Altura da regiao. Padrao = altura da textura.
+---@return love.ImageData imagedata # Os pixels lidos da textura.
+function love.graphics.readbackTexture(texture, slice, mipmap, x, y, width, height) end

@@ -2035,7 +2035,7 @@ end
 		local text = object.texthash
 		local selected = object.selected
 		local hovered = object.hovered
-		local elements = object.elements
+		local elements = object.filtered_elements or object.elements
 		local background = object.background
 		local body1color = skin.controls.columnlistrow_body1_color
 		local body2color = skin.controls.columnlistrow_body2_color

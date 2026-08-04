@@ -11,6 +11,18 @@
 local ctl = love.thread.getChannel("listenserver_ctl")
 local evt = love.thread.getChannel("listenserver_evt")
 
+-- Redireciona print da thread do servidor para enviar mensagens de log ao cliente principal
+local _print = print
+function _G.print(...)
+	local args = { ... }
+	for i = 1, #args do
+		args[i] = tostring(args[i])
+	end
+	local msg = table.concat(args, "\t")
+	_print(msg)
+	evt:push({ type = "log", msg = msg })
+end
+
 -- Numa love.thread só love.thread vem por padrão; declara os submódulos usados.
 require "love.timer"
 require "love.filesystem"

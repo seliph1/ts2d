@@ -24,6 +24,15 @@ return function(cs2dAPI, server)
         return
     end
 
+    --- Triggers entities matching the specified trigger name
+    ---@param trigger_name string
+    ---@param source_id? number
+    cs2dAPI.trigger = function(trigger_name, source_id)
+        if trigger_name and trigger_name ~= "" then
+            server.trigger(trigger_name, source_id or 0)
+        end
+    end
+
     -- Hostage functions
     cs2dAPI.hostage = function(hostage_id, parameter)
         -- void

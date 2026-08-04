@@ -700,6 +700,8 @@ function MapObject:read(path, noindexing)
 	-----------------------------------------------------------------------------------------------------------
 	mapdata.entity_count = read_integer()
 	mapdata.entity_table = {}
+	mapdata.entity_cache = {}
+	mapdata.tile_override = {}
 	print("Map: Entity count: " .. mapdata.entity_count)
 	for i = 1, mapdata.entity_count do
 		local e = {}
@@ -718,6 +720,15 @@ function MapObject:read(path, noindexing)
 			e.string_settings[j] = read_string()
 		end
 		table.insert(mapdata.entity_table, e)
+
+		mapdata.entity_cache[e.x] = mapdata.entity_cache[e.x] or {}
+		mapdata.entity_cache[e.x][e.y] = mapdata.entity_cache[e.x][e.y] or {}
+		table.insert(mapdata.entity_cache[e.x][e.y], e)
+
+		-- Initialize Func_DynWall (71) state
+		if e.type == 71 then
+			e.state = 1 -- default closed
+		end
 
 		-- Add it to bump world
 		self._world:add(e, e.x * 32, e.y * 32, 32, 32)
@@ -923,10 +934,29 @@ function MapObject:tile(x, y) -- coords in tiles
 		local id = self._mapdata.map[x][y]
 		local mod = self._mapdata.map_mod[x][y]
 		local property = self._mapdata.tile[id].property
+		if self._mapdata.tile_override and self._mapdata.tile_override[x] and self._mapdata.tile_override[x][y] ~= nil then
+			property = self._mapdata.tile_override[x][y]
+		end
 		return id, mod, property
 	else
 		return -1, DEFAULT_MOD, DEFAULT_PROPERTY
 	end
+end
+
+function MapObject:setTileOverride(x, y, property)
+	local mapdata = self._mapdata
+	if not mapdata then return end
+	mapdata.tile_override = mapdata.tile_override or {}
+	mapdata.tile_override[x] = mapdata.tile_override[x] or {}
+	mapdata.tile_override[x][y] = property
+end
+
+function MapObject:getEntitiesAt(x, y)
+	local mapdata = self._mapdata
+	if mapdata and mapdata.entity_cache and mapdata.entity_cache[x] and mapdata.entity_cache[x][y] then
+		return mapdata.entity_cache[x][y]
+	end
+	return {}
 end
 
 function MapObject:gfx(group, id)
@@ -1459,6 +1489,28 @@ function MapObject:draw_entity(e)
 	-- Reset de shader/blend/cor feito em draw_entities() após o loop completo
 end
 
+function MapObject:draw_dynwall(e)
+	if e.state == 0 then return end -- Open / hidden when state is 0
+	local tile_index = e.number_settings[1] or 0
+	local tile_img = self._mapdata and self._mapdata.gfx and self._mapdata.gfx.tile and self._mapdata.gfx.tile[tile_index]
+	if tile_img then
+		-- strs[1] is transparency: "" or nil → fully opaque (1.0)
+		local alpha_str = e.string_settings[1]
+		local alpha = (alpha_str and alpha_str ~= "") and tonumber(alpha_str) or 1.0
+		local w = math.max(1, e.number_settings[4] or 1)
+		local h = math.max(1, e.number_settings[5] or 1)
+		love.graphics.setColor(1, 1, 1, alpha)
+		for tx = 0, w - 1 do
+			for ty = 0, h - 1 do
+				love.graphics.draw(tile_img, (e.x + tx) * 32, (e.y + ty) * 32)
+			end
+		end
+		love.graphics.setColor(1, 1, 1, 1)
+	else
+		print(string.format("DynWall: tile_img nil for entity at (%d,%d), tile_index=%d", e.x, e.y, tile_index))
+	end
+end
+
 function MapObject:draw_entities(client)
 	local camera = self._camera
 	-- Usa o cache de resolução atualizado em update()
@@ -1481,8 +1533,12 @@ function MapObject:draw_entities(client)
 	love.graphics.setShader(self._entity_shader)
 	for i = 1, self._entity_length do
 		local e = self._entity_cache[i]
-		if e.object_type == "entity" and e.type == 22 then
-			self:draw_entity(e)
+		if e.object_type == "entity" then
+			if e.type == 22 then
+				self:draw_entity(e)
+			elseif e.type == 71 then
+				self:draw_dynwall(e)
+			end
 		end
 	end
 	love.graphics.setShader()

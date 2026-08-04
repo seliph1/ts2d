@@ -98,18 +98,32 @@ local LERP_FLAGS = {
 
 function client.snapshot_lerp(dt)
 	local lerp_flags = LERP_FLAGS
+	local max_distance = 256 -- Threshold to snap position directly (e.g. teleports/respawns)
 
 	for player_id, player in pairs(share.players) do
-		share_lerp.players[player_id] = share_lerp.players[player_id] or {}
+		local p_lerp = share_lerp.players[player_id] or {}
+		share_lerp.players[player_id] = p_lerp
 
-		for property, value in pairs(player) do
-			if lerp_flags[property] then
-				local lerp_value = share_lerp.players[player_id][property] or value
-				-- Apply lerp
-				local lerp = lerp_value + (value - lerp_value) * (client.lerp_speed * dt)
-				share_lerp.players[player_id][property] = lerp
-			else
-				share_lerp.players[player_id][property] = value
+		local current_x = p_lerp.x or player.x
+		local current_y = p_lerp.y or player.y
+		local dx = math.abs((player.x or 0) - current_x)
+		local dy = math.abs((player.y or 0) - current_y)
+
+		if dx > max_distance or dy > max_distance then
+			-- Large distance difference: snap position directly without lerping
+			for property, value in pairs(player) do
+				p_lerp[property] = value
+			end
+		else
+			for property, value in pairs(player) do
+				if lerp_flags[property] then
+					local lerp_value = p_lerp[property] or value
+					-- Apply lerp
+					local lerp = lerp_value + (value - lerp_value) * (client.lerp_speed * dt)
+					p_lerp[property] = lerp
+				else
+					p_lerp[property] = value
+				end
 			end
 		end
 	end

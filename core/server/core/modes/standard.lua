@@ -147,8 +147,8 @@ function standard.second()
 end
 
 function standard.init()
-	local ct_spawn_entities = entitylist(0)
-	local t_spawn_entities = entitylist(1)
+	local t_spawn_entities = entitylist(0)  -- Info_T (0)
+	local ct_spawn_entities = entitylist(1) -- Info_CT (1)
 	ct_spawn = {}
 	t_spawn = {}
 
