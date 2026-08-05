@@ -26,45 +26,44 @@ local font_mono_small = love.graphics.newFont("gfx/fonts/NotoSansMono-Regular.tt
 setFontFallbacks(font_mono_small, 12)
 
 console.frame = LF.Create("frame")
-:SetSize(0.8, 0.8)
-:SetResizable(false)
-:SetScreenLocked(true)
-:SetName("Console")
-:SetCloseAction("hide")
-:SetState("*")
+	:SetSize(0.8, 0.8)
+	:SetResizable(false)
+	:SetScreenLocked(true)
+	:SetName("Console")
+	:SetCloseAction("hide")
+	:SetState("*")
 
 console.frame.Update = function(object, dt)
-    object.name = string.format("Console [%s]",love.timer.getFPS())
-    local block = console_in:pop()
-    if block then
-
-        if type(block) == "string" then
-			local expression, error_message = loadstring( block )
+	object.name = string.format("Console [%s]", love.timer.getFPS())
+	local block = console_in:pop()
+	if block then
+		if type(block) == "string" then
+			local expression, error_message = loadstring(block)
 			if expression then
 				local status, error_message = pcall(expression)
 				if not status then
-					print("©255000000LUA ERROR: "..error_message)
+					print("©255000000LUA ERROR: " .. error_message)
 				end
 			else
-				print("©255000000LUA ERROR: "..error_message)
+				print("©255000000LUA ERROR: " .. error_message)
 			end
 		end
 
 
-        if type(block) == "table" then
+		if type(block) == "table" then
 			if block.action then
 				if block.action == "display_image" then
 					local frame = LF.Create("frame"):SetSize(500, 500)
 					local w, h = frame:GetSize()
-					local scroll = LF.Create("scrollpanel", frame):SetSize(w, h-30):SetY(30)
+					local scroll = LF.Create("scrollpanel", frame):SetSize(w, h - 30):SetY(30)
 					local image_holder = LF.Create("image", scroll)
 					local image_data = block.args.image_data
 
 					if image_data then
-                        local image = love.graphics.newImage(image_data)
-                        if image then
-						    image_holder:SetImage(image)
-                        end
+						local image = love.graphics.newImage(image_data)
+						if image then
+							image_holder:SetImage(image)
+						end
 					end
 				end
 
@@ -72,15 +71,15 @@ console.frame.Update = function(object, dt)
 					local frame = LF.Create("frame"):SetSize(500, 500)
 					local w, h = frame:GetSize()
 					local panel = LF.Create("panel", frame)
-						:SetSize(w, h-30)
+						:SetSize(w, h - 30)
 						:SetY(30)
 					local scroll = LF.Create("scrollpanel", frame)
-						:SetSize(w, h-30)
+						:SetSize(w, h - 30)
 						:SetY(30)
 					local label = LF.Create("label", scroll)
 						:SetMaxWidth(w)
 						:SetFont(font_mono_small)
-						:SetColor(1,1,1,1)
+						:SetColor(1, 1, 1, 1)
 
 					local body = block.args.body
 					if body then
@@ -88,57 +87,56 @@ console.frame.Update = function(object, dt)
 					end
 				end
 			end
-        end -- if type(block) == "table" then
+		end -- if type(block) == "table" then
+	end
 
-    end
-
-    local out = console_out:pop()
-    if out then
-        print(out)
-    end
+	local out = console_out:pop()
+	if out then
+		print(out)
+	end
 end
 
 console.toast = LF.Create("toast", console.frame)
 
 console.input = LF.Create("textbox", console.frame)
-:SetY(-8)
-:SetSize(0.98, 25)
-:CenterX()
-:SetMaxHistory(1)
-:SetFont(font_mono)
+	:SetY(-8)
+	:SetSize(0.98, 25)
+	:CenterX()
+	:SetMaxHistory(1)
+	:SetFont(font_mono)
 
 console.window_panel = LF.Create("panel", console.frame)
-:SetY(30)
-:SetWidth(0.98)
-:Expand("bottom", 40)
-:CenterX()
+	:SetY(30)
+	:SetWidth(0.98)
+	:Expand("bottom", 40)
+	:CenterX()
 console.window = LF.Create("log", console.window_panel)
-:Expand()
-:SetPadding(0)
-:SetFont(font_mono_small)
+	:Expand()
+	:SetPadding(0)
+	:SetFont(font_mono_small)
 
 console.window.menu = LF.Create("menu", console.window)
-:AddOption("Clear Console", nil, function ()
-	console.window:Clear()
-end)
-:AddDivider()
-:AddOption("Copy Line")
-:AddOption("Copy All")
+	:AddOption("Clear Console", nil, function()
+		console.window:Clear()
+	end)
+	:AddDivider()
+	:AddOption("Copy Line")
+	:AddOption("Copy All")
 
 console.input.menu = LF.Create("menu", console.input)
-:AddOption("Clear Input", nil, function() console.input:Clear() end)
-:AddOption("Cut Input", nil, function() console.input:Cut() end)
-:AddOption("Copy Input", nil, function() console.input:Copy() end)
-:AddOption("Paste Input", nil, function() console.input:Paste() end)
+	:AddOption("Clear Input", nil, function() console.input:Clear() end)
+	:AddOption("Cut Input", nil, function() console.input:Cut() end)
+	:AddOption("Copy Input", nil, function() console.input:Copy() end)
+	:AddOption("Paste Input", nil, function() console.input:Paste() end)
 
 
 console.input.rollback = 1
-console.input.history = {""}
+console.input.history = { "" }
 console.input.OnEnter = function(self, text)
 	if text == "" then return end
-    if not(self.focus) then
-        return
-    end
+	if not (self.focus) then
+		return
+	end
 	self:SetText("")
 	self.parse(text)
 	table.insert(self.history, text)
@@ -146,18 +144,18 @@ console.input.OnEnter = function(self, text)
 end
 
 console.input.OnControlKeyPressed = function(self, key)
-    if not(self.focus) then
-        return
-    end
+	if not (self.focus) then
+		return
+	end
 
-	if key=="up" then
+	if key == "up" then
 		local h = console.input.history
 		local r = math.max(self.rollback - 1, 1)
 
 		self:SetText(h[r])
 		self:MoveCursorTo("end")
 		self.rollback = r
-	elseif key=="down" then
+	elseif key == "down" then
 		local h = self.history
 		local r = math.min(self.rollback + 1, #h)
 
@@ -184,10 +182,10 @@ console.input.parse = function(str)
 
 	local command_id = args[1]
 	local commands = console.input.commands
-	if commands[ command_id ] then
-		local command_object = commands[ command_id ]
+	if commands[command_id] then
+		local command_object = commands[command_id]
 		if command_object.action then
-			local status = command_object.action( unpack(args,2) )
+			local status = command_object.action(unpack(args, 2))
 			if status then
 				print(status)
 				return status
@@ -220,11 +218,11 @@ function print(...)
 		local v = select(i, ...)
 		v = tostring(v)
 		if v == "true" then
-			v = "©255255000"..v.."©255255255"
+			v = "©255255000" .. v .. "©255255255"
 		elseif v == "false" then
-			v = "©255000000"..v.."©255255255"
+			v = "©255000000" .. v .. "©255255255"
 		elseif v == "nil" then
-			v = "©255000000"..v.."©255255255"
+			v = "©255000000" .. v .. "©255255255"
 		end
 		table.insert(str, v)
 	end
@@ -238,9 +236,9 @@ end
 LF.bind("all", "", "'", function()
 	local toggle = not console.frame:GetVisible()
 	console.frame
-	:SetVisible(toggle)
-	:Center()
-	:MoveToTop()
+		:SetVisible(toggle)
+		:Center()
+		:MoveToTop()
 end)
 
 LF.bind("all", "", "f1", function()
@@ -254,9 +252,9 @@ end)
 
 
 console.frame
-:SetVisible(false)
-:Center()
-:MoveToTop()
+	:SetVisible(false)
+	:Center()
+	:MoveToTop()
 
 return console
 

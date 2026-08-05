@@ -8,11 +8,14 @@ return {
 		if loveframes and loveframes.SetState then
 			loveframes.SetState("editor")
 		end
+		loveframes.SetKeyNavigation(false)
 	end,
 
 	---@param client table
 	---@param to string?
 	exit = function(client, to)
+		local loveframes = package.loaded["lib.loveframes"]
+		loveframes.SetKeyNavigation(true)
 	end,
 
 	---@param client table
@@ -40,8 +43,9 @@ return {
 			client.map:draw_floor()
 			client.map:draw_entities(client)
 			client.map:draw_ceiling()
+			client.map:draw_shadow()
 			client.map:draw_effects()
-			client.map:draw_hrc(ox, oy, client.width, client.height)
+			--client.map:draw_entity_icons(client)
 		end
 
 		love.graphics.setCanvas()

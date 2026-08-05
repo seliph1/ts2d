@@ -20,7 +20,6 @@ function love.conf(t)
         t.physics          = false
         return
     end
-    --t.version = "11.5"                  -- The LÖVE version this game was made for (string)
     t.appendidentity    = false                -- Search files in source directory before save directory (boolean)
     t.console           = false                -- Attach a console (boolean, Windows only)
     t.window.title      = "Tactical Strike 2D" -- The window title (string)
@@ -31,6 +30,4 @@ function love.conf(t)
     t.window.resizable  = false                -- Let the window be user-resizable (boolean)
     t.window.vsync      = 1                    -- Vertical sync mode (number)
     t.window.msaa       = 0                    -- The number of samples to use with multi-sampled antialiasing (number)
-    --t.window.minwidth = 1               -- Minimum window width if the window is resizable (number)
-    --t.window.minheight = 1              -- Minimum window height if the window is resizable (number)
 end

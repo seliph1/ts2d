@@ -86,6 +86,11 @@ return function(client)
 	function client.camera_shake()
 	end
 
+	function client.camera_abrupt(x, y, tx, ty)
+		client.map:scroll(tx, ty)
+		client.map:shiftRender(tx, ty)
+	end
+
 	---Camera interpolated movement function
 	---@param dt number Delta time
 	function client.camera_tween(dt)

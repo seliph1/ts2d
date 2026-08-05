@@ -12,6 +12,7 @@ local home            = client.home
 --- @field bullets table
 --- @field players table
 --- @field items table
+--- @field entities table
 --- @field game table
 --- Table that gets info from server
 local share           = client.share
@@ -56,6 +57,7 @@ local modules         = {
 for index, module in pairs(modules) do
 	require(module)(client)
 end
+
 -- Global shader config
 client.canvas:setWrap("clampzero")
 client.shaders = require "core.shaders.cs2dshaders"
@@ -78,12 +80,6 @@ local function is_dead(peer_id)
 	if player then
 		return player.h <= 0
 	end
-end
-
-
-function client.camera_abrupt(x, y, tx, ty)
-	client.map:scroll(tx, ty)
-	client.map:shiftRender(tx, ty)
 end
 
 -- Which player properties get interpolated (vs. copied as-is). Module-level so

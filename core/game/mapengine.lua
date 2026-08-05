@@ -2,10 +2,9 @@
 local bump = require "lib.bump"
 local effect = require "core.game.effect"
 local enum = require "core.enum"
+local Entities = require "core.entities"
 local serpent = require "lib.serpent"
---local HRC = require "lib.hrc"
 local GI = require "lib.gi"
-local LF = love.filesystem
 
 -- Localise some important functions to constantly call during execution
 local max = math.max
@@ -28,7 +27,7 @@ local DEFAULT_MOD = enum.DEFAULT_MOD
 local TILE_PROPERTY = enum.TILE_PROPERTY
 local TILE_BLEND_DIR = enum.TILE_BLEND_DIR
 local TILE_MODE_HEIGHT = enum.TILE_MODE_HEIGHT
-local ENTITY_TYPE = enum.ENTITY_TYPE
+local ENTITY_TYPE = Entities.Database.ENTITIES
 local SOLID_THRESHOLD = 0.3
 local WALL_THRESHOLD = 1.0
 -- Memoised "gfx/player/<name>" paths so the per-frame draw loops don't
@@ -52,9 +51,6 @@ effect.register("core/particle/blood.lua", "blood")
 effect.register("core/particle/slash.lua", "slash")
 effect.register("core/particle/muzzle.lua", "muzzle")
 
---effect.register(LF.load "core/particle/fire.lua" (), "fire")
---effect.register(dofile "core/particle/snow.lua", "snow")
---effect.register(dofile "core/particle/rain.lua", "rain")
 --[[---------------------------------------------------------
 	Lib
 --]] ---------------------------------------------------------
@@ -443,6 +439,10 @@ function MapObject:clear()
 	mapdata.gfx.background = love.graphics.newImage(self._placeholder)
 	self._mapdata = mapdata
 	self:shiftRender()
+	if self._heightMap then
+		self._heightMap:release()
+		self._heightMap = nil
+	end
 
 	collectgarbage("collect")
 
@@ -704,31 +704,30 @@ function MapObject:read(path, noindexing)
 	mapdata.tile_override = {}
 	print("Map: Entity count: " .. mapdata.entity_count)
 	for i = 1, mapdata.entity_count do
-		local e = {}
-		e.object_type = "entity"
-		e.name = read_string()
-		e.type = read_byte()
-		e.x = read_integer()
-		e.y = read_integer()
-		e.trigger = read_string()
-		e.string_settings = {}
-		e.number_settings = {}
-		e.index = i
-		e.depth = e.index
+		local raw = {}
+		raw.object_type = "entity"
+		raw.name = read_string()
+		raw.type = read_byte()
+		raw.x = read_integer()
+		raw.y = read_integer()
+		raw.trigger = read_string()
+		raw.string_settings = {}
+		raw.number_settings = {}
+		raw.index = i
+		raw.depth = i
 		for j = 1, 10 do
-			e.number_settings[j] = read_integer()
-			e.string_settings[j] = read_string()
+			raw.number_settings[j] = read_integer()
+			raw.string_settings[j] = read_string()
 		end
+
+		local e = Entities.create(raw)
+		e:onInit(self)
+
 		table.insert(mapdata.entity_table, e)
 
 		mapdata.entity_cache[e.x] = mapdata.entity_cache[e.x] or {}
 		mapdata.entity_cache[e.x][e.y] = mapdata.entity_cache[e.x][e.y] or {}
 		table.insert(mapdata.entity_cache[e.x][e.y], e)
-
-		-- Initialize Func_DynWall (71) state
-		if e.type == 71 then
-			e.state = 1 -- default closed
-		end
 
 		-- Add it to bump world
 		self._world:add(e, e.x * 32, e.y * 32, 32, 32)
@@ -826,6 +825,7 @@ function MapObject:read(path, noindexing)
 	end
 	self._mapdata = mapdata
 	self:shiftRender()
+	self:updateHeightMap()
 
 
 	print("Loading complete! ")
@@ -913,12 +913,23 @@ function MapObject:getHeightMap()
 	return self._heightMap
 end
 
+function MapObject:updateHeightMap()
+	if self._heightMap then
+		self._heightMap:release()
+		self._heightMap = nil
+	end
+	return self:getHeightMap()
+end
+
 function MapObject:settile(x, y, tile_id)
 	if self._mapdata.map[x] and self._mapdata.map[x][y] then
 		self._mapdata.map[x][y] = tile_id
 	end
 	local property = self._mapdata.tile[tile_id].property
 	local height = TILE_MODE_HEIGHT[property]
+	if self._heightMap then
+		self:updateHeightMap()
+	end
 end
 
 function MapObject:gettile(x, y) -- coords in tiles
@@ -1180,7 +1191,6 @@ function MapObject:draw_ceiling()
 end
 
 function MapObject:draw_shadow()
-	--[[
 	local heightmap = self:getHeightMap()
 	local camera = self._camera
 	local shadows = self._shadows
@@ -1194,7 +1204,7 @@ function MapObject:draw_shadow()
 	love.graphics.setColor(0, 0, 0.01, 1)
 	love.graphics.setShader(shadows)
 	love.graphics.rectangle("fill", 0, 0, love.graphics.getDimensions())
-	love.graphics.setShader()]]
+	love.graphics.setShader()
 end
 
 function MapObject:draw_effects()
@@ -1492,7 +1502,8 @@ end
 function MapObject:draw_dynwall(e)
 	if e.state == 0 then return end -- Open / hidden when state is 0
 	local tile_index = e.number_settings[1] or 0
-	local tile_img = self._mapdata and self._mapdata.gfx and self._mapdata.gfx.tile and self._mapdata.gfx.tile[tile_index]
+	local tile_img = self._mapdata and self._mapdata.gfx and self._mapdata.gfx.tile and
+		self._mapdata.gfx.tile[tile_index]
 	if tile_img then
 		-- strs[1] is transparency: "" or nil → fully opaque (1.0)
 		local alpha_str = e.string_settings[1]
@@ -1534,34 +1545,52 @@ function MapObject:draw_entities(client)
 	for i = 1, self._entity_length do
 		local e = self._entity_cache[i]
 		if e.object_type == "entity" then
-			if e.type == 22 then
-				self:draw_entity(e)
-			elseif e.type == 71 then
-				self:draw_dynwall(e)
+			if e.draw then
+				e:draw(self, client)
 			end
 		end
 	end
+	-- Clear the graphic settings
+	love.graphics.setColor(1, 1, 1, 1)
 	love.graphics.setShader()
 	love.graphics.setBlendMode("alpha")
-	love.graphics.setColor(1, 1, 1, 1)
+	love.graphics.pop()
+end
 
-	if client.debug_level >= 1 then
-		-- Change font of small entity sprites
-		love.graphics.setFont(self._smallfont)
-		-- Set blend mode
-		love.graphics.setBlendMode("add")
-		for i = 1, self._entity_length do
-			local e = self._entity_cache[i]
-			local t = ENTITY_TYPE[e.type] or ENTITY_TYPE["null"]
-			local c = t.color
-			love.graphics.setColor(c[1], c[2], c[3], 0.5 + self._oscillation / 2)
-			love.graphics.draw(self._hudicon[9], e.x * 32 + 16, e.y * 32 + 16, 0, 1, 1, 8, 8)
-			love.graphics.printf(t.label or "", e.x * 32 + 20, e.y * 32 + 20, 48, "left")
-		end
-		love.graphics.setBlendMode("alpha")
-		love.graphics.setFont(self._normalfont)
-		-- Reset the transformation stack
+function MapObject:draw_entity_icons()
+	local cx, cy = self:getCameraOffset()
+	love.graphics.push()
+	love.graphics.translate(cx, cy)
+
+	local alpha = 0.5 + self._oscillation / 2
+	local icon = self._hudicon[9]
+
+	-- Pass 1: Renderizar todos os ícones (LÖVE faz batching de draw calls da mesma imagem)
+	love.graphics.setBlendMode("add")
+	for i = 1, self._entity_length do
+		local e = self._entity_cache[i]
+		local t = ENTITY_TYPE[e.type] or ENTITY_TYPE["null"]
+		local c = t.color
+		love.graphics.setColor(c[1], c[2], c[3], alpha)
+		love.graphics.draw(icon, e.x * 32 + 16, e.y * 32 + 16, 0, 1, 1, 8, 8)
 	end
+
+	-- Pass 2: Renderizar rótulos das entidades (print rápido em vez de printf com word wrap)
+	love.graphics.setFont(self._smallfont)
+	for i = 1, self._entity_length do
+		local e = self._entity_cache[i]
+		local t = ENTITY_TYPE[e.type] or ENTITY_TYPE["null"]
+		local label = t.label
+		if label and label ~= "" then
+			local c = t.color
+			love.graphics.setColor(c[1], c[2], c[3], alpha)
+			love.graphics.print(label, e.x * 32 + 20, e.y * 32 + 20)
+		end
+	end
+
+	love.graphics.setFont(self._normalfont)
+	love.graphics.setBlendMode("alpha")
+	love.graphics.setColor(1, 1, 1, 1)
 	love.graphics.pop()
 end
 

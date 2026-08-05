@@ -480,11 +480,16 @@ return function(loveframes)
 		end
 
 		if loveframes.inputobject ~= self then return end
-		self.field:keypressed(key, isrepeat)
+		local handled, textedited = self.field:keypressed(key, isrepeat)
 		local focus = self.focus
 		local oncopy = self.OnCopy
 		local onpaste = self.OnPaste
 		local oncut = self.OnCut
+		local ontextchanged = self.OnTextChanged
+
+		if (key == "backspace" or key == "delete" or textedited) and ontextchanged then
+			ontextchanged(self, self.field:getText())
+		end
 
 		if loveframes.IsCtrlDown() and focus then
 			if key == "c" then
@@ -495,9 +500,15 @@ return function(loveframes)
 				if oncut then
 					oncut(self, love.system.getClipboardText())
 				end
+				if ontextchanged then
+					ontextchanged(self, self.field:getText())
+				end
 			elseif key == "v" then
 				if onpaste then
 					onpaste(self, love.system.getClipboardText())
+				end
+				if ontextchanged then
+					ontextchanged(self, self.field:getText())
 				end
 			end
 		end
@@ -522,7 +533,7 @@ return function(loveframes)
 		local event, textedited = self.field:textinput(text)
 		if event and textedited then
 			if ontextchanged then
-				ontextchanged(self, text)
+				ontextchanged(self, self.field:getText())
 			end
 
 			--[[

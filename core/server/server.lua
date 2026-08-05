@@ -50,7 +50,7 @@ local share = server.share
 ---@class Homes: table
 local homes = server.homes
 
-function server.load()
+function server.load(map_name)
 	-- Welcome message
 	print("******** C4 Dedicated Server ********")
 	-- Load and start the netcode
@@ -58,11 +58,23 @@ function server.load()
 
 	-- Load map
 	server.map = MapObject.new() -- 50x50 tile map
-	--server.map:read("maps/de_dust.map", true)
-	--server.map:read("maps/fun_jason.map", true)
-	--server.map:read("maps/room34.map", true)
-	--server.map:read("maps/fun_roleplay.map", true)
-	server.map:read("maps/deathrun_target v8.0.map", true)
+	local default_map = "maps/de_dust.map"
+	local target_map = default_map
+
+	if type(map_name) == "string" and map_name ~= "" then
+		if not map_name:find("^maps/") then
+			target_map = "maps/" .. map_name
+		else
+			target_map = map_name
+		end
+	end
+
+	local ok, err = pcall(function() server.map:read(target_map, true) end)
+	if not ok then
+		print("Failed to load map: " ..
+			tostring(target_map) .. " (" .. tostring(err) .. "), falling back to default map.")
+		server.map:read(default_map, true)
+	end
 
 	server.log(1, "game", tostring(server.map))
 
@@ -74,6 +86,13 @@ function server.load()
 	share.players      = {}
 	share.bullets      = {}
 	share.objects      = {}
+	share.entities     = {}
+
+	-- Add the entity state to the sync table
+	local entities     = server.map:getEntities()
+	for _, e in ipairs(entities) do
+		share.entities[e.index] = e.state
+	end
 	share.config       = {
 		--//-----------------------------------------------------------------//--
 		--// SHOP CONFIG                                                     //
@@ -267,21 +286,6 @@ end
 
 function server.join(peer_id)
 	server.callhook("join", peer_id)
-
-	-- Sync current entity states to joining player
-	if server.map then
-		local entities = server.map:getEntities()
-		for i = 1, #entities do
-			local e = entities[i]
-			if e.type == 71 and e.state ~= nil then
-				server.send(peer_id, string.format("entitystate %d %d 71 %d", e.x, e.y, e.state))
-			elseif e.type == 70 and e.disabled ~= nil then
-				server.send(peer_id, string.format("entitystate %d %d 70 %d", e.x, e.y, e.disabled and 1 or 0))
-			elseif e.type == 95 and e._triggered then
-				server.send(peer_id, string.format("entitystate %d %d 95 1", e.x, e.y))
-			end
-		end
-	end
 
 	server.send(peer_id, "menu_team")
 end
@@ -550,8 +554,8 @@ function server.setcamera(peer_id, mode, ...)
 
 		if not share[category] then return "(camera) There is no category with that name" end
 		if not share[category][id] then return "(camera) There is no entity with this ID" end
-		local entity = share[category][id]
-		if entity and entity.x and entity.y then
+		local object = share[category][id]
+		if object and object.x and object.y then
 			server.send(peer_id, string.format("camera follow %s %s", category, id))
 		end
 	elseif mode == "translate" then
@@ -1034,8 +1038,13 @@ end
 function server.activate_entity(e, source_id, x, y, active_set)
 	if not e or not server.map then return end
 
+	local source_player = (source_id and source_id > 0) and share.players[source_id] or nil
+	if e.onToggle then
+		e:onToggle(source_player, source_id, server)
+	end
+	--[[
 	-- Func_Teleport (70): Toggles disabled state
-	if e.type == 70 then
+	if e.type == 70 and not e.onToggle then
 		e.disabled = not e.disabled
 		server.send("all", string.format("entitystate %d %d 70 %d", e.x, e.y, e.disabled and 1 or 0))
 
@@ -1124,6 +1133,7 @@ function server.activate_entity(e, source_id, x, y, active_set)
 			server.trigger(e.trigger, source_id, x, y, active_set)
 		end
 	end
+	]]
 end
 
 function server.pausetime()
@@ -1566,40 +1576,16 @@ function server.apply_forces_to_player(peer_id, v, h, w)
 
 	-- Check for entity triggers when entering a new tile
 	if new_tx ~= player.last_tx or new_ty ~= player.last_ty then
-		-- Func_Teleport (70) - only if not disabled
-		local teleport_entity = server.map:getEntityAt(new_tx, new_ty, 70)
-		if teleport_entity and not teleport_entity.disabled then
-			local dest_tx = teleport_entity.number_settings[1] or 0
-			local dest_ty = teleport_entity.number_settings[2] or 0
-			local dest_x = dest_tx * 32 + 16
-			local dest_y = dest_ty * 32 + 16
-			server.setpos(peer_id, dest_x, dest_y)
+		local walking_entity = server.map:getEntityAt(new_tx, new_ty, 70)
+		if walking_entity and walking_entity.onWalk then
+			walking_entity:onWalk(player)
 			new_x = player.x
 			new_y = player.y
 			new_tx = floor(new_x / 32)
 			new_ty = floor(new_y / 32)
-			if teleport_entity.trigger and teleport_entity.trigger ~= "" then
-				server.trigger(teleport_entity.trigger, peer_id, new_x, new_y)
-			end
-		else
-			player.last_tx = new_tx
-			player.last_ty = new_ty
 		end
-
-		-- Trigger_Move (91)
-		local move_trigger = server.map:getEntityAt(new_tx, new_ty, 91)
-		if move_trigger and move_trigger.trigger and move_trigger.trigger ~= "" then
-			server.trigger(move_trigger.trigger, peer_id, new_x, new_y)
-		end
-
-		-- Trigger_Once (95)
-		local once_trigger = server.map:getEntityAt(new_tx, new_ty, 95)
-		if once_trigger and not once_trigger._triggered then
-			once_trigger._triggered = true
-			if once_trigger.trigger and once_trigger.trigger ~= "" then
-				server.trigger(once_trigger.trigger, peer_id, new_x, new_y)
-			end
-		end
+		player.last_tx = new_tx
+		player.last_ty = new_ty
 	end
 
 	-- After collision is solved, run the callbacks

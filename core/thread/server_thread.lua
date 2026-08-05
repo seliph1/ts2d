@@ -32,7 +32,7 @@ require "love.filesystem"
 local base = "core/server/"
 love.filesystem.setRequirePath(base .. "?.lua;" .. base .. "?/init.lua;" .. love.filesystem.getRequirePath())
 
--- local map, settings, port = ...   -- TODO(v1+): escolher mapa/porta; hoje usa defaults
+local map, settings, port = ...
 
 local ok, server = pcall(require, "server")
 if not ok then
@@ -40,7 +40,7 @@ if not ok then
 	return
 end
 
-local ok2, err = pcall(server.load)   -- abre o host enet (*:36963) e carrega o mapa
+local ok2, err = pcall(server.load, map)   -- abre o host enet (*:36963) e carrega o mapa
 if not ok2 then
 	evt:push({ type = "error", msg = "server.load: " .. tostring(err) })
 	return

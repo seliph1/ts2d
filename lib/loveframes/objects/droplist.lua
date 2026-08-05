@@ -545,14 +545,21 @@ return function(loveframes)
 	end
 
 	function newobject:Sort(f)
-		if not f then
-			f = function(a, b)
-				local textA = type(a) == "table" and a.text or a
-				local textB = type(b) == "table" and b.text or b
-				return textA:lower() < textB:lower()
+		local sortfunc
+		if f then
+			sortfunc = function(a, b)
+				local valA = type(a) == "table" and a.text or a
+				local valB = type(b) == "table" and b.text or b
+				return f(valA, valB)
+			end
+		else
+			sortfunc = function(a, b)
+				local valA = type(a) == "table" and a.text or a
+				local valB = type(b) == "table" and b.text or b
+				return valA:lower() < valB:lower()
 			end
 		end
-		table.sort(self.elements, f)
+		table.sort(self.elements, sortfunc)
 		self:ParseElements()
 	end
 

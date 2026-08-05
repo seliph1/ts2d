@@ -9,10 +9,10 @@ else
 end
 
 -- Loading some libs
-local ffi = require "ffi"
 local List = require "lib.list"
 local bump = require "lib.bump"
 local enum = require "core.enum"
+local Entities = require "core.entities"
 
 -- Localise some important functions to constantly call during execution
 local max = math.max
@@ -37,15 +37,6 @@ local ENTITY_TYPE = enum.ENTITY_TYPE
 
 local SOLID_THRESHOLD = 0.3
 local WALL_THRESHOLD = 1.0
-
----@class Entity
----@field name string
----@field type number
----@field x number
----@field y number
----@field trigger string
----@field string_settings string[]
----@field number_settings number[]
 
 ---@class MapObject
 ---@field _mapdata MapData
@@ -316,16 +307,6 @@ function MapObject:name()
 	return self._mapdata.name
 end
 
-function MapObject:walk()
-	--[[
-	local mapdata = self._mapdata
-	local width = mapdata.width
-	local height = mapdata.height
-	return function()
-		
-	end--]]
-end
-
 function MapObject:read(path, noindexing)
 	--local filedata = love.filesystem.newFileData(path)
 	if not fs:isFile(path) then
@@ -333,50 +314,47 @@ function MapObject:read(path, noindexing)
 		--return string.format("File %q does not exist. Check your files/folders and try again!", path)
 	end
 	local filedata = fs:loadFile(path)
-	-- Get a C pointer to read files as binary mode.
 	local size = filedata:getSize()
-	local pointer = filedata:getFFIPointer()
-	-- Set byte and integer tables to read.
-	local bytearray = ffi.cast('uint8_t*', pointer)
-	local integerarray = ffi.cast('int32_t*', pointer)
-	local shortarray = ffi.cast('uint16_t*', pointer)
+
 	-- Set the cursor at the start of file
-	local cursor = 0
+	local cursor = 1
 	-- Read single byte
 	local function read_byte()
-		local value = bytearray[cursor]
+		local stream = love.data.unpack("B", filedata, cursor)
+		local value = tonumber(stream)
 		cursor = cursor + 1
 		return value
 	end
-	-- Reading functions
-	local function read_integer()
-		local b1, b2, b3, b4 = bytearray[cursor], bytearray[cursor + 1], bytearray[cursor + 2], bytearray[cursor + 3]
-		-- Read integer as signed non endian
-		local value = b4 * 0x1000000 + b3 * 0x10000 + b2 * 0x100 + b1
-		cursor = cursor + 4
-		return value > 0x7fffffff and value - 0x100000000 or value
-	end
-	-- Read string until \n
-	local function read_string()
-		local str = ""
-		local i = 0
-		for index = 0, size - cursor do
-			local chr = string.char(bytearray[cursor + index])
-			if bytearray[cursor + index] == 10 then
-				cursor = cursor + index + 1
-				return str
-			end
-
-			if bytearray[cursor + index] ~= 13 then
-				str = str .. chr
-			end
-		end
-	end
 	-- Read short integer as unsigned endian.
 	local function read_short()
-		local value = shortarray[floor(cursor / 2)]
+		local stream = love.data.unpack("<i2", filedata, cursor)
+		local value = tonumber(stream)
 		cursor = cursor + 2
 		return value
+	end
+	-- Reading integer as signed endian
+	local function read_integer()
+		local stream = love.data.unpack("<i4", filedata, cursor)
+		local value = tonumber(stream)
+		cursor = cursor + 4
+		return value
+	end
+
+	-- Read string until \n
+	local function read_string()
+		-- Usa buffer de tabela para evitar alocação de string por caractere
+		local buf = {}
+		for index = 0, size - cursor do
+			local byte = love.data.unpack("B", filedata, cursor + index)
+			local chr = tonumber(byte)
+			if byte == 10 then
+				cursor = cursor + index + 1
+				return table.concat(buf)
+			end
+			if byte ~= 13 and chr then
+				buf[#buf + 1] = string.char(chr)
+			end
+		end
 	end
 	-- Jumps the cursor
 	local function seek_forward(bytes)
@@ -601,32 +579,38 @@ function MapObject:read(path, noindexing)
 	mapdata.tile_override = {}
 	--print("Entity count: " .. mapdata.entity_count)
 	for i = 1, mapdata.entity_count do
-		local e = {}
-		e.name = read_string()
-		e.type = read_byte()
-		e.x = read_integer()
-		e.y = read_integer()
-		e.trigger = read_string()
-		e.string_settings = {}
-		e.number_settings = {}
+		local raw = {}
+		raw.name = read_string()
+		raw.type = read_byte()
+		raw.x = read_integer()
+		raw.y = read_integer()
+		raw.trigger = read_string()
+		raw.string_settings = {}
+		raw.number_settings = {}
+		raw.index = i
+		raw.depth = i
 		for j = 1, 10 do
-			e.number_settings[j] = read_integer()
-			e.string_settings[j] = read_string()
+			raw.number_settings[j] = read_integer()
+			raw.string_settings[j] = read_string()
 		end
+		local e = Entities.create(raw)
+
+		-- Initialize trigger
+		e:onInit(self)
+
+		-- List object
 		mapdata.entity_list:push(e)
+
+		-- Lua table
 		table.insert(mapdata.entity_table, e)
 		mapdata.entity_cache[e.x] = mapdata.entity_cache[e.x] or {}
 		mapdata.entity_cache[e.x][e.y] = mapdata.entity_cache[e.x][e.y] or {}
 		table.insert(mapdata.entity_cache[e.x][e.y], e)
 
+		-- Add on trigger index
 		if e.name and e.name ~= "" then
 			mapdata.trigger_index[e.name] = mapdata.trigger_index[e.name] or {}
 			table.insert(mapdata.trigger_index[e.name], e)
-		end
-
-		-- Initialize Func_DynWall (71) state
-		if e.type == 71 then
-			e.state = 1 -- default closed
 		end
 	end
 
@@ -680,6 +664,7 @@ function MapObject:getEntities(entity_type)
 					type = e.type,
 					x = e.x,
 					y = e.y,
+					index = e.index,
 					trigger = e.trigger,
 					string_settings = e.string_settings,
 					number_settings = e.number_settings,
@@ -692,6 +677,7 @@ function MapObject:getEntities(entity_type)
 				x = e.x,
 				y = e.y,
 				trigger = e.trigger,
+				index = e.index,
 				string_settings = e.string_settings,
 				number_settings = e.number_settings,
 			})

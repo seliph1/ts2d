@@ -45,6 +45,7 @@ loveframes.config["ACTIVESKIN"]            = "CS2D"
 loveframes.config["INDEXSKINIMAGES"]       = true
 loveframes.config["DEBUG"]                 = false
 loveframes.config["ENABLE_SYSTEM_CURSORS"] = true
+loveframes.config["ENABLE_KEY_NAVIGATION"]  = true
 
 
 -- misc library vars
@@ -330,7 +331,9 @@ function loveframes.keypressed(key, isrepeat)
 
 	-- Run keys if we aren't stuck in an input
 	if not loveframes.inputobject then
-		loveframes.HandleNavKeyPressed(key)
+		if loveframes.GetKeyNavigation() then
+			loveframes.HandleNavKeyPressed(key)
+		end
 
 		local keyhandler = loveframes.keyhandlers[loveframes.getModKeys()][key]
 		if keyhandler then
@@ -351,7 +354,7 @@ function loveframes.keyreleased(key)
 	base:keyreleased(key)
 	menu:keyreleased(key)
 
-	if not loveframes.inputobject then
+	if not loveframes.inputobject and loveframes.GetKeyNavigation() then
 		loveframes.HandleNavKeyReleased(key)
 	end
 end

@@ -20,7 +20,7 @@ return function(client)
 		local thread = love.thread.newThread("core/thread/server_thread.lua")
 		client.listenThread = thread
 		thread:start(map, nil, 36963)
-		print("listenserver: iniciando host em 127.0.0.1:36963 (map=" .. tostring(map or "default") .. ")")
+		print("[server] iniciando host em 127.0.0.1:36963 (map=" .. tostring(map or "default") .. ")")
 		return true
 	end
 
@@ -31,7 +31,7 @@ return function(client)
 		love.thread.getChannel(CTL):push("stop")
 		t:wait()
 		client.listenThread = nil
-		print("listenserver: parado")
+		print("[server] parado")
 	end
 
 	--- Drena os eventos da thread (ready/error/stopped). Chamar a cada frame.
@@ -43,13 +43,13 @@ return function(client)
 		while e ~= nil do
 			if type(e) == "table" then
 				if e.type == "ready" then
-					print("listenserver: pronto na porta " .. tostring(e.port))
+					print("[server] pronto na porta " .. tostring(e.port))
 				elseif e.type == "log" then
-					print("listenserver: " .. tostring(e.msg))
+					print("[server] " .. tostring(e.msg))
 				elseif e.type == "error" then
-					print("listenserver: ERRO -> " .. tostring(e.msg))
+					print("[server] ERRO -> " .. tostring(e.msg))
 				elseif e.type == "stopped" then
-					print("listenserver: thread encerrada")
+					print("[server] thread encerrada")
 				end
 			end
 			e = ch:pop()
@@ -57,7 +57,7 @@ return function(client)
 		-- captura crash duro da thread (erro fora do pcall do runner)
 		local err = t:getError()
 		if err then
-			print("listenserver: CRASH NA THREAD -> " .. tostring(err))
+			print("[server] CRASH NA THREAD -> " .. tostring(err))
 			client.listenThread = nil
 		end
 	end

@@ -531,10 +531,37 @@ return function(loveframes)
 	end
 
 	--[[---------------------------------------------------------
+	- func: SetKeyNavigation(bool)
+	- desc: enables or disables key navigation
+--]] ---------------------------------------------------------
+	function loveframes.SetKeyNavigation(bool)
+		loveframes.config["ENABLE_KEY_NAVIGATION"] = not not bool
+	end
+
+	loveframes.SetKeyNavigationEnabled = loveframes.SetKeyNavigation
+	loveframes.EnableKeyNavigation = loveframes.SetKeyNavigation
+
+	--[[---------------------------------------------------------
+	- func: GetKeyNavigation()
+	- desc: gets whether key navigation is enabled
+--]] ---------------------------------------------------------
+	function loveframes.GetKeyNavigation()
+		local enabled = loveframes.config["ENABLE_KEY_NAVIGATION"]
+		if enabled == nil then
+			return true
+		end
+		return enabled
+	end
+
+	loveframes.GetKeyNavigationEnabled = loveframes.GetKeyNavigation
+
+	--[[---------------------------------------------------------
 	- func: HandleNavKeyPressed(key)
 	- desc: handles key press events for spatial navigation and activation keys
 --]] ---------------------------------------------------------
 	function loveframes.HandleNavKeyPressed(key)
+		if not loveframes.GetKeyNavigation() then return end
+
 		local focus = loveframes.focusedobject
 		local navKeyMap = { up = true, down = true, left = true, right = true }
 
@@ -584,6 +611,8 @@ return function(loveframes)
 	- desc: handles key release events for spatial navigation and activation keys
 --]] ---------------------------------------------------------
 	function loveframes.HandleNavKeyReleased(key)
+		if not loveframes.GetKeyNavigation() then return end
+
 		local focus = loveframes.focusedobject
 
 		if key == "return" or key == "space" then
