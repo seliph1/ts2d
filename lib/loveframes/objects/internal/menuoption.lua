@@ -32,6 +32,7 @@ return function(loveframes)
 		self.func = nil
 		self.margin = 2
 		self.enabled = true
+		self.state = "*"
 		self:SetDrawFunc()
 
 		if option_type == "divider" then

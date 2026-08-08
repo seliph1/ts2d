@@ -27,6 +27,7 @@ return function(loveframes)
 		self.margin = 60
 		self.lastselected = nil
 		self.parent = loveframes.base
+		self.state = "*"
 		self:SetDrawFunc()
 	end
 

@@ -20,7 +20,7 @@ string.byte string.char  string.find  string.format string.gmatch
 string.gsub string.len   string.lower string.match  string.reverse
 string.sub  string.upper
 
-table.insert table.maxn table.remove table.sort
+table.insert table.maxn table.remove table.sort table.concat
 ]]):gsub('%S+', function(id)
 	local module, method = id:match('([^%.]+)%.([^%.]+)')
 	if module then
@@ -53,14 +53,14 @@ local commands = {
 
 			local shadows = client.map._shadows
 			ui.shader_controls(shadows, {
-				{ name = "steps",          hint = { 1.0, 500.0 }, init_value = 32.0 },
-				{ name = "shadowBrightness", hint = { 0.0, 1.0 }, init_value = 0.5 },
-				{ name = "shadowLength",   hint = { 0.0, 96.0 }, init_value = 32 },
+				{ name = "steps",            hint = { 1.0, 500.0 }, init_value = 32.0 },
+				{ name = "shadowBrightness", hint = { 0.0, 1.0 },   init_value = 0.5 },
+				{ name = "shadowLength",     hint = { 0.0, 96.0 },  init_value = 32 },
 				--{name="direction", hint = {-180, 180}, init_value = 45.0};
-				{ name = "direction",      hint = { 0, 360 },   init_value = 45.0 },
-				{ name = "mode",           hint = { 0.0, 1.0 }, init_value = 1.0 },
+				{ name = "direction",        hint = { 0, 360 },     init_value = 45.0 },
+				{ name = "mode",             hint = { 0.0, 1.0 },   init_value = 1.0 },
 				--{name="stepFactor", hint = {0.0, 1.0}, init_value = 0.05};
-				{ name = "distanceFactor", hint = { 0.0, 32.0 }, init_value = 0.05 },
+				{ name = "distanceFactor",   hint = { 0.0, 32.0 },  init_value = 0.05 },
 			})
 		end,
 	},
@@ -248,20 +248,56 @@ local commands = {
 		end,
 	},
 
+	luac = {
+		action = function(...)
+			local LF = require "lib.loveframes"
+			local frame = LF.Create("frame"):SetSize(0.5, 0.8):Center()
+				:SetName("Lua live code"):SetState("*"):SetDraggable(true)
+
+			local codebox = LF.Create("codebox", frame):SetPos(5, 25)
+				:ExpandBottom(35):ExpandRight(5)
+
+			local runButton = LF.Create("button", frame)
+				:Stack(10, codebox):SetText("Run code")
+
+
+			runButton.OnClick = function(self)
+				local block = codebox:GetText()
+				local ui = require "core.interface.ui"
+				local client = require "core.client"
+				CONSOLE_ENV.print = print
+				CONSOLE_ENV.client = client
+				CONSOLE_ENV.ui = ui
+				CONSOLE_ENV.serpent = serpent
+
+				local expression, error_message = loadstring(block, "")
+				if expression then
+					setfenv(expression, CONSOLE_ENV)
+					local status, error_message = pcall(expression)
+					if not status then
+						print("©255000000LUA ERROR: " .. error_message)
+					end
+				else
+					print("©255000000LUA ERROR: " .. error_message)
+				end
+			end
+		end
+	},
+
+
 	lua = {
 		---Evaluates a lua expression
 		---@param ... string
 		action = function(...)
 			local block = table.concat({ ... }, " ")
-			local expression, error_message = loadstring(block, "")
 			local ui = require "core.interface.ui"
 			local client = require "core.client"
 			CONSOLE_ENV.print = print
 			CONSOLE_ENV.client = client
 			CONSOLE_ENV.ui = ui
-			CONSOLE_ENV.msg = ui.chat_frame_server_message
-			CONSOLE_ENV.dump = serpent.dump
+			CONSOLE_ENV.serpent = serpent
 
+			local expression, error_message = loadstring(block, "")
 			if expression then
 				setfenv(expression, CONSOLE_ENV)
 				local status, error_message = pcall(expression)

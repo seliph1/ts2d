@@ -115,19 +115,37 @@ console.window = LF.Create("log", console.window_panel)
 	:SetPadding(0)
 	:SetFont(font_mono_small)
 
-console.window.menu = LF.Create("menu", console.window)
-	:AddOption("Clear Console", nil, function()
+console.window:SetContextMenu {
+	{ text = "Clear Console", func = function()
 		console.window:Clear()
-	end)
-	:AddDivider()
-	:AddOption("Copy Line")
-	:AddOption("Copy All")
+	end },
+	{ type = "divider" },
+	{ text = "Copy Line", func = function()
+		local text, id = console.window:GetSelectedText()
+		if text then
+			love.system.setClipboardText(text)
+		end
+	end },
+	{ text = "Copy All", func = function()
+		local full_text = table.concat(console.window.elements, "\n")
+		love.system.setClipboardText(full_text)
+	end },
+}
 
-console.input.menu = LF.Create("menu", console.input)
-	:AddOption("Clear Input", nil, function() console.input:Clear() end)
-	:AddOption("Cut Input", nil, function() console.input:Cut() end)
-	:AddOption("Copy Input", nil, function() console.input:Copy() end)
-	:AddOption("Paste Input", nil, function() console.input:Paste() end)
+console.input:SetContextMenu {
+	{ text = "Clear Input", func = function()
+		console.input:Clear()
+	end },
+	{ text = "Cut Input", func = function()
+		console.input:Cut()
+	end },
+	{ text = "Copy Input", func = function()
+		console.input:Copy()
+	end },
+	{ text = "Paste Input", func = function()
+		console.input:Paste()
+	end },
+}
 
 
 console.input.rollback = 1
@@ -253,6 +271,7 @@ end)
 
 console.frame
 	:SetVisible(false)
+	:SetDraggable(true)
 	:Center()
 	:MoveToTop()
 

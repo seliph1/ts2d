@@ -25,6 +25,7 @@ return function(loveframes)
 		self.internal = false
 		self.internals = {}
 		self.elements = {}
+		self.element_offsets = {}
 		self.padding = 5
 		self.selected = 0
 		self.hovered = 0
@@ -122,21 +123,9 @@ return function(loveframes)
 			-- Dont select, but dont deselect also
 			return
 		end
-		-- Retrieve the cell size
-		local cell_x = self.width
-		local cell_y = self.font:getHeight() + self.padding
 
-		-- Get the relative position from mouse
-		local rel_x = x - self.x
-		local rel_y = y - self.y
-
-		-- Chech which cell is selected
-		-- Ceil is used so it always return element id >= 1
-		local element_id = math.ceil(rel_y / cell_y)
-		if element_id < 0 or element_id > #self.elements then
-			element_id = 0
-		end
-		self.selected = element_id
+		local text, element_id = self:GetTextAt(x, y)
+		self.selected = element_id or 0
 	end
 
 	--[[---------------------------------------------------------
@@ -162,6 +151,69 @@ return function(loveframes)
 		for _, v in ipairs(self.internals) do
 			v:wheelmoved(x, y)
 		end
+	end
+
+	--[[---------------------------------------------------------
+	- func: GetTextAt(x, y) / GetOverlapText(x, y)
+	- desc: returns the text and element index at (x, y)
+--]] ---------------------------------------------------------
+	function Log:GetTextAt(x, y)
+		if not x or not y then return nil end
+
+		-- Converte coordenadas de tela para coordenadas internas do log
+		local rel_y
+		if y >= self.y and y <= (self.y + self.height) then
+			rel_y = y - self.y + self.offsety
+		else
+			rel_y = y + self.offsety
+		end
+
+		if rel_y < 0 or rel_y >= self.lastheight then return nil end
+
+		local offsets = self.element_offsets
+		local count = #self.elements
+		if offsets and #offsets >= count and count > 0 then
+			-- Busca binária exata pelos offsets de cada linha
+			local low, high = 1, count
+			while low <= high do
+				local mid = math.floor((low + high) / 2)
+				local start_y = offsets[mid]
+				local end_y = offsets[mid + 1] or self.lastheight
+
+				if rel_y < start_y then
+					high = mid - 1
+				elseif rel_y >= end_y then
+					low = mid + 1
+				else
+					return self.elements[mid], mid
+				end
+			end
+		end
+
+		local line_height = self.font:getHeight()
+		if line_height > 0 then
+			local index = math.floor(rel_y / line_height) + 1
+			local text = self.elements[index]
+			if text then
+				return text, index
+			end
+		end
+
+		return nil
+	end
+
+	Log.GetOverlapText = Log.GetTextAt
+	Log.GetElementAt = Log.GetTextAt
+
+	--[[---------------------------------------------------------
+	- func: GetSelectedText()
+	- desc: returns the currently selected text and element index
+	--]] ---------------------------------------------------------
+	function Log:GetSelectedText()
+		if self.selected and self.selected > 0 then
+			return self.elements[self.selected], self.selected
+		end
+		return nil
 	end
 
 	--[[---------------------------------------------------------
@@ -229,7 +281,7 @@ return function(loveframes)
 				or p == s:find("[\238-\239][\128-\191][\128-\191]", p) then
 				p = p + 3
 			elseif p == s:find("\240[\144-\191][\128-\191][\128-\191]", p)
-				or p == s:find("[\241-\243][\128-\191][\128-\191][\128-\191]", p)
+				or p == s:find("[\241-\243][\128-\191][\128-\191]", p)
 				or p == s:find("\244[\128-\143][\128-\191][\128-\191]", p) then
 				p = p + 4
 			else
@@ -296,15 +348,18 @@ return function(loveframes)
 	function Log:ParseElements()
 		self.texthash:clear()
 		self.lastheight = 0
+		self.element_offsets = {}
 		local elements = self.elements
-		for _, value in ipairs(elements) do
+		for index, value in ipairs(elements) do
 			local lastheight = self.lastheight
+			self.element_offsets[index] = lastheight
 			local parsedvalue = ""
 			-- Fix the text
 			value = self:fixUTF8(value, " ")
 
 			-- Parse the obtained string with cs2d formatting
-			value, parsedvalue = self:ParseText(value)
+			local formattedchunks
+			formattedchunks, parsedvalue = self:ParseText(value)
 
 			-- Adds the offset from vertical body if applicable
 			local truewidth = self.width
@@ -313,29 +368,29 @@ return function(loveframes)
 			end
 
 			-- Add the fixed, formatted text to the texthash object
-			local index
+			local batch_index
 			local status, err = pcall(
 				self.texthash.addf,
 				self.texthash,
-				value,
+				formattedchunks,
 				truewidth,
 				"left",
 				0,
 				lastheight
 			)
 			if not status then
-				index = self.texthash:addf(tostring(err), self.width - self.verticalbody:GetWidth(), "left", 0,
-					lastheight)
+				batch_index = self.texthash:addf(tostring(err), truewidth, "left", 0, lastheight)
 			else
-				index = err
+				batch_index = err
 			end
 
 			-- Get the total height spanned by that line
-			local addedheight = self.texthash:getHeight(index)
+			local addedheight = self.texthash:getHeight(batch_index)
 
 			-- Increment the height property
 			self.lastheight = self.lastheight + addedheight
 		end
+		self.element_offsets[#elements + 1] = self.lastheight
 		self:RedoLayout()
 
 		if self.verticalbody then
@@ -346,13 +401,18 @@ return function(loveframes)
 	end
 
 	function Log:AppendElement(value)
+		self.element_offsets = self.element_offsets or { 0 }
 		local lastheight = self.lastheight
+		local element_index = #self.elements
+		self.element_offsets[element_index] = lastheight
+
 		local parsedvalue = ""
 		-- Fix the text
 		value = self:fixUTF8(value, " ")
 
 		-- Parse the obtained string with cs2d formatting
-		value, parsedvalue = self:ParseText(value)
+		local formattedchunks
+		formattedchunks, parsedvalue = self:ParseText(value)
 
 		-- Adds the offset from vertical body if applicable
 		local truewidth = self.width
@@ -360,29 +420,28 @@ return function(loveframes)
 			truewidth = self.width - self.verticalbody:GetWidth()
 		end
 
-		-- Add the fixed, formatted text to the texthash object
-		--local index = self.texthash:addf(value, self.width - self.verticalbody:GetWidth(), "left", 0, lastheight)
-		local index
+		local batch_index
 		local status, err = pcall(
 			self.texthash.addf,
 			self.texthash,
-			value,
+			formattedchunks,
 			truewidth,
 			"left",
 			0,
 			lastheight
 		)
 		if not status then
-			index = self.texthash:addf(tostring(err), self.width - self.verticalbody:GetWidth(), "left", 0, lastheight)
+			batch_index = self.texthash:addf(tostring(err), truewidth, "left", 0, lastheight)
 		else
-			index = err
+			batch_index = err
 		end
 
 		-- Get the total height spanned by that line
-		local addedheight = self.texthash:getHeight(index)
+		local addedheight = self.texthash:getHeight(batch_index)
 
 		-- Increment the height property
 		self.lastheight = self.lastheight + addedheight
+		self.element_offsets[element_index + 1] = self.lastheight
 		self:RedoLayout()
 
 		if self.verticalbody then
@@ -400,6 +459,7 @@ return function(loveframes)
 		self.text = ""
 		self.texthash:clear()
 		self.elements = {}
+		self.element_offsets = {}
 		self.lastheight = 0
 		self.itemwidth = self.width
 		self.itemheight = 0

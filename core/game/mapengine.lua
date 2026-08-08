@@ -718,6 +718,8 @@ function MapObject:read(path, noindexing)
 		for j = 1, 10 do
 			raw.number_settings[j] = read_integer()
 			raw.string_settings[j] = read_string()
+
+			print(i, serpent.block(raw.string_settings))
 		end
 
 		local e = Entities.create(raw)

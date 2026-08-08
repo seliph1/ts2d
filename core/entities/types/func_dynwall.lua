@@ -49,18 +49,12 @@ function FuncDynWall:draw(mapengine, client)
 
 	if tile_img then
 		local alpha_str = self:getStr(1)
-		local alpha = (alpha_str and alpha_str ~= "") and tonumber(alpha_str) or 1.0
-		--print(alpha_str, alpha)
-
-		alpha = 1
-
+		local inverse_alpha = (alpha_str and alpha_str ~= "") and tonumber(alpha_str) or 1.0
+		local alpha = 1.0 + inverse_alpha
 
 		love.graphics.setColor(1, 1, 1, alpha)
 		love.graphics.setBlendMode("alpha")
 		love.graphics.draw(tile_img, self.x * 32, self.y * 32)
-
-		love.graphics.setColor(1, 1, 1, 1)
-		love.graphics.print(alpha_str .. "|" .. alpha, self.x * 32, self.y * 32)
 	end
 end
 
