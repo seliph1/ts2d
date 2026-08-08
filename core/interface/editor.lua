@@ -1,7 +1,6 @@
 local loveframes = require "lib.loveframes"
 local client = require "core.client"
 local Entities = require "core.entities"
-local serpent = require "serpent"
 local editor = {}
 
 local ENTITY_TYPE = Entities.dump()
@@ -44,42 +43,9 @@ editor.frame:SetScreenLocked(true)
 editor.tabs = loveframes.Create("tabs", editor.frame)
 editor.tabs:SetPos(5, 150)
 editor.tabs:SetSize(editor.default_width, editor.default_size - 150)
---[[
-			editor.tile_panel = loveframes.Create("list")
-			editor.tile_panel:EnableHorizontalStacking(true)
-			editor.tile_panel.Select = function(object)
-				local tile_id = object:GetProperty("tile_id")
-				if tile_id then
-					--mapdata_setpencil(tile_id)
-					print(string.format("Tile ID selected: %s ", tile_id))
-				end
-			end
-			editor.tile_panel.Hovering = function(object)
-				if object.hover then
-					love.graphics.setColor(1, 1, 1, 0.2)
-					love.graphics.rectangle("fill", object.x, object.y, 32, 32)
-				end
-			end
-			editor.tile_panel.Fill = function(object)
-				for i = 0, 255 do
-                    local map = client.map
-                    local gfx = map._mapdata.gfx.tile[i]
-                    if gfx then
-                        local tile = loveframes.Create("imagelink")
-                        tile:SetProperty("tile_id", i)
-                        tile:SetImage(gfx)
-                        tile.OnClick = editor.tile_panel.Select
-                        tile.DrawOver = editor.tile_panel.Hovering
 
-                        editor.tile_panel:AddItem(tile)
-                    end
-				end
-			end
-			editor.tile_panel:Fill()
-			--]]
 editor.entity_scrollable = loveframes.Create("scrollpanel"):SetSize(190, 423)
 editor.entity_panel = loveframes.Create("droplist", editor.entity_scrollable):SetWidth(190)
---editor.entity_panel:AddItemsFromTable(ENTITY_TYPE)
 for id, data in pairs(ENTITY_TYPE) do
 	editor.entity_panel:AddItem(data.name)
 end
@@ -92,61 +58,46 @@ editor.tools = loveframes.Create("panel")
 editor.tabs:AddTab("Entity", editor.entity_scrollable)
 editor.tabs:AddTab("Tools", editor.tools)
 
+editor.open_map_dialog = function()
+	loveframes.CreateFileDialog(
+		"Selecionar Mapa",
+		"open",
+		{ "Mapas (*.map)" },
+		function(filepath)
+			editor.map_path:SetText(filepath)
+			if client.map then
+				local status = client.map:read(filepath)
+				if status then
+					print(status)
+				else
+					client.camera_snap(0, 0)
+					client.map:shiftRender()
+				end
+			end
+		end,
+		function()
+			-- Diálogo cancelado
+		end,
+		"maps"
+	)
+end
+
 editor.map_path = loveframes.Create("textbox", editor.frame)
 editor.map_path:SetText("maps/fun_roleplay.map")
-editor.map_path:SetPos(5, 30):SetWidth(192)
---map_path:SetMultiline(true)
---map_path:SetHeight(90)
---[[
-		local map_path_input_menu = loveframes.Create("menu", editor_frame)
-		map_path_input_menu:AddOption("Copy")
-		map_path_input_menu:AddOption("Paste")
-		map_path_input_menu:SetVisible(false)
-		--]]
-editor.pencil_mode = loveframes.Create("multichoice", editor.frame)
-editor.pencil_mode:SetPos(80, 120):SetWidth(80)
-for k, v in pairs(editor.tool_option) do
-	editor.pencil_mode:AddChoice(k)
+editor.map_path:SetPos(5, 30):SetWidth(155)
+
+editor.browsebutton = loveframes.Create("button", editor.frame)
+editor.browsebutton:SetText("...")
+editor.browsebutton:SetPos(164, 30):SetSize(33, 20)
+editor.browsebutton:SetTooltip("Selecionar mapa...")
+editor.browsebutton.OnClick = function(object)
+	editor.open_map_dialog()
 end
-editor.pencil_mode:SetChoice("Pencil")
-editor.pencil_mode.OnChoiceSelected = function(object, choice)
-	local mode = editor.tool_option[choice] or "pencil"
-	--mapdata_toolmode(mode)
-end
-editor.pencil_label = loveframes.Create("label", editor.frame)
-editor.pencil_label:SetPos(5, 120 + 2):SetText("Tool Mode: ")
---[[
-		local pencil_button = loveframes.Create("button", editor_frame)
-		pencil_button:SetPos(5,95):SetText("Pencil"):SetWidth(40)
-		pencil_button.OnClick = function(object)
-			mapdata_toolmode("pencil")
-		end
-		
-		local rectangle_button = loveframes.Create("button", editor_frame)
-		rectangle_button:SetPos(55,95):SetText("Rectangle"):SetWidth(40)
-		rectangle_button.OnClick = function(object)
-			mapdata_toolmode("rectangle")
-		end
-		
-		
-		local colorfill_button = loveframes.Create("button", editor_frame)
-		colorfill_button:SetPos(105,95):SetText("Color Fill"):SetWidth(40)
-		colorfill_button.OnClick = function(object)
-			mapdata_toolmode("fill")
-		end--]]
-editor.savebutton = loveframes.Create("button", editor.frame)
-editor.savebutton:SetText("Save")
-editor.savebutton:SetWidth(40)
-editor.savebutton:SetPos(editor.map_path:GetWidth() + 10, 30)
-editor.savebutton:SetPos(50, 60)
-editor.savebutton:SetEnabled(false)
-editor.savebutton.OnClick = function(object)
-	--tile_panel.refresh()
-end
+
 editor.loadbutton = loveframes.Create("button", editor.frame)
 editor.loadbutton:SetText("Load")
-editor.loadbutton:SetWidth(40)
-editor.loadbutton:SetPos(5, 60)
+editor.loadbutton:SetWidth(58)
+editor.loadbutton:SetPos(5, 58)
 editor.loadbutton.OnClick = function(object)
 	local path = editor.map_path:GetText()
 	if client.map then
@@ -158,33 +109,37 @@ editor.loadbutton.OnClick = function(object)
 			client.map:shiftRender()
 		end
 	end
-	--editor.tile_panel:Clear()
-	--editor.tile_panel:Fill()
 end
+
+editor.savebutton = loveframes.Create("button", editor.frame)
+editor.savebutton:SetText("Save")
+editor.savebutton:SetWidth(58)
+editor.savebutton:SetPos(68, 58)
+editor.savebutton:SetEnabled(false)
+editor.savebutton.OnClick = function(object)
+	--tile_panel.refresh()
+end
+
+editor.settingsbutton = loveframes.Create("button", editor.frame)
+editor.settingsbutton:SetWidth(66)
+editor.settingsbutton:SetText("Settings")
+editor.settingsbutton:SetPos(131, 58)
+editor.settingsbutton:SetProperty("target", editor.settings_panel)
+editor.settingsbutton.OnClick = function(object)
+	--local target = object:GetProperty("target")
+	--target:SetVisible(true)
+	--target:Center()
+end
+
 editor.exitbutton = loveframes.Create("button", editor.frame)
 editor.exitbutton:SetText("Exit")
-editor.exitbutton:SetWidth(40)
+editor.exitbutton:SetWidth(58)
 editor.exitbutton:SetPos(5, 85)
 function editor.exitbutton:OnClick()
 	client.scene.switch("lobby")
 end
 
-editor.settings_panel = loveframes.Create("frame")
-editor.settings_panel:SetVisible(false)
-editor.settings_panel.OnClose = function(object)
-	object:SetVisible(false)
-	return false
-end
-editor.settingsbutton = loveframes.Create("button", editor.frame)
-editor.settingsbutton:SetWidth(60)
-editor.settingsbutton:SetText("Settings")
-editor.settingsbutton:SetPos(95, 60)
-editor.settingsbutton:SetProperty("target", editor.settings_panel)
-editor.settingsbutton.OnClick = function(object)
-	local target = object:GetProperty("target")
-	target:SetVisible(true)
-	target:Center()
-end
+--[[
 editor.resolution_picker = loveframes.Create("multichoice", editor.settings_panel)
 editor.resolution_picker:SetPos(80, 30)
 editor.resolution_picker:SetWidth(80)
@@ -202,6 +157,7 @@ end
 editor.resolution_label = loveframes.Create("label", editor.settings_panel)
 editor.resolution_label:SetText("Resolution: ")
 editor.resolution_label:SetPos(10, 35)
+]]
 
 
 editor.frame:SetState("editor")

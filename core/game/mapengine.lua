@@ -743,8 +743,6 @@ function MapObject:read(path, noindexing)
 	-----------------------------------------------------------------------------------------------------------
 	-- Tileset load.
 	local tileset_path = string.format("gfx/tiles/%s", mapdata.tileset)
-	--local tileset_raw = fs:loadImage(path)
-	--local tileset_atlas = fs:loadImageData(tileset_path)
 	local tileset_atlas = love.image.newImageData(tileset_path)
 	local w, h = tileset_atlas:getDimensions()
 	local s = mapdata.tile_size
@@ -782,7 +780,6 @@ function MapObject:read(path, noindexing)
 		if e.type == 22 then
 			local sprite_path = (e.string_settings[1] or "gfx/cs2d.bmp")
 			if not mapdata.gfx.entity[sprite_path] then -- Try to load a new image
-				--if fs:isFile(sprite_path) then -- Check if file exists
 				-- Check if file exists
 				if love.filesystem.getInfo(sprite_path) then
 					local pixelFormat = love.image.newImageData(sprite_path):getFormat()
@@ -809,7 +806,6 @@ function MapObject:read(path, noindexing)
 	-- Background load.
 	local background_path = string.format("gfx/backgrounds/%s", mapdata.background_file)
 	if (mapdata.background_file ~= "") and love.filesystem.getInfo(path) then --fs:isFile(background_path) then
-		--mapdata.gfx.background = fs:loadImage(background_path)
 		local status, background = pcall(love.graphics.newImage, background_path)
 		if status then
 			mapdata.gfx.background = background
@@ -834,49 +830,6 @@ function MapObject:read(path, noindexing)
 	print("pixel size:", mapdata.width * mapdata.tile_size, mapdata.height * mapdata.tile_size)
 	print("entities: ", mapdata.entity_count)
 end
-
--- Methods
---[[
-function MapObject:colorfill(x, y, replace)
-	--local color = mapdata_gettile(x,y)
-	if color == replace then return end
-	local q = {}
-	local t = self._mapfile.map
-	
-	
-	table.insert(q, {x=x,y=y})
-	for index, n in ipairs(q) do
-		
-		local w, e  = {},{}
-		
-		w.x, w.y = n.x, n.y
-		e.x, e.y = n.x, n.y
-		
-		while t[w.x][w.y] == color and w.x > 0 do
-			w.x = w.x - 1
-		end
-		
-		while t[e.x][e.y] == color and e.x < mapfile.height do
-			e.x = e.x + 1
-		end
-
-		for i = w.x+1, e.x-1 do
-			mapdata_settile(i, n.y, replace)
-			
-			local north = min(n.y + 1, mapfile.height)
-			local south = max(n.y - 1, 0)
-			
-			if t[i][south]==color then
-				table.insert(q,{x = i, y = south})
-			end
-			
-			if t[i][north]==color then
-				table.insert(q,{x = i, y = north})
-			end
-		end		
-	end
-end
---]]
 
 function MapObject:random()
 	for x = 0, self._mapdata.width do
@@ -966,6 +919,14 @@ function MapObject:getEntitiesAt(x, y)
 	local mapdata = self._mapdata
 	if mapdata and mapdata.entity_cache and mapdata.entity_cache[x] and mapdata.entity_cache[x][y] then
 		return mapdata.entity_cache[x][y]
+	end
+	return {}
+end
+
+function MapObject:getEntityById(entity_id)
+	local mapdata = self._mapdata
+	if mapdata and mapdata.entity_table and mapdata.entity_table[entity_id] then
+		return mapdata.entity_table[entity_id]
 	end
 	return {}
 end
@@ -1497,29 +1458,6 @@ function MapObject:draw_entity(e)
 	love.graphics.setColor(love.math.colorFromBytes(red, green, blue, alpha))
 	love.graphics.draw(sprite, sx, sy, angle, scale_x, scale_y, width / 2, height / 2)
 	-- Reset de shader/blend/cor feito em draw_entities() após o loop completo
-end
-
-function MapObject:draw_dynwall(e)
-	if e.state == 0 then return end -- Open / hidden when state is 0
-	local tile_index = e.number_settings[1] or 0
-	local tile_img = self._mapdata and self._mapdata.gfx and self._mapdata.gfx.tile and
-		self._mapdata.gfx.tile[tile_index]
-	if tile_img then
-		-- strs[1] is transparency: "" or nil → fully opaque (1.0)
-		local alpha_str = e.string_settings[1]
-		local alpha = (alpha_str and alpha_str ~= "") and tonumber(alpha_str) or 1.0
-		local w = math.max(1, e.number_settings[4] or 1)
-		local h = math.max(1, e.number_settings[5] or 1)
-		love.graphics.setColor(1, 1, 1, alpha)
-		for tx = 0, w - 1 do
-			for ty = 0, h - 1 do
-				love.graphics.draw(tile_img, (e.x + tx) * 32, (e.y + ty) * 32)
-			end
-		end
-		love.graphics.setColor(1, 1, 1, 1)
-	else
-		print(string.format("DynWall: tile_img nil for entity at (%d,%d), tile_index=%d", e.x, e.y, tile_index))
-	end
 end
 
 function MapObject:draw_entities(client)

@@ -29,6 +29,7 @@ return function(loveframes)
 		self.enabled = true
 		self.internal = false
 		self.choices = {}
+		self.internals = {}
 		self.listheight = nil
 
 		self:SetDrawFunc()
@@ -54,6 +55,10 @@ return function(loveframes)
 			self.y = self.parent.y + self.staticy
 		end
 
+		for index, internal in ipairs(self.internals) do
+			internal:update()
+		end
+
 		if update then
 			update(self, dt)
 		end
@@ -66,29 +71,32 @@ return function(loveframes)
 	function newobject:mousepressed(x, y, button)
 		if not self:OnState() then return end
 		if not self:isUpdating() then return end
+		local list = self.internals[1]
 		local hover = self.hover
-		local haslist = self.haslist
 		local enabled = self.enabled
 
-		if hover and not haslist and enabled and button == 1 then
+		if hover and not list and enabled and button == 1 then
+			self:MoveToTop()
 			local baseparent = self:GetBaseParent()
 			if baseparent and baseparent.type == "frame" then
 				baseparent:MakeTop()
 			end
-			self.haslist = true
-			self.list = loveframes.objects["multichoicelist"]:new(self)
-			self.list:SetState(self.state)
-			loveframes.downobject = self
+			self.internals[1] = loveframes.objects["multichoicelist"]:new(self)
+			return
+		end
+
+		if list then
+			list:mousepressed(x, y, button)
 		end
 	end
 
-	--[[---------------------------------------------------------
-	- func: mousereleased(x, y, button)
-	- desc: called when the player releases a mouse button
---]] ---------------------------------------------------------
 	function newobject:mousereleased(x, y, button)
 		if not self:OnState() then return end
 		if not self:isUpdating() then return end
+		local list = self.internals[1]
+		if list then
+			list:mousereleased(x, y, button)
+		end
 	end
 
 	--[[---------------------------------------------------------
@@ -135,11 +143,11 @@ return function(loveframes)
 --]] ---------------------------------------------------------
 	function newobject:SelectChoice(choice)
 		local onchoiceselected = self.OnChoiceSelected
-
+		local list = self.internals[1]
 		self.choice = choice
 
-		if self.list then
-			self.list:Close()
+		if list then
+			list:Close()
 		end
 
 		if onchoiceselected then

@@ -91,7 +91,11 @@ function server.load(map_name)
 	-- Add the entity state to the sync table
 	local entities     = server.map:getEntities()
 	for _, e in ipairs(entities) do
-		share.entities[e.index] = e.state
+		if e.state then
+			share.entities[e.index] = {
+				state = e.state
+			}
+		end
 	end
 	share.config       = {
 		--//-----------------------------------------------------------------//--
@@ -1003,7 +1007,6 @@ function server.setpos(peer_id, x, y)
 end
 
 function server.trigger(target_names, source_id, x, y, active_set)
-	print(target_names, source_id)
 	if not target_names or target_names == "" or not server.map then return end
 	source_id = source_id or 0
 	active_set = active_set or {}

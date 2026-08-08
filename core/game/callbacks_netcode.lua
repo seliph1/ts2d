@@ -1,208 +1,219 @@
 return function(client)
----------- module start ----------
+	---------- module start ----------
 
-local home = client.home
-local share = client.share
-local share_lerp = client.share_lerp
+	local home = client.home
+	local share = client.share
+	local share_lerp = client.share_lerp
 
---------------------------------------------------------------------------------------------------
---client callbacks--------------------------------------------------------------------------------
---------------------------------------------------------------------------------------------------
-function client.connect_attempt()
-	local ui = require "core.interface.ui"
+	local serpent = require "lib.serpent"
 
-	-- Reset map/physics worlds
-	client.map:clear()
-	client.world:clear()
-	
-	-- Reset chat
-	ui.chat_log:Clear()
+	--------------------------------------------------------------------------------------------------
+	--client callbacks--------------------------------------------------------------------------------
+	--------------------------------------------------------------------------------------------------
+	function client.connect_attempt()
+		local ui = require "core.interface.ui"
 
-	-- Set up initial values for client
-	home.screenh = love.graphics.getWidth()
-	home.screenw = love.graphics.getHeight()
-	home.attack = false
-	home.attack2 = false
-	home.attack3 = false
-	home.targetX = 0
-	home.targetY = 0
-	home._attack1Timer = 0
-	home._attack2Timer = 0
-end
+		-- Reset map/physics worlds
+		client.map:clear()
+		client.world:clear()
 
---- Callback for when client sucessfully connects to server
-function client.connect(peer_id)
-end
+		-- Reset chat
+		ui.chat_log:Clear()
 
---- Callback for when client disconnects from server
-function client.disconnect(reason)
-	client.stopListenServer()   -- se estávamos hospedando, derruba o listen server
-	local LF = require "lib.loveframes"
-	LF.SetState()
-	client.map:clear()
-	client.scene.switch("lobby")
-
-	if reason then
-		client.parse("warning "..reason)
+		-- Set up initial values for client
+		home.screenh = love.graphics.getWidth()
+		home.screenw = love.graphics.getHeight()
+		home.attack = false
+		home.attack2 = false
+		home.attack3 = false
+		home.targetX = 0
+		home.targetY = 0
+		home._attack1Timer = 0
+		home._attack2Timer = 0
 	end
-end
 
--- Callback for when client joins the server
-function client.join(peer_id)
-	-- Only start the engine on join
-	local LF = require "lib.loveframes"
-	LF.SetState("game")
-	client.scene.switch("game")
-
-	local player = share.players[peer_id]
-	if player then
-		-- void
+	--- Callback for when client sucessfully connects to server
+	function client.connect(peer_id)
 	end
-end
 
---- Callback for information in sync with server
----@param payload table
-function client.changing(payload)
-	if payload.players then
-		-- Update players position
-		for peer_id in pairs(payload.players) do
-			local player
-			local player_payload = payload.players[peer_id]
-			if share.players and share.players[peer_id] then
-				player = share.players[peer_id]
-			end
+	--- Callback for when client disconnects from server
+	function client.disconnect(reason)
+		client.stopListenServer() -- se estávamos hospedando, derruba o listen server
+		local LF = require "lib.loveframes"
+		LF.SetState()
+		client.map:clear()
+		client.scene.switch("lobby")
 
-			if client.setmoney then
-				if player and player.m and player_payload.m then
-					client.setmoney(peer_id, player.m, player_payload.m)
+		if reason then
+			client.parse("warning " .. reason)
+		end
+	end
+
+	-- Callback for when client joins the server
+	function client.join(peer_id)
+		-- Only start the engine on join
+		local LF = require "lib.loveframes"
+		LF.SetState("game")
+		client.scene.switch("game")
+
+		local player = share.players[peer_id]
+		if player then
+			-- void
+		end
+	end
+
+	--- Callback for information in sync with server
+	---@param payload table
+	function client.changing(payload)
+		if payload.players then
+			-- Update players position
+			for peer_id in pairs(payload.players) do
+				local player
+				local player_payload = payload.players[peer_id]
+				if share.players and share.players[peer_id] then
+					player = share.players[peer_id]
+				end
+
+				if client.setmoney then
+					if player and player.m and player_payload.m then
+						client.setmoney(peer_id, player.m, player_payload.m)
+					end
 				end
 			end
 		end
 	end
-end
 
---- Callback for information synced with server
----@param payload table
-function client.changed(payload)
-	if payload.players then
-		-- Update players position
-		for peer_id in pairs(payload.players) do
-			local player
-			local player_payload = payload.players[peer_id]
-			if share.players and share.players[peer_id] then
-				player = share.players[peer_id]
-			end
-			-- This is the data that will be fed to share anyways, so we use it here
-			if player and not client.world:hasItem(player) then
-				client.world:add(player, 0, 0, player.size, player.size)
-			end
+	--- Callback for information synced with server
+	---@param payload table
+	function client.changed(payload)
+		if payload.players then
+			-- Update players position
+			for peer_id in pairs(payload.players) do
+				local player
+				local player_payload = payload.players[peer_id]
+				if share.players and share.players[peer_id] then
+					player = share.players[peer_id]
+				end
+				-- This is the data that will be fed to share anyways, so we use it here
+				if player and not client.world:hasItem(player) then
+					client.world:add(player, 0, 0, player.size, player.size)
+				end
 
-			-- Update collision frames
-			if player then
-				local half = math.floor(player.size/2)
-				client.world:update(player, player.x - half, player.y - half, player.size, player.size)
-			end
+				-- Update collision frames
+				if player then
+					local half = math.floor(player.size / 2)
+					client.world:update(player, player.x - half, player.y - half, player.size, player.size)
+				end
 
-			-- Update item acquisitions/subtractions
-			if client.collect and client.discard then
-				if player_payload.i then
-					-- Player inventory changed
-					for item_type, itemobject in pairs(player_payload.i) do
-						if itemobject ~= client.DIFF_NIL then
-							client.collect(peer_id, item_type)
+				-- Update item acquisitions/subtractions
+				if client.collect and client.discard then
+					if player_payload.i then
+						-- Player inventory changed
+						for item_type, itemobject in pairs(player_payload.i) do
+							if itemobject ~= client.DIFF_NIL then
+								client.collect(peer_id, item_type)
+							else
+								client.discard(peer_id, item_type)
+							end
+						end
+					end
+
+					if player_payload.e then
+						-- Player equipment changed
+						for item_type, itemobject in pairs(player_payload.e) do
+							if itemobject ~= client.DIFF_NIL then
+								client.collect(peer_id, item_type)
+							else
+								client.discard(peer_id, item_type)
+							end
+						end
+					end
+
+					if player_payload.a then
+						local armor = player_payload.a
+						-- Player armor changed
+						if (armor ~= client.DIFF_NIL and armor ~= 0) then
+							client.collect(peer_id, player_payload.a)
 						else
-							client.discard(peer_id, item_type)
+							--client.discard(peer_id, )
 						end
 					end
 				end
 
-				if player_payload.e then
-					-- Player equipment changed
-					for item_type, itemobject in pairs(player_payload.e) do
-						if itemobject ~= client.DIFF_NIL then
-							client.collect(peer_id, item_type)
-						else
-							client.discard(peer_id, item_type)
-						end
+				-- Check if player held item is changed
+				if player_payload.ih then
+					if client.select then
+						client.select(peer_id, player.ih)
 					end
 				end
+			end -- for peer_id in pairs(payload.players)
+		end -- if payload.players
 
-				if player_payload.a then
-					local armor = player_payload.a
-					-- Player armor changed
-					if (armor ~= client.DIFF_NIL and armor ~= 0) then
-						client.collect(peer_id, player_payload.a)
-					else
-						--client.discard(peer_id, )
-					end
+		if payload.items then
+			-- void
+		end
+
+		if payload.entities then
+			for entity_index, data in pairs(payload.entities) do
+				local entity = client.map:getEntityById(entity_index)
+				local state = data.state
+				print(entity_index, state)
+				if type(state) == "number" and entity then
+					entity:setState(state)
 				end
 			end
-
-			-- Check if player held item is changed
-			if player_payload.ih then
-				if client.select then
-					client.select(peer_id, player.ih)
-				end
-			end
-
-		end -- for peer_id in pairs(payload.players)
-	end -- if payload.players
-
-	if payload.items then
-		-- void
+		end
 	end
-end
 
-function client.peer_connected(peer_id)
-end
-
-function client.peer_disconnected(peer_id)
-	if not (share.players and share_lerp.players) then return end
-
-	-- Store it temporarily
-	local player = share.players[peer_id]
-	local player_s = share_lerp.players[peer_id]
-
-	-- Remove it from the interpolation table
-	share_lerp.players[peer_id] = nil
-	share.players[peer_id] = nil
-
-	-- Remove it from the collision world if possible
-	if player and client.world:hasItem(player) then
-		client.world:remove(player)
+	function client.peer_connected(peer_id)
 	end
-end
 
-function client.peer_joined(peer_id)
-	--print(peer_id.. " joined")
-end
+	function client.peer_disconnected(peer_id)
+		if not (share.players and share_lerp.players) then return end
 
--- Callback for inputs being pressed
-function client.input_response(peer_id, input)
-	if input["use"] then
-		-- void
+		-- Store it temporarily
+		local player = share.players[peer_id]
+		local player_s = share_lerp.players[peer_id]
+
+		-- Remove it from the interpolation table
+		share_lerp.players[peer_id] = nil
+		share.players[peer_id] = nil
+
+		-- Remove it from the collision world if possible
+		if player and client.world:hasItem(player) then
+			client.world:remove(player)
+		end
 	end
-end
 
-function client.warning(message)
-	client.parse("warning "..message)
-end
+	function client.peer_joined(peer_id)
+		--print(peer_id.. " joined")
+	end
 
----Callback for messages/packets received by server
----@param message string
-function client.receive(message)
-	-- Send the message to the action parser
-    client.parse(message)
-end
+	-- Callback for inputs being pressed
+	function client.input_response(peer_id, input)
+		if input["use"] then
+			-- void
+		end
+	end
 
+	function client.warning(message)
+		client.parse("warning " .. message)
+	end
 
-function client.tick(dt)
-	if client.joined then
-		client.predict_player(client.id, dt)
+	---Callback for messages/packets received by server
+	---@param message string
+	function client.receive(message)
+		-- Send the message to the action parser
+		client.parse(message)
+	end
 
-		client.run_player_timers(dt)
-    end
-end
+	function client.tick(dt)
+		if client.joined then
+			client.predict_player(client.id, dt)
 
----------- module end ------------
+			client.run_player_timers(dt)
+		end
+	end
+
+	---------- module end ------------
 end

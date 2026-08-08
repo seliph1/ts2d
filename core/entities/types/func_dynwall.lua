@@ -11,7 +11,7 @@ FuncDynWall.__index = FuncDynWall
 function FuncDynWall.new(data)
 	local self = Entity.new(data)
 	setmetatable(self, FuncDynWall)
-	self.state = data.state or 1 -- 1 = closed (visible/solid), 0 = open (hidden/passable)
+	self.state = data.state or 0 -- 1 = closed (visible/solid), 0 = open (hidden/passable)
 	return self
 end
 
@@ -35,7 +35,13 @@ function FuncDynWall:getPhysicsBody(map, client)
 end
 
 function FuncDynWall:draw(mapengine, client)
-	if self:getState(client) == 0 then return end
+	--if self:getState(client) == 1 then return end
+	if self.state == 1 then return end
+
+	if client.debug_level == 2 then
+		love.graphics.setColor(1, 1, 1, 1)
+		love.graphics.rectangle("line", self.x * 32, self.y * 32, 32, 32)
+	end
 
 	local tile_index = self:getInt(1)
 	local mapdata = mapengine._mapdata
@@ -44,16 +50,17 @@ function FuncDynWall:draw(mapengine, client)
 	if tile_img then
 		local alpha_str = self:getStr(1)
 		local alpha = (alpha_str and alpha_str ~= "") and tonumber(alpha_str) or 1.0
-		local w = math.max(1, self:getInt(4))
-		local h = math.max(1, self:getInt(5))
+		--print(alpha_str, alpha)
+
+		alpha = 1
+
 
 		love.graphics.setColor(1, 1, 1, alpha)
-		for tx = 0, w - 1 do
-			for ty = 0, h - 1 do
-				love.graphics.draw(tile_img, (self.x + tx) * 32, (self.y + ty) * 32)
-			end
-		end
+		love.graphics.setBlendMode("alpha")
+		love.graphics.draw(tile_img, self.x * 32, self.y * 32)
+
 		love.graphics.setColor(1, 1, 1, 1)
+		love.graphics.print(alpha_str .. "|" .. alpha, self.x * 32, self.y * 32)
 	end
 end
 

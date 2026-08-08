@@ -34,9 +34,7 @@ function FuncTeleport:getPhysicsBody(map)
 	}
 end
 
-function FuncTeleport:onWalk(player, peer_id, server)
-	if self:isDisabled(server) then return end
-
+function FuncTeleport:onWalk(player)
 	local dest_tx = self:getInt(1)
 	local dest_ty = self:getInt(2)
 	local dest_x = dest_tx * 32 + 16

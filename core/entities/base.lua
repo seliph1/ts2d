@@ -37,7 +37,6 @@ function Entity.new(data)
 	self.number_settings = data.number_settings or { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
 	self.string_settings = data.string_settings or { "", "", "", "", "", "", "", "", "", "" }
 	self.object_type = "entity"
-	self.state = data.state or 0
 	self.index = data.index or 0
 	self.depth = data.depth or 0
 
@@ -173,6 +172,10 @@ function Entity:getState(context)
 		if net.state ~= nil then return net.state end
 	end
 	return self.state
+end
+
+function Entity:setState(state)
+	self.state = state
 end
 
 return Entity

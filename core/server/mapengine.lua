@@ -666,6 +666,7 @@ function MapObject:getEntities(entity_type)
 					y = e.y,
 					index = e.index,
 					trigger = e.trigger,
+					state = e.state,
 					string_settings = e.string_settings,
 					number_settings = e.number_settings,
 				})
@@ -678,6 +679,7 @@ function MapObject:getEntities(entity_type)
 				y = e.y,
 				trigger = e.trigger,
 				index = e.index,
+				state = e.state,
 				string_settings = e.string_settings,
 				number_settings = e.number_settings,
 			})
@@ -785,48 +787,6 @@ function MapObject:getTileset()
 	return self._mapdata.tileset
 end
 
--- Methods
---[[
-function MapObject:colorfill(x, y, replace)
-	--local color = mapdata_gettile(x,y)
-	if color == replace then return end
-	local q = {}
-	local t = self._mapfile.map
-	
-	
-	table.insert(q, {x=x,y=y})
-	for index, n in ipairs(q) do
-		
-		local w, e  = {},{}
-		
-		w.x, w.y = n.x, n.y
-		e.x, e.y = n.x, n.y
-		
-		while t[w.x][w.y] == color and w.x > 0 do
-			w.x = w.x - 1
-		end
-		
-		while t[e.x][e.y] == color and e.x < mapfile.height do
-			e.x = e.x + 1
-		end
-
-		for i = w.x+1, e.x-1 do
-			mapdata_settile(i, n.y, replace)
-			
-			local north = math.min(n.y + 1, mapfile.height)
-			local south = math.max(n.y - 1, 0)
-			
-			if t[i][south]==color then
-				table.insert(q,{x = i, y = south})
-			end
-			
-			if t[i][north]==color then
-				table.insert(q,{x = i, y = north})
-			end
-		end		
-	end
-end
---]]
 function MapObject:random()
 	for x = 0, self._mapdata.width do
 		for y = 0, self._mapdata.height do
@@ -847,8 +807,6 @@ function MapObject:settile(x, y, tile_id)
 	end
 	local property = self._mapdata.tile[tile_id].property
 	local height = TILE_MODE_HEIGHT[property]
-	--self._mapdata.shadow_mask:setPixel(x, y, height, height, height)
-	--mapdata_shadow_refresh()
 end
 
 function MapObject:gettile(x, y) -- coords in tiles

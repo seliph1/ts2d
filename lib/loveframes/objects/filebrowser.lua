@@ -421,7 +421,7 @@ return function(loveframes)
 		for _, pat in ipairs(patterns) do
 			self.filter_choice:AddChoice(pat)
 		end
-		self.filter_choice:SetChoice("Todos os Arquivos (*.*)")
+		self.filter_choice:SetChoice(patterns[1] or "Todos os Arquivos (*.*)")
 		self:RefreshFileList()
 		return self
 	end
@@ -479,6 +479,10 @@ return function(loveframes)
 			end
 			frame:Remove()
 		end)
+
+		if loveframes.state and loveframes.state ~= "none" then
+			frame:SetState(loveframes.state)
+		end
 
 		return fb, frame
 	end
