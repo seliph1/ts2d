@@ -64,6 +64,11 @@ return function(loveframes)
 		if not self:IsVisible() then return end
 
 		self:SetDrawOrder()
+		if self == loveframes.modalobject then
+			love.graphics.setColor(0, 0, 0, 0.5)
+			love.graphics.rectangle("fill", 0, 0, love.graphics.getDimensions())
+			love.graphics.setColor(0, 0, 0, 0)
+		end
 		local drawfunc = self.Draw or self.drawfunc
 		if drawfunc then
 			drawfunc(self)

@@ -2670,12 +2670,12 @@ end
 	end
 
 	function skin.tree(object)
+		local font = object.font or loveframes.basicfont
+		local nodes = object.visiblenodes
 		local x = object:GetX()
 		local y = object:GetY()
 		local width = object:GetWidth()
 		local height = object:GetHeight()
-		local font = object.font or loveframes.basicfont
-		local nodes = object.visiblenodes
 		if not nodes then return end
 
 		for _, node in ipairs(nodes) do
@@ -2683,18 +2683,18 @@ end
 			if object.selectednode == node then
 				local twidth = font:getWidth(node.text)
 				local theight = font:getHeight(node.text)
-				love.graphics.setColor(0.4, 0.55, 1, 1)
-				love.graphics.rectangle("fill", node.textx, node.texty, twidth, theight)
+				love.graphics.setColor(skin.controls.droplist_body_active_color)
+				love.graphics.rectangle("fill", x, node.texty, width, theight)
 			end
+			-- text
+			love.graphics.setFont(font)
+			love.graphics.setColor(skin.controls.droplist_text_active_color)
+			skin.PrintText(node.text, node.textx, node.texty)
 			-- icon
 			if node.icon then
 				love.graphics.setColor(1, 1, 1, 1)
 				love.graphics.draw(node.icon, node.iconx, node.icony)
 			end
-			-- text
-			love.graphics.setFont(font)
-			love.graphics.setColor(0, 0, 0, 1)
-			skin.PrintText(node.text, node.textx, node.texty)
 			-- open/close button
 			if node.haschildren then
 				local image

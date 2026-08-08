@@ -286,6 +286,18 @@ return function(loveframes)
 		self:RefreshFileList()
 	end
 
+	local function hasSubdirectories(path)
+		local items = love.filesystem.getDirectoryItems(path)
+		for _, item in ipairs(items) do
+			local fullpath = (path == "" and item) or (path .. "/" .. item)
+			local info = love.filesystem.getInfo(fullpath)
+			if info and info.type == "directory" then
+				return true
+			end
+		end
+		return false
+	end
+
 	--[[---------------------------------------------------------
 	- func: PopulateNode(node)
 	- desc: lists subdirs inside node
@@ -310,8 +322,10 @@ return function(loveframes)
 			child.OnOpen = function(n)
 				self:PopulateNode(n)
 			end
-			-- Adiciona um nó dummy para garantir que o botão de expandir apareça
-			child:AddNode("")
+			-- Só adiciona o nó dummy se a pasta realmente tiver subdiretórios
+			if hasSubdirectories(child.path) then
+				child:AddNode("")
+			end
 		end
 	end
 
