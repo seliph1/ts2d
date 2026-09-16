@@ -14,6 +14,7 @@ local Database = require "core.entities.database"
 ---@field number_settings table<number, number>
 ---@field string_settings table<number, string>
 ---@field object_type string
+---@field ct number
 ---@field disabled boolean
 ---@field state any
 ---@field index number
@@ -37,6 +38,7 @@ function Entity.new(data)
 	self.number_settings = data.number_settings or { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
 	self.string_settings = data.string_settings or { "", "", "", "", "", "", "", "", "", "" }
 	self.object_type = "entity"
+	self.ct = 3 -- Collision type 3: entity/obstacle
 	self.index = data.index or 0
 	self.depth = data.depth or 0
 
@@ -135,6 +137,13 @@ end
 ---@param map table
 function Entity:onTouch(other, map)
 	-- Virtual method
+end
+
+--- Checks if the entity is currently solid to physics
+---@param context table|nil
+---@return boolean
+function Entity:isSolid(context)
+	return false
 end
 
 --- Returns physics body / bounding box data for Bump.lua integration

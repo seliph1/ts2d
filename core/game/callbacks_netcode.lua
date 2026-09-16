@@ -157,9 +157,12 @@ return function(client)
 			for entity_index, data in pairs(payload.entities) do
 				local entity = client.map:getEntityById(entity_index)
 				local state = data.state
-				print(entity_index, state)
+				--print(entity_index, state)
 				if type(state) == "number" and entity then
 					entity:setState(state)
+					if client.map and client.map.updateEntityHeightMap then
+						client.map:updateEntityHeightMap(entity)
+					end
 				end
 			end
 		end

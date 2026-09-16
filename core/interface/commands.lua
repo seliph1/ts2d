@@ -248,6 +248,212 @@ local commands = {
 		end,
 	},
 
+	gc = {
+		action = function()
+			local LF            = require "lib.loveframes"
+			local LG            = love.graphics
+			local width, height = 340, 230
+			local frame         = LF.Create("frame")
+			frame:SetName("Lua Garbage Collector Monitor")
+				:SetSize(width, height)
+				:Center()
+				:SetState("*")
+				:SetDraggable(true)
+
+			local btnCollect   = LF.Create("button", frame):SetSize(75, 24):SetPos(10, 195):SetText("Collect")
+			local btnStep      = LF.Create("button", frame):SetSize(75, 24):SetPos(90, 195):SetText("Step")
+			local btnStop      = LF.Create("button", frame):SetSize(75, 24):SetPos(170, 195):SetText("Stop")
+			local btnRestart   = LF.Create("button", frame):SetSize(75, 24):SetPos(250, 195):SetText("Restart")
+
+			btnCollect.OnClick = function() collectgarbage("collect") end
+			btnStep.OnClick    = function() collectgarbage("step", 100) end
+			btnStop.OnClick    = function() collectgarbage("stop") end
+			btnRestart.OnClick = function() collectgarbage("restart") end
+
+			local history      = {}
+			local maxHistory   = 60
+			local peakKB       = 0
+			local timer        = 0
+
+			--local oldDraw      = frame.Draw
+			frame.DrawOver     = function(self)
+				love.graphics.setFont(LF.basicfont)
+				local x, y = self:GetPos()
+				local w, h = self:GetDimensions()
+
+				local countKB = collectgarbage("count")
+				local countMB = countKB / 1024
+				if countKB > peakKB then peakKB = countKB end
+
+				timer = timer + love.timer.getDelta()
+				if timer >= 0.1 then
+					timer = 0
+					table.insert(history, countKB)
+					if #history > maxHistory then
+						table.remove(history, 1)
+					end
+				end
+
+
+				LG.setColor(0, 0, 0, 1)
+				LG.print(string.format("Memory: %.2f MB (%.0f KB)", countMB, countKB), x + 15, y + 32)
+				LG.print(string.format("Peak: %.2f MB", peakKB / 1024), x + 210, y + 32)
+
+				-- Memory History Graph Box
+				local gx, gy, gw, gh = x + 15, y + 55, w - 30, 130
+				LG.setColor(0, 0, 0, 1)
+				LG.rectangle("fill", gx, gy, gw, gh)
+				LG.setColor(0.4, 0.4, 0.4, 0.8)
+				LG.rectangle("line", gx, gy, gw, gh)
+
+				if #history > 1 then
+					local minVal, maxVal = history[1], history[1]
+					for _, v in ipairs(history) do
+						if v < minVal then minVal = v end
+						if v > maxVal then maxVal = v end
+					end
+					if maxVal == minVal then maxVal = minVal + 1 end
+
+					local stepX = gw / (maxHistory - 1)
+					LG.setLineWidth(1.5)
+					for i = 1, #history - 1 do
+						local val1 = history[i]
+						local val2 = history[i + 1]
+
+						local x1 = gx + (i - 1) * stepX
+						local y1 = gy + gh - ((val1 - minVal) / (maxVal - minVal)) * (gh - 14) - 7
+						local x2 = gx + i * stepX
+						local y2 = gy + gh - ((val2 - minVal) / (maxVal - minVal)) * (gh - 14) - 7
+
+						if val2 < val1 then
+							LG.setColor(0.2, 0.9, 0.3, 1)
+						else
+							LG.setColor(0.9, 0.7, 0.2, 1)
+						end
+						LG.line(x1, y1, x2, y2)
+					end
+					LG.setLineWidth(1)
+
+					LG.setColor(0.7, 0.7, 0.7, 0.8)
+					LG.print(string.format("%.0f KB", maxVal), gx + 5, gy + 3)
+					LG.print(string.format("%.0f KB", minVal), gx + 5, gy + gh - 15)
+				end
+				LG.setColor(1, 1, 1, 1)
+			end
+		end,
+		syntax = "gc",
+	},
+
+	fps = {
+		action = function()
+			local LF            = require "lib.loveframes"
+			local LG            = love.graphics
+			local width, height = 340, 230
+			local frame         = LF.Create("frame")
+			frame:SetName("FPS & Performance Monitor")
+				:SetSize(width, height)
+				:Center()
+				:SetState("*")
+				:SetDraggable(true)
+
+			local btnReset   = LF.Create("button", frame):SetSize(90, 24):SetPos(10, 195):SetText("Reset Stats")
+			local btnVSync   = LF.Create("button", frame):SetSize(100, 24):SetPos(110, 195):SetText("Toggle VSync")
+
+			local history    = {}
+			local maxHistory = 60
+			local timer      = 0
+			local minFPS     = 999
+			local maxFPS     = 0
+
+			btnReset.OnClick = function()
+				history = {}
+				minFPS  = 999
+				maxFPS  = 0
+			end
+
+			btnVSync.OnClick = function()
+				local currentVSync = love.window.getVSync()
+				love.window.setVSync(currentVSync == 0 and 1 or 0)
+			end
+
+			frame.DrawOver   = function(self)
+				love.graphics.setFont(LF.basicfont)
+				local x, y    = self:GetPos()
+				local w, h    = self:GetDimensions()
+
+				local curFPS  = love.timer.getFPS()
+				local deltaMS = love.timer.getDelta() * 1000
+
+				if curFPS > 0 then
+					if curFPS < minFPS then minFPS = curFPS end
+					if curFPS > maxFPS then maxFPS = curFPS end
+				end
+
+				timer = timer + love.timer.getDelta()
+				if timer >= 0.1 then
+					timer = 0
+					table.insert(history, curFPS)
+					if #history > maxHistory then
+						table.remove(history, 1)
+					end
+				end
+
+				LG.setColor(0, 0, 0, 1)
+				LG.print(string.format("FPS: %d (%.1f ms)", curFPS, deltaMS), x + 15, y + 32)
+				LG.print(string.format("Min/Max: %d / %d", (minFPS == 999 and 0 or minFPS), maxFPS), x + 200, y + 32)
+
+				-- Memory / FPS History Graph Box
+				local gx, gy, gw, gh = x + 15, y + 55, w - 30, 130
+				LG.setColor(0, 0, 0, 1)
+				LG.rectangle("fill", gx, gy, gw, gh)
+				LG.setColor(0.4, 0.4, 0.4, 0.8)
+				LG.rectangle("line", gx, gy, gw, gh)
+
+				if #history > 1 then
+					local minVal, maxVal = 0, 120
+					for _, v in ipairs(history) do
+						if v > maxVal then maxVal = v end
+					end
+
+					local stepX = gw / (maxHistory - 1)
+					LG.setLineWidth(1.5)
+					for i = 1, #history - 1 do
+						local val1 = history[i]
+						local val2 = history[i + 1]
+
+						local x1 = gx + (i - 1) * stepX
+						local y1 = gy + gh - ((val1 - minVal) / (maxVal - minVal)) * (gh - 14) - 7
+						local x2 = gx + i * stepX
+						local y2 = gy + gh - ((val2 - minVal) / (maxVal - minVal)) * (gh - 14) - 7
+
+						if val2 >= 55 then
+							LG.setColor(0.2, 0.9, 0.3, 1)
+						elseif val2 >= 30 then
+							LG.setColor(0.9, 0.8, 0.2, 1)
+						else
+							LG.setColor(0.9, 0.2, 0.2, 1)
+						end
+						LG.line(x1, y1, x2, y2)
+					end
+					LG.setLineWidth(1)
+
+					-- 60 FPS reference line
+					local targetY = gy + gh - ((60 - minVal) / (maxVal - minVal)) * (gh - 14) - 7
+					if targetY >= gy and targetY <= gy + gh then
+						LG.setColor(1, 1, 1, 0.3)
+						LG.line(gx, targetY, gx + gw, targetY)
+					end
+
+					LG.setColor(0.7, 0.7, 0.7, 0.8)
+					LG.print(string.format("%d FPS", maxVal), gx + 5, gy + 3)
+					LG.print("0 FPS", gx + 5, gy + gh - 15)
+				end
+				LG.setColor(1, 1, 1, 1)
+			end
+		end,
+		syntax = "fps",
+	},
+
 	luac = {
 		action = function(...)
 			local LF = require "lib.loveframes"

@@ -88,6 +88,11 @@ function server.load(map_name)
 	share.objects      = {}
 	share.entities     = {}
 
+	-- Register physical map entities in the server bump world
+	if server.map.syncEntitiesToWorld then
+		server.map:syncEntitiesToWorld(server.world)
+	end
+
 	-- Add the entity state to the sync table
 	local entities     = server.map:getEntities()
 	for _, e in ipairs(entities) do
@@ -917,6 +922,16 @@ function server.raycast(x1, y1, x2, y2)
 		local info = item_info[i]
 		local object = info.item
 
+		-- check if it's a solid entity (e.g. Func_DynWall)
+		local is_solid_entity = (object.ct == 3 or object.object_type == "entity") and
+			((type(object.isSolid) == "function" and object:isSolid()) or object.isSolid == true)
+		if is_solid_entity then
+			impact_x = info.x1
+			impact_y = info.y1
+			hit = true
+			return impact_x, impact_y, hit, info
+		end
+
 		-- check if it's a player
 		if object.ct == 1 and object.h > 0 then
 			-- Update the values for the first player hit
@@ -949,6 +964,16 @@ function server.hitscan(x1, y1, x2, y2)
 	for i = 1, len do
 		local info = item_info[i]
 		local object = info.item
+
+		-- check if it's a solid entity (e.g. Func_DynWall)
+		local is_solid_entity = (object.ct == 3 or object.object_type == "entity") and
+			((type(object.isSolid) == "function" and object:isSolid()) or object.isSolid == true)
+		if is_solid_entity then
+			impact_x = info.x1
+			impact_y = info.y1
+			hit = true
+			break
+		end
 
 		-- check if it's a player
 		if object.ct == 1 and object.h > 0 then
@@ -1611,6 +1636,17 @@ function server.player_collision_filter(self, other)
 			else
 				return "cross"
 			end
+		elseif other.ct == 3 or other.object_type == "entity" then
+			local solid = false
+			if type(other.isSolid) == "function" then
+				solid = other:isSolid()
+			elseif other.isSolid ~= nil then
+				solid = other.isSolid
+			end
+			if solid then
+				return "slide"
+			end
+			return nil
 		end
 	end
 end

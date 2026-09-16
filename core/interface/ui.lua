@@ -304,6 +304,10 @@ ui.editor_button.OnClick = function(self)
 		if status then
 			print(status)
 		end
+		client.world:clear()
+		if client.map.syncEntitiesToWorld then
+			client.map:syncEntitiesToWorld(client.world)
+		end
 	end
 	client.scene.switch("editor")
 end

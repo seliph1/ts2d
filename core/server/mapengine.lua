@@ -730,6 +730,32 @@ function MapObject:getEntitiesByName(name)
 	return {}
 end
 
+--- Gets an entity by its 1-based index
+--- @param entity_id number Entity index
+--- @return Entity|nil
+function MapObject:getEntityById(entity_id)
+	local mapdata = self._mapdata
+	if mapdata and mapdata.entity_table and mapdata.entity_table[entity_id] then
+		return mapdata.entity_table[entity_id]
+	end
+	return nil
+end
+
+--- Synchronizes map entities that have physical bodies into a Bump world
+--- @param world table Bump.World instance
+function MapObject:syncEntitiesToWorld(world)
+	local mapdata = self._mapdata
+	if not world or not mapdata or not mapdata.entity_table then return end
+	for _, e in ipairs(mapdata.entity_table) do
+		if e.getPhysicsBody then
+			local body = e:getPhysicsBody(self)
+			if body and not world:hasItem(e) then
+				world:add(e, body.x, body.y, body.w, body.h)
+			end
+		end
+	end
+end
+
 --- Sets a tile property override at (x, y)
 --- @param x number Tile X
 --- @param y number Tile Y

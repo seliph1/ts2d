@@ -50,6 +50,7 @@ return {
 			client.map:draw_ceiling()
 			client.map:draw_effects()
 			client.map:draw_shadow()
+			client.map:draw_shadow(client)
 			--client.map:draw_hrc(ox, oy, client.width, client.height)
 		end
 

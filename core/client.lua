@@ -556,6 +556,17 @@ function client.player_collision_filter(item, other)
 			else
 				return "cross"
 			end
+		elseif other.ct == 3 or other.object_type == "entity" then
+			local solid = false
+			if type(other.isSolid) == "function" then
+				solid = other:isSolid(client)
+			elseif other.isSolid ~= nil then
+				solid = other.isSolid
+			end
+			if solid then
+				return "slide"
+			end
+			return nil
 		end
 	end
 end
@@ -572,6 +583,16 @@ function client.raycast(x1, y1, x2, y2)
 	for i = 1, len do
 		local info = item_info[i]
 		local object = info.item
+
+		-- check if it's a solid entity (e.g. Func_DynWall)
+		local is_solid_entity = (object.ct == 3 or object.object_type == "entity") and
+			((type(object.isSolid) == "function" and object:isSolid(client)) or object.isSolid == true)
+		if is_solid_entity then
+			impact_x = info.x1
+			impact_y = info.y1
+			hit = true
+			break
+		end
 
 		-- check if it's a player
 		if object.ct == 1 and object.h > 0 then
@@ -605,6 +626,16 @@ function client.hitscan(x1, y1, x2, y2)
 	for i = 1, len do
 		local info = item_info[i]
 		local object = info.item
+
+		-- check if it's a solid entity (e.g. Func_DynWall)
+		local is_solid_entity = (object.ct == 3 or object.object_type == "entity") and
+			((type(object.isSolid) == "function" and object:isSolid(client)) or object.isSolid == true)
+		if is_solid_entity then
+			impact_x = info.x1
+			impact_y = info.y1
+			hit = true
+			break
+		end
 
 		-- check if it's a player
 		if object.ct == 1 and object.h > 0 then

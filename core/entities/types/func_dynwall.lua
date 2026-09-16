@@ -11,8 +11,13 @@ FuncDynWall.__index = FuncDynWall
 function FuncDynWall.new(data)
 	local self = Entity.new(data)
 	setmetatable(self, FuncDynWall)
-	self.state = data.state or 0 -- 1 = closed (visible/solid), 0 = open (hidden/passable)
+	self.state = data.state or 0 -- 0 = closed (visible/solid), 1 = open (hidden/passable)
 	return self
+end
+
+function FuncDynWall:isSolid(context)
+	local state = (context and self:getState(context)) or self.state
+	return state == 0
 end
 
 function FuncDynWall:onToggle(activator, source_id, server)
@@ -21,26 +26,27 @@ function FuncDynWall:onToggle(activator, source_id, server)
 end
 
 function FuncDynWall:getPhysicsBody(map, client)
-	local state = self:getState(client)
-	local w = math.max(1, self:getInt(4))
-	local h = math.max(1, self:getInt(5))
+	local w = math.max(1, self:getInt(4)) * 32
+	local h = math.max(1, self:getInt(5)) * 32
 	return {
 		x = self.x * 32,
 		y = self.y * 32,
-		w = w * 32,
-		h = h * 32,
-		isSolid = (state == 1),
+		w = w,
+		h = h,
+		isSolid = self:isSolid(client),
 		isTrigger = false,
 	}
 end
 
 function FuncDynWall:draw(mapengine, client)
-	--if self:getState(client) == 1 then return end
-	if self.state == 1 then return end
+	if not self:isSolid(client) then return end
+
+	local w = math.max(1, self:getInt(4))
+	local h = math.max(1, self:getInt(5))
 
 	if client.debug_level == 2 then
 		love.graphics.setColor(1, 1, 1, 1)
-		love.graphics.rectangle("line", self.x * 32, self.y * 32, 32, 32)
+		love.graphics.rectangle("line", self.x * 32, self.y * 32, w * 32, h * 32)
 	end
 
 	local tile_index = self:getInt(1)
@@ -54,7 +60,11 @@ function FuncDynWall:draw(mapengine, client)
 
 		love.graphics.setColor(1, 1, 1, alpha)
 		love.graphics.setBlendMode("alpha")
-		love.graphics.draw(tile_img, self.x * 32, self.y * 32)
+		for tx = 0, w - 1 do
+			for ty = 0, h - 1 do
+				love.graphics.draw(tile_img, (self.x + tx) * 32, (self.y + ty) * 32)
+			end
+		end
 	end
 end
 

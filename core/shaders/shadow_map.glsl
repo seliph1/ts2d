@@ -19,7 +19,7 @@ uniform float distanceFactor = 0.9;
 uniform float blur = 1.0;
 
 uniform int numOccluders;
-uniform vec3 occluderPositions[128];
+uniform vec4 occluders[32]; // [i] = vec4(worldX, worldY, radius, height)
 
 uniform float vx, vy, v1, v2;
 
@@ -34,19 +34,34 @@ float hash(vec2 p) {
 }
 
 
-
-
-float getHeight(vec2 mapPos) {
+float getHeight(vec2 mapPos, vec2 pixelsToMap) {
     // Get the texel from heightmap texture
     vec4 color = Texel(heightmap, mapPos);
     // If it's out of bounds, then treat it as 0.0
     if ( any(lessThan(mapPos, vec2(0.0))) || any(greaterThan(mapPos, vec2(1.0))) ) {
         color.r = 0.0;
     }
-    // Return current height (on red channel)
-    // TODO:
-    //    add other kind of info on the remaining channels.
-    return min(color.r, 1.0);
+    float h = min(color.r, 1.0);
+
+    if (numOccluders > 0) {
+        vec2 worldPos = mapPos * pixelsToMap;
+        for (int i = 0; i < numOccluders; i++) {
+            vec4 occ = occluders[i];
+            float dx = abs(worldPos.x - occ.x);
+            if (dx > occ.z) continue;
+            float dy = abs(worldPos.y - occ.y);
+            if (dy > occ.z) continue;
+
+            float d2 = dx * dx + dy * dy;
+            float r2 = occ.z * occ.z;
+            if (d2 < r2) {
+                float circleHeight = occ.w * sqrt(1.0 - d2 / r2);
+                h = max(h, circleHeight);
+            }
+        }
+    }
+
+    return h;
 }
 
 vec3 getOcclusion(vec2 UV, vec2 SCREEN_UV) {
@@ -71,7 +86,7 @@ vec3 getOcclusion(vec2 UV, vec2 SCREEN_UV) {
     vec2 ray2D = normalize(vec2(sin(direction), cos(direction))) / mapSize;
 
     // Calculate base height on this position
-    float baseHeight = getHeight(mapPos);
+    float baseHeight = getHeight(mapPos, pixelsToMap);
 
     // Create position vector at step 0, including ground.
     vec3 position = vec3(mapPos, baseHeight);
@@ -94,7 +109,7 @@ vec3 getOcclusion(vec2 UV, vec2 SCREEN_UV) {
         position += stepDir;
 
         // Get the height on the current step
-        height = getHeight(position.xy);
+        height = getHeight(position.xy, pixelsToMap);
 
         // If current height is bigger than vector height, then
         if (height > position.z) {

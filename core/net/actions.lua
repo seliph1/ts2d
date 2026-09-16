@@ -145,6 +145,10 @@ local actions = {
             if status then
                 print(status)
             end
+            client.world:clear()
+            if client.map.syncEntitiesToWorld then
+                client.map:syncEntitiesToWorld(client.world)
+            end
             client.scene.switch("game")
         end,
     };

@@ -718,8 +718,6 @@ function MapObject:read(path, noindexing)
 		for j = 1, 10 do
 			raw.number_settings[j] = read_integer()
 			raw.string_settings[j] = read_string()
-
-			print(i, serpent.block(raw.string_settings))
 		end
 
 		local e = Entities.create(raw)
@@ -863,9 +861,62 @@ function MapObject:getHeightMap()
 			return 0.0, 0.0, 0.0, 0.0
 		end
 	end)
+
+	-- Apply dynamic walls (FuncDynWall) to heightmap
+	if self._mapdata.entity_table then
+		for _, e in ipairs(self._mapdata.entity_table) do
+			if e.type == 71 and e.isSolid and e:isSolid() then
+				local w = math.max(1, e:getInt(4))
+				local h = math.max(1, e:getInt(5))
+				for tx = 0, w - 1 do
+					for ty = 0, h - 1 do
+						local px = e.x + tx
+						local py = e.y + ty
+						if px >= 0 and px < self._mapdata.width and py >= 0 and py < self._mapdata.height then
+							heightMapData:setPixel(px, py, 1.0, 1.0, 1.0, 1.0)
+						end
+					end
+				end
+			end
+		end
+	end
+
+	self._heightMapData = heightMapData
 	self._heightMap = love.graphics.newImage(heightMapData)
 	self._heightMap:setFilter("nearest", "nearest")
 	return self._heightMap
+end
+
+--- Updates the heightmap tiles for a dynamic wall when its state changes
+---@param entity table FuncDynWall instance
+function MapObject:updateEntityHeightMap(entity)
+	if not self._heightMap or not self._heightMapData then return end
+	if entity.type == 71 then
+		local solid = entity.isSolid and entity:isSolid()
+		local w = math.max(1, entity:getInt(4))
+		local h = math.max(1, entity:getInt(5))
+		for tx = 0, w - 1 do
+			for ty = 0, h - 1 do
+				local px = entity.x + tx
+				local py = entity.y + ty
+				if px >= 0 and px < self._mapdata.width and py >= 0 and py < self._mapdata.height then
+					if solid then
+						self._heightMapData:setPixel(px, py, 1.0, 1.0, 1.0, 1.0)
+					else
+						local tile_id = (self._mapdata.map[px] and self._mapdata.map[px][py]) or 0
+						local property = self._mapdata.tile[tile_id] and self._mapdata.tile[tile_id].property or 0
+						local th = TILE_MODE_HEIGHT[property] or 0.0
+						if th > 0 then
+							self._heightMapData:setPixel(px, py, th, th, th, 1.0)
+						else
+							self._heightMapData:setPixel(px, py, 0.0, 0.0, 0.0, 0.0)
+						end
+					end
+				end
+			end
+		end
+		self._heightMap:replacePixels(self._heightMapData)
+	end
 end
 
 function MapObject:updateHeightMap()
@@ -873,6 +924,7 @@ function MapObject:updateHeightMap()
 		self._heightMap:release()
 		self._heightMap = nil
 	end
+	self._heightMapData = nil
 	return self:getHeightMap()
 end
 
@@ -931,6 +983,20 @@ function MapObject:getEntityById(entity_id)
 		return mapdata.entity_table[entity_id]
 	end
 	return {}
+end
+
+--- Synchronizes map entities that have physical bodies into a Bump world
+---@param world table
+function MapObject:syncEntitiesToWorld(world)
+	if not world or not self._mapdata or not self._mapdata.entity_table then return end
+	for _, e in ipairs(self._mapdata.entity_table) do
+		if e.getPhysicsBody then
+			local body = e:getPhysicsBody(self)
+			if body and not world:hasItem(e) then
+				world:add(e, body.x, body.y, body.w, body.h)
+			end
+		end
+	end
 end
 
 function MapObject:gfx(group, id)
@@ -1153,7 +1219,7 @@ function MapObject:draw_ceiling()
 	love.graphics.setColor(1, 1, 1, 1)
 end
 
-function MapObject:draw_shadow()
+function MapObject:draw_shadow(client)
 	local heightmap = self:getHeightMap()
 	local camera = self._camera
 	local shadows = self._shadows
@@ -1163,6 +1229,44 @@ function MapObject:draw_shadow()
 	end
 	shadows:send("heightmap", heightmap)
 	shadows:send("camera", camera)
+
+	if not self._occludersBuffer then
+		self._occludersBuffer = {}
+		for i = 1, 32 do
+			self._occludersBuffer[i] = { 0, 0, 0, 0 }
+		end
+	end
+
+	local count = 0
+	if client and shadows:hasUniform("numOccluders") then
+		local players = (client.share_lerp and client.share_lerp.players) or (client.share and client.share.players)
+		if players then
+			for peer_id, p in pairs(players) do
+				if count >= 32 then break end
+				if p.h and p.h > 0 and p.x and p.y then
+					count = count + 1
+					local buf = self._occludersBuffer[count]
+					buf[1] = p.x
+					buf[2] = p.y
+					buf[3] = (p.size or 24) * 0.45 -- radius in pixels
+					buf[4] = 0.65                  -- height relative to walls
+				end
+			end
+		end
+
+		for i = count + 1, 32 do
+			local buf = self._occludersBuffer[i]
+			buf[1] = 0
+			buf[2] = 0
+			buf[3] = 0
+			buf[4] = 0
+		end
+
+		shadows:send("numOccluders", count)
+		if shadows:hasUniform("occluders") then
+			shadows:send("occluders", unpack(self._occludersBuffer))
+		end
+	end
 
 	love.graphics.setColor(0, 0, 0.01, 1)
 	love.graphics.setShader(shadows)
