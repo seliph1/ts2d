@@ -308,12 +308,14 @@ function MapObject:name()
 end
 
 function MapObject:read(path, noindexing)
-	--local filedata = love.filesystem.newFileData(path)
-	if not fs:isFile(path) then
+	local filedata
+	if fs:isFile(path) then
+		filedata = fs:loadFile(path)
+	elseif love.filesystem.getInfo(path) then
+		filedata = love.filesystem.newFileData(path)
+	else
 		error(string.format("File %q does not exist. Check your files/folders and try again!", path))
-		--return string.format("File %q does not exist. Check your files/folders and try again!", path)
 	end
-	local filedata = fs:loadFile(path)
 	local size = filedata:getSize()
 
 	-- Set the cursor at the start of file
@@ -652,37 +654,12 @@ end
 ---@return Entity[]
 function MapObject:getEntities(entity_type)
 	local mapdata = self._mapdata
+	if not mapdata or not mapdata.entity_list then return {} end
 	local entities = {}
 	for _, e in mapdata.entity_list:walk() do
 		---@cast e Entity
-		if entity_type then
-			if e.type == entity_type then
-				-- Dont expose inner table
-				-- And just add x and y as tile coordinates
-				table.insert(entities, {
-					name = e.name,
-					type = e.type,
-					x = e.x,
-					y = e.y,
-					index = e.index,
-					trigger = e.trigger,
-					state = e.state,
-					string_settings = e.string_settings,
-					number_settings = e.number_settings,
-				})
-			end
-		else
-			table.insert(entities, {
-				name = e.name,
-				type = e.type,
-				x = e.x,
-				y = e.y,
-				trigger = e.trigger,
-				index = e.index,
-				state = e.state,
-				string_settings = e.string_settings,
-				number_settings = e.number_settings,
-			})
+		if not entity_type or e.type == entity_type then
+			table.insert(entities, e)
 		end
 	end
 	return entities

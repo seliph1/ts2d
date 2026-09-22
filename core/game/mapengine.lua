@@ -865,15 +865,23 @@ function MapObject:getHeightMap()
 	-- Apply dynamic walls (FuncDynWall) to heightmap
 	if self._mapdata.entity_table then
 		for _, e in ipairs(self._mapdata.entity_table) do
-			if e.type == 71 and e.isSolid and e:isSolid() then
-				local w = math.max(1, e:getInt(4))
-				local h = math.max(1, e:getInt(5))
-				for tx = 0, w - 1 do
-					for ty = 0, h - 1 do
-						local px = e.x + tx
-						local py = e.y + ty
-						if px >= 0 and px < self._mapdata.width and py >= 0 and py < self._mapdata.height then
-							heightMapData:setPixel(px, py, 1.0, 1.0, 1.0, 1.0)
+			if e.type == 71 then
+				local th = 0.0
+				if e.getHeightMapHeight then
+					th = e:getHeightMapHeight()
+				elseif e.isSolid and e:isSolid() then
+					th = 1.0
+				end
+				if th > 0 then
+					local w = math.max(1, e:getInt(4))
+					local h = math.max(1, e:getInt(5))
+					for tx = 0, w - 1 do
+						for ty = 0, h - 1 do
+							local px = e.x + tx
+							local py = e.y + ty
+							if px >= 0 and px < self._mapdata.width and py >= 0 and py < self._mapdata.height then
+								heightMapData:setPixel(px, py, th, th, th, 1.0)
+							end
 						end
 					end
 				end
@@ -892,7 +900,13 @@ end
 function MapObject:updateEntityHeightMap(entity)
 	if not self._heightMap or not self._heightMapData then return end
 	if entity.type == 71 then
-		local solid = entity.isSolid and entity:isSolid()
+		local th_wall = 0.0
+		if entity.getHeightMapHeight then
+			th_wall = entity:getHeightMapHeight()
+		elseif entity.isSolid and entity:isSolid() then
+			th_wall = 1.0
+		end
+
 		local w = math.max(1, entity:getInt(4))
 		local h = math.max(1, entity:getInt(5))
 		for tx = 0, w - 1 do
@@ -900,8 +914,8 @@ function MapObject:updateEntityHeightMap(entity)
 				local px = entity.x + tx
 				local py = entity.y + ty
 				if px >= 0 and px < self._mapdata.width and py >= 0 and py < self._mapdata.height then
-					if solid then
-						self._heightMapData:setPixel(px, py, 1.0, 1.0, 1.0, 1.0)
+					if th_wall > 0 then
+						self._heightMapData:setPixel(px, py, th_wall, th_wall, th_wall, 1.0)
 					else
 						local tile_id = (self._mapdata.map[px] and self._mapdata.map[px][py]) or 0
 						local property = self._mapdata.tile[tile_id] and self._mapdata.tile[tile_id].property or 0
@@ -983,6 +997,23 @@ function MapObject:getEntityById(entity_id)
 		return mapdata.entity_table[entity_id]
 	end
 	return {}
+end
+
+---@param entity_type? number
+---@return Entity[]
+function MapObject:getEntities(entity_type)
+	local mapdata = self._mapdata
+	if not mapdata or not mapdata.entity_table then return {} end
+	if not entity_type then
+		return mapdata.entity_table
+	end
+	local entities = {}
+	for _, e in ipairs(mapdata.entity_table) do
+		if e.type == entity_type then
+			table.insert(entities, e)
+		end
+	end
+	return entities
 end
 
 --- Synchronizes map entities that have physical bodies into a Bump world

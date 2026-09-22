@@ -45,6 +45,12 @@ end
 ---@param y number
 ---@param button number
 function client.mousepressed(x, y, button, istouch, presses)
+	if client.scene and client.scene.mousepressed then
+		local handled = client.scene.mousepressed(x, y, button, istouch, presses)
+		if handled then
+			return
+		end
+	end
 	if not client.key[button] then
 		client.sendInput(button, true)
 	end

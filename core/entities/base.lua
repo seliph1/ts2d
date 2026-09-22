@@ -19,6 +19,9 @@ local Database = require "core.entities.database"
 ---@field state any
 ---@field index number
 ---@field depth number
+---@field storage table
+---@field initial_state number
+---@field initial_disabled boolean
 ---@field schema table|nil
 local Entity = {}
 Entity.__index = Entity
@@ -41,6 +44,12 @@ function Entity.new(data)
 	self.ct = 3 -- Collision type 3: entity/obstacle
 	self.index = data.index or 0
 	self.depth = data.depth or 0
+
+	self.disabled = data.disabled or false
+	self.state = data.state or 0
+	self.initial_state = self.state
+	self.initial_disabled = self.disabled
+	self.storage = {}
 
 	self.schema = Database.get(self.type)
 	return self
@@ -110,6 +119,19 @@ function Entity:onInit(map)
 	-- Virtual method
 end
 
+--- Called on round start to reset the entity to its initial state
+---@param server table|nil
+function Entity:onRoundStart(server)
+	self.state = self.initial_state or 0
+	self.disabled = self.initial_disabled or false
+	if self._triggered ~= nil then
+		self._triggered = false
+	end
+	if server then
+		self:syncState(server)
+	end
+end
+
 --- Called on tick update
 ---@param dt number
 ---@param map table
@@ -168,6 +190,10 @@ function Entity:syncState(server)
 		share.entities[self.index] = {
 			state = self.state,
 		}
+	end
+	if server and server.send then
+		local s = (type(self.state) == "number" and self.state) or (self.disabled and 1 or 0)
+		server.send("all", string.format("entitystate %d %d %d %d", self.x, self.y, self.type, s))
 	end
 end
 

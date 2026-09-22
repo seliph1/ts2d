@@ -3,9 +3,13 @@
 /assets/
 /.vscode/
 /.claude/
+/build/
+/dist/
 
 *.bak
 *.bat
+!build.bat
+!zip.bat
 *.dll
 *.exe
 *.zip

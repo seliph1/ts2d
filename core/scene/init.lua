@@ -77,6 +77,15 @@ return function(client)
 		if s and s.draw then s.draw(client) end
 	end
 
+	--- Encaminha o mousepressed da cena ativa (retorna boolean se consumido).
+	function scene.mousepressed(x, y, button, istouch, presses)
+		local s = scene.scenes[scene.current]
+		if s and s.mousepressed then
+			return s.mousepressed(client, x, y, button, istouch, presses)
+		end
+		return false
+	end
+
 	client.scene = scene
 
 	-- Registro das cenas do projeto.

@@ -925,7 +925,7 @@ function server.raycast(x1, y1, x2, y2)
 		-- check if it's a solid entity (e.g. Func_DynWall)
 		local is_solid_entity = (object.ct == 3 or object.object_type == "entity") and
 			((type(object.isSolid) == "function" and object:isSolid()) or object.isSolid == true)
-		if is_solid_entity then
+		if is_solid_entity and (not object.blocksBullets or object:blocksBullets()) then
 			impact_x = info.x1
 			impact_y = info.y1
 			hit = true
@@ -968,7 +968,7 @@ function server.hitscan(x1, y1, x2, y2)
 		-- check if it's a solid entity (e.g. Func_DynWall)
 		local is_solid_entity = (object.ct == 3 or object.object_type == "entity") and
 			((type(object.isSolid) == "function" and object:isSolid()) or object.isSolid == true)
-		if is_solid_entity then
+		if is_solid_entity and (not object.blocksBullets or object:blocksBullets()) then
 			impact_x = info.x1
 			impact_y = info.y1
 			hit = true
@@ -1031,10 +1031,18 @@ function server.setpos(peer_id, x, y)
 	return true
 end
 
-function server.trigger(target_names, source_id, x, y, active_set)
+local MAX_TRIGGER_DEPTH = 32
+
+function server.trigger(target_names, source_id, x, y, active_set, depth)
 	if not target_names or target_names == "" or not server.map then return end
 	source_id = source_id or 0
 	active_set = active_set or {}
+	depth = (depth or 0) + 1
+
+	if depth > MAX_TRIGGER_DEPTH then
+		print("WARNING: Max trigger recursion depth exceeded for: " .. tostring(target_names))
+		return
+	end
 
 	for sub_name in string.gmatch(target_names, "[^,]+") do
 		sub_name = sub_name:match("^%s*(.-)%s*$")
@@ -1054,7 +1062,7 @@ function server.trigger(target_names, source_id, x, y, active_set)
 					server.callhook("triggerentity", e.name, source_id)
 
 					-- Dispatch entity activation logic
-					server.activate_entity(e, source_id, x, y, active_set)
+					server.activate_entity(e, source_id, x, y, active_set, depth)
 				end
 
 				active_set[sub_name] = nil
@@ -1063,12 +1071,12 @@ function server.trigger(target_names, source_id, x, y, active_set)
 	end
 end
 
-function server.activate_entity(e, source_id, x, y, active_set)
+function server.activate_entity(e, source_id, x, y, active_set, depth)
 	if not e or not server.map then return end
 
 	local source_player = (source_id and source_id > 0) and share.players[source_id] or nil
 	if e.onToggle then
-		e:onToggle(source_player, source_id, server)
+		e:onToggle(source_player, source_id, server, active_set, depth)
 	end
 	--[[
 	-- Func_Teleport (70): Toggles disabled state
@@ -1225,22 +1233,19 @@ function server.restart(seconds)
 		server.endround_flag = false
 	end
 
-	server.callhook("startround_prespawn")
 	local players = share.players
-	-- Reset all players health and scores
+	-- Reset all players scores and respawn
 	for peer_id, player in pairs(players) do
 		if player.t > 0 then
 			server.spawnplayer_silent(peer_id, player.x, player.y)
 		end
 		server.resetscores(peer_id)
 	end
-	-- Clear all items and entities from world
-	server.resetobjects()
-	server.resettimer()
-	server.callhook("startround")
 
 	server.message("all", "©255220000Round restart!@C")
 	server.send("all", "restart")
+
+	server.startround()
 end
 
 function server.startround()
@@ -1273,16 +1278,30 @@ function server.startround()
 		server.callhook("startround")
 	end
 
-	-- Fire Trigger_Start (90) entities
+	server.is_starting_round = true
+
+	-- Reset all entities (triggers, dynamic walls, etc.) to initial state, then fire Trigger_Start (90)
 	if server.map then
-		local start_triggers = server.map:getEntities(90)
-		for i = 1, #start_triggers do
-			local st = start_triggers[i]
-			if st.trigger and st.trigger ~= "" then
-				server.trigger(st.trigger, 0)
+		local entities = server.map:getEntities()
+		for i = 1, #entities do
+			local e = entities[i]
+			if e.type ~= 90 and e.onRoundStart then
+				e:onRoundStart(server)
+			end
+		end
+		for i = 1, #entities do
+			local e = entities[i]
+			if e.type == 90 then
+				if e.onRoundStart then
+					e:onRoundStart(server)
+				elseif e.trigger and e.trigger ~= "" then
+					server.trigger(e.trigger, 0)
+				end
 			end
 		end
 	end
+
+	server.is_starting_round = false
 end
 
 function server.endround(team_win, seconds)
@@ -1424,8 +1443,12 @@ function server.use(peer_id)
 		for dy = -1, 1 do
 			local e = server.map:getEntityAt(tx + dx, ty + dy, 93)
 			if e then
-				trigger_entity = e
-				break
+				local team_filter = e:getInt(2)
+				local team_filter = e:getInt(3)
+				if team_filter == 0 or team_filter == player.t then
+					trigger_entity = e
+					break
+				end
 			end
 		end
 		if trigger_entity then break end
@@ -1441,8 +1464,10 @@ function server.use(peer_id)
 		x = trigger_entity.x
 		y = trigger_entity.y
 
-		if trigger_entity.trigger and trigger_entity.trigger ~= "" then
-			server.trigger(trigger_entity.trigger, peer_id, x, y)
+		if not trigger_entity.disabled and trigger_entity.state ~= 1 then
+			if trigger_entity.trigger and trigger_entity.trigger ~= "" then
+				server.trigger(trigger_entity.trigger, peer_id, x, y)
+			end
 		end
 	end
 
@@ -1593,6 +1618,13 @@ function server.apply_forces_to_player(peer_id, v, h, w)
 					server.collect(peer_id, item_id)
 				end
 			end
+		-- Collided with entity trigger (e.g. Trigger_Move 91, Func_Teleport 70)
+		elseif (object.ct == 3 or object.object_type == "entity") and object.isTrigger then
+			if not overlaps then
+				if object.onWalk then
+					object:onWalk(player, peer_id, server)
+				end
+			end
 		end
 	end
 
@@ -1604,9 +1636,9 @@ function server.apply_forces_to_player(peer_id, v, h, w)
 
 	-- Check for entity triggers when entering a new tile
 	if new_tx ~= player.last_tx or new_ty ~= player.last_ty then
-		local walking_entity = server.map:getEntityAt(new_tx, new_ty, 70)
+		local walking_entity = server.map:getEntityAt(new_tx, new_ty, 70) or server.map:getEntityAt(new_tx, new_ty, 91)
 		if walking_entity and walking_entity.onWalk then
-			walking_entity:onWalk(player)
+			walking_entity:onWalk(player, peer_id, server)
 			new_x = player.x
 			new_y = player.y
 			new_tx = floor(new_x / 32)
@@ -1645,6 +1677,8 @@ function server.player_collision_filter(self, other)
 			end
 			if solid then
 				return "slide"
+			elseif other.isTrigger then
+				return "cross"
 			end
 			return nil
 		end
@@ -1833,6 +1867,22 @@ function server.fire(start_x, start_y, angle, distance, peer_id)
 		local dx = hit_x - start_x
 		local dy = hit_y - start_y
 		hit_distance = math.sqrt(dx * dx + dy * dy)
+
+		-- Check if bullet hit a Trigger_Hit (92) on wall
+		if server.map then
+			local hit_tx = math.floor(hit_x / 32)
+			local hit_ty = math.floor(hit_y / 32)
+			local attacker = share.players[peer_id]
+			local th = server.map:getEntityAt(hit_tx, hit_ty, 92)
+			if not th then
+				local in_tx = math.floor((hit_x + math.cos(angle) * 2) / 32)
+				local in_ty = math.floor((hit_y + math.sin(angle) * 2) / 32)
+				th = server.map:getEntityAt(in_tx, in_ty, 92)
+			end
+			if th and th.onHit then
+				th:onHit(attacker, peer_id, server)
+			end
+		end
 	end
 
 	for index, victim in pairs(players) do
@@ -1889,6 +1939,22 @@ function server.swing(angle, peer_id)
 				-- Deal damage to target_id
 				server.hit(victim_id, attacker_id, item_type, damage, 0)
 			end
+		elseif (target.ct == 3 or target.object_type == "entity") and target.type == 92 then
+			if target.onHit then
+				target:onHit(player, peer_id, server)
+			end
+		end
+	end
+
+	-- Check for Trigger_Hit (92) on wall in melee reach
+	if server.map then
+		local reach_x = player.x + math.cos(angle) * (itemdata.range or 32)
+		local reach_y = player.y + math.sin(angle) * (itemdata.range or 32)
+		local reach_tx = math.floor(reach_x / 32)
+		local reach_ty = math.floor(reach_y / 32)
+		local wall_hit = server.map:getEntityAt(reach_tx, reach_ty, 92)
+		if wall_hit and wall_hit.onHit then
+			wall_hit:onHit(player, peer_id, server)
 		end
 	end
 end

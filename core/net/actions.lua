@@ -105,7 +105,13 @@ local actions = {
 				if e.type == entity_type then
 					if entity_type == 71 then -- Func_DynWall
 						e.state = state
+						if client.map and client.map.updateEntityHeightMap then
+							client.map:updateEntityHeightMap(e)
+						end
 					elseif entity_type == 70 then -- Func_Teleport
+						e.disabled = (state == 1)
+					elseif entity_type == 93 then -- Trigger_Use
+						e.state = state
 						e.disabled = (state == 1)
 					elseif entity_type == 95 then -- Trigger_Once
 						e._triggered = (state == 1)
@@ -420,6 +426,15 @@ local actions = {
     restart = {
         action = function(...)
             print("Round restarted by server.")
+            if client.map and client.map.getEntities then
+                local entities = client.map:getEntities()
+                for i = 1, #entities do
+                    local e = entities[i]
+                    if e.onRoundStart then
+                        e:onRoundStart(nil)
+                    end
+                end
+            end
         end,
         syntax = "",
     };

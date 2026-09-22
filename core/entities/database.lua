@@ -7,6 +7,10 @@
 
 local Database = {}
 
+local CYAN = {0, 1, 1}
+local LIGHT_CYAN = {0.52, 0.94, 1}
+
+
 Database.ENTITIES = {
 	[0] = {
 		name = "Info_T",
@@ -364,7 +368,7 @@ Database.ENTITIES = {
 		int_schema = {
 			[1] = "tile_index",
 			[2] = "mode",
-			[3] = "speed",
+			[3] = "close_if_not_blocked",
 			[4] = "width",
 			[5] = "height",
 		},
@@ -412,14 +416,14 @@ Database.ENTITIES = {
 	[90] = {
 		name = "Trigger_Start",
 		label = "TrigStart",
-		color = { 1, 1, 0.2 },
+		color = LIGHT_CYAN,
 		category = "trigger",
 		description = "Round Start Trigger",
 	},
 	[91] = {
 		name = "Trigger_Move",
 		label = "TrigMove",
-		color = { 1, 1, 0.2 },
+		color = LIGHT_CYAN,
 		category = "trigger",
 		description = "Movement Area Trigger",
 		int_schema = {
@@ -430,25 +434,27 @@ Database.ENTITIES = {
 	[92] = {
 		name = "Trigger_Hit",
 		label = "TrigHit",
-		color = { 1, 1, 0.2 },
+		color = LIGHT_CYAN,
 		category = "trigger",
 		description = "Projectile / Hit Trigger",
 	},
 	[93] = {
 		name = "Trigger_Use",
 		label = "TrigUse",
-		color = { 1, 1, 0.2 },
+		color = LIGHT_CYAN,
 		category = "trigger",
 		description = "Key Use (E) Activation Trigger",
 		int_schema = {
-			[1] = "width",
-			[2] = "height",
+			[1] = "button_type",
+			[2] = "alignment",
+			[3] = "team",
+			[4] = "delay_ms",
 		},
 	},
 	[94] = {
 		name = "Trigger_Delay",
 		label = "TrigDelay",
-		color = { 1, 1, 0.2 },
+		color = LIGHT_CYAN,
 		category = "trigger",
 		description = "Delayed Trigger Relay",
 		int_schema = {
@@ -458,14 +464,14 @@ Database.ENTITIES = {
 	[95] = {
 		name = "Trigger_Once",
 		label = "TrigOnce",
-		color = { 1, 1, 0.2 },
+		color = LIGHT_CYAN,
 		category = "trigger",
 		description = "One-Time Trigger",
 	},
 	[96] = {
 		name = "Trigger_If",
 		label = "TrigIf",
-		color = { 1, 1, 0.2 },
+		color = LIGHT_CYAN,
 		category = "trigger",
 		description = "Conditional Logic Trigger",
 	},

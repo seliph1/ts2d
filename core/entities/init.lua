@@ -12,7 +12,12 @@ local FuncTeleport = require "core.entities.types.func_teleport"
 local FuncDynWall = require "core.entities.types.func_dynwall"
 local FuncMessage = require "core.entities.types.func_message"
 local FuncGameAction = require "core.entities.types.func_gameaction"
+local TriggerStart = require "core.entities.types.trigger_start"
+local TriggerMove = require "core.entities.types.trigger_move"
+local TriggerHit = require "core.entities.types.trigger_hit"
 local TriggerUse = require "core.entities.types.trigger_use"
+local TriggerDelay = require "core.entities.types.trigger_delay"
+local TriggerOnce = require "core.entities.types.trigger_once"
 
 local Entities = {}
 Entities.Database = Database
@@ -26,7 +31,12 @@ Entities.registry = {
 	[71] = FuncDynWall,
 	[72] = FuncMessage,
 	[73] = FuncGameAction,
+	[90] = TriggerStart,
+	[91] = TriggerMove,
+	[92] = TriggerHit,
 	[93] = TriggerUse,
+	[94] = TriggerDelay,
+	[95] = TriggerOnce,
 }
 
 --- Creates an Entity instance from a raw entity table data

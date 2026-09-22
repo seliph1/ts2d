@@ -565,6 +565,8 @@ function client.player_collision_filter(item, other)
 			end
 			if solid then
 				return "slide"
+			elseif other.isTrigger then
+				return "cross"
 			end
 			return nil
 		end
@@ -587,7 +589,7 @@ function client.raycast(x1, y1, x2, y2)
 		-- check if it's a solid entity (e.g. Func_DynWall)
 		local is_solid_entity = (object.ct == 3 or object.object_type == "entity") and
 			((type(object.isSolid) == "function" and object:isSolid(client)) or object.isSolid == true)
-		if is_solid_entity then
+		if is_solid_entity and (not object.blocksBullets or object:blocksBullets(client)) then
 			impact_x = info.x1
 			impact_y = info.y1
 			hit = true
@@ -630,7 +632,7 @@ function client.hitscan(x1, y1, x2, y2)
 		-- check if it's a solid entity (e.g. Func_DynWall)
 		local is_solid_entity = (object.ct == 3 or object.object_type == "entity") and
 			((type(object.isSolid) == "function" and object:isSolid(client)) or object.isSolid == true)
-		if is_solid_entity then
+		if is_solid_entity and (not object.blocksBullets or object:blocksBullets(client)) then
 			impact_x = info.x1
 			impact_y = info.y1
 			hit = true

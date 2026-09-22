@@ -11,9 +11,9 @@ uniform Image overlay;
 
 uniform float steps = 32.0;
 uniform float maxSteps = 32.0;
-uniform float shadowStrength = 0.5;
+uniform float shadowStrength = 0.6;
 uniform float shadowLength = 32.0;
-uniform float direction = 235.0;
+uniform float direction = 225.0;
 uniform float mode = 1.0;
 uniform float distanceFactor = 0.9;
 uniform float blur = 1.0;
@@ -33,15 +33,18 @@ float hash(vec2 p) {
     return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
 }
 
-
-float getHeight(vec2 mapPos, vec2 pixelsToMap) {
-    // Get the texel from heightmap texture
+// Samples height only from the map / heightmap texture
+float getTerrainHeight(vec2 mapPos) {
     vec4 color = Texel(heightmap, mapPos);
-    // If it's out of bounds, then treat it as 0.0
     if ( any(lessThan(mapPos, vec2(0.0))) || any(greaterThan(mapPos, vec2(1.0))) ) {
         color.r = 0.0;
     }
-    float h = min(color.r, 1.0);
+    return min(color.r, 1.0);
+}
+
+// Samples height from terrain and dynamic occluders (players)
+float getHeight(vec2 mapPos, vec2 pixelsToMap) {
+    float h = getTerrainHeight(mapPos);
 
     if (numOccluders > 0) {
         vec2 worldPos = mapPos * pixelsToMap;
@@ -74,10 +77,24 @@ vec3 getOcclusion(vec2 UV, vec2 SCREEN_UV) {
     // Conversion factor: screen pixels > map space
     vec2 pixelsToMap = (mapSize * TILE_SIZE);
 
-    // Screen space position
+    // Screen space position in world pixels
     vec2 screenCenter = screenSize * 0.5;
-    vec2 screenPos = (SCREEN_UV + camera - screenCenter);
-    vec2 mapPos = (SCREEN_UV + camera - screenCenter) / pixelsToMap;
+    vec2 worldPos = (SCREEN_UV + camera - screenCenter);
+    vec2 mapPos = worldPos / pixelsToMap;
+
+    // Base ground height from terrain
+    float baseHeight = getTerrainHeight(mapPos);
+
+    // If current pixel is directly underneath a dynamic occluder (contact shadow),
+    // fill the shadow completely (cheia) without holes
+    if (numOccluders > 0) {
+        for (int i = 0; i < numOccluders; i++) {
+            vec4 occ = occluders[i];
+            if (distance(worldPos, occ.xy) < occ.z) {
+                return vec3(1.0, 0.0, baseHeight);
+            }
+        }
+    }
 
     // Transform degrees to radians
     float direction = radians(direction);
@@ -85,10 +102,7 @@ vec3 getOcclusion(vec2 UV, vec2 SCREEN_UV) {
     // Calculate angle from radians (0~1)
     vec2 ray2D = normalize(vec2(sin(direction), cos(direction))) / mapSize;
 
-    // Calculate base height on this position
-    float baseHeight = getHeight(mapPos, pixelsToMap);
-
-    // Create position vector at step 0, including ground.
+    // Create position vector at step 0, starting at terrain level
     vec3 position = vec3(mapPos, baseHeight);
 
     // Calculate the step size of sample
@@ -113,7 +127,7 @@ vec3 getOcclusion(vec2 UV, vec2 SCREEN_UV) {
 
         // If current height is bigger than vector height, then
         if (height > position.z) {
-            // Ray got inside a terrain while travelling to sun.
+            // Ray got inside an obstacle while travelling to sun.
             // So this pixel must be inside a shadow
             shadow = 1.0;
 
@@ -132,8 +146,14 @@ vec3 getOcclusion(vec2 UV, vec2 SCREEN_UV) {
         // Ray got over the height limit
         if (position.z > 1.0) break;
     }
+
     // Make threshold to where the shadow softness should begin
     dist = smoothstep(distanceFactor, 1.0, dist);
+
+    // If there is no shadow at this pixel, dist should not subtract or show white in debug
+    if (shadow < 0.5) {
+        dist = 0.0;
+    }
 
     // Return the control variables
     return vec3(shadow, dist, baseHeight);
@@ -165,8 +185,8 @@ vec4 getShadow(vec4 COLOR, vec2 UV, vec2 SCREEN_UV) {
     // Get the current color from external buffer
     vec3 shadow_color = COLOR.rgb;
 
-    // Calculate alpha base on shadow strength
-    float shadow_fadeout = (shadow - dist) * shadowStrength;
+    // Calculate alpha base on shadow strength, clamping negative values
+    float shadow_fadeout = max(0.0, shadow - dist) * shadowStrength;
 
     // Return the final result
     return vec4(vec3( shadow_color ), shadow_fadeout);

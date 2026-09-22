@@ -39,6 +39,7 @@ return {
 		if client.map then
 			client.map:draw_floor()
 			client.map:draw_entities(client)
+			client.map:draw_shadow(client)
 		end
 
 		if client.joined and client.map then
@@ -49,8 +50,6 @@ return {
 		if client.map then
 			client.map:draw_ceiling()
 			client.map:draw_effects()
-			client.map:draw_shadow()
-			client.map:draw_shadow(client)
 			--client.map:draw_hrc(ox, oy, client.width, client.height)
 		end
 

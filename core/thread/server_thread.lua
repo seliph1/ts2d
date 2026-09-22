@@ -40,7 +40,7 @@ if not ok then
 	return
 end
 
-local ok2, err = pcall(server.load, map)   -- abre o host enet (*:36963) e carrega o mapa
+local ok2, err = xpcall(function() server.load(map) end, debug.traceback)   -- abre o host enet (*:36963) e carrega o mapa
 if not ok2 then
 	evt:push({ type = "error", msg = "server.load: " .. tostring(err) })
 	return

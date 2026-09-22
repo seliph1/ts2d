@@ -11,6 +11,10 @@ FuncTeleport.__index = FuncTeleport
 function FuncTeleport.new(data)
 	local self = Entity.new(data)
 	setmetatable(self, FuncTeleport)
+	self.disabled = false
+	self.state = 0
+	self.initial_state = 0
+	self.initial_disabled = false
 	return self
 end
 

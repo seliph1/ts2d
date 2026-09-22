@@ -32,7 +32,36 @@ do
 		local base = "core/server/"
 		love.filesystem.setRequirePath(base .. "?.lua;" .. base .. "?/init.lua;" .. love.filesystem.getRequirePath())
 		local server = require "server"
-		function love.load() server.load() end
+		function love.load(args)
+			for i, a in ipairs(args or {}) do
+				if a == "--run-script" and args[i + 1] then
+					dofile(args[i + 1])
+					love.event.quit(0)
+					return
+				end
+			end
+			local map = nil
+			for _, a in ipairs(args or {}) do
+				if a ~= "--server" and a ~= "server" and not a:match("^%-") then
+					map = a
+					break
+				end
+			end
+			local ok, err = xpcall(function() server.load(map) end, debug.traceback)
+			if not ok then
+				print("SERVER CRASH TRACEBACK:\n" .. tostring(err))
+				love.event.quit(1)
+				return
+			else
+				print("SERVER LOADED SUCCESSFULLY")
+				for _, a in ipairs(args or {}) do
+					if a == "--test" or a == "--quit" then
+						love.event.quit(0)
+						return
+					end
+				end
+			end
+		end
 
 		function love.update(dt) server.update(dt) end
 

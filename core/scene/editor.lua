@@ -15,7 +15,14 @@ return {
 	---@param to string?
 	exit = function(client, to)
 		local loveframes = package.loaded["lib.loveframes"]
-		loveframes.SetKeyNavigation(true)
+		if loveframes and loveframes.SetKeyNavigation then
+			loveframes.SetKeyNavigation(true)
+		end
+		-- Ao sair da cena do editor, oculta o inspetor e limpa a entidade selecionada
+		local ok, editor = pcall(require, "core.interface.editor")
+		if ok and editor and editor.close_inspector then
+			editor.close_inspector()
+		end
 	end,
 
 	---@param client table
@@ -27,6 +34,22 @@ return {
 			client.map:scroll(client.camera.x, client.camera.y)
 			client.map:update(dt)
 		end
+	end,
+
+	--- Manipula cliques do mouse na cena do editor
+	---@param client table
+	---@param x number
+	---@param y number
+	---@param button number
+	mousepressed = function(client, x, y, button, istouch, presses)
+		-- Botão esquerdo: verifica seleção de entidade no mapa e abre/atualiza o inspetor
+		if button == 1 then
+			local ok, editor = pcall(require, "core.interface.editor")
+			if ok and editor and editor.mousepressed then
+				return editor.mousepressed(client, x, y, button, istouch, presses)
+			end
+		end
+		return false
 	end,
 
 	---@param client table
@@ -45,7 +68,13 @@ return {
 			client.map:draw_ceiling()
 			client.map:draw_shadow()
 			client.map:draw_effects()
-			--client.map:draw_entity_icons(client)
+			client.map:draw_entity_icons(client)
+
+			-- Desenha a caixa de seleção animada ciano ao redor da entidade selecionada
+			local ok, editor = pcall(require, "core.interface.editor")
+			if ok and editor and editor.draw_selection then
+				editor.draw_selection(client)
+			end
 		end
 
 		love.graphics.setCanvas()
