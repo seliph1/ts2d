@@ -20,24 +20,19 @@ ui.setFontFallbacks = function(font, size)
 end
 
 ui.font_mono        = LG.newFont("gfx/fonts/NotoSansMono-Regular.ttf", 15)
+ui.font_mono_small  = LG.newFont("gfx/fonts/NotoSansMono-Regular.ttf", 12)
+ui.font             = LG.newFont("gfx/fonts/liberationsans.ttf", 15)
+ui.font_small       = LG.newFont("gfx/fonts/liberationsans.ttf", 11)
+ui.font_medium      = LG.newFont("gfx/fonts/liberationsans.ttf", 13)
+ui.font_chat        = LG.newFont("gfx/fonts/liberationsans.ttf", 18)
+ui.font_big         = LG.newFont("gfx/fonts/liberationsans.ttf", 24)
+
 ui.setFontFallbacks(ui.font_mono, 15)
-
-ui.font_mono_small = LG.newFont("gfx/fonts/NotoSansMono-Regular.ttf", 12)
 ui.setFontFallbacks(ui.font_mono_small, 12)
-
-ui.font = LG.newFont("gfx/fonts/liberationsans.ttf", 15)
 ui.setFontFallbacks(ui.font, 15)
-
-ui.font_small = LG.newFont("gfx/fonts/liberationsans.ttf", 11)
 ui.setFontFallbacks(ui.font_small, 11)
-
-ui.font_medium = LG.newFont("gfx/fonts/liberationsans.ttf", 13)
 ui.setFontFallbacks(ui.font_small, 13)
-
-ui.font_chat = LG.newFont("gfx/fonts/liberationsans.ttf", 18)
 ui.setFontFallbacks(ui.font_chat, 18)
-
-ui.font_big = LG.newFont("gfx/fonts/liberationsans.ttf", 24)
 ui.setFontFallbacks(ui.font_chat, 24)
 
 ui.setCursor = function(cursorType, cursorImageData, scale)
@@ -171,7 +166,6 @@ LF.toast
 	:SetRelativeBoxWidth(1.0)
 	:SetMessageOrder("descending")
 	:SetFont(ui.font_big)
-
 
 ui.pointers = pointers
 

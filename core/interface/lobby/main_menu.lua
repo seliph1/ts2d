@@ -43,6 +43,7 @@ ui.findservers_button = LF.Create("textbutton", ui.main_menu)
 	:SetHoverText("©255255255Find Servers")
 	:SetPos(0, 80):SetCursor(LF.cursors.hand)
 ui.findservers_button.OnClick = function(self)
+	--[[
 	local console = require "core.interface.console"
 	console.frame
 		:SetVisible(true)
@@ -51,6 +52,11 @@ ui.findservers_button.OnClick = function(self)
 
 	local console = require "core.interface.console"
 	console.parse("connect 127.0.0.1 36963")
+	]]
+	ui.find_servers_frame
+		:SetVisible(true)
+		:Center()
+		:MoveToTop()
 end
 --Main menu group 2---------------------------------------------------------------------------
 ui.options_button = LF.Create("textbutton", ui.main_menu)

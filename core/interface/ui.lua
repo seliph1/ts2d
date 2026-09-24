@@ -15,6 +15,7 @@ require("core.interface.shared.shader_controls")(ui)
 -- 3. Interface da cena Lobby (SetState("none"))
 require("core.interface.lobby.main_menu")(ui)
 require("core.interface.lobby.new_game")(ui)
+require("core.interface.lobby.find_servers")(ui)
 
 -- 4. Interface da cena Game (SetState("game"))
 require("core.interface.game.hud")(ui)
