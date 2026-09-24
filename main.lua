@@ -16,6 +16,24 @@
 
 ---------------------------------------------------------------------------------------
 -- =============================================================================
+-- Suporte a pastas externas quando executando como binário fundido (fused).
+-- Monta o diretório do executável para expor gfx, sfx, logos, sys, maps.
+-- =============================================================================
+if love.filesystem.isFused() then
+	local base_dir = love.filesystem.getSourceBaseDirectory()
+	if base_dir then
+		love.filesystem.mount(base_dir, "")
+		-- Fallback para desenvolvimento caso o binário esteja dentro de build/
+		if not love.filesystem.getInfo("gfx") and not love.filesystem.getInfo("maps") then
+			local parent_dir = base_dir:match("^(.*)[/\\][^/\\]+$")
+			if parent_dir then
+				love.filesystem.mount(parent_dir, "")
+			end
+		end
+	end
+end
+
+-- =============================================================================
 -- Modo servidor dedicado headless: `love . --server`  (ou `lovec . --server`).
 -- Roda o servidor vendorizado em core/server/ e encerra o chunk antes de
 -- carregar qualquer coisa do cliente.
@@ -26,6 +44,24 @@ do
 		if a == "--server" or a == "server" then
 			is_server = true
 			break
+		end
+	end
+	if not is_server and love.filesystem then
+		if love.filesystem.getInfo and (love.filesystem.getInfo("is_server") or love.filesystem.getInfo("core/is_server")) then
+			is_server = true
+		elseif love.filesystem.isFused and love.filesystem.isFused() then
+			local src = (love.filesystem.getSource and love.filesystem.getSource()) or ""
+			if src:lower():match("server") then
+				is_server = true
+			end
+		end
+	end
+	if not is_server and arg then
+		for i = -2, 0 do
+			if arg[i] and tostring(arg[i]):lower():match("server") then
+				is_server = true
+				break
+			end
 		end
 	end
 	if is_server then

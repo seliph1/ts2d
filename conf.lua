@@ -1,10 +1,29 @@
 function love.conf(t)
     -- Modo servidor dedicado headless: `love . --server` (ver branch em main.lua).
+    -- Modo servidor dedicado headless: flag --server ou binario dedicado (ex: ts2d_server.exe)
     local is_server = false
     for _, a in ipairs(arg or {}) do
         if a == "--server" or a == "server" then
             is_server = true
             break
+        end
+    end
+    if not is_server and love.filesystem then
+        if love.filesystem.getInfo and (love.filesystem.getInfo("is_server") or love.filesystem.getInfo("core/is_server")) then
+            is_server = true
+        elseif love.filesystem.isFused and love.filesystem.isFused() then
+            local src = (love.filesystem.getSource and love.filesystem.getSource()) or ""
+            if src:lower():match("server") then
+                is_server = true
+            end
+        end
+    end
+    if not is_server and arg then
+        for i = -2, 0 do
+            if arg[i] and tostring(arg[i]):lower():match("server") then
+                is_server = true
+                break
+            end
         end
     end
 

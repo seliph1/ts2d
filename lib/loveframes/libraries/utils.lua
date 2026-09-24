@@ -244,25 +244,27 @@ return function(loveframes)
 		local files = love.filesystem.getDirectoryItems(dir)
 
 		for k, v in ipairs(files) do
-			local isdir = love.filesystem.getInfo(dir .. "/" .. v) ~= nil and
-				love.filesystem.getInfo(dir .. "/" .. v)["type"] ==
-				"directory" --love.filesystem.isDirectory(dir.. "/" ..v)
-			if isdir == true then
-				table.insert(dirs, dir .. "/" .. v)
-			else
-				local parts = loveframes.SplitString(v, "([.])")
-				local extension = #parts > 1 and parts[#parts]
-				if #parts > 1 then
-					parts[#parts] = nil
+			if v ~= "" and v ~= "." and v ~= ".." then
+				local fullpath = (dir == "" or dir == ".") and v or (dir .. "/" .. v)
+				local info = love.filesystem.getInfo(fullpath)
+				local isdir = info ~= nil and info.type == "directory"
+				if isdir == true then
+					table.insert(dirs, fullpath)
+				else
+					local parts = loveframes.SplitString(v, "([.])")
+					local extension = #parts > 1 and parts[#parts]
+					if #parts > 1 then
+						parts[#parts] = nil
+					end
+					local name = table.concat(parts, ".")
+					table.insert(t, {
+						path = dir,
+						fullpath = fullpath,
+						requirepath = loveframes.utf8.gsub(dir, "/", ".") .. "." .. name,
+						name = name,
+						extension = extension
+					})
 				end
-				local name = table.concat(parts, ".")
-				table.insert(t, {
-					path = dir,
-					fullpath = dir .. "/" .. v,
-					requirepath = loveframes.utf8.gsub(dir, "/", ".") .. "." .. name,
-					name = name,
-					extension = extension
-				})
 			end
 		end
 

@@ -70,16 +70,16 @@ if not defined SEVENZIP (
 set "LOVE_FILE=%TEMP%\ts2d_build_%RANDOM%.love"
 if exist "!LOVE_FILE!" del /f /q "!LOVE_FILE!"
 
-echo [2/4] Compactando arquivos do jogo...
+echo [2/4] Compactando codigo e scripts do motor em "!LOVE_FILE!"...
 
 if defined SEVENZIP (
     "!SEVENZIP!" a -tzip "!LOVE_FILE!" ^
-        "core" "gfx" "lib" "logos" "maps" "meta" "sfx" "sys" ^
+        "core" "lib" "meta" ^
         "conf.lua" "main.lua" "cs2d.png" "cs2d1024px.png" >nul
 ) else (
     echo    (7-Zip nao encontrado, usando PowerShell Compress-Archive...)
     powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-        "$dirs = @('core','gfx','lib','logos','maps','meta','sfx','sys');" ^
+        "$dirs = @('core','lib','meta');" ^
         "$files = @('conf.lua','main.lua','cs2d.png','cs2d1024px.png');" ^
         "$items = @();" ^
         "foreach ($d in $dirs) { if (Test-Path $d) { $items += (Get-Item $d) } };" ^
@@ -108,15 +108,39 @@ echo    - Criado: build\ts2d.exe
 if defined LOVEC_EXE (
     copy /b "!LOVEC_EXE!" + "!LOVE_FILE!" "build\ts2d_server.exe" >nul
     if not errorlevel 1 echo    - Criado: build\ts2d_server.exe (Modo Console / Servidor Dedicado)
+    set "SERVER_LOVE=%TEMP%\ts2d_server_%RANDOM%.love"
+    copy /y "!LOVE_FILE!" "!SERVER_LOVE!" >nul
+    echo server > "%TEMP%\is_server"
+    if defined SEVENZIP (
+        "!SEVENZIP!" a -tzip "!SERVER_LOVE!" "%TEMP%\is_server" >nul
+    )
+    if exist "%TEMP%\is_server" del /f /q "%TEMP%\is_server"
+    copy /b "!LOVEC_EXE!" + "!SERVER_LOVE!" "build\ts2d_server.exe" >nul
+    if not errorlevel 1 echo    - Criado: build\ts2d_server.exe (Modo Console / Servidor Dedicado Headless)
+    if exist "!SERVER_LOVE!" del /f /q "!SERVER_LOVE!"
 )
 
-:: 5. Montar pasta dist completa com executaveis e DLLs de build/
-echo [4/4] Montando pasta de distribuicao 'dist'...
+:: Vincular pastas expostas na pasta build/ para desenvolvimento local imediato
+if not exist "build\gfx" mklink /j "build\gfx" "gfx" >nul 2>nul
+if not exist "build\sfx" mklink /j "build\sfx" "sfx" >nul 2>nul
+if not exist "build\logos" mklink /j "build\logos" "logos" >nul 2>nul
+if not exist "build\sys" mklink /j "build\sys" "sys" >nul 2>nul
+if not exist "build\maps" mklink /j "build\maps" "maps" >nul 2>nul
+
+:: 5. Montar pasta dist completa com executaveis, DLLs e pastas expostas
+echo [4/4] Montando pasta de distribuicao 'dist' com pastas expostas...
 if not exist "dist" mkdir "dist"
 copy /y "build\*.dll" "dist\" >nul
 copy /y "build\ts2d.exe" "dist\" >nul
 if exist "build\ts2d_server.exe" copy /y "build\ts2d_server.exe" "dist\" >nul
 if exist "README.md" copy /y "README.md" "dist\" >nul
+
+echo    - Copiando pastas expostas para dist\...
+if exist "gfx" xcopy "gfx" "dist\gfx\" /e /i /y >nul
+if exist "sfx" xcopy "sfx" "dist\sfx\" /e /i /y >nul
+if exist "logos" xcopy "logos" "dist\logos\" /e /i /y >nul
+if exist "sys" xcopy "sys" "dist\sys\" /e /i /y >nul
+if exist "maps" xcopy "maps" "dist\maps\" /e /i /y >nul
 
 :: Limpar arquivo temporario
 if exist "!LOVE_FILE!" del /f /q "!LOVE_FILE!"
@@ -126,11 +150,18 @@ echo ========================================================
 echo               BUILD CONCLUIDO COM SUCESSO!
 echo ========================================================
 echo Executaveis gerados:
-echo   - build\ts2d.exe (junto com as DLLs em build\)
+echo   - build\ts2d.exe
 if exist "build\ts2d_server.exe" echo   - build\ts2d_server.exe (console/servidor)
 echo.
-echo Pacote pronto para distribuicao:
-echo   - dist\ (contem os executaveis e todas as DLLs de build\)
+echo Pacote de distribuicao configurado em 'dist\':
+echo   - dist\ts2d.exe (executavel)
+if exist "dist\ts2d_server.exe" echo   - dist\ts2d_server.exe (console/servidor)
+echo   - dist\*.dll (todas as dependencias da pasta build\)
+echo   - dist\gfx\   (exposta para sprites, tiles, HUD e texturas)
+echo   - dist\sfx\   (exposta para sons e efeitos sonoros)
+echo   - dist\logos\ (exposta para sprays e icones)
+echo   - dist\sys\   (exposta para configuracoes e scripts Lua de servidor)
+echo   - dist\maps\  (exposta para mapas .map customizados)
 echo ========================================================
 goto :end
 

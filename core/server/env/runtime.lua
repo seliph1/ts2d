@@ -135,14 +135,15 @@ return function(cs2dAPI, BASE_ENV, server)
 	-- server.lua entrypoint
 	server.log(7, "lua", string.format("Lua: Parsing Lua server script (mp_luaserver = '%s')", mp_luaserver))
 	local status, entrypoint = pcall(love.filesystem.load, mp_luaserver)
-	if status then
+	if status and entrypoint then
 		setfenv(entrypoint, SERVER_ENV)
 		local entrypoint_output = { pcall(entrypoint) }
 		if not entrypoint_output[1] then
 			server.log(7, "error", entrypoint_output[2])
 		end
 	else
-		local error_message = tostring(entrypoint)
+		local error_message =
+			tostring(entrypoint or ("Failed to load " .. mp_luaserver))
 		error_message = string.gsub(error_message, "\n", "")
 		server.log(7, "error", error_message)
 	end
