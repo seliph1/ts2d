@@ -37,6 +37,7 @@ function newobject:initialize()
 	self.children = {}
 	self.internals = {}
 	self.resizecolumn = nil
+	self.columnrenderers = {}
 	self.OnRowClicked = nil
 	self.OnRowRightClicked = nil
 	self.OnRowSelected = nil
@@ -464,6 +465,36 @@ function newobject:SetColumnHeight(height)
 end
 
 --[[---------------------------------------------------------
+	- func: SetRowHeight(height)
+	- desc: sets the height of rows in the object
+--]]---------------------------------------------------------
+function newobject:SetRowHeight(height)
+
+	local list = self.internals[1]
+	if list then
+		list.rowheight = height
+		list:CalculateSize()
+		list:RedoLayout()
+	end
+	return self
+
+end
+
+--[[---------------------------------------------------------
+	- func: GetRowHeight()
+	- desc: gets the height of rows in the object
+--]]---------------------------------------------------------
+function newobject:GetRowHeight()
+
+	local list = self.internals[1]
+	if list then
+		return list.rowheight
+	end
+	return 25
+
+end
+
+--[[---------------------------------------------------------
 	- func: SetDTScrolling(bool)
 	- desc: sets whether or not the object should use delta
 			time when scrolling
@@ -803,6 +834,27 @@ function newobject:GetColumnWidth(id)
 	
 	return false
 	
+end
+
+--[[---------------------------------------------------------
+	- func: SetColumnRenderer(id, func)
+	- desc: sets a custom draw callback for the specified column
+--]]---------------------------------------------------------
+function newobject:SetColumnRenderer(id, func)
+
+	self.columnrenderers[id] = func
+	return self
+
+end
+
+--[[---------------------------------------------------------
+	- func: GetColumnRenderer(id)
+	- desc: gets the custom draw callback for the specified column
+--]]---------------------------------------------------------
+function newobject:GetColumnRenderer(id)
+
+	return self.columnrenderers[id]
+
 end
 
 --[[---------------------------------------------------------

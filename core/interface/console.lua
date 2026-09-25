@@ -1,15 +1,9 @@
+local LF               = require "lib.loveframes"
 --//------------------------ MODULE START ------------------------//--
-local LF = require "lib.loveframes"
-
-local console = {}
-
-local console_in = love.thread.getChannel("console_in")
-local console_out = love.thread.getChannel("console_out")
-
-local font_fallbacks = {
-	--"gfx/fonts/NotoSansCJK-Regular.ttc",
-}
-
+local console          = {}
+local console_in       = love.thread.getChannel("console_in")
+local console_out      = love.thread.getChannel("console_out")
+local font_fallbacks   = { --[["gfx/fonts/NotoSansCJK-Regular.ttc" --]] }
 local setFontFallbacks = function(font, size)
 	local fallbacks = {}
 	for index, fallback_src in ipairs(font_fallbacks) do
@@ -18,11 +12,9 @@ local setFontFallbacks = function(font, size)
 	end
 	font:setFallbacks(unpack(fallbacks))
 end
-
-local font_mono = love.graphics.newFont("gfx/fonts/NotoSansMono-Regular.ttf", 15)
+local font_mono        = love.graphics.newFont("gfx/fonts/NotoSansMono-Regular.ttf", 15)
+local font_mono_small  = love.graphics.newFont("gfx/fonts/NotoSansMono-Regular.ttf", 12)
 setFontFallbacks(font_mono, 15)
-
-local font_mono_small = love.graphics.newFont("gfx/fonts/NotoSansMono-Regular.ttf", 12)
 setFontFallbacks(font_mono_small, 12)
 
 console.frame = LF.Create("frame")
@@ -32,72 +24,141 @@ console.frame = LF.Create("frame")
 	:SetName("Console")
 	:SetCloseAction("hide")
 	:SetState("*")
+	:SetAlwaysUpdate(true)
+----------------------------------------------------------------------------------------------------
+-- HTTP Callback Registry & Helpers
+----------------------------------------------------------------------------------------------------
+console.http_callbacks = {}
+local next_callback_id = 1
+
+---Fires an asynchronous HTTP request on a background thread and invokes the callback upon completion.
+---@param request_or_url string|table URL string or config table { url, method, headers, data, timeout }
+---@param callback? fun(body: string?, code: number, headers: table, image_data?: love.ImageData|any) Callback invoked on completion
+---@return number|string? callback_id The assigned callback ID
+function console.http_request(request_or_url, callback)
+	local options = {}
+	if type(request_or_url) == "string" then
+		options.url = request_or_url
+	elseif type(request_or_url) == "table" then
+		for k, v in pairs(request_or_url) do options[k] = v end
+	else
+		error("console.http_request: URL string or options table expected", 2)
+	end
+
+	local callback_id = nil
+	if callback then
+		callback_id = next_callback_id
+		next_callback_id = next_callback_id + 1
+		console.http_callbacks[callback_id] = callback
+		options.callback_id = callback_id
+	end
+
+	local thread = love.thread.newThread("core/thread/http_thread.lua")
+	if thread then
+		thread:start(options)
+	end
+
+	return callback_id
+end
+
+---Convenience helper for HTTP GET requests.
+function console.http_get(url, callback)
+	return console.http_request({ url = url, method = "GET" }, callback)
+end
+
+---Convenience helper for HTTP POST requests.
+function console.http_post(url, data, callback)
+	return console.http_request({ url = url, method = "POST", data = data }, callback)
+end
 
 console.frame.Update = function(object, dt)
 	object.name = string.format("Console [%s]", love.timer.getFPS())
-	local block = console_in:pop()
-	if block then
+
+	-- Process all pending incoming channel messages
+	while true do
+		local block = console_in:pop()
+		if not block then break end
+
 		if type(block) == "string" then
 			local expression, error_message = loadstring(block)
 			if expression then
-				local status, error_message = pcall(expression)
+				local status, err = pcall(expression)
 				if not status then
-					print("©255000000LUA ERROR: " .. error_message)
+					print("©255000000LUA ERROR: " .. tostring(err))
 				end
 			else
-				print("©255000000LUA ERROR: " .. error_message)
+				print("©255000000LUA ERROR: " .. tostring(error_message))
+			end
+		elseif type(block) == "table" then
+			local action = block.action
+			if action == "display_image" then
+				local frame = LF.Create("frame"):SetSize(500, 500):Center()
+				local w, h = frame:GetSize()
+				local scroll = LF.Create("scrollpanel", frame):SetSize(w, h - 30):SetY(30)
+				local image_holder = LF.Create("image", scroll)
+				local image_data = block.args and block.args.image_data
+
+				if image_data then
+					local image = love.graphics.newImage(image_data)
+					if image then
+						image_holder:SetImage(image)
+					end
+				end
+			elseif action == "display_http_response" then
+				local frame = LF.Create("frame"):SetSize(500, 500):Center()
+				local w, h = frame:GetSize()
+				local panel = LF.Create("panel", frame)
+					:SetSize(w, h - 30)
+					:SetY(30)
+				local scroll = LF.Create("scrollpanel", frame)
+					:SetSize(w, h - 30)
+					:SetY(30)
+				local label = LF.Create("label", scroll)
+					:SetMaxWidth(w)
+					:SetFont(font_mono_small)
+					:SetColor(1, 1, 1, 1)
+
+				local body = block.args and block.args.body
+				if body then
+					label:SetText(body)
+				end
+			elseif action == "function" or action == "callback" then
+				local func = block.f
+				if not func and block.callback_id then
+					func = console.http_callbacks[block.callback_id]
+					console.http_callbacks[block.callback_id] = nil
+				end
+
+				if type(func) == "function" then
+					local args = block.args or {}
+					local ok, err = pcall(func, unpack(args))
+					if not ok then
+						print("©255000000HTTP CALLBACK ERROR: " .. tostring(err))
+					end
+				elseif type(func) == "string" then
+					local expr, err = loadstring(func)
+					if expr then
+						local ok, run_err = pcall(expr, unpack(block.args or {}))
+						if not ok then
+							print("©255000000HTTP CALLBACK ERROR: " .. tostring(run_err))
+						end
+					else
+						print("©255000000HTTP CALLBACK COMPILATION ERROR: " .. tostring(err))
+					end
+				end
 			end
 		end
-
-
-		if type(block) == "table" then
-			if block.action then
-				if block.action == "display_image" then
-					local frame = LF.Create("frame"):SetSize(500, 500)
-					local w, h = frame:GetSize()
-					local scroll = LF.Create("scrollpanel", frame):SetSize(w, h - 30):SetY(30)
-					local image_holder = LF.Create("image", scroll)
-					local image_data = block.args.image_data
-
-					if image_data then
-						local image = love.graphics.newImage(image_data)
-						if image then
-							image_holder:SetImage(image)
-						end
-					end
-				end
-
-				if block.action == "display_http_response" then
-					local frame = LF.Create("frame"):SetSize(500, 500)
-					local w, h = frame:GetSize()
-					local panel = LF.Create("panel", frame)
-						:SetSize(w, h - 30)
-						:SetY(30)
-					local scroll = LF.Create("scrollpanel", frame)
-						:SetSize(w, h - 30)
-						:SetY(30)
-					local label = LF.Create("label", scroll)
-						:SetMaxWidth(w)
-						:SetFont(font_mono_small)
-						:SetColor(1, 1, 1, 1)
-
-					local body = block.args.body
-					if body then
-						label:SetText(body)
-					end
-				end
-			end
-		end -- if type(block) == "table" then
 	end
 
-	local out = console_out:pop()
-	if out then
+	-- Process all pending outgoing console messages
+	while true do
+		local out = console_out:pop()
+		if not out then break end
 		print(out)
 	end
 end
 
 console.toast = LF.Create("toast", console.frame)
-
 console.input = LF.Create("textbox", console.frame)
 	:SetY(-8)
 	:SetSize(0.98, 25)
@@ -110,6 +171,7 @@ console.window_panel = LF.Create("panel", console.frame)
 	:SetWidth(0.98)
 	:Expand("bottom", 40)
 	:CenterX()
+
 console.window = LF.Create("log", console.window_panel)
 	:Expand()
 	:SetPadding(0)

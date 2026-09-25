@@ -27,10 +27,9 @@ function newobject:initialize(parent, data)
 	self.selected = false
 	self.internal = true
 	self.columndata = {}
+	self.columnchunks = {}
 	
-	for k, v in ipairs(data) do
-		self.columndata[k] = tostring(v)
-	end
+	self:ParseColumnData(data)
 	
 	-- apply template properties to the object
 	loveframes.ApplyTemplatesToObject(self)
@@ -180,8 +179,68 @@ end
 --]]---------------------------------------------------------
 function newobject:SetColumnData(data)
 
-	self.columndata = data
+	self:ParseColumnData(data)
 	
+end
+
+--[[---------------------------------------------------------
+	- func: ParseColumnData(data)
+	- desc: parses column data and caches color chunks/bars
+--]]---------------------------------------------------------
+function newobject:ParseColumnData(data)
+
+	self.columndata = {}
+	self.columnchunks = {}
+
+	for k, v in ipairs(data) do
+		local str = tostring(v)
+		self.columndata[k] = str
+
+		if str:find("©") then
+			self.columnchunks[k] = self:ParseChunks(str)
+		end
+	end
+
+end
+
+--[[---------------------------------------------------------
+	- func: ParseChunks(str)
+	- desc: parses CS2D color tags into drawable chunks once
+--]]---------------------------------------------------------
+function newobject:ParseChunks(str)
+
+	local chunks = {}
+	local cur_col = { 0.8, 0.8, 0.8, 1 }
+	local last = 1
+	while true do
+		local i, j = str:find("©", last)
+		if not i then
+			if #str >= last then
+				table.insert(chunks, cur_col)
+				table.insert(chunks, str:sub(last))
+			end
+			break
+		end
+		if i > last then
+			table.insert(chunks, cur_col)
+			table.insert(chunks, str:sub(last, i - 1))
+		end
+		local k = str:find("©", j + 1) or (#str + 1)
+		local capture = str:sub(j + 1, k - 1)
+		local r, g, b = capture:match("(%d%d%d)(%d%d%d)(%d%d%d)")
+		local captured_text = capture:sub(10)
+		if r and g and b then
+			cur_col = { tonumber(r) / 255, tonumber(g) / 255, tonumber(b) / 255, 1 }
+			table.insert(chunks, cur_col)
+			table.insert(chunks, captured_text)
+		else
+			table.insert(chunks, cur_col)
+			table.insert(chunks, "©" .. capture)
+		end
+		last = k
+	end
+	return chunks
+
 end
 
 --[[---------------------------------------------------------

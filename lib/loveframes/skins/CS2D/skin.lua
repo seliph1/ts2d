@@ -304,7 +304,8 @@ return function(loveframes)
 	local function ParseRowText(str, rx, rwidth, tx1, tx2)
 		local font = love.graphics.getFont()
 		local maxwidth = (rx + rwidth) - (tx1 + tx2)
-		if font:getWidth(str) <= maxwidth then
+		local clean_str = str:gsub("©%d%d%d%d%d%d%d%d%d", "")
+		if font:getWidth(clean_str) <= maxwidth then
 			return str
 		end
 		-- binary search for the longest prefix that fits. trimming one
@@ -314,7 +315,9 @@ return function(loveframes)
 		local lo, hi = 1, utf8.len(str)
 		while lo < hi do
 			local mid = math.ceil((lo + hi) / 2)
-			if font:getWidth(utf8.sub(str, 1, mid)) <= maxwidth then
+			local sub = utf8.sub(str, 1, mid)
+			local clean_sub = sub:gsub("©%d%d%d%d%d%d%d%d%d", "")
+			if font:getWidth(clean_sub) <= maxwidth then
 				lo = mid
 			else
 				hi = mid - 1
@@ -323,8 +326,52 @@ return function(loveframes)
 		return utf8.sub(str, 1, lo)
 	end
 
+	local text_chunks_cache = setmetatable({}, { __mode = "v" })
+	local function ParseColorChunks(text)
+		local cached = text_chunks_cache[text]
+		if cached then return cached end
+
+		local chunks = {}
+		local cur_col = { 0.8, 0.8, 0.8, 1 }
+		local last = 1
+		while true do
+			local i, j = text:find("©", last)
+			if not i then
+				if #text >= last then
+					table.insert(chunks, cur_col)
+					table.insert(chunks, text:sub(last))
+				end
+				break
+			end
+			if i > last then
+				table.insert(chunks, cur_col)
+				table.insert(chunks, text:sub(last, i - 1))
+			end
+			local k = text:find("©", j + 1) or (#text + 1)
+			local capture = text:sub(j + 1, k - 1)
+			local r, g, b = capture:match("(%d%d%d)(%d%d%d)(%d%d%d)")
+			local captured_text = capture:sub(10)
+			if r and g and b then
+				cur_col = { tonumber(r) / 255, tonumber(g) / 255, tonumber(b) / 255, 1 }
+				table.insert(chunks, cur_col)
+				table.insert(chunks, captured_text)
+			else
+				table.insert(chunks, cur_col)
+				table.insert(chunks, "©" .. capture)
+			end
+			last = k
+		end
+		text_chunks_cache[text] = chunks
+		return chunks
+	end
+
 	function skin.PrintText(text, x, y)
-		love.graphics.print(text, math.floor(x + 0.5), math.floor(y + 0.5))
+		if type(text) == "string" and text:find("©") then
+			local chunks = ParseColorChunks(text)
+			love.graphics.print(chunks, math.floor(x + 0.5), math.floor(y + 0.5))
+		else
+			love.graphics.print(text, math.floor(x + 0.5), math.floor(y + 0.5))
+		end
 	end
 
 	--[[---------------------------------------------------------
@@ -2274,49 +2321,47 @@ end
 		local down = object.down
 		local font = skin.controls.columnlistheader_text_font
 		local theight = font:getHeight()
-		local twidth = font:getWidth("")
+		local raw_name = object:GetName()
+		local twidth = font:getWidth(raw_name)
 
 		local bodydowncolor = skin.controls.columnlistheader_body_down_color
 		local textdowncolor = skin.controls.columnlistheader_text_down_color
 		local bodyhovercolor = skin.controls.columnlistheader_body_hover_color
-		local textdowncolor = skin.controls.columnlistheader_text_hover_color
+		local texthovercolor = skin.controls.columnlistheader_text_hover_color
 		local nohovercolor = skin.controls.columnlistheader_body_nohover_color
 		local textnohovercolor = skin.controls.columnlistheader_text_nohover_color
 
-
-		local name = ParseHeaderText(object:GetName(), x, width, x + width / 2, twidth)
+		local name = raw_name
+		local prev_x, prev_y, prev_w, prev_h = love.graphics.getScissor()
 
 		if down then
-			-- header body
 			love.graphics.setColor(bodydowncolor)
 			love.graphics.rectangle("fill", x, y, width, height)
-			-- header name
 			love.graphics.setFont(font)
 			love.graphics.setColor(textdowncolor)
-			skin.PrintText(name, x + width / 2 - twidth / 2, y + height / 2 - theight / 2)
-			-- header border
+			love.graphics.intersectScissor(x + 1, y, math.max(0, width - 2), height)
+			skin.PrintText(name, x + 5, y + height / 2 - theight / 2)
+			if prev_x then love.graphics.setScissor(prev_x, prev_y, prev_w, prev_h) else love.graphics.setScissor() end
 			love.graphics.setColor(bordercolor)
 			skin.OutlinedRectangle(x, y, width, height)
 		elseif hover then
-			-- header body
 			love.graphics.setColor(bodyhovercolor)
 			love.graphics.rectangle("fill", x, y, width, height)
-			-- header name
 			love.graphics.setFont(font)
-			love.graphics.setColor(textdowncolor)
-			skin.PrintText(name, x + width / 2 - twidth / 2, y + height / 2 - theight / 2)
-			-- header border
+			love.graphics.setColor(texthovercolor)
+			love.graphics.intersectScissor(x + 1, y, math.max(0, width - 2), height)
+			skin.PrintText(name, x + 5, y + height / 2 - theight / 2)
+			if prev_x then love.graphics.setScissor(prev_x, prev_y, prev_w, prev_h) else love.graphics.setScissor() end
 			love.graphics.setColor(bordercolor)
 			skin.OutlinedRectangle(x, y, width, height)
 		else
-			-- header body
 			love.graphics.setColor(nohovercolor)
 			love.graphics.rectangle("fill", x, y, width, height)
-			-- header name
 			love.graphics.setFont(font)
 			love.graphics.setColor(textnohovercolor)
-			skin.PrintText(name, x + width / 2 - twidth / 2, y + height / 2 - theight / 2)
-			-- header border
+			love.graphics.intersectScissor(x + 1, y, math.max(0, width - 2), height)
+			skin.PrintText(name, x + 5, y + height / 2 - theight / 2)
+			if prev_x then love.graphics.setScissor(prev_x, prev_y, prev_w, prev_h) else love.graphics.setScissor() end
 			love.graphics.setColor(bordercolor)
 			skin.OutlinedRectangle(x, y, width, height)
 		end
@@ -2409,8 +2454,34 @@ end
 				for ci, value in ipairs(row.columndata) do
 					local colwidth = columnlist:GetColumnWidth(ci)
 					if colwidth then
-						local text = ParseRowText(value, cx, colwidth, cx, textx)
-						skin.PrintText(text, cx + textx, ry + texty)
+						local renderer = columnlist:GetColumnRenderer(ci)
+						local cell_scissor_x, cell_scissor_y, cell_scissor_w, cell_scissor_h = love.graphics.getScissor()
+						love.graphics.intersectScissor(cx, ry, math.max(0, colwidth), rheight)
+
+						if renderer then
+							renderer(row, value, cx, ry, colwidth, rheight, textx, texty)
+						else
+							local chunks = row.columnchunks and row.columnchunks[ci]
+							if chunks then
+								love.graphics.print(chunks, cx + textx, ry + texty)
+							else
+								if type(value) == "string" and value:find("©") then
+									chunks = ParseColorChunks(value)
+									if not row.columnchunks then row.columnchunks = {} end
+									row.columnchunks[ci] = chunks
+									love.graphics.print(chunks, cx + textx, ry + texty)
+								else
+									love.graphics.print(value, cx + textx, ry + texty)
+								end
+							end
+						end
+
+						if cell_scissor_x then
+							love.graphics.setScissor(cell_scissor_x, cell_scissor_y, cell_scissor_w, cell_scissor_h)
+						else
+							love.graphics.setScissor()
+						end
+
 						cx = cx + columns[ci]:GetWidth()
 					else
 						break
