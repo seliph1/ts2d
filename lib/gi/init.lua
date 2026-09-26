@@ -57,6 +57,8 @@ function GI.new(width, height)
     self.enableBilateralBlur = true
     self.blurRadius = 3.0
     self.shadowMaskMode = true
+    self.shadowExponent = 10.0
+    self.shadowOpacity = 1.0
 
     -- Controle de acumulação temporal
     self.time = 0.0
@@ -333,6 +335,8 @@ function GI:renderPipeline()
     self.giShader:send("enableSun", self.enableSun)
     self.giShader:send("maxSteps", self.maxSteps)
     self.giShader:send("shadowMaskMode", self.shadowMaskMode)
+    self.giShader:send("shadowExponent", self.shadowExponent or 10.0)
+    self.giShader:send("shadowOpacity", self.shadowOpacity or 1.0)
 
     self.giShader:send("sceneTexture", self.sceneCanvas)
     self.giShader:send("distanceTexture", self.distanceCanvas)

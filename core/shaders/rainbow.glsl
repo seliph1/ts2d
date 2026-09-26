@@ -1,7 +1,12 @@
-uniform float time = 0.0;
-uniform float strength = 0.5;
-uniform float speed = 0.5;
-uniform float angle = 0.0;
+// @default time = 0.0
+// @default strength = 0.5
+// @default speed = 0.5
+// @default angle = 0.0
+
+uniform float time;
+uniform float strength;
+uniform float speed;
+uniform float angle;
 
 vec4 effect( vec4 color, Image tex, vec2 texture_coords, vec2 screen_coords )
 {
@@ -14,13 +19,13 @@ vec4 effect( vec4 color, Image tex, vec2 texture_coords, vec2 screen_coords )
 	if (hue < 1.0/6.0) {
 		rainbow = vec3(1.0, x, 0.0);
 	} else if (hue < 1.0/3.0) {
-		rainbow = vec3(x, 1.0, 0);
+		rainbow = vec3(x, 1.0, 0.0);
 	} else if (hue < 0.5) {
-		rainbow = vec3(0, 1., x);
+		rainbow = vec3(0.0, 1.0, x);
 	} else if (hue < 2.0/3.0) {
-		rainbow = vec3(0., x, 1.);
+		rainbow = vec3(0.0, x, 1.0);
 	} else if (hue < 5.0/6.0) {
-		rainbow = vec3(x, 0.0, 1.);
+		rainbow = vec3(x, 0.0, 1.0);
 	} else {
 		rainbow = vec3(1.0, 0.0, x);
 	}

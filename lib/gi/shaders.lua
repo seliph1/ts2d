@@ -87,8 +87,8 @@ shaders.gi = [[
     uniform int rayCount;
     uniform float time;
     uniform float sunAngle;
-    uniform float shadowExponent = 10.0;
-    uniform float shadowOpacity = 1.0;
+    uniform float shadowExponent;
+    uniform float shadowOpacity;
     uniform bool showNoise;
     uniform bool showGrain;
     uniform bool useTemporalAccum;

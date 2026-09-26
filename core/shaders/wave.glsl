@@ -1,9 +1,16 @@
-uniform float waveAmount = 12.56;
-uniform float waveSize = 0.05;
-uniform float waveSpeed = 0.05;
-uniform float x = 1.0;
-uniform float y = 1.0;
-uniform float time = 0.0;
+// @default waveAmount = 12.56
+// @default waveSize = 0.05
+// @default waveSpeed = 0.05
+// @default x = 1.0
+// @default y = 1.0
+// @default time = 0.0
+
+uniform float waveAmount;
+uniform float waveSize;
+uniform float waveSpeed;
+uniform float x;
+uniform float y;
+uniform float time;
 
 vec4 effect (vec4 COLOR, Image TEXTURE, vec2 UV, vec2 SCREEN_UV) {
     vec2 pos = UV;

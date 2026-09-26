@@ -1,12 +1,19 @@
+// @default width = 0.05
+// @default t = 0.2
+// @default aberration = 0.02
+// @default speed = 1.0
+// @default shading = 1.0
+// @default centre = 0.0, 0.0
+
 uniform float time;
 uniform vec4 mouse;
 
-uniform float width = 0.05;
-uniform float t = 0.2;
-uniform float aberration = 0.02;
-uniform float speed = 1.0;
-uniform float shading = 1.0;
-uniform vec2 centre = vec2(0.0);
+uniform float width;
+uniform float t;
+uniform float aberration;
+uniform float speed;
+uniform float shading;
+uniform vec2 centre;
 
 const float maxRadius = 0.25;
 
@@ -28,9 +35,9 @@ vec4 effect (vec4 COLOR, Image TEXTURE, vec2 UV, vec2 SCREEN_UV) {
 
     float elapsed = fract( (t + time) * speed);
     //float d = getOffsetStrength(elapsed, dir);
-    float rD = getOffsetStrength(elapsed, dir + aberration);
+    float rD = getOffsetStrength(elapsed, dir + vec2(aberration));
     float gD = getOffsetStrength(elapsed, dir);
-    float bD = getOffsetStrength(elapsed, dir - aberration);
+    float bD = getOffsetStrength(elapsed, dir - vec2(aberration));
 
     dir = normalize(dir);
 
@@ -41,7 +48,7 @@ vec4 effect (vec4 COLOR, Image TEXTURE, vec2 UV, vec2 SCREEN_UV) {
     float a = Texel(TEXTURE, UV + dir * gD).a;
 
     vec4 final_color = vec4(r,g,b,a);
-    final_color += gD * shading;
+    final_color.rgb += gD * shading;
 
     return final_color * COLOR;
 }

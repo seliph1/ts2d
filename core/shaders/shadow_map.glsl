@@ -1,7 +1,16 @@
 #pragma language glsl3
+// @default steps = 32.0
+// @default maxSteps = 32.0
+// @default shadowStrength = 0.6
+// @default shadowLength = 32.0
+// @default direction = 225.0
+// @default mode = 1.0
+// @default distanceFactor = 0.9
+// @default blur = 1.0
+
 // Love2d variables
-uniform vec2 camera = vec2(0.0);
-uniform vec4 mouse = vec4(0.0);
+uniform vec2 camera;
+uniform vec4 mouse;
 uniform Image heightmap;
 uniform Image overlay;
 
@@ -9,14 +18,14 @@ uniform Image overlay;
 // Uniforms                         //
 //////////////////////////////////////
 
-uniform float steps = 32.0;
-uniform float maxSteps = 32.0;
-uniform float shadowStrength = 0.6;
-uniform float shadowLength = 32.0;
-uniform float direction = 225.0;
-uniform float mode = 1.0;
-uniform float distanceFactor = 0.9;
-uniform float blur = 1.0;
+uniform float steps;
+uniform float maxSteps;
+uniform float shadowStrength;
+uniform float shadowLength;
+uniform float direction;
+uniform float mode;
+uniform float distanceFactor;
+uniform float blur;
 
 uniform int numOccluders;
 uniform vec4 occluders[32]; // [i] = vec4(worldX, worldY, radius, height)
@@ -96,17 +105,25 @@ vec3 getOcclusion(vec2 UV, vec2 SCREEN_UV) {
         }
     }
 
+    // Safe fallbacks in case uniforms are not sent from host
+    float safeSteps = steps > 0.0 ? steps : 32.0;
+    float safeMaxSteps = maxSteps > 0.0 ? maxSteps : 32.0;
+    float safeLength = shadowLength > 0.0 ? shadowLength : 32.0;
+    float safeDirection = direction != 0.0 ? direction : 225.0;
+    float safeDistFactor = distanceFactor > 0.0 ? distanceFactor : 0.9;
+    float safeBlur = blur > 0.0 ? blur : 1.0;
+
     // Transform degrees to radians
-    float direction = radians(direction);
+    float dirRad = radians(safeDirection);
 
     // Calculate angle from radians (0~1)
-    vec2 ray2D = normalize(vec2(sin(direction), cos(direction))) / mapSize;
+    vec2 ray2D = normalize(vec2(sin(dirRad), cos(dirRad))) / mapSize;
 
     // Create position vector at step 0, starting at terrain level
     vec3 position = vec3(mapPos, baseHeight);
 
     // Calculate the step size of sample
-    vec3 stepDir = normalize( vec3(ray2D * shadowLength, 32.0) ) / maxSteps;
+    vec3 stepDir = normalize( vec3(ray2D * safeLength, 32.0) ) / safeMaxSteps;
 
     // Create control variables:
     // We are in shadow if shadow == 1.0;
@@ -118,7 +135,7 @@ vec3 getOcclusion(vec2 UV, vec2 SCREEN_UV) {
     float highest = 0.0;
 
     // Iterate through steps
-    for (float i = 0.0; i < steps; i++) {
+    for (float i = 0.0; i < safeSteps; i++) {
         // Increment vector p by step size
         position += stepDir;
 
@@ -148,7 +165,7 @@ vec3 getOcclusion(vec2 UV, vec2 SCREEN_UV) {
     }
 
     // Make threshold to where the shadow softness should begin
-    dist = smoothstep(distanceFactor, 1.0, dist);
+    dist = smoothstep(safeDistFactor, 1.0, dist);
 
     // If there is no shadow at this pixel, dist should not subtract or show white in debug
     if (shadow < 0.5) {
@@ -168,8 +185,8 @@ vec4 getShadow(vec4 COLOR, vec2 UV, vec2 SCREEN_UV) {
     float dist = occlusion.y;
     float height = occlusion.z;
 
-    // Debug
-    if (mode < 0.2) {
+    // Debug (only if mode is explicitly set to debug values > 0.05)
+    if (mode > 0.05 && mode < 0.2) {
         return vec4( 1.0 );
     }
     if (mode >= 0.2 && mode < 0.4) {
@@ -185,8 +202,10 @@ vec4 getShadow(vec4 COLOR, vec2 UV, vec2 SCREEN_UV) {
     // Get the current color from external buffer
     vec3 shadow_color = COLOR.rgb;
 
+    float safeStrength = shadowStrength > 0.0 ? shadowStrength : 0.6;
+
     // Calculate alpha base on shadow strength, clamping negative values
-    float shadow_fadeout = max(0.0, shadow - dist) * shadowStrength;
+    float shadow_fadeout = max(0.0, shadow - dist) * safeStrength;
 
     // Return the final result
     return vec4(vec3( shadow_color ), shadow_fadeout);

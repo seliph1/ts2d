@@ -4,17 +4,29 @@
 // Oni_The_Demon (godot adaptation)
 // Adapted for love2d by seliph 
 
-uniform float time = 0.0;
-uniform float Line_Smoothness = 0.045; // 0 .. 0.1
-uniform float Line_Width = 0.09; // 0 .. 0.2
-uniform float Brightness = 0.5; //
-uniform float Rotation_deg = 45; // -90, 90
-uniform float Distortion = 1.8; // 1 .. 2
-uniform float Speed = 0.7;
-uniform float Position = 0.0; // 0 .. 1
-uniform float Position_Min = 0.25;
-uniform float Position_Max = 0.5;
-uniform float Alpha  = 0.1; // 0 .. 1
+// @default time = 0.0
+// @default Line_Smoothness = 0.045
+// @default Line_Width = 0.09
+// @default Brightness = 0.5
+// @default Rotation_deg = 45.0
+// @default Distortion = 1.8
+// @default Speed = 0.7
+// @default Position = 0.0
+// @default Position_Min = 0.25
+// @default Position_Max = 0.5
+// @default Alpha = 0.1
+
+uniform float time;
+uniform float Line_Smoothness;
+uniform float Line_Width;
+uniform float Brightness;
+uniform float Rotation_deg;
+uniform float Distortion;
+uniform float Speed;
+uniform float Position;
+uniform float Position_Min;
+uniform float Position_Max;
+uniform float Alpha;
 //uniform Image source_color;
 
 
@@ -71,7 +83,7 @@ vec4 effect( vec4 color, Image SCREEN_TEXTURE, vec2 UV, vec2 SCREEN_UV ) {
 	remapped_line = min(remapped_line, Alpha);
 
 	vec4 surface_tex = Texel(SCREEN_TEXTURE, UV);
-    float highlight = 1 / (1.0 - remapped_line);
+    float highlight = 1.0 / (1.0 - remapped_line);
     surface_tex.rgb += vec3(highlight);
     return surface_tex;
 }

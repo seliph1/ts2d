@@ -1,9 +1,16 @@
-uniform float time = 1.0;
-uniform float x = 0.0;
-uniform float y = 0.0;
-uniform float shake = 0.0;
-uniform float speed = 1.0;
-uniform float seed = 0.0;
+// @default time = 1.0
+// @default x = 0.0
+// @default y = 0.0
+// @default shake = 0.0
+// @default speed = 1.0
+// @default seed = 0.0
+
+uniform highp float time;
+uniform highp float x;
+uniform highp float y;
+uniform highp float shake;
+uniform highp float speed;
+uniform highp float seed;
 
 float random( float seed )
 {
@@ -12,13 +19,13 @@ float random( float seed )
 
 #ifdef VERTEX
 vec4 position ( mat4 TRANSFORM, vec4 POSITION) {
-    POSITION += vec4(x, y, 0, 0);
+    POSITION += vec4(x, y, 0.0, 0.0);
     //float f = random(time) * 32.0;
 
     float offset_x = sin(time * speed * 1.3 + sin(time * speed * 0.7)) * 0.05;
     float offset_y = cos(time * speed * 0.9 + cos(time * speed * 0.5)) * 0.05;
 
-    POSITION += vec4( offset_x * shake, offset_y * shake, 0, 0);
+    POSITION += vec4( offset_x * shake, offset_y * shake, 0.0, 0.0);
 
     return TRANSFORM * POSITION;
 }

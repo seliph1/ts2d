@@ -1,7 +1,12 @@
-uniform float color_offset_multiplier  =  0.004;
-uniform float black_offset_multiplier = 0.1;
-uniform float color_offset = 0.005;
-uniform float blur_amount = 0.1;
+// @default color_offset_multiplier = 0.004
+// @default black_offset_multiplier = 0.1
+// @default color_offset = 0.005
+// @default blur_amount = 0.1
+
+uniform float color_offset_multiplier;
+uniform float black_offset_multiplier;
+uniform float color_offset;
+uniform float blur_amount;
 
 uniform float time;
 

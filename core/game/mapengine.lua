@@ -203,6 +203,10 @@ function MapObject.new(width, height)
 		_entity_shader = love.graphics.newShader("core/shaders/entity.glsl"),
 	}
 
+	if object._entity_shader:hasUniform("epsilon") then
+		object._entity_shader:send("epsilon", 0.1)
+	end
+
 	object._placeholder = love.image.newImageData(32, 32)
 	object._placeholder_img = love.graphics.newImage(object._placeholder)
 	object._blendmap = create_spritesheet("gfx/blendmap.bmp", 32, 32)
@@ -1257,6 +1261,14 @@ function MapObject:draw_shadow(client)
 	if not shadows then
 		shadows = love.graphics.newShader("core/shaders/shadow_map.glsl")
 		self._shadows = shadows
+		if shadows:hasUniform("steps") then shadows:send("steps", 32.0) end
+		if shadows:hasUniform("maxSteps") then shadows:send("maxSteps", 32.0) end
+		if shadows:hasUniform("shadowStrength") then shadows:send("shadowStrength", 0.6) end
+		if shadows:hasUniform("shadowLength") then shadows:send("shadowLength", 32.0) end
+		if shadows:hasUniform("direction") then shadows:send("direction", 225.0) end
+		if shadows:hasUniform("mode") then shadows:send("mode", 1.0) end
+		if shadows:hasUniform("distanceFactor") then shadows:send("distanceFactor", 0.9) end
+		if shadows:hasUniform("blur") then shadows:send("blur", 1.0) end
 	end
 	shadows:send("heightmap", heightmap)
 	shadows:send("camera", camera)

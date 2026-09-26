@@ -1,19 +1,28 @@
+// @default steps = 32.0
+// @default shadowBrightness = 0.5
+// @default shadowLength = 32.0
+// @default direction = 45.0
+// @default mode = 1.0
+// @default stepFactor = 0.05
+// @default distanceFactor = 0.05
+// @default offset = [0.0, 1.3846153846, 3.2307692308]
+// @default weight = [0.2270270270, 0.3162162162, 0.0702702703]
+
 uniform Image heightmap;
 
 // 640 units sun height
 // This ensures our uniform shadows scale with pixel size.
 const vec3 sunPos = vec3( vec2(0.0, 0.0), 640.0);
-uniform float steps = 32.0;
-uniform float shadowBrightness = 0.5;
-uniform float shadowLength = 32.0;
-uniform float direction = 45.0;
-uniform float mode = 1.0;
-uniform float stepFactor = 0.05;
-uniform float distanceFactor = 0.05;
-vec3 pix = vec3( 1/love_ScreenSize.x, 1/love_ScreenSize.y, 0);
+uniform float steps;
+uniform float shadowBrightness;
+uniform float shadowLength;
+uniform float direction;
+uniform float mode;
+uniform float stepFactor;
+uniform float distanceFactor;
 
-uniform float offset[3] = float[](0.0, 1.3846153846, 3.2307692308);
-uniform float weight[3] = float[](0.2270270270, 0.3162162162, 0.0702702703);
+uniform float offset[3];
+uniform float weight[3];
 
 float getHeight(vec2 UV) {
     vec4 color = Texel(heightmap, UV);
@@ -32,6 +41,7 @@ float expEase(float t, float k)
 }
 
 vec3 getOcclusion(vec2 UV) {
+    vec2 pix = vec2(1.0 / love_ScreenSize.x, 1.0 / love_ScreenSize.y);
     float minStepSize = min(pix.x, pix.y);
     float angle = radians(direction);
     float height0 = getHeight(UV);
@@ -73,7 +83,7 @@ vec3 getOcclusion(vec2 UV) {
 }
 
 vec3 easeOcclusion(vec2 UV) {
-	vec2 size = textureSize(heightmap, 0);
+	vec2 size = vec2(textureSize(heightmap, 0));
 	vec3 occlusion = getOcclusion(UV);
 
 	for (int i=1; i<3; i++) {

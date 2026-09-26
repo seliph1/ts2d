@@ -7,9 +7,11 @@ no SDF or distance fields, just a value field for the world
 
 */
 
-uniform vec4 iMouse = vec4(0.0);
-uniform float iTime = 0.0;
-vec2 iResolution = love_ScreenSize.xy;
+// @default iMouse = 0.0, 0.0, 0.0, 0.0
+// @default iTime = 0.0
+
+uniform vec4 iMouse;
+uniform float iTime;
 
 
 vec2 mod289(vec2 x) {
@@ -42,7 +44,7 @@ vec4 snoise(vec4 v) {return vec4(0.0);}
 
 vec4 world(vec2 uv) {
     // snoise defined in Common tab
-    float existHere = snoise(uv * 5.0) > 0.0 ? 1.0 : 0.0;
+    float existHere = snoise(uv * 5.0).x > 0.0 ? 1.0 : 0.0;
     
     vec3 col = vec3(1.0, 1.0, 1.0) * existHere;
 
@@ -52,6 +54,7 @@ vec4 world(vec2 uv) {
 
 vec4 effect( vec4 fragColor, Image tex, vec2 fragCoord, vec2 screenCoord )
 {
+    vec2 iResolution = love_ScreenSize.xy;
     // normalized pixel coordinates (from 0 to 1)
     vec2 uv = screenCoord/iResolution.xy;
 

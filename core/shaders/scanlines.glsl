@@ -1,6 +1,10 @@
-uniform float brightnessMult = 4.0;
-uniform float wiggleMult = 0.005;
-uniform float chromaticAberrationOffset = 0.001;
+// @default brightnessMult = 4.0
+// @default wiggleMult = 0.005
+// @default chromaticAberrationOffset = 0.001
+
+uniform float brightnessMult;
+uniform float wiggleMult;
+uniform float chromaticAberrationOffset;
 uniform float time;
 
 vec4 effect(vec4 COLOR, Image TEXTURE, vec2 UV, vec2 SCREEN_UV) {

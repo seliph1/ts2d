@@ -1,4 +1,6 @@
-extern float epsilon = 0.1;
+// @default epsilon = 0.1
+
+extern float epsilon;
 
 void color_mask(vec4 sub_color, vec4 tex_color, float threshold){
 	if (

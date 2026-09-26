@@ -1,13 +1,16 @@
 // jangsy5 code
-uniform number distortion = 0.1;
-uniform number aberration = 2.0;
+// @default distortion = 0.1
+// @default aberration = 2.0
+
+uniform number distortion;
+uniform number aberration;
 
 vec4 effect(vec4 color, Image tx, vec2 tc, vec2 pc)
 {
   // curvature
-  vec2 cc = tc - 0.5f;
+  vec2 cc = tc - 0.5;
   float dist = dot(cc, cc)*distortion;
-  tc = (tc + cc * (1.0f + dist) * dist);
+  tc = (tc + cc * (1.0 + dist) * dist);
 
   // fake chromatic aberration
   float sx = aberration/love_ScreenSize.x;
