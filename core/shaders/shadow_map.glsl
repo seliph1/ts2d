@@ -26,6 +26,7 @@ uniform float direction;
 uniform float mode;
 uniform float distanceFactor;
 uniform float blur;
+uniform bool worldSpace;
 
 uniform int numOccluders;
 uniform vec4 occluders[32]; // [i] = vec4(worldX, worldY, radius, height)
@@ -80,16 +81,20 @@ vec3 getOcclusion(vec2 UV, vec2 SCREEN_UV) {
     // Get the map size
     vec2 mapSize = vec2( textureSize(heightmap, 0) );
 
-    // Get the viewport size
-    vec2 screenSize = love_ScreenSize.xy;
-
     // Conversion factor: screen pixels > map space
     vec2 pixelsToMap = (mapSize * TILE_SIZE);
 
-    // Screen space position in world pixels
-    vec2 screenCenter = screenSize * 0.5;
-    vec2 worldPos = (SCREEN_UV + camera - screenCenter);
-    vec2 mapPos = worldPos / pixelsToMap;
+    vec2 worldPos;
+    vec2 mapPos;
+    if (worldSpace) {
+        mapPos = SCREEN_UV / love_ScreenSize.xy;
+        worldPos = mapPos * pixelsToMap;
+    } else {
+        vec2 screenSize = love_ScreenSize.xy;
+        vec2 screenCenter = screenSize * 0.5;
+        worldPos = (SCREEN_UV + camera - screenCenter);
+        mapPos = worldPos / pixelsToMap;
+    }
 
     // Base ground height from terrain
     float baseHeight = getTerrainHeight(mapPos);

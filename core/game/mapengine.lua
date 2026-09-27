@@ -201,6 +201,12 @@ function MapObject.new(width, height)
 		_entity_cache = {},
 		_entity_length = 0,
 		_entity_shader = love.graphics.newShader("core/shaders/entity.glsl"),
+		_bakeShadows = true,
+		_shadowDirty = true,
+		_staticShadowCanvas = nil,
+		_shadowDirection = 225.0,
+		_shadowLength = 32.0,
+		_shadowStrength = 0.6,
 	}
 
 	if object._entity_shader:hasUniform("epsilon") then
@@ -321,6 +327,8 @@ function MapObject:clear()
 	self._breath = 0;
 	self._oscillation = 0;
 	self._world = bump.newWorld();
+	self._staticShadowCanvas = nil
+	self._shadowDirty = true
 
 	self._content = {
 		gfx = {},
@@ -934,6 +942,7 @@ function MapObject:updateEntityHeightMap(entity)
 			end
 		end
 		self._heightMap:replacePixels(self._heightMapData)
+		self._shadowDirty = true
 	end
 end
 
@@ -943,6 +952,7 @@ function MapObject:updateHeightMap()
 		self._heightMap = nil
 	end
 	self._heightMapData = nil
+	self._shadowDirty = true
 	return self:getHeightMap()
 end
 
@@ -1254,7 +1264,135 @@ function MapObject:draw_ceiling()
 	love.graphics.setColor(1, 1, 1, 1)
 end
 
+function MapObject:invalidateShadows()
+	self._shadowDirty = true
+end
+
+function MapObject:bake_static_shadows()
+	if not self._mapdata or not self._mapdata.width or not self._mapdata.height then
+		return
+	end
+
+	local mapPixelW = self._mapdata.width * 32
+	local mapPixelH = self._mapdata.height * 32
+	if mapPixelW <= 0 or mapPixelH <= 0 then
+		return
+	end
+
+	local heightmap = self:getHeightMap()
+	if not heightmap then return end
+
+	local shadows = self._shadows
+	if not shadows then
+		shadows = love.graphics.newShader("core/shaders/shadow_map.glsl")
+		self._shadows = shadows
+	end
+
+	local maxTex = 4096
+	if love.graphics and love.graphics.getSystemLimits then
+		maxTex = love.graphics.getSystemLimits().texturesize or 4096
+	end
+	local scale = 1.0
+	if mapPixelW > maxTex or mapPixelH > maxTex then
+		scale = math.min(maxTex / mapPixelW, maxTex / mapPixelH)
+	end
+	local canvasW = math.max(32, math.floor(mapPixelW * scale))
+	local canvasH = math.max(32, math.floor(mapPixelH * scale))
+
+	if not self._staticShadowCanvas or self._staticShadowCanvas:getWidth() ~= canvasW or self._staticShadowCanvas:getHeight() ~= canvasH then
+		self._staticShadowCanvas = love.graphics.newCanvas(canvasW, canvasH)
+		self._staticShadowCanvas:setFilter("linear", "linear")
+	end
+
+	local prevCanvas = love.graphics.getCanvas()
+	local prevShader = love.graphics.getShader()
+	local r, g, b, a = love.graphics.getColor()
+
+	love.graphics.setCanvas(self._staticShadowCanvas)
+	love.graphics.clear(0, 0, 0, 0)
+
+	love.graphics.setShader(shadows)
+	shadows:send("heightmap", heightmap)
+	if shadows:hasUniform("worldSpace") then
+		shadows:send("worldSpace", true)
+	end
+	if shadows:hasUniform("camera") then
+		shadows:send("camera", { 0, 0 })
+	end
+	if shadows:hasUniform("steps") then shadows:send("steps", 32.0) end
+	if shadows:hasUniform("maxSteps") then shadows:send("maxSteps", 32.0) end
+	if shadows:hasUniform("shadowStrength") then shadows:send("shadowStrength", self._shadowStrength or 0.6) end
+	if shadows:hasUniform("shadowLength") then shadows:send("shadowLength", self._shadowLength or 32.0) end
+	if shadows:hasUniform("direction") then shadows:send("direction", self._shadowDirection or 225.0) end
+	if shadows:hasUniform("mode") then shadows:send("mode", 1.0) end
+	if shadows:hasUniform("distanceFactor") then shadows:send("distanceFactor", 0.9) end
+	if shadows:hasUniform("blur") then shadows:send("blur", 1.0) end
+	if shadows:hasUniform("numOccluders") then shadows:send("numOccluders", 0) end
+
+	love.graphics.setColor(0, 0, 0.01, 1)
+	love.graphics.rectangle("fill", 0, 0, canvasW, canvasH)
+
+	love.graphics.setShader(prevShader)
+	love.graphics.setCanvas(prevCanvas)
+	love.graphics.setColor(r, g, b, a)
+
+	self._shadowDirty = false
+end
+
+function MapObject:draw_player_shadows(client)
+	if not client then return end
+	local players = (client.share_lerp and client.share_lerp.players) or (client.share and client.share.players)
+	if not players then return end
+
+	local cx, cy = self:getCameraOffset()
+	love.graphics.push()
+	love.graphics.translate(cx, cy)
+	love.graphics.setBlendMode("alpha")
+
+	local dirRad = math.rad(self._shadowDirection or 225.0)
+	local offsetDist = 8
+	local shadowX = -math.sin(dirRad) * offsetDist
+	local shadowY = -math.cos(dirRad) * offsetDist
+
+	for peer_id, p in pairs(players) do
+		if p.h and p.h > 0 and p.x and p.y then
+			local r = (p.size or 24) * 0.45
+			-- Soft layered contact shadow
+			love.graphics.setColor(0, 0, 0.01, 0.22)
+			love.graphics.circle("fill", p.x + shadowX, p.y + shadowY, r * 1.25)
+			love.graphics.setColor(0, 0, 0.01, 0.40)
+			love.graphics.circle("fill", p.x + shadowX * 0.5, p.y + shadowY * 0.5, r)
+		end
+	end
+
+	love.graphics.pop()
+	love.graphics.setColor(1, 1, 1, 1)
+end
+
 function MapObject:draw_shadow(client)
+	if self._bakeShadows then
+		if self._shadowDirty or not self._staticShadowCanvas then
+			self:bake_static_shadows()
+		end
+
+		if self._staticShadowCanvas then
+			local cx, cy = self:getCameraOffset()
+			love.graphics.push()
+			love.graphics.translate(cx, cy)
+			love.graphics.setBlendMode("alpha")
+			love.graphics.setColor(1, 1, 1, 1)
+			local mapW = self._mapdata.width * 32
+			local mapH = self._mapdata.height * 32
+			local sx = mapW / self._staticShadowCanvas:getWidth()
+			local sy = mapH / self._staticShadowCanvas:getHeight()
+			love.graphics.draw(self._staticShadowCanvas, 0, 0, 0, sx, sy)
+			love.graphics.pop()
+		end
+
+		self:draw_player_shadows(client)
+		return
+	end
+
 	local heightmap = self:getHeightMap()
 	local camera = self._camera
 	local shadows = self._shadows
@@ -1269,6 +1407,9 @@ function MapObject:draw_shadow(client)
 		if shadows:hasUniform("mode") then shadows:send("mode", 1.0) end
 		if shadows:hasUniform("distanceFactor") then shadows:send("distanceFactor", 0.9) end
 		if shadows:hasUniform("blur") then shadows:send("blur", 1.0) end
+	end
+	if shadows:hasUniform("worldSpace") then
+		shadows:send("worldSpace", false)
 	end
 	shadows:send("heightmap", heightmap)
 	shadows:send("camera", camera)

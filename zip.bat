@@ -2,18 +2,52 @@
 set SCRIPT_DIR=%~dp0
 cd /d "%SCRIPT_DIR%"
 
-"C:\Program Files\7-Zip\7z.exe" a -tzip "%SCRIPT_DIR%game.zip" "%SCRIPT_DIR%\*" ^
--xr!*.py ^
+for %%I in ("%SCRIPT_DIR%.") do set "PROJECT_NAME=%%~nxI"
+
+echo ========================================
+echo Gerando %PROJECT_NAME%.love...
+echo ========================================
+echo.
+
+set "SEVENZIP=C:\Program Files\7-Zip\7z.exe"
+if not exist "%SEVENZIP%" set "SEVENZIP=C:\Program Files (x86)\7-Zip\7z.exe"
+if not exist "%SEVENZIP%" set "SEVENZIP=7z"
+
+set "LIST_FILE=%TEMP%\%PROJECT_NAME%_filelist_%RANDOM%.txt"
+
+REM Lista arquivos atuais (incluindo modificados e novos) respeitando o .gitignore
+git ls-files --cached --others --exclude-standard > "%LIST_FILE%"
+
+if errorlevel 1 (
+    echo.
+    echo ERRO: falha ao consultar arquivos com git
+    if exist "%LIST_FILE%" del "%LIST_FILE%"
+    pause
+    exit /b 1
+)
+
+if exist "%PROJECT_NAME%.zip" del "%PROJECT_NAME%.zip"
+if exist "%PROJECT_NAME%.love" del "%PROJECT_NAME%.love"
+
+"%SEVENZIP%" a -tzip "%PROJECT_NAME%.zip" @"%LIST_FILE%" ^
 -xr!*.bat ^
--xr!game ^
--xr!lovejs_source ^
--xr!.gitattributes ^
--xr!.gitignore ^
--xr!.vscode ^
--xr!uidebug
+-xr!.git*
 
-if exist "game.love" del "game.love"
+set ZIP_ERROR=%ERRORLEVEL%
+if exist "%LIST_FILE%" del "%LIST_FILE%"
 
-ren "game.zip" "game.love"
+if %ZIP_ERROR% neq 0 (
+    echo.
+    echo ERRO: nao foi possivel gerar %PROJECT_NAME%.love
+    pause
+    exit /b 1
+)
+
+ren "%PROJECT_NAME%.zip" "%PROJECT_NAME%.love"
+
+echo.
+echo ========================================
+echo %PROJECT_NAME%.love gerado com sucesso!
+echo ========================================
 
 pause
