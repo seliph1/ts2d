@@ -23,13 +23,9 @@ vec4 color_mask(vec4 sub_color, vec4 tex_color, float threshold){
 vec4 effect( vec4 color, Image tex, vec2 texture_coords, vec2 screen_coords )
 {
 	vec4 texcolor = Texel(tex, texture_coords);
-	if (blend == 6) { // Grayscale
+	if (blend == 6) { // Grayscale alpha mask: brightness of texture drives alpha, tinted by color
 		float alpha = (texcolor.r + texcolor.g + texcolor.b) / 3.0;
-		texcolor.a *= alpha;
-		return texcolor * color;
-
-	} else if (blend == 3) { // Light
-		texcolor.rgb *= color.a;
+		return vec4(color.rgb, texcolor.a * alpha * color.a);
 	}
 	
 	if ( mask == 4 ) {

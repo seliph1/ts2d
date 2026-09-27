@@ -71,7 +71,7 @@ function EnvSprite:draw(mapengine, client)
 	if blend == 0 then
 		love.graphics.setBlendMode("alpha")
 	elseif blend == 3 then
-		love.graphics.setBlendMode("screen", "premultiplied")
+		love.graphics.setBlendMode("add")
 	elseif blend == 4 then
 		love.graphics.setBlendMode("multiply", "premultiplied")
 	elseif blend == 6 then

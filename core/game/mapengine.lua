@@ -70,7 +70,9 @@ local function create_spritesheet(file, xsize, ysize)
 		for x = 0, floor(w / ysize) - 1 do
 			local sprite = love.image.newImageData(xsize, ysize)
 			sprite:paste(spritesheet, 0, 0, x * xsize, y * ysize, xsize, ysize)
-			spritesheet_table[id] = love.graphics.newImage(sprite)
+			local img = love.graphics.newImage(sprite)
+			img:setFilter("nearest", "nearest")
+			spritesheet_table[id] = img
 			id = id + 1
 		end
 	end
@@ -201,6 +203,10 @@ function MapObject.new(width, height)
 		_entity_cache = {},
 		_entity_length = 0,
 		_entity_shader = love.graphics.newShader("core/shaders/entity.glsl"),
+		_tile_blend_shader = love.graphics.newShader("core/shaders/tile_blend.glsl"),
+		_blend_tiles = {},
+		_off_x = 16,
+		_off_y = 16,
 		_bakeShadows = true,
 		_shadowDirty = true,
 		_staticShadowCanvas = nil,
@@ -1151,6 +1157,10 @@ function MapObject:shiftRender()
 	self._render.width = render_width
 	self._render.height = render_height
 
+	self._off_x = off_x
+	self._off_y = off_y
+	self._blend_tiles = {}
+
 	gfx.ground:clear()
 	gfx.wall:clear()
 	for x = render_x, render_width do
@@ -1179,6 +1189,32 @@ function MapObject:shiftRender()
 					off_x,
 					off_y
 				)
+			end
+
+			-- Tile blending
+			if mod.blending > 1 then
+				local raw_blend = mod.blending - 2
+				if raw_blend >= 0 and raw_blend < 40 and self._blendmap[raw_blend] then
+					local dir = TILE_BLEND_DIR[raw_blend % 8]
+					if dir then
+						local nx = x + dir[1]
+						local ny = y + dir[2]
+						local neighbor_id, neighbor_mod = self:tile(nx, ny)
+						if neighbor_id >= 0 and mapdata.gfx.tile[neighbor_id] then
+							local n_brightness = (neighbor_mod.brightness / 100)
+							table.insert(self._blend_tiles, {
+								mask = self._blendmap[raw_blend],
+								tile = mapdata.gfx.tile[neighbor_id],
+								x = x * tile_size + off_x,
+								y = y * tile_size + off_y,
+								rot = mod.rotation,
+								r = (neighbor_mod.color.red * n_brightness) / 255,
+								g = (neighbor_mod.color.green * n_brightness) / 255,
+								b = (neighbor_mod.color.blue * n_brightness) / 255,
+							})
+						end
+					end
+				end
 			end
 		end
 	end
@@ -1231,6 +1267,27 @@ function MapObject:draw_background()
 	end
 end
 
+function MapObject:draw_tile_blends()
+	local blend_tiles = self._blend_tiles
+	if not blend_tiles or #blend_tiles == 0 then return end
+
+	local shader = self._tile_blend_shader
+	if not shader then return end
+
+	local off_x = self._off_x or 16
+	local off_y = self._off_y or 16
+
+	love.graphics.setShader(shader)
+	for i = 1, #blend_tiles do
+		local b = blend_tiles[i]
+		shader:send("tile", b.tile)
+		love.graphics.setColor(b.r, b.g, b.b, 1)
+		love.graphics.draw(b.mask, b.x, b.y, ROT_RAD[b.rot] or 0, 1, 1, off_x, off_y)
+	end
+	love.graphics.setShader()
+	love.graphics.setColor(1, 1, 1, 1)
+end
+
 function MapObject:draw_floor()
 	local mapdata = self._mapdata
 	local cx, cy = self:getCameraOffset()
@@ -1241,6 +1298,8 @@ function MapObject:draw_floor()
 	love.graphics.translate(cx, cy)
 	-- Draw floor level
 	love.graphics.draw(mapdata.gfx.ground)
+	-- Draw tile blends
+	self:draw_tile_blends()
 	-- Reset the transformation stack
 	love.graphics.pop()
 	-- Reset render
@@ -1288,10 +1347,7 @@ function MapObject:bake_static_shadows()
 		self._shadows = shadows
 	end
 
-	local maxTex = 2048
-	if love.graphics and love.graphics.getSystemLimits then
-		maxTex = math.min(2048, love.graphics.getSystemLimits().texturesize or 2048)
-	end
+	local maxTex = (love.graphics and love.graphics.getSystemLimits and love.graphics.getSystemLimits().texturesize) or 16384
 	local scale = 1.0
 	if mapPixelW > maxTex or mapPixelH > maxTex then
 		scale = math.min(maxTex / mapPixelW, maxTex / mapPixelH)
@@ -1300,6 +1356,9 @@ function MapObject:bake_static_shadows()
 	local canvasH = math.max(32, math.floor(mapPixelH * scale))
 
 	if not self._staticShadowCanvas or self._staticShadowCanvas:getWidth() ~= canvasW or self._staticShadowCanvas:getHeight() ~= canvasH then
+		if self._staticShadowCanvas then
+			self._staticShadowCanvas:release()
+		end
 		self._staticShadowCanvas = love.graphics.newCanvas(canvasW, canvasH)
 		self._staticShadowCanvas:setFilter("linear", "linear")
 	end
@@ -1737,7 +1796,7 @@ function MapObject:draw_entity(e)
 	if blend == 0 then  -- No filter/solid
 		love.graphics.setBlendMode("alpha")
 	elseif blend == 3 then -- Light
-		love.graphics.setBlendMode("screen", "premultiplied")
+		love.graphics.setBlendMode("add")
 	elseif blend == 4 then -- Shade
 		love.graphics.setBlendMode("multiply", "premultiplied")
 	elseif blend == 6 then -- Grayscale
