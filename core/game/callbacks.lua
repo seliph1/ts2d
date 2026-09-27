@@ -161,8 +161,6 @@ function client.draw()
 	else
 		-- void
 	end
-
-	client.scene.draw()
 end
 
 

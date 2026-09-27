@@ -1288,9 +1288,9 @@ function MapObject:bake_static_shadows()
 		self._shadows = shadows
 	end
 
-	local maxTex = 4096
+	local maxTex = 2048
 	if love.graphics and love.graphics.getSystemLimits then
-		maxTex = love.graphics.getSystemLimits().texturesize or 4096
+		maxTex = math.min(2048, love.graphics.getSystemLimits().texturesize or 2048)
 	end
 	local scale = 1.0
 	if mapPixelW > maxTex or mapPixelH > maxTex then
@@ -1306,10 +1306,12 @@ function MapObject:bake_static_shadows()
 
 	local prevCanvas = love.graphics.getCanvas()
 	local prevShader = love.graphics.getShader()
+	local prevBlendMode, prevAlphaMode = love.graphics.getBlendMode()
 	local r, g, b, a = love.graphics.getColor()
 
 	love.graphics.setCanvas(self._staticShadowCanvas)
 	love.graphics.clear(0, 0, 0, 0)
+	love.graphics.setBlendMode("replace", "premultiplied")
 
 	love.graphics.setShader(shadows)
 	shadows:send("heightmap", heightmap)
@@ -1334,6 +1336,7 @@ function MapObject:bake_static_shadows()
 
 	love.graphics.setShader(prevShader)
 	love.graphics.setCanvas(prevCanvas)
+	love.graphics.setBlendMode(prevBlendMode, prevAlphaMode)
 	love.graphics.setColor(r, g, b, a)
 
 	self._shadowDirty = false

@@ -68,7 +68,7 @@ float getHeight(vec2 mapPos, vec2 pixelsToMap) {
             float d2 = dx * dx + dy * dy;
             float r2 = occ.z * occ.z;
             if (d2 < r2) {
-                float circleHeight = occ.w * sqrt(1.0 - d2 / r2);
+                float circleHeight = occ.w * sqrt(max(0.0, 1.0 - d2 / r2));
                 h = max(h, circleHeight);
             }
         }
@@ -87,7 +87,7 @@ vec3 getOcclusion(vec2 UV, vec2 SCREEN_UV) {
     vec2 worldPos;
     vec2 mapPos;
     if (worldSpace) {
-        mapPos = SCREEN_UV / love_ScreenSize.xy;
+        mapPos = UV;
         worldPos = mapPos * pixelsToMap;
     } else {
         vec2 screenSize = love_ScreenSize.xy;
@@ -157,7 +157,7 @@ vec3 getOcclusion(vec2 UV, vec2 SCREEN_UV) {
                 highest = height;
                 // Also calculate the distance of shadow base to ceiling
                 // To emulate soft shadows at the border
-                float factor = (1.0) / height * blur;
+                float factor = (1.0) / max(height, 0.001) * safeBlur;
                 float falloff = length(vec3(position.xyz) - vec3( position.xy, 0.0) ) * factor;
 
                 dist = min(dist, falloff);
@@ -209,8 +209,8 @@ vec4 getShadow(vec4 COLOR, vec2 UV, vec2 SCREEN_UV) {
 
     float safeStrength = shadowStrength > 0.0 ? shadowStrength : 0.6;
 
-    // Calculate alpha base on shadow strength, clamping negative values
-    float shadow_fadeout = max(0.0, shadow - dist) * safeStrength;
+    // Calculate alpha based on shadow strength, clamping strictly to [0, 1]
+    float shadow_fadeout = clamp(max(0.0, shadow - dist) * safeStrength, 0.0, 1.0);
 
     // Return the final result
     return vec4(vec3( shadow_color ), shadow_fadeout);
