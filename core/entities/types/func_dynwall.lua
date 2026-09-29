@@ -84,15 +84,14 @@ function FuncDynWall:onToggle(activator, source_id, server)
 		local close_if_not_blocked = (self:getInt(3) == 1)
 		local mode = self:getInt(2)
 
-		-- Find living players overlapping the wall
+		-- Find living players inside the wall tile area
 		local players = (server and server.share and server.share.players) or {}
 		local overlapping_players = {}
 
 		for peer_id, p in pairs(players) do
 			if p and p.h and p.h > 0 and p.x and p.y then
-				local psize = p.size or 24
-				-- AABB overlap check between player bounding box and wall area
-				if p.x < wx + w and p.x + psize > wx and p.y < wy + h and p.y + psize > wy then
+				-- Check if player position is within the DynWall bounds
+				if p.x >= wx and p.x < wx + w and p.y >= wy and p.y < wy + h then
 					table.insert(overlapping_players, { id = peer_id, player = p })
 				end
 			end
