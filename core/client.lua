@@ -276,10 +276,6 @@ function client.attack(peer_id, local_data)
 			client.map:playSoundAt(itemdata.sound, offset_x, offset_y)
 		end
 
-		client.map:spawn_effect("muzzle", offset_x, offset_y, {
-			setDirection = player_angle,
-		})
-
 		-- Simulate locally that we fired a weapon
 		if spawn == 1 then
 			-- Skip with single shot
@@ -377,6 +373,7 @@ function client.fire(start_x, start_y, angle, distance, peer_id)
 	local target_y = start_y + math.sin(angle) * distance
 	local hit_x, hit_y, hit, bodies = client.hitscan(start_x, start_y, target_x, target_y)
 	local hit_distance = distance
+	
 	if hit then
 		local rand = math.random()
 		if rand < 0.80 then
@@ -394,6 +391,12 @@ function client.fire(start_x, start_y, angle, distance, peer_id)
 		local dx = hit_x - start_x
 		local dy = hit_y - start_y
 		hit_distance = math.sqrt(dx * dx + dy * dy)
+	end
+
+	if hit_distance > 16 then
+		client.map:spawn_effect("muzzle", start_x, start_y, {
+			setDirection = angle,
+		})
 	end
 	local half = hit_distance / 2
 	local half_x = start_x + math.cos(angle) * half
