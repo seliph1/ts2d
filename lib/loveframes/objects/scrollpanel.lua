@@ -220,6 +220,244 @@ return function(loveframes)
 	end
 
 	--[[---------------------------------------------------------
+	- func: Fill(item, margin, align, max_per_line, overflow_policy)
+	- desc: overrides Base:Fill for ScrollPanel.
+			Places item into flow layout, indexes it into itemhash
+			(spatial hash) for high-performance frustum culling,
+			and updates extraheight / extrawidth.
+			Supports overflow_policy = "scroll" (default) or "wrap".
+--]] ---------------------------------------------------------
+	function ScrollPanel:Fill(item_or_margin, margin_or_align, align_or_max, max_or_policy, maybe_policy)
+		local panel, item, margin, align, max_per_line, overflow_policy
+		if type(item_or_margin) == "table" and item_or_margin.type then
+			panel = self
+			item = item_or_margin
+			margin = margin_or_align
+			align = align_or_max
+			max_per_line = max_or_policy
+			overflow_policy = maybe_policy
+		else
+			item = self
+			panel = self.parent
+			margin = item_or_margin
+			align = margin_or_align
+			max_per_line = align_or_max
+			overflow_policy = max_or_policy
+		end
+
+		if not (panel and item) or item.type == "frame" then
+			return item
+		end
+
+		margin = margin or 5
+		align = align or "horizontal"
+		overflow_policy = overflow_policy or "scroll"
+
+		-- Ensure item is properly reparented to the scrollpanel
+		if item.parent ~= panel then
+			item:Remove()
+			item.parent = panel
+			item:SetState(panel.state)
+			table.insert(panel.children, item)
+		else
+			local exists = false
+			for _, child in ipairs(panel.children) do
+				if child == item then
+					exists = true
+					break
+				end
+			end
+			if not exists then
+				table.insert(panel.children, item)
+			end
+		end
+
+		local usable_width = panel.width
+		local usable_height = panel.height
+
+		local state = panel._flow_state
+		if not state or state.align ~= align or state.margin ~= margin or state.max_per_line ~= max_per_line then
+			state = {
+				x = margin,
+				y = margin,
+				line_size = 0,
+				items_in_line = 0,
+				items = {},
+				align = align,
+				margin = margin,
+				max_per_line = max_per_line,
+				overflow_policy = overflow_policy,
+			}
+			panel._flow_state = state
+		end
+
+		table.insert(state.items, item)
+
+		local c_w = item.width or 0
+		local c_h = item.height or 0
+
+		if align == "horizontal" then
+			if state.items_in_line > 0 then
+				local wrap = false
+				if state.max_per_line and state.items_in_line >= state.max_per_line then
+					wrap = true
+				elseif (state.x + c_w + margin) > usable_width then
+					wrap = true
+				end
+
+				if wrap then
+					state.x = margin
+					state.y = state.y + state.line_size + margin
+					state.line_size = 0
+					state.items_in_line = 0
+				end
+			end
+
+			local pos_x = state.x
+			local pos_y = state.y
+
+			state.x = state.x + c_w + margin
+			if c_h > state.line_size then
+				state.line_size = c_h
+			end
+			state.items_in_line = state.items_in_line + 1
+
+			pos_x = math.floor(pos_x)
+			pos_y = math.floor(pos_y)
+
+			item.staticx = pos_x
+			item.staticy = pos_y
+			item.x = panel.x + pos_x
+			item.y = panel.y + pos_y
+
+			-- Spatial hash indexing for culling
+			if panel.itemhash:hasItem(item) then
+				panel.itemhash:update(item, pos_x, pos_y, c_w, c_h)
+			else
+				panel.itemhash:add(item, pos_x, pos_y, c_w, c_h)
+			end
+
+			if overflow_policy == "wrap" then
+				local req_w = pos_x + c_w + margin
+				local req_h = pos_y + c_h + margin
+				if req_w > panel.width then
+					panel:SetWidth(req_w)
+				end
+				if req_h > panel.height then
+					panel:SetHeight(req_h)
+				end
+			else -- "scroll"
+				local req_w = pos_x + c_w + margin
+				local req_h = pos_y + c_h + margin
+				if not panel.itemwidth or req_w > panel.itemwidth then
+					panel.itemwidth = req_w
+				end
+				if not panel.itemheight or req_h > panel.itemheight then
+					panel.itemheight = req_h
+				end
+
+				if panel.itemheight > panel.height then
+					panel.extraheight = panel.itemheight - panel.height
+					if not panel.vbar then
+						local verticalbar = loveframes.objects["scrollbody"]:new(panel, "vertical")
+						table.insert(panel.internals, verticalbar)
+						panel.vbar = true
+					end
+				end
+
+				if panel.itemwidth > panel.width then
+					panel.extrawidth = panel.itemwidth - panel.width
+					if not panel.hbar then
+						local horizontalbar = loveframes.objects["scrollbody"]:new(panel, "horizontal")
+						table.insert(panel.internals, horizontalbar)
+						panel.hbar = true
+					end
+				end
+			end
+		else -- vertical
+			if state.items_in_line > 0 then
+				local wrap = false
+				if state.max_per_line and state.items_in_line >= state.max_per_line then
+					wrap = true
+				elseif (state.y + c_h + margin) > usable_height then
+					wrap = true
+				end
+
+				if wrap then
+					state.y = margin
+					state.x = state.x + state.line_size + margin
+					state.line_size = 0
+					state.items_in_line = 0
+				end
+			end
+
+			local pos_x = state.x
+			local pos_y = state.y
+
+			state.y = state.y + c_h + margin
+			if c_w > state.line_size then
+				state.line_size = c_w
+			end
+			state.items_in_line = state.items_in_line + 1
+
+			pos_x = math.floor(pos_x)
+			pos_y = math.floor(pos_y)
+
+			item.staticx = pos_x
+			item.staticy = pos_y
+			item.x = panel.x + pos_x
+			item.y = panel.y + pos_y
+
+			-- Spatial hash indexing for culling
+			if panel.itemhash:hasItem(item) then
+				panel.itemhash:update(item, pos_x, pos_y, c_w, c_h)
+			else
+				panel.itemhash:add(item, pos_x, pos_y, c_w, c_h)
+			end
+
+			if overflow_policy == "wrap" then
+				local req_w = pos_x + c_w + margin
+				local req_h = pos_y + c_h + margin
+				if req_w > panel.width then
+					panel:SetWidth(req_w)
+				end
+				if req_h > panel.height then
+					panel:SetHeight(req_h)
+				end
+			else -- "scroll"
+				local req_w = pos_x + c_w + margin
+				local req_h = pos_y + c_h + margin
+				if not panel.itemwidth or req_w > panel.itemwidth then
+					panel.itemwidth = req_w
+				end
+				if not panel.itemheight or req_h > panel.itemheight then
+					panel.itemheight = req_h
+				end
+
+				if panel.itemheight > panel.height then
+					panel.extraheight = panel.itemheight - panel.height
+					if not panel.vbar then
+						local verticalbar = loveframes.objects["scrollbody"]:new(panel, "vertical")
+						table.insert(panel.internals, verticalbar)
+						panel.vbar = true
+					end
+				end
+
+				if panel.itemwidth > panel.width then
+					panel.extrawidth = panel.itemwidth - panel.width
+					if not panel.hbar then
+						local horizontalbar = loveframes.objects["scrollbody"]:new(panel, "horizontal")
+						table.insert(panel.internals, horizontalbar)
+						panel.hbar = true
+					end
+				end
+			end
+		end
+
+		return item
+	end
+
+	--[[---------------------------------------------------------
 	- func: RemoveItem(object or number)
 	- desc: removes an item from the object
 --]] ---------------------------------------------------------
@@ -341,7 +579,7 @@ return function(loveframes)
 		self.children = {}
 		self.itemcache = {}
 		self.itemlength = 0
-
+		self:ResetFlow()
 		self:RedoLayout()
 		return self
 	end

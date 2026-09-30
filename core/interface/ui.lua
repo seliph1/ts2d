@@ -27,6 +27,7 @@ require("core.interface.game.serverinfo")(ui)
 require("core.interface.game.team_pick")(ui)
 require("core.interface.game.tabscreen")(ui)
 require("core.interface.game.buymenu")(ui)
+--require("core.interface.game.buymenu_old")(ui)
 require("core.interface.game.reload")(ui)
 
 -- 5. Interface da cena Editor (SetState("editor"))

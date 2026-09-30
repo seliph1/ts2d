@@ -941,6 +941,189 @@ return function(loveframes)
 	end
 
 	--[[---------------------------------------------------------
+	- func: Fill(margin, align, max_per_line, overflow_policy)
+	- desc: places this object into a flow grid inside its parent,
+			wrapping to the next line/column on overflow or after
+			max_per_line items.
+			Supports overflow_policy = "scroll" (default) or "wrap".
+			Can also be called on the parent: parent:Fill(child, ...)
+--]] ---------------------------------------------------------
+	function Base:Fill(margin, align, max_per_line, overflow_policy, ...)
+		local child, parent
+		if type(margin) == "table" and margin.type then
+			-- Called as parent:Fill(child, margin, align, max_per_line, overflow_policy)
+			parent = self
+			child = margin
+			margin = align
+			align = max_per_line
+			max_per_line = overflow_policy
+			overflow_policy = select(1, ...)
+		else
+			child = self
+			parent = self.parent
+		end
+
+		if not parent then return child end
+
+		-- Delegate to parent if parent has an overridden Fill method (e.g. ScrollPanel)
+		if parent.Fill and parent ~= loveframes.base and parent.Fill ~= Base.Fill then
+			return parent:Fill(child, margin, align, max_per_line, overflow_policy)
+		end
+
+		margin = margin or 5
+		align = align or "horizontal"
+		overflow_policy = overflow_policy or "scroll"
+
+		local base = loveframes.base
+		local p_width = (parent == base) and love.graphics.getWidth() or parent.width
+		local p_height = (parent == base) and love.graphics.getHeight() or parent.height
+
+		local state = parent._flow_state
+		if not state or state.align ~= align or state.margin ~= margin or state.max_per_line ~= max_per_line then
+			state = {
+				x = margin,
+				y = margin,
+				line_size = 0,
+				items_in_line = 0,
+				items = {},
+				align = align,
+				margin = margin,
+				max_per_line = max_per_line,
+				overflow_policy = overflow_policy,
+			}
+			parent._flow_state = state
+		end
+
+		table.insert(state.items, child)
+
+		local c_w = child.width or 0
+		local c_h = child.height or 0
+
+		if align == "horizontal" then
+			if state.items_in_line > 0 then
+				local wrap = false
+				if state.max_per_line and state.items_in_line >= state.max_per_line then
+					wrap = true
+				elseif (state.x + c_w + margin) > p_width then
+					wrap = true
+				end
+
+				if wrap then
+					state.x = margin
+					state.y = state.y + state.line_size + margin
+					state.line_size = 0
+					state.items_in_line = 0
+				end
+			end
+
+			local pos_x = state.x
+			local pos_y = state.y
+
+			state.x = state.x + c_w + margin
+			if c_h > state.line_size then
+				state.line_size = c_h
+			end
+			state.items_in_line = state.items_in_line + 1
+
+			pos_x = math.floor(pos_x)
+			pos_y = math.floor(pos_y)
+
+			if parent == base then
+				child.x, child.y = pos_x, pos_y
+			else
+				child.staticx, child.staticy = pos_x, pos_y
+				child.x, child.y = parent.x + pos_x, parent.y + pos_y
+			end
+
+			if overflow_policy == "wrap" and parent ~= base then
+				local req_w = pos_x + c_w + margin
+				local req_h = pos_y + c_h + margin
+				if req_w > parent.width then
+					parent:SetWidth(req_w)
+				end
+				if req_h > parent.height then
+					parent:SetHeight(req_h)
+				end
+			end
+		else -- vertical
+			if state.items_in_line > 0 then
+				local wrap = false
+				if state.max_per_line and state.items_in_line >= state.max_per_line then
+					wrap = true
+				elseif (state.y + c_h + margin) > p_height then
+					wrap = true
+				end
+
+				if wrap then
+					state.y = margin
+					state.x = state.x + state.line_size + margin
+					state.line_size = 0
+					state.items_in_line = 0
+				end
+			end
+
+			local pos_x = state.x
+			local pos_y = state.y
+
+			state.y = state.y + c_h + margin
+			if c_w > state.line_size then
+				state.line_size = c_w
+			end
+			state.items_in_line = state.items_in_line + 1
+
+			pos_x = math.floor(pos_x)
+			pos_y = math.floor(pos_y)
+
+			if parent == base then
+				child.x, child.y = pos_x, pos_y
+			else
+				child.staticx, child.staticy = pos_x, pos_y
+				child.x, child.y = parent.x + pos_x, parent.y + pos_y
+			end
+
+			if overflow_policy == "wrap" and parent ~= base then
+				local req_w = pos_x + c_w + margin
+				local req_h = pos_y + c_h + margin
+				if req_w > parent.width then
+					parent:SetWidth(req_w)
+				end
+				if req_h > parent.height then
+					parent:SetHeight(req_h)
+				end
+			end
+		end
+
+		if parent.container and parent.RedoLayout and parent.type ~= "scrollpanel" then
+			parent:RedoLayout()
+		end
+
+		return child
+	end
+
+	function Base:ResetFlow()
+		self._flow_state = nil
+		if self.parent then
+			self.parent._flow_state = nil
+		end
+		return self
+	end
+
+	function Base:Reflow(margin, align, max_per_line, overflow_policy)
+		local items = (self._flow_state and self._flow_state.items) or self.children
+		self._flow_state = nil
+		if items then
+			local list = {}
+			for _, child in ipairs(items) do
+				table.insert(list, child)
+			end
+			for _, child in ipairs(list) do
+				self:Fill(child, margin, align, max_per_line, overflow_policy)
+			end
+		end
+		return self
+	end
+
+	--[[---------------------------------------------------------
 	- func: SetSize(width, height, r1, r2)
 	- desc: sets the object's size
 --]] ---------------------------------------------------------
@@ -1345,9 +1528,29 @@ return function(loveframes)
 		if #args == 0 then
 			args = self.children
 		end
-		for index, child in pairs(args) do
-			child:Remove()
+		if args then
+			local to_remove = {}
+			for _, child in pairs(args) do
+				table.insert(to_remove, child)
+			end
+			for _, child in ipairs(to_remove) do
+				child:Remove()
+			end
 		end
+		return self
+	end
+
+	--[[---------------------------------------------------------
+	- func: Clear()
+	- desc: removes all children and resets flow state
+--]] ---------------------------------------------------------
+	function Base:Clear()
+		self:RemoveChildren()
+		self:ResetFlow()
+		if self.container and self.RedoLayout then
+			self:RedoLayout()
+		end
+		return self
 	end
 
 	--[[---------------------------------------------------------
