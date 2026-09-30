@@ -86,7 +86,7 @@ return function(ui)
 
 			local itemdata = selected_item_data
 
-			-- If no item is hovered but a category is selected/hovered:
+			-- If a category is selected/hovered and no individual item is selected:
 			if not itemdata and selected_category_data then
 				local cat = selected_category_data
 				local preview_h = 130
@@ -110,12 +110,48 @@ return function(ui)
 				end
 
 				love.graphics.setColor(1, 1, 1, 1)
-				love.graphics.print(cat.name or "Category", x + 15, y + preview_h + 20)
+				love.graphics.print(cat.name or "Category", x + 15, y + preview_h + 18)
 				love.graphics.setColor(0.65, 0.70, 0.75, 1)
 				if cat.count then
-					love.graphics.print(tostring(cat.count) .. " available items", x + 15, y + preview_h + 40)
+					love.graphics.print(tostring(cat.count) .. " available items", x + 15, y + preview_h + 38)
 				end
-				love.graphics.print("Click or press 1-9 to view weapons.", x + 15, y + preview_h + 65)
+
+				local cur_y = y + preview_h + 62
+				love.graphics.setColor(0.25, 0.27, 0.32, 0.8)
+				love.graphics.line(x + 15, cur_y, x + w - 15, cur_y)
+				cur_y = cur_y + 10
+
+				-- List items available in this category
+				if cat.items then
+					love.graphics.setColor(0.80, 0.85, 0.90, 1)
+					love.graphics.print("Included weapons / items:", x + 15, cur_y)
+					cur_y = cur_y + 20
+
+					local teamitems = cat.teamitems or {}
+					local self_team = player.t
+					local count_listed = 0
+					for _, item_id in ipairs(cat.items) do
+						local t = teamitems[item_id]
+						if not t or t == self_team then
+							local idata = client.get_item_data(item_id)
+							if idata and count_listed < 8 then
+								local price = idata.price
+								if shop.price_override and shop.price_override[item_id] then
+									price = shop.price_override[item_id]
+								end
+								love.graphics.setColor(0.85, 0.85, 0.85, 1)
+								love.graphics.print("• " .. (idata.name or "Item"), x + 20, cur_y)
+								if price then
+									love.graphics.setColor(0.3, 0.85, 0.3, 1)
+									love.graphics.print("$ " .. tostring(price), x + w - 75, cur_y)
+								end
+								cur_y = cur_y + 18
+								count_listed = count_listed + 1
+							end
+						end
+					end
+				end
+
 				love.graphics.setColor(1, 1, 1, 1)
 				return
 			end
@@ -218,31 +254,42 @@ return function(ui)
 				cur_y = cur_y + bar_h + 8
 			end
 
-			if itemdata.damage then
+			local is_gun = (itemdata.category == "primary" or itemdata.category == "secondary")
+				and (itemdata.id ~= 41)
+				and ((itemdata.ammo_mag and itemdata.ammo_mag > 0) or (itemdata.attack and itemdata.attack:find("^bullet")))
+			local is_melee = (itemdata.category == "melee") or (itemdata.attack and itemdata.attack:find("^swing"))
+			local is_throwable = (itemdata.category == "throwable" or itemdata.category == "grenade") or (itemdata.attack and itemdata.attack:find("^throw"))
+
+			if (is_gun or is_melee or is_throwable) and itemdata.damage and itemdata.damage > 0 then
 				draw_stat_bar("Damage", tostring(itemdata.damage), itemdata.damage / 100)
 			end
 
-			if itemdata.frame_delay then
-				local rof_ratio = math.max(0.05, 1 - (itemdata.frame_delay - 5) / 55)
-				local rpm = math.floor(3000 / math.max(1, itemdata.frame_delay))
+			if is_gun and itemdata.frame_delay and itemdata.frame_delay > 0 then
+				local rof_ratio = math.max(0.05, math.min(1, 1 - (itemdata.frame_delay - 5) / 55))
+				local rpm = math.floor(3000 / itemdata.frame_delay)
 				draw_stat_bar("Rate of Fire", rpm .. " RPM", rof_ratio)
 			end
 
-			if itemdata.accuracy ~= nil then
+			if is_gun and itemdata.accuracy ~= nil and itemdata.accuracy > 0 then
 				draw_stat_bar("Accuracy", itemdata.accuracy .. "%", itemdata.accuracy / 100)
 			end
 
-			if itemdata.range then
+			if (is_gun or is_melee) and itemdata.range and itemdata.range > 0 then
 				draw_stat_bar("Range", tostring(itemdata.range), itemdata.range / 400)
 			end
 
-			if itemdata.ammo_mag and itemdata.ammo_cap then
+			if is_gun and itemdata.ammo_mag and itemdata.ammo_cap and itemdata.ammo_mag > 0 then
 				draw_stat_bar("Ammo", itemdata.ammo_mag .. " / " .. itemdata.ammo_cap, itemdata.ammo_mag / 50)
 			end
 
-			if itemdata.weight then
+			if itemdata.weight and itemdata.weight > 0 then
 				local kg = string.format("%.1f kg", itemdata.weight / 1000)
 				draw_stat_bar("Weight", kg, itemdata.weight / 5000)
+			end
+
+			if itemdata.description and itemdata.description ~= "" then
+				love.graphics.setColor(0.75, 0.80, 0.85, 1)
+				love.graphics.printf(itemdata.description, x + 15, cur_y + 5, w - 30, "left")
 			end
 
 			love.graphics.setColor(1, 1, 1, 1)
@@ -390,6 +437,7 @@ return function(ui)
 		list_category = function(category)
 			current_category = category
 			selected_category_data = nil
+			selected_item_data = nil
 			card_grid:Clear()
 			active_cards = {}
 
@@ -456,6 +504,8 @@ return function(ui)
 			current_category = nil
 			card_grid:Clear()
 			active_cards = {}
+			selected_item_data = nil
+			selected_category_data = nil
 
 			if close_button then
 				close_button:SetText("0 Close")
@@ -473,17 +523,10 @@ return function(ui)
 					if type(category.items) == "table" then
 						-- Count available items for player's team
 						local count = 0
-						local preview_item_data = nil
 						for _, item_id in ipairs(category.items) do
 							local t = teamitems[item_id]
 							if not t or t == self_team then
 								count = count + 1
-								if not preview_item_data then
-									preview_item_data = client.get_item_data(item_id)
-									if preview_item_data then
-										preview_item_data.id = item_id
-									end
-								end
 							end
 						end
 
@@ -502,8 +545,8 @@ return function(ui)
 							teamitems = category.teamitems,
 						}
 
-						if not selected_item_data and preview_item_data then
-							selected_item_data = preview_item_data
+						if not selected_category_data then
+							selected_category_data = cat_data
 						end
 
 						local card = create_card(
@@ -518,9 +561,7 @@ return function(ui)
 							end,
 							function()
 								selected_category_data = cat_data
-								if preview_item_data then
-									selected_item_data = preview_item_data
-								end
+								selected_item_data = nil
 							end
 						)
 
@@ -564,6 +605,7 @@ return function(ui)
 								if itemdata then
 									selected_item_data = itemdata
 									selected_item_data.id = item_id
+									selected_category_data = nil
 								end
 							end
 						)
