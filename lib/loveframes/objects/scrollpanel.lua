@@ -69,7 +69,7 @@ return function(loveframes)
 		end
 		-- Cache the last scrolled position
 		local scrolled = false
-		if offsetx ~= self.last_offsetx or offsety ~= self.last_offsety then
+		if offsetx ~= self.last_offsetx or offsety ~= self.last_offsety or (self.itemlength == 0 and #self.children > 0) then
 			scrolled = true
 		end
 		self.last_offsetx = offsetx
@@ -78,8 +78,8 @@ return function(loveframes)
 		self:CheckHover()
 		if scrolled then
 			self.itemcache, self.itemlength = self.itemhash:queryRect(
-				self.last_offsetx,
-				self.last_offsety,
+				self.offsetx,
+				self.offsety,
 				self.width,
 				self.height
 			)
@@ -93,6 +93,15 @@ return function(loveframes)
 		local realx, realy = self.x, self.y
 		self.x = math.floor(realx - self.last_offsetx)
 		self.y = math.floor(realy - self.last_offsety)
+
+		if self.itemlength == 0 and #self.children > 0 then
+			self.itemcache, self.itemlength = self.itemhash:queryRect(
+				self.offsetx,
+				self.offsety,
+				self.width,
+				self.height
+			)
+		end
 
 		for i = 1, self.itemlength do
 			local child = self.itemcache[i]
@@ -134,6 +143,16 @@ return function(loveframes)
 		local cut_y = self.hbar and -16 or 0
 		local ox, oy, ow, oh = love.graphics.getScissor()
 		love.graphics.intersectScissor(x, y, width + cut_x, height + cut_y)
+
+		if self.itemlength == 0 and #self.children > 0 then
+			self.itemcache, self.itemlength = self.itemhash:queryRect(
+				self.offsetx,
+				self.offsety,
+				self.width,
+				self.height
+			)
+		end
+
 		for i = 1, self.itemlength do
 			local child = self.itemcache[i]
 			child:draw()
@@ -454,6 +473,15 @@ return function(loveframes)
 			end
 		end
 
+		panel.itemcache, panel.itemlength = panel.itemhash:queryRect(
+			panel.offsetx,
+			panel.offsety,
+			panel.width,
+			panel.height
+		)
+		panel.last_offsetx = panel.offsetx
+		panel.last_offsety = panel.offsety
+
 		return item
 	end
 
@@ -579,6 +607,8 @@ return function(loveframes)
 		self.children = {}
 		self.itemcache = {}
 		self.itemlength = 0
+		self.last_offsetx = -1
+		self.last_offsety = -1
 		self:ResetFlow()
 		self:RedoLayout()
 		return self

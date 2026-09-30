@@ -58,25 +58,16 @@ return function(ui)
 			ui.buymenu = nil
 		end
 
-		-- Layout: Left column (~510px) for cards & actions; Right column (~300px) for details
-		local left_w = math.floor(menu_w * 0.62)
+		-- Layout: Left side (~60%) for card grid and actions; Right side for details
+		local left_w = math.floor(menu_w * 0.60)
 		local right_w = menu_w - left_w - 25
 
-		-- Left Container
-		local left_panel = LF.Create("panel", ui.buymenu)
+		-- Scrollable Card Grid Container (uses skin.scrollpanel natively)
+		local card_grid = LF.Create("scrollpanel", ui.buymenu)
 			:SetPos(10, 32)
-			:SetSize(left_w, menu_h - 42)
+			:SetSize(left_w, 350)
 
-		function left_panel:Draw() end -- Invisible background
-
-		-- 3x3 Card Grid Container
-		local card_grid = LF.Create("panel", left_panel)
-			:SetPos(0, 0)
-			:SetSize(left_w, 340)
-
-		function card_grid:Draw() end
-
-		-- Right Details Panel
+		-- Right Details Panel (uses skin.panel natively)
 		local details_panel = LF.Create("panel", ui.buymenu)
 			:SetPos(left_w + 15, 32)
 			:SetSize(right_w, menu_h - 42)
@@ -88,16 +79,10 @@ return function(ui)
 		local active_cards = {}
 		local close_button = nil
 
-		-- Draw function for the Right Details Panel
-		function details_panel:Draw()
+		-- DrawOver for Details Panel: draws preview box, floating sprite and stat bars on top of skin.panel
+		function details_panel:DrawOver()
 			local x, y = self:GetPos()
 			local w, h = self:GetSize()
-
-			-- Dark background with rounded corners
-			love.graphics.setColor(0.10, 0.11, 0.14, 0.95)
-			love.graphics.rectangle("fill", x, y, w, h, 8, 8)
-			love.graphics.setColor(0.28, 0.30, 0.35, 0.8)
-			love.graphics.rectangle("line", x, y, w, h, 8, 8)
 
 			local itemdata = selected_item_data
 
@@ -131,12 +116,14 @@ return function(ui)
 					love.graphics.print(tostring(cat.count) .. " available items", x + 15, y + preview_h + 40)
 				end
 				love.graphics.print("Click or press 1-9 to view weapons.", x + 15, y + preview_h + 65)
+				love.graphics.setColor(1, 1, 1, 1)
 				return
 			end
 
 			if not itemdata then
-				love.graphics.setColor(0.5, 0.55, 0.6, 1)
+				love.graphics.setColor(0.6, 0.65, 0.7, 1)
 				love.graphics.print("Hover over an item to view stats.", x + 15, y + 20)
+				love.graphics.setColor(1, 1, 1, 1)
 				return
 			end
 
@@ -257,6 +244,8 @@ return function(ui)
 				local kg = string.format("%.1f kg", itemdata.weight / 1000)
 				draw_stat_bar("Weight", kg, itemdata.weight / 5000)
 			end
+
+			love.graphics.setColor(1, 1, 1, 1)
 		end
 
 		-- Buy Action
@@ -304,69 +293,56 @@ return function(ui)
 		end
 
 		-- Function to create a styled card button
+		-- Uses skin.button for native background, border, press offsets, and uses DrawOver ONLY for card graphics
 		local function create_card(badge_num, title, icon_img, footer_text, is_price, price_val, on_click, on_hover)
 			local card_w = math.floor((left_w - 40) / 3)
 			local card_h = 100
 
 			local card = LF.Create("button", card_grid)
 				:SetSize(card_w, card_h)
+				:SetText("")
 				:Fill(10, "horizontal", 3)
 
 			card.badge = tostring(badge_num)
 			card.card_title = title
-			card.image = icon_img
+			card.card_icon = icon_img
 			card.footer_text = footer_text
 			card.is_price = is_price
 			card.price_val = price_val
 
-			function card:Draw()
+			-- DrawOver: renders custom card content on top of native skin.button
+			function card:DrawOver()
 				local x, y = self:GetPos()
 				local w, h = self:GetSize()
-				local is_hover = self.hover
-
-				-- Card Background
-				if is_hover then
-					love.graphics.setColor(0.18, 0.22, 0.28, 0.95)
-				else
-					love.graphics.setColor(0.12, 0.13, 0.16, 0.90)
+				local ox, oy = 0, 0
+				if self.down then
+					ox, oy = 1, 1
 				end
-				love.graphics.rectangle("fill", x, y, w, h, 6, 6)
-
-				-- Card Border
-				if is_hover then
-					love.graphics.setColor(0.40, 0.65, 0.95, 1.0)
-					love.graphics.setLineWidth(2)
-				else
-					love.graphics.setColor(0.28, 0.30, 0.35, 0.8)
-					love.graphics.setLineWidth(1)
-				end
-				love.graphics.rectangle("line", x, y, w, h, 6, 6)
-				love.graphics.setLineWidth(1)
 
 				-- Top-left Badge
 				if self.badge then
-					love.graphics.setColor(0.75, 0.80, 0.90, 0.9)
-					love.graphics.print(self.badge, x + 8, y + 6)
+					love.graphics.setColor(0.85, 0.85, 0.90, 1.0)
+					love.graphics.print(self.badge, x + 8 + ox, y + 6 + oy)
 				end
 
 				-- Top Title
 				if self.card_title then
-					love.graphics.setColor(0.95, 0.95, 0.95, 1.0)
+					love.graphics.setColor(1, 1, 1, 1)
 					local font = love.graphics.getFont()
 					local tw = font and font:getWidth(self.card_title) or 60
 					local tx = x + (w - tw) / 2
-					love.graphics.print(self.card_title, math.max(x + 22, tx), y + 6)
+					love.graphics.print(self.card_title, math.max(x + 22, tx) + ox, y + 6 + oy)
 				end
 
 				-- Center Icon
-				local img = self.image
+				local img = self.card_icon
 				if img then
 					love.graphics.setColor(1, 1, 1, 1)
 					img:setFilter("nearest", "nearest")
 					local iw = img:getWidth()
 					local ih = img:getHeight()
 					local scale = math.min(65 / iw, 36 / ih, 2.5)
-					love.graphics.draw(img, x + w / 2, y + h / 2 + 2, 0, scale, scale, iw / 2, ih / 2)
+					love.graphics.draw(img, x + w / 2 + ox, y + h / 2 + 2 + oy, 0, scale, scale, iw / 2, ih / 2)
 				end
 
 				-- Footer
@@ -380,13 +356,15 @@ return function(ui)
 					local txt = "$ " .. tostring(self.price_val)
 					local font = love.graphics.getFont()
 					local tw = font and font:getWidth(txt) or 40
-					love.graphics.print(txt, x + (w - tw) / 2, y + h - 20)
+					love.graphics.print(txt, x + (w - tw) / 2 + ox, y + h - 20 + oy)
 				elseif self.footer_text then
-					love.graphics.setColor(0.60, 0.65, 0.70, 0.9)
+					love.graphics.setColor(0.70, 0.75, 0.80, 1.0)
 					local font = love.graphics.getFont()
 					local tw = font and font:getWidth(self.footer_text) or 40
-					love.graphics.print(self.footer_text, x + (w - tw) / 2, y + h - 20)
+					love.graphics.print(self.footer_text, x + (w - tw) / 2 + ox, y + h - 20 + oy)
 				end
+
+				love.graphics.setColor(1, 1, 1, 1)
 			end
 
 			function card:OnClick()
@@ -413,7 +391,6 @@ return function(ui)
 			current_category = category
 			selected_category_data = nil
 			card_grid:Clear()
-			card_grid:ResetFlow()
 			active_cards = {}
 
 			if close_button then
@@ -478,7 +455,6 @@ return function(ui)
 		list_shop = function()
 			current_category = nil
 			card_grid:Clear()
-			card_grid:ResetFlow()
 			active_cards = {}
 
 			if close_button then
@@ -604,92 +580,50 @@ return function(ui)
 			end
 		end
 
-		-- Bottom Action Bar Container (Below 3x3 Card Grid)
-		local bottom_panel = LF.Create("panel", left_panel)
-			:SetPos(10, 350)
-			:SetSize(left_w - 20, 180)
-
-		function bottom_panel:Draw() end
-
-		local action_w = left_w - 20
+		-- Bottom Action Buttons (placed directly below the card grid, rendered 100% by skin.button)
+		local action_w = left_w
 		local half_w = math.floor((action_w - 10) / 2)
 
-		-- Helper for styling action buttons
-		local function style_action_button(btn)
-			function btn:Draw()
-				local x, y = self:GetPos()
-				local w, h = self:GetSize()
-				local is_hover = self.hover
-
-				if is_hover then
-					love.graphics.setColor(0.20, 0.24, 0.30, 0.95)
-				else
-					love.graphics.setColor(0.13, 0.14, 0.17, 0.90)
-				end
-				love.graphics.rectangle("fill", x, y, w, h, 6, 6)
-
-				if is_hover then
-					love.graphics.setColor(0.45, 0.70, 0.95, 1.0)
-				else
-					love.graphics.setColor(0.28, 0.30, 0.35, 0.8)
-				end
-				love.graphics.rectangle("line", x, y, w, h, 6, 6)
-
-				love.graphics.setColor(0.95, 0.95, 0.95, 1.0)
-				local font = love.graphics.getFont()
-				local text = self:GetText()
-				local tw = font and font:getWidth(text) or 50
-				local th = font and font:getHeight() or 14
-				love.graphics.print(text, x + (w - tw) / 2, y + (h - th) / 2)
-			end
-			return btn
-		end
-
 		-- Row 1: Ammo Buttons (< Primary Ammo, > Secondary Ammo)
-		local btn_pri_ammo = LF.Create("button", bottom_panel)
-			:SetPos(0, 0)
-			:SetSize(half_w, 30)
+		local btn_pri_ammo = LF.Create("button", ui.buymenu)
+			:SetPos(10, 390)
+			:SetSize(half_w, 28)
 			:SetText("< Primary Ammo")
-		style_action_button(btn_pri_ammo)
 		function btn_pri_ammo:OnClick()
 			client.send("buy 61")
 		end
 
-		local btn_sec_ammo = LF.Create("button", bottom_panel)
-			:SetPos(half_w + 10, 0)
-			:SetSize(half_w, 30)
+		local btn_sec_ammo = LF.Create("button", ui.buymenu)
+			:SetPos(10 + half_w + 10, 390)
+			:SetSize(half_w, 28)
 			:SetText("> Secondary Ammo")
-		style_action_button(btn_sec_ammo)
 		function btn_sec_ammo:OnClick()
 			client.send("buy 62")
 		end
 
 		-- Row 2: [F1] Auto-Buy
-		local btn_autobuy = LF.Create("button", bottom_panel)
-			:SetPos(0, 36)
-			:SetSize(action_w, 30)
+		local btn_autobuy = LF.Create("button", ui.buymenu)
+			:SetPos(10, 424)
+			:SetSize(action_w, 28)
 			:SetText("[F1] Auto-Buy")
-		style_action_button(btn_autobuy)
 		function btn_autobuy:OnClick()
 			do_autobuy()
 		end
 
 		-- Row 3: [F2] Previous
-		local btn_previous = LF.Create("button", bottom_panel)
-			:SetPos(0, 72)
-			:SetSize(action_w, 30)
+		local btn_previous = LF.Create("button", ui.buymenu)
+			:SetPos(10, 458)
+			:SetSize(action_w, 28)
 			:SetText("[F2] Previous")
-		style_action_button(btn_previous)
 		function btn_previous:OnClick()
 			do_rebuy()
 		end
 
 		-- Row 4: 0 Close / 0 Back
-		close_button = LF.Create("button", bottom_panel)
-			:SetPos(0, 108)
-			:SetSize(action_w, 30)
+		close_button = LF.Create("button", ui.buymenu)
+			:SetPos(10, 492)
+			:SetSize(action_w, 28)
 			:SetText("0 Close")
-		style_action_button(close_button)
 		function close_button:OnClick()
 			if current_category then
 				list_shop()
@@ -753,4 +687,3 @@ return function(ui)
 		list_shop()
 	end
 end
-
