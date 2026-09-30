@@ -1,0 +1,342 @@
+local LF               = require "lib.loveframes"
+--//------------------------ MODULE START ------------------------//--
+local console          = {}
+local console_in       = love.thread.getChannel("console_in")
+local console_out      = love.thread.getChannel("console_out")
+local font_fallbacks   = { --[["gfx/fonts/NotoSansCJK-Regular.ttc" --]] }
+local setFontFallbacks = function(font, size)
+	local fallbacks = {}
+	for index, fallback_src in ipairs(font_fallbacks) do
+		local fallback = love.graphics.newFont(fallback_src, size)
+		table.insert(fallbacks, fallback)
+	end
+	font:setFallbacks(unpack(fallbacks))
+end
+local font_mono        = love.graphics.newFont("gfx/fonts/NotoSansMono-Regular.ttf", 15)
+local font_mono_small  = love.graphics.newFont("gfx/fonts/NotoSansMono-Regular.ttf", 12)
+setFontFallbacks(font_mono, 15)
+setFontFallbacks(font_mono_small, 12)
+
+console.frame = LF.Create("frame")
+	:SetSize(0.8, 0.8)
+	:SetResizable(false)
+	:SetScreenLocked(true)
+	:SetName("Console")
+	:SetCloseAction("hide")
+	:SetState("*")
+	:SetAlwaysUpdate(true)
+----------------------------------------------------------------------------------------------------
+-- HTTP Callback Registry & Helpers
+----------------------------------------------------------------------------------------------------
+console.http_callbacks = {}
+local next_callback_id = 1
+
+---Fires an asynchronous HTTP request on a background thread and invokes the callback upon completion.
+---@param request_or_url string|table URL string or config table { url, method, headers, data, timeout }
+---@param callback? fun(body: string?, code: number, headers: table, image_data?: love.ImageData|any) Callback invoked on completion
+---@return number|string? callback_id The assigned callback ID
+function console.http_request(request_or_url, callback)
+	local options = {}
+	if type(request_or_url) == "string" then
+		options.url = request_or_url
+	elseif type(request_or_url) == "table" then
+		for k, v in pairs(request_or_url) do options[k] = v end
+	else
+		error("console.http_request: URL string or options table expected", 2)
+	end
+
+	local callback_id = nil
+	if callback then
+		callback_id = next_callback_id
+		next_callback_id = next_callback_id + 1
+		console.http_callbacks[callback_id] = callback
+		options.callback_id = callback_id
+	end
+
+	local thread = love.thread.newThread("core/thread/http_thread.lua")
+	if thread then
+		thread:start(options)
+	end
+
+	return callback_id
+end
+
+---Convenience helper for HTTP GET requests.
+function console.http_get(url, callback)
+	return console.http_request({ url = url, method = "GET" }, callback)
+end
+
+---Convenience helper for HTTP POST requests.
+function console.http_post(url, data, callback)
+	return console.http_request({ url = url, method = "POST", data = data }, callback)
+end
+
+console.frame.Update = function(object, dt)
+	object.name = string.format("Console [%s]", love.timer.getFPS())
+
+	-- Process all pending incoming channel messages
+	while true do
+		local block = console_in:pop()
+		if not block then break end
+
+		if type(block) == "string" then
+			local expression, error_message = loadstring(block)
+			if expression then
+				local status, err = pcall(expression)
+				if not status then
+					print("©255000000LUA ERROR: " .. tostring(err))
+				end
+			else
+				print("©255000000LUA ERROR: " .. tostring(error_message))
+			end
+		elseif type(block) == "table" then
+			local action = block.action
+			if action == "display_image" then
+				local frame = LF.Create("frame"):SetSize(500, 500):Center()
+				local w, h = frame:GetSize()
+				local scroll = LF.Create("scrollpanel", frame):SetSize(w, h - 30):SetY(30)
+				local image_holder = LF.Create("image", scroll)
+				local image_data = block.args and block.args.image_data
+
+				if image_data then
+					local image = love.graphics.newImage(image_data)
+					if image then
+						image_holder:SetImage(image)
+					end
+				end
+			elseif action == "display_http_response" then
+				local frame = LF.Create("frame"):SetSize(500, 500):Center()
+				local w, h = frame:GetSize()
+				local panel = LF.Create("panel", frame)
+					:SetSize(w, h - 30)
+					:SetY(30)
+				local scroll = LF.Create("scrollpanel", frame)
+					:SetSize(w, h - 30)
+					:SetY(30)
+				local label = LF.Create("label", scroll)
+					:SetMaxWidth(w)
+					:SetFont(font_mono_small)
+					:SetColor(1, 1, 1, 1)
+
+				local body = block.args and block.args.body
+				if body then
+					label:SetText(body)
+				end
+			elseif action == "function" or action == "callback" then
+				local func = block.f
+				if not func and block.callback_id then
+					func = console.http_callbacks[block.callback_id]
+					console.http_callbacks[block.callback_id] = nil
+				end
+
+				if type(func) == "function" then
+					local args = block.args or {}
+					local ok, err = pcall(func, unpack(args))
+					if not ok then
+						print("©255000000HTTP CALLBACK ERROR: " .. tostring(err))
+					end
+				elseif type(func) == "string" then
+					local expr, err = loadstring(func)
+					if expr then
+						local ok, run_err = pcall(expr, unpack(block.args or {}))
+						if not ok then
+							print("©255000000HTTP CALLBACK ERROR: " .. tostring(run_err))
+						end
+					else
+						print("©255000000HTTP CALLBACK COMPILATION ERROR: " .. tostring(err))
+					end
+				end
+			end
+		end
+	end
+
+	-- Process all pending outgoing console messages
+	while true do
+		local out = console_out:pop()
+		if not out then break end
+		print(out)
+	end
+end
+
+console.toast = LF.Create("toast", console.frame)
+console.input = LF.Create("textbox", console.frame)
+	:SetY(-8)
+	:SetSize(0.98, 25)
+	:CenterX()
+	:SetMaxHistory(1)
+	:SetFont(font_mono)
+
+console.window_panel = LF.Create("panel", console.frame)
+	:SetY(30)
+	:SetWidth(0.98)
+	:Expand("bottom", 40)
+	:CenterX()
+
+console.window = LF.Create("log", console.window_panel)
+	:Expand()
+	:SetPadding(0)
+	:SetFont(font_mono_small)
+
+console.window:SetContextMenu {
+	{ text = "Clear Console", func = function()
+		console.window:Clear()
+	end },
+	{ type = "divider" },
+	{ text = "Copy Line", func = function()
+		local text, id = console.window:GetSelectedText()
+		if text then
+			love.system.setClipboardText(text)
+		end
+	end },
+	{ text = "Copy All", func = function()
+		local full_text = table.concat(console.window.elements, "\n")
+		love.system.setClipboardText(full_text)
+	end },
+}
+
+console.input:SetContextMenu {
+	{ text = "Clear Input", func = function()
+		console.input:Clear()
+	end },
+	{ text = "Cut Input", func = function()
+		console.input:Cut()
+	end },
+	{ text = "Copy Input", func = function()
+		console.input:Copy()
+	end },
+	{ text = "Paste Input", func = function()
+		console.input:Paste()
+	end },
+}
+
+
+console.input.rollback = 1
+console.input.history = { "" }
+console.input.OnEnter = function(self, text)
+	if text == "" then return end
+	if not (self.focus) then
+		return
+	end
+	self:SetText("")
+	self.parse(text)
+	table.insert(self.history, text)
+	self.rollback = #self.history + 1
+end
+
+console.input.OnControlKeyPressed = function(self, key)
+	if not (self.focus) then
+		return
+	end
+
+	if key == "up" then
+		local h = console.input.history
+		local r = math.max(self.rollback - 1, 1)
+
+		self:SetText(h[r])
+		self:MoveCursorTo("end")
+		self.rollback = r
+	elseif key == "down" then
+		local h = self.history
+		local r = math.min(self.rollback + 1, #h)
+
+		self:SetText(h[r])
+		self:MoveCursorTo("end")
+		self.rollback = r
+	end
+end
+
+console.input.commands = love.filesystem.load("core/interface/commands.lua")()
+for command, data in pairs(console.input.commands) do
+	if data.alias then
+		for index, alias in pairs(data.alias) do
+			console.input.commands[alias] = data
+		end
+	end
+end
+
+console.input.parse = function(str)
+	local args = {}
+	for word in string.gmatch(str, "%S+") do
+		table.insert(args, word)
+	end
+
+	local command_id = args[1]
+	local commands = console.input.commands
+	if commands[command_id] then
+		local command_object = commands[command_id]
+		if command_object.action then
+			local status = command_object.action(unpack(args, 2))
+			if status then
+				print(status)
+				return status
+			end
+		end
+	else
+		local status = string.format("Unknown command: %s", str)
+		print(status)
+		return status
+	end
+end
+console.parse = console.input.parse
+
+function console.message(...)
+	local str = {}
+	for i = 1, select("#", ...) do
+		local v = select(i, ...)
+		table.insert(str, tostring(v))
+	end
+	if console.window then
+		console.window:AddElement(table.concat(str, "	"), true)
+	end
+end
+
+--- print override
+_Print = print
+function print(...)
+	local str = {}
+	for i = 1, select("#", ...) do
+		local v = select(i, ...)
+		v = tostring(v)
+		if v == "true" then
+			v = "©255255000" .. v .. "©255255255"
+		elseif v == "false" then
+			v = "©255000000" .. v .. "©255255255"
+		elseif v == "nil" then
+			v = "©255000000" .. v .. "©255255255"
+		end
+		table.insert(str, v)
+	end
+
+	if console.window then
+		console.window:AddElement(table.concat(str, "	"), true)
+	end
+	_Print(...)
+end
+
+LF.bind("all", "", "'", function()
+	local toggle = not console.frame:GetVisible()
+	console.frame
+		:SetVisible(toggle)
+		:Center()
+		:MoveToTop()
+end)
+
+LF.bind("all", "", "f1", function()
+	local state = LF.config["DEBUG"]
+	LF.config["DEBUG"] = not state
+end)
+
+LF.bind("all", "", "f12", function()
+	love.event.quit("restart")
+end)
+
+
+console.frame
+	:SetVisible(false)
+	:SetDraggable(true)
+	:Center()
+	:MoveToTop()
+
+return console
+
+--//------------------------ MODULE END ------------------------//--
